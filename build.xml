@@ -1,0 +1,161 @@
+<!--
+  JBoss, Home of Professional Open Source
+  Copyright 2007, Red Hat Middleware LLC, and individual contributors
+  as indicated by the @author tags.
+  See the copyright.txt in the distribution for a full listing
+  of individual contributors.
+  This copyrighted material is made available to anyone wishing to use,
+  modify, copy, or redistribute it subject to the terms and conditions
+  of the GNU General Public License, v. 2.0.
+  This program is distributed in the hope that it will be useful, but WITHOUT A
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+  PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  You should have received a copy of the GNU General Public License,
+  v. 2.0 along with this distribution; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+  MA  02110-1301, USA.
+
+  (C) 2007,
+  @author JBoss Inc.
+-->
+
+<project name="orchestration" default="jar" basedir=".">
+
+    <!-- the directory in which your installed app server resides -->
+    <property environment="env"/>
+
+    <!-- pick up the asm.org code transform library -->
+    <property name="asm.home" value="${env.HOME}/Download/asm/asm-3.0/output/dist/lib/all"/>
+    <property name="asm.jar" value="asm-all-3.0.jar"/>
+
+    <condition property="jboss.home" value="${env.JBOSS_HOME}">
+      <isset property="env.JBOSS_HOME"/>
+    </condition>
+
+    <fail unless="jboss.home">
+The JBoss installation directory must be specified with the JBOSS_HOME environment variable or the jboss.home property.
+    </fail>
+
+    <property name="src.dir"           value="src"/>
+    <property name="dd.dir"            value="dd"/>
+    <property name="dd.grammar.dir"    value="${dd.dir}/grammar"/>
+    <property name="ext.lib.dir" value="ext"/>
+    <property name="build.dir"         value="build"/>
+    <property name="build.classes.dir" value="${build.dir}/classes"/>
+    <property name="build.lib.dir"     value="${build.dir}/lib"/>
+
+    <property name="ext.antlr.jars" value="antlr-3.0.1.jar antlr-2.7.7.jar antlr-runtime-3.0.1.jar stringtemplate-3.1b1.jar"/>
+
+    <!-- enable debugging of XTS service code -->
+
+    <property name="javac.debug" value="on"/>
+
+    <target name="init">
+        <delete dir="${build.dir}"/>
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${build.classes.dir}"/>
+        <mkdir dir="${build.lib.dir}"/>
+        <mkdir dir="${build.classes.dir}/META-INF"/>
+    </target>
+
+    <!-- ??? parser is not automatically remade ??? -->
+    <target name="parser" depends="init">
+        <java classname="org.antlr.Tool">
+            <classpath>
+                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
+            </classpath>
+            <arg value="${dd.grammar.dir}/ECAToken.g"/>
+        </java>
+        
+        <java classname="org.antlr.Tool">
+            <classpath>
+                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
+            </classpath>
+            <arg value="-lib" />
+            <arg value="${dd.grammar.dir}"/>
+            <arg value="${dd.grammar.dir}/ECAGrammar.g"/>
+        </java>
+        <copy file="${dd.grammar.dir}/ECATokenLexer.java"
+            tofile="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/ECATokenLexer.java"/>
+        <copy file="${dd.grammar.dir}/ECAGrammarParser.java"
+            tofile="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/ECAGrammarParser.java"/>
+    </target>
+    <!-- ?? we should maybe always remake the parser and not include the generate code in SVN ??? -->
+    <target name="compile" depends="init">
+        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}">
+            <classpath>
+                <pathelement location="${asm.home}/${asm.jar}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
+            </classpath>
+        </javac>
+    </target>
+
+     <target name="jar" depends="compile">
+         <!-- until we know better include all the antlr runtime in our deployed jar -->
+         <unjar src="${ext.lib.dir}/antlr-3.0.1.jar" dest="${build.classes.dir}"/>
+         <unjar src="${ext.lib.dir}/antlr-runtime-3.0.1.jar" dest="${build.classes.dir}"/>
+         <unjar src="${ext.lib.dir}/antlr-2.7.7.jar" dest="${build.classes.dir}"/>
+         <unjar src="${ext.lib.dir}/stringtemplate-3.1b1.jar" dest="${build.classes.dir}"/>
+         <unjar src="${ext.lib.dir}/junit.jar" dest="${build.classes.dir}"/>
+         <unjar src="${ext.lib.dir}/asm-all-3.0.jar" dest="${build.classes.dir}"/>
+         <jar jarfile="${build.lib.dir}/orchestration.jar" manifest="${dd.dir}/META-INF/MANIFEST.MF">
+             <fileset dir="${build.classes.dir}" includes="**/*"/>
+         </jar>
+    </target>
+
+   <target name="clean">
+       <delete dir="${build.dir}"/>
+       <delete dir="${dd.grammar.dir}" includes="*.java *.tokens"/>
+    </target>
+
+    <target name="TestParse.compile" depends="jar">
+        <!-- build the TestParse class and then run it to check parsing of rule elements -->
+        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}" source="TestParse.java">
+            <classpath>
+                <pathelement location="${asm.home}/${asm.jar}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="TestParse" depends="TestParse.compile">
+        <java classname="TestParse">
+            <classpath>
+                <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
+                <pathelement location="${asm.home}/${asm.jar}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
+            </classpath>
+            <arg value='WHEN coordinator:Coordinator = $1, recovered : boolean = coordinator.recovered, identifier : String = coordinator.getInstanceIdentifier()'/>
+            <arg value='IF recovered AND getCounter(identifier)'/>
+            <arg value='DO debug("killing prepare"),  killThread()'/>
+        </java>
+    </target>
+
+    <target name="TestRule.compile" depends="jar">
+        <!-- build the TestRule class and then run it to check parsing of rule elements -->
+        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}" source="TestRule.java">
+            <classpath>
+                <pathelement location="${asm.home}/${asm.jar}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="TestRule" depends="TestRule.compile">
+        <java classname="TestRule" fork="true">
+            <classpath>
+                <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
+                <pathelement location="${asm.home}/${asm.jar}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
+            </classpath>
+            <jvmarg value="-Xdebug"/>
+            <jvmarg value="-Xrunjdwp:transport=dt_socket,server=n,address=5005,suspend=y"/>
+            <arg value='-event'/>
+            <arg value='coordinator:Coordinator = $1, recovered : boolean = coordinator.recovered, identifier : String = coordinator.getInstanceIdentifier()'/>
+            <arg value='-condition'/>
+            <arg value='recovered AND getCounter(identifier)'/>
+            <arg value='-action'/>
+            <arg value='debug("killing prepare"),  killThread()'/>
+        </java>
+    </target>
+</project>
