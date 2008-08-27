@@ -18,7 +18,7 @@ the orchestration jar as a java agent. This jar implements
 The agent is passed to the JVM using the -javaagent option of the java
 command by setting JAVA_OPTS as follows:
 
-export JAVA_OPTS="-javaagent:${HOME}/home/adinn/jboss/workspace/adinn/orchestration/build/lib/orchestration.jar=rule:${HOME}/jboss/workspace/adinn/orchestration/build/lib/orchestration.jar"
+export JAVA_OPTS="-javaagent:${HOME}/jboss/workspace/adinn/orchestration/build/lib/orchestration.jar=rule:${HOME}/jboss/workspace/adinn/orchestration/build/lib/orchestration.jar"
 
 The =rule:<jar> option to the -javaagent argument tells the agent
 premain to search <jar> for rules, i.e. classes and methods annotated
@@ -33,10 +33,12 @@ Rules are defined via class and method anotations on a host class. Any
 class tagged with an EventHandlerClass annotation is a host class and
 is able to define a set of rules. Any static method of a host class
 annotated with an EventHandler annotation defines an individual
-rule. The event handler must define a target class for the rule, a
-target method and a target method line number (or -1 for start of
-method). Text elements in the annotation specify the rule event,
-condition and action.
+rule. The EventHandler annotation must define a target class for the
+rule, a target method and a target method line number (or -1 for start
+of method). Text elements in the annotation specify the rule event,
+condition and action. The event handler class and event handler static
+method code are available for use in the rule but they need not be
+invoked.
 
 The target class may be specified with or without a full package
 qualification. If no package is specified then all classes whose
@@ -44,39 +46,41 @@ unqualified name equals the target will be candidiates for rule
 trigger insertion. Note, however, that for safety triggers will only
 be inserted into com.arjuna classes. So, for example,
 targetClass="TransactionImple" would match all the transaction
-implementation classes in the JTA, JTS and XTS packages but wou dlnot
+implementation classes in the JTA, JTS and XTS packages but would not
 match any org.jboss implementations.
 
-Note that a rule is deliberately not defined using the host class
-code. It is quite legitimate to call host class methods from within a
-rule event, condition or action but they cannot provide the complete
-definition of the rule itself. Rules need to refer to the target class
-and to classes it references. Defining the rule via th ehost class
-implementation would impose recursive class loader dependencies
-between the class defining the rule and the class into which it is
-trying to insert trigger code.
+Note that a rule is deliberately not defined using the host class code
+(the class tagged with annotation EventHandlerClass).  It is quite
+legitimate to call host class methods from within a rule event,
+condition or action but they cannot provide the complete definition of
+the rule itself.  Rules need to refer to the target class and,
+possibly, classes that it references. Defining the rule via the host
+class implementation would impose recursive class loader dependencies
+between the host class and the class into which it is trying to insert
+trigger code.
 
-Note also that any classes mentioned in the rule by name are only
-identified by name. These names are resolved at runtime against a
-target class and its related classes as they are being loaded into a
-specific class loader. So, if a class is loaded more than once then
-each version of the class may be a candidate for trigger insertion.
-Class names emloyed in rules may also be quoted without package
-qualification. However, it must be possibel for the rule compiler to
+Note also that classes mentioned in the rule are only identified by
+name. Such names are resolved at runtime against a target class and
+related classes as they are being loaded into a specific class
+loader. So, if a class is loaded more than once then each version of
+the class may be a candidate for trigger insertion. As a consequence,
+class names emloyed in rules may also be quoted without package
+qualification. However, it must be possible for the rule compiler to
 translate them unambiguously to fully qualified class names by
 inferring the types from the target class and target method signature
 identified at transform time or by deriving them from field references
-and method signatures of classes associated wiht the target class and
+and method signatures of classes associated with the target class and
 method.
 
 An event specification is a list of bindings for variables which can
 be referenced during evaluaton of the rule condition and execution of
-the rule actions. bindings are established in th econtext of the
-target method and, bydefault, the target method arguemnts are
-available for using the specuial syntax $0 (for this) and $1...$N for
-arguments 1..N of the target method. Further bindings can be
-established by field reference, instance and static method invocation
-and builtin function execution. For example,
+the rule actions. Bindings are established in the context of the
+target method. By default, the target method arguments are pre-bound
+using the special syntax $0 (for this) and $1...$N for arguments 1..N
+of the target method. Further bindings, using symbolic names for the
+bound variables, can be established by assigning a symbolic constant
+to an expression which may refer to previously bound variables. For
+example,
 
   'coordinator:Coordinator = $0,
    recovered:boolean = coordinator.recovered,
@@ -84,18 +88,23 @@ and builtin function execution. For example,
 
 binds coordinator to the Coordinator instance bound to this in the
 triggering method, binds recovered to the value of its boolean field,
-recovered, and bids identifier to the String returned by invoking
-method getInstanceIdentifier(). The LHS of a binding must be a
-variable name or a name:type pair. If the type is omitted it will be
-inferred from the RHS where possible. The RHS of a binding is a Java
-exprssion which can include various builtin expressions plus most Java
-operations such as static or instance field accesses and invocatiosn,
-array dereferences etc but *not* assignment. The RHS of a binding may
-variables boudn in previous bindings but nto to its won variable or
-later bound variables. Rebinding of variable sis not permitted.
+recovered, and binds identifier to the String returned by invoking
+method getInstanceIdentifier().
+
+The LHS of a binding must be a variable name or a name:type pair. If
+the type is omitted it will be inferred from the RHS where
+possible. The RHS of a binding is a Java exprssion which can include
+various builtin expressions plus most Java expressions such as static
+or instance field accesses and invocations, array dereferences,
+operator expressions, etc (but *not* assignment expressions). The RHS
+of a binding may refer to variables bound in earlier bindings but not
+to its own variable or later bound variables. Rebinding of variables
+is not permitted.
 
 A condition is merely an expression with a boolean result. Expressions
-may be complex using the usual operators. So, for example:
+may be complex using the usual operators plus a few syntactically
+sugared variants. Conditions may also include references to bound
+variables. So, for example:
 
   'recovered AND findCounter(instanceIdentifier)'
 
@@ -108,7 +117,8 @@ will suceed if recovered is false and decrementing the counter
 identified by instanceIdentifier renders it inactive.
 
 An action is a series of expressions which are either method
-invocations or builtin invocations. SO, for example,
+invocations or builtin invocations. Actions may include references to
+bound variables. So, for example,
 
   'debug("killing prepare attempt"), killThread()'
 
@@ -117,4 +127,4 @@ exception, killing the therad in normal circumstances
 
   'debug("terminator X it"), killJVM()'
 
-will print a debug message and cause an immediate halt of the JVM.#
+will print a debug message and cause an immediate halt of the JVM.
