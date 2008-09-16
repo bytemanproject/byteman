@@ -1,8 +1,10 @@
 Type 'ant jar' to create the orchestration package library which
 supports definition of Event Condition Action rules for orchestrating
-JBossTS test scenarios and insertion of event triggers into com.arjuna
-methods, either at start/end of method or at specific line numbers.
+JBossTS test scenarios via insertion of event triggers into com.arjuna
+methods, either at start of method code or at specific line numbers.
 
+Set up
+------
 In order to use this library inside JBOSS you need to supply JVM with
 the orchestration jar as a java agent. This jar implements
 
@@ -13,7 +15,9 @@ the orchestration jar as a java agent. This jar implements
   the transformer class which inserts trigger calls to invoke rules
 
   a rule compiler which translates rules into classes which handle the
-  trigger method calls
+  trigger method calls (n.b. at present the rules are excuted by
+  interpreting the type-checked rule parse tree rather than by
+  compiling them but the latter should eventualy follow)
 
 The agent is passed to the JVM using the -javaagent option of the java
 command by setting JAVA_OPTS as follows:
@@ -27,8 +31,11 @@ annotations. The agent will parse them to identify rules for
 transforming com.arjuna.* classes. The agent jar contains a simple
 test class, org.jboss.jbossts.test.HandlerClass, which defines 4 rules
 used for testing a specific scenario in XTS coordinator crash
-recovery.
+recovery. See these (or the code :-) to get a taste of what the rule
+language offers (that's all foax, for now at least -- sorry).
 
+Rule Definition
+---------------
 Rules are defined via class and method anotations on a host class. Any
 class tagged with an EventHandlerClass annotation is a host class and
 is able to define a set of rules. Any static method of a host class
@@ -44,7 +51,7 @@ The target class may be specified with or without a full package
 qualification. If no package is specified then all classes whose
 unqualified name equals the target will be candidiates for rule
 trigger insertion. Note, however, that for safety triggers will only
-be inserted into com.arjuna classes. So, for example,
+be inserted into com.arjuna or org.jboss classes. So, for example,
 targetClass="TransactionImple" would match all the transaction
 implementation classes in the JTA, JTS and XTS packages but would not
 match any org.jboss implementations.
@@ -72,6 +79,8 @@ identified at transform time or by deriving them from field references
 and method signatures of classes associated with the target class and
 method.
 
+Rule Events
+-----------
 An event specification is a list of bindings for variables which can
 be referenced during evaluaton of the rule condition and execution of
 the rule actions. Bindings are established in the context of the
@@ -93,7 +102,7 @@ method getInstanceIdentifier().
 
 The LHS of a binding must be a variable name or a name:type pair. If
 the type is omitted it will be inferred from the RHS where
-possible. The RHS of a binding is a Java exprssion which can include
+possible. The RHS of a binding is a Java expression which can include
 various builtin expressions plus most Java expressions such as static
 or instance field accesses and invocations, array dereferences,
 operator expressions, method invocations, etc (but *not* assignment
@@ -102,6 +111,8 @@ variables and to variables bound in earlier bindings but not to its
 own variable or later bound variables. Rebinding of variables is not
 permitted.
 
+Rule Conditions
+---------------
 A condition is merely an expression with a boolean result. Expressions
 may be complex using the usual operators plus a few syntactically
 sugared variants. Conditions may also include method invocations and
@@ -117,6 +128,8 @@ identified by instanceIdentifer is active
 will succeed if recovered is false and decrementing the countdown
 identified by instanceIdentifier renders it inactive.
 
+Rule Actions
+------------
 An action is a series of expressions which are either method
 invocations or builtin invocations. Actions may include references to
 bound variables. So, for example,
@@ -129,3 +142,35 @@ exception, killing the therad in normal circumstances
   'debug("terminator X it"), killJVM()'
 
 will print a debug message and cause an immediate halt of the JVM.
+
+Expressions
+-----------
+Expressions occuring in rules can employ most of the available Java
+syntax with the notable exception that assignment is only valid at the
+top level in an event binding. Certain restrictions currently apply
+e.g. the recipient of a method invocation must be either a bound
+variable (*not* a dollar variable) or a field reference or series of
+field references via a bound vaiable or a static field reference
+(e.g. foo.meth(), foo.bar.meth, com.arjuna.foo.meth()). These should
+get fixed at some point.
+
+A variety of builtin methods are available. These may be written as
+function calls although internally they are treated as invocations of
+instance methods on an object identified by an implicit bound variable
+$$ of type Rule.Helper. Each time a rule is triggered a Helper
+instance is used to store the table of bindings for the trigger method
+arguments $0, $1 etc and for event variables. Every public instance
+method on class Helper is automatically available as a callable
+function in a rule binding, condition or action. For example, Helper
+defines a boolean method debug(String) which prints text to
+System.out. So, a call to debug("call to debug") will result in a call
+to the hhelper's instance method (n.b. debug always returns true,
+allowing it to be composed in AND conditions as well invoked as an
+action).
+
+Helper provides other builtins which allow countdowns to be initiated,
+detected and decremented and allows threads to be blocked on a wait,
+resumed and killed. Methods to support rendezvous will be added
+soon. Adding a method to Helper automatically makes it available as a
+builtin (type-checking happens automically too) so it should be easy
+to extend the rule language as nw requirements arise.
