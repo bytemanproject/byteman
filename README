@@ -1,4 +1,4 @@
-Type 'build jar' to create the orchestration package library which
+Type 'ant jar' to create the orchestration package library which
 supports definition of Event Condition Action rules for orchestrating
 JBossTS test scenarios and insertion of event triggers into com.arjuna
 methods, either at start/end of method or at specific line numbers.
@@ -76,11 +76,11 @@ An event specification is a list of bindings for variables which can
 be referenced during evaluaton of the rule condition and execution of
 the rule actions. Bindings are established in the context of the
 target method. By default, the target method arguments are pre-bound
-using the special syntax $0 (for this) and $1...$N for arguments 1..N
-of the target method. Further bindings, using symbolic names for the
-bound variables, can be established by assigning a symbolic constant
-to an expression which may refer to previously bound variables. For
-example,
+using the special syntax $0 (for this, when the target method is not
+static) and $1...$N for arguments 1..N of the target method. Further
+bindings, using symbolic names for the bound variables, can be
+established by assigning a symbolic constant to an expression which
+may refer to previously bound variables. For example,
 
   'coordinator:Coordinator = $0,
    recovered:boolean = coordinator.recovered,
@@ -96,24 +96,25 @@ the type is omitted it will be inferred from the RHS where
 possible. The RHS of a binding is a Java exprssion which can include
 various builtin expressions plus most Java expressions such as static
 or instance field accesses and invocations, array dereferences,
-operator expressions, etc (but *not* assignment expressions). The RHS
-of a binding may refer to variables bound in earlier bindings but not
-to its own variable or later bound variables. Rebinding of variables
-is not permitted.
+operator expressions, method invocations, etc (but *not* assignment
+expressions). The RHS of a binding may refer to method argument
+variables and to variables bound in earlier bindings but not to its
+own variable or later bound variables. Rebinding of variables is not
+permitted.
 
 A condition is merely an expression with a boolean result. Expressions
 may be complex using the usual operators plus a few syntactically
-sugared variants. Conditions may also include references to bound
-variables. So, for example:
+sugared variants. Conditions may also include method invocations and
+references to bound variables. So, for example:
 
-  'recovered AND findCounter(instanceIdentifier)'
+  'engine.isRecovered() AND getCountdown(instanceIdentifier)'
 
-will succeed if recovered is true and the counter identified
-by instanceIdentifer is active
+will succeed if engine.isRecovered() returns true and a countdown
+identified by instanceIdentifer is active
 
-  'NOT recovered && decrementCounter(instanceIdentifier)'
+  'NOT recovered && countDown(instanceIdentifier)'
 
-will suceed if recovered is false and decrementing the counter
+will succeed if recovered is false and decrementing the countdown
 identified by instanceIdentifier renders it inactive.
 
 An action is a series of expressions which are either method

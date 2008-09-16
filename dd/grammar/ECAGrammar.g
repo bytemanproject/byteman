@@ -23,11 +23,21 @@ tokens {
 package org.jboss.jbossts.orchestration.rule.grammar;
 }
 
-eca_rule	:	eca EOF ;
+eca_rule	:	eca EOF -> ^(eca)
+	;
+	
+eca_event	:	event EOF -> ^(event)
+	;
 
-eca	:	WHEN event	-> ^(WHEN event)
-	|	IF condition 	-> ^(IF condition)
-	|	DO action	-> ^(DO action)
+eca_condition	:	condition EOF -> ^(condition)
+	;
+
+eca_action	:	action EOF -> ^(action)
+	;
+
+eca	:	BIND e=event
+		IF c=condition
+		DO a=action	-> ^(BIND $e $c $a)
 	;
 
 // event specifications -- for now events are just a list of bindings

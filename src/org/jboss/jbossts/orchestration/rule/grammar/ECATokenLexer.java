@@ -1,4 +1,4 @@
-// $ANTLR 3.0.1 dd/grammar/ECAToken.g 2008-07-18 14:15:59
+// $ANTLR 3.0.1 dd/grammar/ECAToken.g 2008-09-12 18:02:58
 
 package org.jboss.jbossts.orchestration.rule.grammar;
 
@@ -41,7 +41,6 @@ public class ECATokenLexer extends Lexer {
     public static final int LSQUARE=18;
     public static final int DO=15;
     public static final int POINT=9;
-    public static final int WHEN=13;
     public static final int BARESYM=53;
     public static final int SEPR=22;
     public static final int WS=59;
@@ -64,6 +63,7 @@ public class ECATokenLexer extends Lexer {
     public static final int DIV=39;
     public static final int DOTSYM=55;
     public static final int BXOR=36;
+    public static final int BIND=13;
     public static final int NOT=27;
     public static final int UNDERSCORE=46;
     public static final int DOLLARSYM=58;
@@ -363,14 +363,14 @@ public class ECATokenLexer extends Lexer {
     }
     // $ANTLR end NUMBER
 
-    // $ANTLR start WHEN
-    public final void mWHEN() throws RecognitionException {
+    // $ANTLR start BIND
+    public final void mBIND() throws RecognitionException {
         try {
-            int _type = WHEN;
-            // dd/grammar/ECAToken.g:47:6: ( 'WHEN' )
-            // dd/grammar/ECAToken.g:47:8: 'WHEN'
+            int _type = BIND;
+            // dd/grammar/ECAToken.g:47:6: ( 'BIND' )
+            // dd/grammar/ECAToken.g:47:8: 'BIND'
             {
-            match("WHEN"); 
+            match("BIND"); 
 
 
             }
@@ -380,7 +380,7 @@ public class ECATokenLexer extends Lexer {
         finally {
         }
     }
-    // $ANTLR end WHEN
+    // $ANTLR end BIND
 
     // $ANTLR start IF
     public final void mIF() throws RecognitionException {
@@ -2078,7 +2078,7 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR end WS
 
     public void mTokens() throws RecognitionException {
-        // dd/grammar/ECAToken.g:1:8: ( NUMBER | WHEN | IF | DO | LPAREN | RPAREN | LSQUARE | RSQUARE | LBRACE | RBRACE | SEPR | DOT | ASSIGN | OR | AND | NOT | EQ | NEQ | GT | LT | GEQ | LEQ | BOR | BAND | BXOR | TWIDDLE | MUL | DIV | PLUS | MINUS | MOD | TERN_IF | COLON | QUOTE | DQUOTE | STRING | SYMBOL | DOLLARSYM | WS )
+        // dd/grammar/ECAToken.g:1:8: ( NUMBER | BIND | IF | DO | LPAREN | RPAREN | LSQUARE | RSQUARE | LBRACE | RBRACE | SEPR | DOT | ASSIGN | OR | AND | NOT | EQ | NEQ | GT | LT | GEQ | LEQ | BOR | BAND | BXOR | TWIDDLE | MUL | DIV | PLUS | MINUS | MOD | TERN_IF | COLON | QUOTE | DQUOTE | STRING | SYMBOL | DOLLARSYM | WS )
         int alt28=39;
         switch ( input.LA(1) ) {
         case '+':
@@ -2106,17 +2106,17 @@ public class ECATokenLexer extends Lexer {
             alt28=1;
             }
             break;
-        case 'W':
+        case 'B':
             {
             int LA28_3 = input.LA(2);
 
-            if ( (LA28_3=='H') ) {
+            if ( (LA28_3=='I') ) {
                 int LA28_53 = input.LA(3);
 
-                if ( (LA28_53=='E') ) {
+                if ( (LA28_53=='N') ) {
                     int LA28_100 = input.LA(4);
 
-                    if ( (LA28_100=='N') ) {
+                    if ( (LA28_100=='D') ) {
                         int LA28_123 = input.LA(5);
 
                         if ( (LA28_123=='.'||(LA28_123>='0' && LA28_123<='9')||(LA28_123>='A' && LA28_123<='Z')||LA28_123=='_'||(LA28_123>='a' && LA28_123<='z')) ) {
@@ -3007,7 +3007,6 @@ public class ECATokenLexer extends Lexer {
                 alt28=35;}
             }
             break;
-        case 'B':
         case 'C':
         case 'F':
         case 'H':
@@ -3018,6 +3017,7 @@ public class ECATokenLexer extends Lexer {
         case 'S':
         case 'U':
         case 'V':
+        case 'W':
         case 'X':
         case 'Y':
         case 'Z':
@@ -3057,7 +3057,7 @@ public class ECATokenLexer extends Lexer {
             break;
         default:
             NoViableAltException nvae =
-                new NoViableAltException("1:1: Tokens : ( NUMBER | WHEN | IF | DO | LPAREN | RPAREN | LSQUARE | RSQUARE | LBRACE | RBRACE | SEPR | DOT | ASSIGN | OR | AND | NOT | EQ | NEQ | GT | LT | GEQ | LEQ | BOR | BAND | BXOR | TWIDDLE | MUL | DIV | PLUS | MINUS | MOD | TERN_IF | COLON | QUOTE | DQUOTE | STRING | SYMBOL | DOLLARSYM | WS );", 28, 0, input);
+                new NoViableAltException("1:1: Tokens : ( NUMBER | BIND | IF | DO | LPAREN | RPAREN | LSQUARE | RSQUARE | LBRACE | RBRACE | SEPR | DOT | ASSIGN | OR | AND | NOT | EQ | NEQ | GT | LT | GEQ | LEQ | BOR | BAND | BXOR | TWIDDLE | MUL | DIV | PLUS | MINUS | MOD | TERN_IF | COLON | QUOTE | DQUOTE | STRING | SYMBOL | DOLLARSYM | WS );", 28, 0, input);
 
             throw nvae;
         }
@@ -3071,9 +3071,9 @@ public class ECATokenLexer extends Lexer {
                 }
                 break;
             case 2 :
-                // dd/grammar/ECAToken.g:1:17: WHEN
+                // dd/grammar/ECAToken.g:1:17: BIND
                 {
-                mWHEN(); 
+                mBIND(); 
 
                 }
                 break;

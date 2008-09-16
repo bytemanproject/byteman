@@ -1,45 +1,105 @@
 package org.jboss.jbossts.orchestration.rule.type;
 
+import org.jboss.jbossts.orchestration.rule.exception.TypeException;
+
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * models the type of a rule binding or expression
  */
 public class Type {
-    // TODO we need eventually to be able to create array types
     /**
      * create a type with a given name and optionally an associated class
      *
-     * @param clazzName the name of the type which may or may not be fully qualified
+     * @param typeName the name of the type which may or may not be fully qualified
      * @param clazz the class associated with this name if it is know otherwise null
      */
-    public Type(String clazzName, Class clazz)
+    public Type(String typeName, Class clazz)
     {
-        this(clazzName, clazz, F_OBJECT);
+        this(typeName, clazz, F_OBJECT, null);
     }
 
     /**
      * create a type with a given name and no associated class
      *
-     * @param clazzName the name of the type which may or may not be fully qualified
+     * @param typeName the name of the type which may or may not be fully qualified
      */
-    public Type(String clazzName)
+    public Type(String typeName)
     {
-        this(clazzName, null);
+        this(typeName, null);
+    }
+
+    /**
+     * create an array type from this base type
+     * @return an array type
+     */
+    public Type arrayType()
+    {
+        return arrayType(null);
+    }
+    
+    /**
+     * create an array type from this base type
+     * @param clazz the class for the array type derived from the class of base type or
+     * null if the base type is undefined
+     * @return an array type
+     */
+    public Type arrayType(Class clazz)
+    {
+        if (this.arrayType ==  null) {
+            arrayType = new Type(typeName + "[]", clazz, F_ARRAY, this);
+        }
+        return arrayType;
+    }
+
+    /**
+     * retrieve the base type for an array type or null if this is not an array type
+     * @return an array type
+     */                                    
+    public Type getBaseType()
+    {
+        if (isArray()) {
+            return baseType;
+        } else {
+            return null;
+        }
     }
 
     /**
      * get the possibly unqualified name with which this type was created
-     * @return
+     * @return the type name
      */
     public String getName()
     {
-        return clazzName;
+        return typeName;
     }
 
     /**
-     * get the class associated with this type or a special undefined class if the type is not defined
-     * @return
+     * get the internal name for this type used by the class loader. this is only valid for
+     * defined types, defined array types or primitive types
+     * @return the type name
+     */
+    public String getInternalName()
+    {
+        if (isArray()) {
+            return "[" + baseType.getInternalName();
+        } else if (isPrimitive()) {
+            return internalNames.get(typeName);
+        } else {
+            String name = aliasFor.getTargetClass().getCanonicalName();
+            if (name.indexOf(';') == 0) {
+                name = "L" + name + ";";
+            }
+            return name;
+        }
+    }
+
+    /**
+     * get the class associated with this type if it has one or a special undefined class if
+     * the type is not defined or null if there is no associated class
+     * @return the associated class
      */
     public Class getTargetClass()
     {
@@ -49,7 +109,7 @@ public class Type {
     /**
      * get the package component of the name associated with this type or the empty String
      * if it has no package or is was defiend with an unqualified name or is a builtin type
-     * @return
+     * @return the package component or an empty string
      */
 
     public String getPackageName()
@@ -79,6 +139,34 @@ public class Type {
         return target;
     }
 
+    public void resolve(ClassLoader loader)
+    {
+        if (this.isDefined() || this == Type.UNDEFINED || this == Type.N) {
+            return;
+        }
+        if (aliasFor != this) {
+            aliasFor.resolve(loader);
+            clazz = aliasFor.clazz;
+            if (clazz != null) {
+                flags &= ~F_UNKNOWN;
+            }
+        } else {
+            try {
+                clazz = loader.loadClass(getName());
+                flags &= ~F_UNKNOWN;
+            } catch (ClassNotFoundException e) {
+                // ok give up here -- we should get a type error later
+            }
+        }
+        // ensure any classes which might have been created via this one are also resolved
+        if (baseType != null) {
+            baseType.resolve(loader);
+        }
+        if (arrayType != null) {
+            arrayType.resolve(loader);
+        }
+    }
+
     /**
      * attempt to establish an alias from an package unqualified named object type to a package
      * qualified named object type whose unqualified name equals this type's name
@@ -105,14 +193,41 @@ public class Type {
             // we assume the caller has already checked that the names match so . . .
             // update the alias
             aliasFor = target;
+            // propagate type-class binding up or down alias link if available
+            if (clazz != null) {
+                if (target.clazz != null) {
+                    // oops class mismatch!
+                    return false;
+                } else {
+                    target.clazz = clazz;
+                    target.flags &= ~F_UNKNOWN;
+                }
+            } else if (target.clazz != null) {
+                clazz = target.clazz;
+                flags &= ~F_UNKNOWN;
+            }
+            if (arrayType != null) {
+                // ensure array types are also aliased
+                if (target.arrayType == null) {
+                    target.arrayType(target.clazz);
+                }
+                arrayType.aliasTo(target.arrayType);
+            } else if (target.arrayType != null) {
+                // point the array type at the target array type
+                arrayType = arrayType(this.clazz);
+                arrayType.aliasTo(target.arrayType);
+            }
             return true;
         }
     }
 
     /**
      * check whether this type can be assigned with values of the supplied type including
-     * the case where numeric conversion from known or unknown numeric types but excluding any other
-     * cases where this type is undefined
+     * the case where numeric conversion from known or unknown numeric types but excluding
+     * any other cases where this type is undefined
+     *
+     * n.b. the caller must dereference the recipient and argument types before calling
+     * this method
      * @param type the type poviding RHS values
      * @return true if it is known that the assignment is valid, false if it is not known to be valid or
      * is known not to be valid
@@ -120,158 +235,227 @@ public class Type {
 
     public boolean isAssignableFrom(Type type)
     {
-        return isAssignableFrom(type.clazz);
-    }
-
-    /**
-     * check whether this type can be assigned with values of the supplied class including
-     * the case where numeric conversion from known or unknown numeric types but excluding any other
-     * cases where this type is undefined
-     * @param clazz the class poviding RHS values
-     * @return true if it is known that the assignment is valid, false if it is not known to be valid or
-     * is known not to be valid
-     */
-    public boolean isAssignableFrom(Class clazz)
-    {
-        if (isUndefined()) {
-            // we can only say yes if this is void or if it is an undefined numeric type
-            if (isVoid()) {
-                return true;
-            } else if (isNumeric()) {
-                // we can coerce any numeric type to another numeric type
-                Type type = primitiveType(clazz);
-                if (type != null && type.isNumeric()) {
-                    return true;
-                }
-            }
-            // we don't know if we can coerce here so return false to play safe
+        if (this.aliasFor != this) {
+            return Type.dereference(this).isAssignableFrom(type);
+        }
+        type = Type.dereference(type);
+        
+        // check for unknown cases first
+        if (isNumeric()) {
+            // can always coerce numerics even if it involves boxing
+            return type.isNumeric();
+        } else if (isUndefined() || type.isUndefined()) {
+            // cannot answer this question yet
             return false;
+        } else if (this == type) {
+            return true;
+        } else if (isString()) {
+            // can always convert anything to a string via boxing and Object.toString();
+            return true;
+        } else if (isVoid()) {
+            // can always assign to void
+            return true;
+        } else if (isPrimitive()) {
+           if (!type.isPrimitive()) {
+               // see if we can arrive at the correct type by boxing or unboxing
+               Type boxedType = boxedTypes.get(type);
+               return (boxedType == this);
+           } else {
+               return false;
+           }
+        } else if (type.isPrimitive()) {
+            // see if we can arrive at the correct type by boxing or unboxing
+            Type boxedType = boxedTypes.get(type);
+            return (boxedType == this);
         } else if (isObject()) {
-            // we can always convert something to a string unless it is void
-            if (this == STRING) {
-                return (clazz != void.class);
-            }
+            // we only get here if we have a known type i.e. both clazz values ar enon-null
             // see if the supplied type is assignable from this type's class
-            if (this.clazz.isAssignableFrom(clazz)) {
-                return true;
-            }
-            return false;
+            return (this.clazz.isAssignableFrom(type.clazz));
         } else {
-
-            // ok this is a defined primitive type check that clazz is primitive
-
-            Type type = primitiveType(clazz);
-
-            if (type == null) {
-                return false;
-            }
-            // ok we can proceed if the two types have overlapping flags
-            return ((this.flags & type.flags) != 0);
+            return false;
         }
     }
 
+    /**
+     * test if this type is an unknown type. a type may be unknown either because it is one
+     * of the pseudo types used as type variables or because it represents an object type
+     * mentioned in a rule but not yet bound to a specific class
+     * @return true if the type is unknown otherwise false
+     */
     public boolean isUndefined()
     {
         return ((flags & F_UNKNOWN) != 0);
     }
 
+    /**
+     * check if this type is a known type. this is just teh oppositeof isUndefined
+     * @return false if the type is unknown otherwise true
+     */
     public boolean isDefined()
     {
         return !isUndefined();
     }
 
+    /**
+     * return true if this is a type mentioned in a rule but not yet bound to a specific class
+     * @return true if the type is not yet bound to a specific class
+     */
+    public boolean isUnbound()
+    {
+        // this only happens where we have an object type marked with the UNKNOWN marker
+
+        return (flags & (F_OBJECT | F_UNKNOWN)) == (F_OBJECT | F_UNKNOWN);
+    }
+
+    /**
+     * return true if this is a primitive value type
+     * @return true if this is a primitive value type
+     */
     public boolean isPrimitive()
     {
-        return ((flags & F_PRIMITIVE) != 0);
+        return (flags & F_PRIMITIVE) != 0;
     }
 
+    /**
+     * return true if this is a value type, which includes the boxed versions of primitive types
+     * @return true if this is a value type
+     */
+    public boolean isValue()
+    {
+        return (flags & F_VALUE) != 0;
+    }
+
+    /**
+     * return true if this is the void type
+     * @return true if this is void type
+     */
     public boolean isVoid()
     {
-        return this == VOID;
+        return (flags & F_VOID) != 0;
     }
 
+    /**
+     * return true if this is the string type
+     * @return true if this is string type
+     */
+    public boolean isString()
+    {
+        return (flags & F_STRING) != 0;
+    }
+
+    /**
+     * return true if this is a numeric type, including the unknown primitive numeric type
+     * @return true if this is a numeric type
+     */
     public boolean isNumeric()
     {
         return (flags & F_NUMERIC) != 0;
     }
 
+    /**
+     * return true if this is an integral type of whatever size, including the unknown
+     * primitive numeric type
+     * @return true if this is an integral type
+     */
     public boolean isIntegral()
     {
         return (flags & F_INTEGRAL) == F_INTEGRAL;
     }
 
+    /**
+     * return true if this is a floating type of whatever size, including the unknown
+     * primitive numeric type
+     * @return true if this is a floating type
+     */
     public boolean isFloating()
     {
         return (flags & F_FLOATING) == F_FLOATING;
     }
 
+    /**
+     * return true if this is a boolean type
+     * @return true if this is a boolean type
+     */
     public boolean isBoolean()
     {
         return (flags & F_BOOLEAN) != 0;
     }
 
+    /**
+     * return true if this is an object type, including unbound types mentioned in rules
+     * @return true if this is an object type
+     */
     public boolean isObject()
     {
         return (flags & F_OBJECT) != 0;
     }
 
+    /**
+     * return true if this is an array type
+     * @return true if this is an array type
+     */
     public boolean isArray()
     {
         return (flags & F_ARRAY) != 0;
     }
 
+    /**
+     * return the builtin type associated with a given class
+     * @return the corresponding builtin type
+     */
     public Type builtinType(Class clazz)
     {
         return builtinTypes.get(clazz.getName());
     }
 
+    /**
+     * return the primitive type whose boxed equivalent is associated with a given class
+     * @return the corresponding primitive type
+     */
     public Type primitiveType(Class clazz)
     {
         Type type = builtinType(clazz);
 
-        if (type != null && type.isDefined() && type.isPrimitive())
-        {
-            return type;
-        }
-
-        return null;
+        return boxedTypes.get(type);
     }
 
-    public Type numericType(Class clazz) {
-        Type type = builtinType(clazz);
-
-        if (type != null && type.isNumeric())
-        {
-            return type;
-        }
-
-        return null;
-    }
-
-    private String clazzName;
+    private String typeName;
     private Class clazz;
     private String packageName;
     private int flags;
     private Type aliasFor;
+    private Type baseType;
+    private Type arrayType;
 
-    private Type(String clazzName, Class clazz, int flags)
+    protected Type(String typeName, Class clazz, int flags)
     {
-        this.clazzName = clazzName;
+        this(typeName, clazz, flags, null);
+    }
 
-        if (clazz != null) {
-            this.clazz = clazz;
-        } else {
-            this.clazz = Undefined.class;
-            flags |= F_UNKNOWN; 
+    protected Type(String typeName, Class clazz, int flags, Type baseType)
+    {
+        this.typeName = typeName;
+
+        if (clazz == null && (flags & F_PRIMITIVE) == 0) {
+            flags |= F_UNKNOWN;
         }
 
+        this.clazz = clazz;
+
         this.flags = flags;
+        if ((flags & F_ARRAY) != 0) {
+            this.baseType = baseType;
+            baseType.arrayType = this;
+        } else {
+            this.baseType = null;
+        }
+        this.arrayType = null;
 
         // types dereference to themselves until they are aliased
 
         aliasFor = this;
 
-        packageName = packagePart(clazzName);
+        packageName = packagePart(typeName);
     }
 
     /**
@@ -286,38 +470,38 @@ public class Type {
         if (!type1.isNumeric() || !type2.isNumeric()) {
             // should not happen!
             System.err.println("Type.promote : unexpected non-numeric type argument");
-            return Type.NUMBER;
+            return N;
         } else if (type1.isUndefined() || type2.isUndefined()) {
                 // don't know for sure which is which so return undefined numeric
-                return Type.NUMBER;
+                return N;
         } else if (type1.isFloating() || type2.isFloating()) {
-            if (type1 == DOUBLE || type2 == DOUBLE) {
-                return DOUBLE;
+            if (type1 == DOUBLE || type2 == DOUBLE || type1 == D || type2 == D) {
+                return D;
             } else {
-                return FLOAT;
+                return F;
             }
         } else {
             // integral types -- ok lets invent^H^H^H declare some rules here :-)
             // either arg long forces a long result
-            // either arg integer forces an integer result
+            // either arg integer forces an int result
             // a matched pair of short, char or byte arguments retains the same type in the result
-            // otherwise the result is an integer and args wil be coerced to integer
-            if (type1 == LONG || type2 == LONG) {
-                return LONG;
-            } else if (type1 == INTEGER || type2 == INTEGER) {
-                return INTEGER;
-            } else if (type1 == SHORT && type2 == SHORT) {
+            // otherwise the result is an int and args will be coerced to int
+            if (type1 == LONG || type2 == LONG || type1 == J || type2 == J) {
+                return J;
+            } else if (type1 == INTEGER || type2 == INTEGER || type1 == I || type2 == I) {
+                return I;
+            } else if ((type1 == SHORT || type1 == S) && (type2 == SHORT || type2 == S)) {
                 return SHORT;
-            } else if (type1 == CHARACTER && type2 == CHARACTER) {
-                return CHARACTER;
-            } else if (type1 == BYTE && type2 == BYTE) {
-                return BYTE;
+            } else if ((type1 == CHARACTER || type1 == C) && (type2 == CHARACTER || type2 == C)) {
+                return C;
+            } else if ((type1 == BYTE || type1 == B) && (type2 == BYTE || type2 == B)) {
+                return B;
             } else {
                 return INTEGER;
             }
         }
     }
-
+    /* TODO we don't seem to need this?
     private static String classPart(String className)
     {
         int dotIdx = className.lastIndexOf('.');
@@ -328,7 +512,7 @@ public class Type {
             return className.substring(dotIdx);
         }
     }
-
+    */
     private static String packagePart(String className)
     {
         int dotIdx = className.lastIndexOf('.');
@@ -340,38 +524,224 @@ public class Type {
         }
     }
 
+    public static List<String> parseDescriptor(String descriptor, boolean includeReturnType)
+    {
+        List<String> argTypes = new ArrayList<String>();
+        int length = descriptor.length();
+        int idx = descriptor.indexOf("(");
+        int arrayDepth = 0;
+        if (idx < 0) {
+            return null;
+        }
+        idx = idx + 1;
+        while (idx < length) {
+            char c = descriptor.charAt(idx);
+            switch(descriptor.charAt(idx))
+            {
+                case 'Z':
+                {
+                    String baseType = "boolean";
+                    argTypes.add(fixArrayType(baseType, arrayDepth));
+                    arrayDepth = 0;
+                    idx++;
+                }
+                break;
+                case 'B':
+                {
+                    String baseType = "byte";
+                    argTypes.add(fixArrayType(baseType, arrayDepth));
+                    arrayDepth = 0;
+                    idx++;
+                }
+                break;
+                case 'S':
+                {
+                    String baseType = "short";
+                    argTypes.add(fixArrayType(baseType, arrayDepth));
+                    arrayDepth = 0;
+                    idx++;
+                }
+                break;
+                case 'C':
+                {
+                    String baseType = "char";
+                    argTypes.add(fixArrayType(baseType, arrayDepth));
+                    arrayDepth = 0;
+                    idx++;
+                }
+                break;
+                case 'I':
+                {
+                    String baseType = "int";
+                    argTypes.add(fixArrayType(baseType, arrayDepth));
+                    arrayDepth = 0;
+                    idx++;
+                }
+                break;
+                case 'J':
+                {
+                    String baseType = "long";
+                    argTypes.add(fixArrayType(baseType, arrayDepth));
+                    arrayDepth = 0;
+                    idx++;
+                }
+                break;
+                case 'F':
+                {
+                    String baseType = "float";
+                    argTypes.add(fixArrayType(baseType, arrayDepth));
+                    arrayDepth = 0;
+                    idx++;
+                }
+                break;
+                case 'D':
+                {
+                    String baseType = "double";
+                    argTypes.add(fixArrayType(baseType, arrayDepth));
+                    arrayDepth = 0;
+                    idx++;
+                }
+                break;
+                case 'V':
+                {
+                    if (arrayDepth != 0) {
+                        // hmm void arrays are definitely not kosher
+                        return null;
+                    } else if (!includeReturnType) {
+                        // hmm should not have got here
+                        return null;
+                    }
+                    argTypes.add("void");
+                    idx++;
+                }
+                break;
+                case 'L':
+                {
+                    int endIdx = descriptor.indexOf(';', idx);
+                    if (endIdx < 0) {
+                        return null;
+                    }
+                    String baseType = descriptor.substring(idx+1, endIdx).replaceAll("/", ".");
+                    argTypes.add(fixArrayType(baseType, arrayDepth));
+                    arrayDepth = 0;
+                    idx = endIdx + 1;
+                }
+                break;
+                case '[':
+                {
+                    arrayDepth++;
+                    idx++;
+                }
+                break;
+                case ')':
+                {
+                    if (arrayDepth != 0) {
+                        return null;
+                    } else if (!includeReturnType) {
+                        // stop here
+                        return argTypes;
+                    } else {
+                        // skip any trailing spaces before the return type
+                        idx++;
+                        while (descriptor.charAt(idx) == ' ')
+                        {
+                            idx++;
+                        }
+                    }
+                }
+                break;
+                default:
+                    return null;
+            }
+        }
+
+        return (arrayDepth == 0 ? argTypes : null);
+    }
+
+    public static String fixArrayType(String baseType, int dimension)
+    {
+        String result = baseType;
+
+        for (int i = 0; i < dimension; i++) {
+            result  += "[]";
+        }
+        
+        return result;
+    }
+
     // private class used to type unknown types
     private static class Undefined {
-    };
+    }
+    // tags divide types into exclusive categories
+    // unknown types may be associated with a tag group such as numeric, or object
+    // markers are used to identify type properties such as unknown, primitive
 
-    final public static int F_UNKNOWN       = 0x1000;
+    // value type tags
     final public static int F_BOOLEAN       = 0x0001;
     final public static int F_INTEGRAL      = 0x0002;
     final public static int F_FLOATING      = 0x0004;
-    final public static int F_NUMERIC       = F_UNKNOWN | F_INTEGRAL | F_FLOATING;
-    final public static int F_PRIMITIVE     = F_UNKNOWN | F_BOOLEAN | F_NUMERIC;
+    // object type tag
     final public static int F_OBJECT        = 0x0008;
-    final public static int F_ARRAY         = 0x0010;
-    final public static int F_ANY           = F_UNKNOWN | F_PRIMITIVE | F_OBJECT | F_ARRAY;
+    // void type tag
+    final public static int F_VOID          = 0x0010;
+    // array type tag
+    final public static int F_ARRAY         = 0x0020;
+
+    // value type tag groups
+    final public static int F_NUMERIC       = F_INTEGRAL | F_FLOATING;
+    final public static int F_VALUE         = F_BOOLEAN | F_NUMERIC;
+
+    // unknown type marker
+    final public static int F_UNKNOWN       = 0x1000;
+    // primitive type marker
+    final public static int F_PRIMITIVE     = 0x2000;
+    // string type marker
+    final public static int F_STRING        = 0x4000;
 
     // we need to cope with array types
-    final public static Type BOOLEAN = new Type("Boolean", Boolean.class, F_BOOLEAN);
-    final public static Type BYTE = new Type("Byte", Byte.class, F_INTEGRAL);
-    final public static Type SHORT = new Type("Short", Short.class, F_INTEGRAL);
-    final public static Type CHARACTER = new Type("Character", Character.class, F_INTEGRAL);
-    final public static Type INTEGER = new Type("Integer", Integer.class, F_INTEGRAL);
-    final public static Type LONG = new Type("Long", Long.class, F_INTEGRAL);
-    final public static Type FLOAT = new Type("Float", Float.class, F_FLOATING);
-    final public static Type DOUBLE = new Type("Double", Double.class, F_FLOATING);
-    final public static Type STRING = new Type("String", String.class, F_OBJECT);
-    final public static Type VOID = new Type("void", void.class, F_ANY);
-    final public static Type NUMBER = new Type("Number", Number.class, F_NUMERIC);
-    final public static Type UNDEFINED = new Type("", Undefined.class, F_ANY);
+
+    final public static Type Z = new Type("boolean", null, F_BOOLEAN|F_PRIMITIVE);
+    final public static Type B = new Type("byte", null, F_INTEGRAL|F_PRIMITIVE);
+    final public static Type S = new Type("short", null, F_INTEGRAL|F_PRIMITIVE);
+    final public static Type C = new Type("char", null, F_INTEGRAL|F_PRIMITIVE);
+    final public static Type I = new Type("int", null, F_INTEGRAL|F_PRIMITIVE);
+    final public static Type J = new Type("long", null, F_INTEGRAL|F_PRIMITIVE);
+    final public static Type F = new Type("float", null, F_FLOATING|F_PRIMITIVE);
+    final public static Type D = new Type("double", null, F_FLOATING|F_PRIMITIVE);
+    // pseudo type representing an undefined numeric primitive type
+    final public static Type N = new Type("", null, F_UNKNOWN|F_NUMERIC|F_PRIMITIVE);
+
+    final public static Type BOOLEAN = new Type("java.lang.Boolean", Boolean.class, F_BOOLEAN);
+    final public static Type BYTE = new Type("java.lang.Byte", Byte.class, F_INTEGRAL);
+    final public static Type SHORT = new Type("java.lang.Short", Short.class, F_INTEGRAL);
+    final public static Type CHARACTER = new Type("java.lang.Character", Character.class, F_INTEGRAL);
+    final public static Type INTEGER = new Type("java.lang.Integer", Integer.class, F_INTEGRAL);
+    final public static Type LONG = new Type("java.lang.Long", Long.class, F_INTEGRAL);
+    final public static Type FLOAT = new Type("java.lang.Float", Float.class, F_FLOATING);
+    final public static Type DOUBLE = new Type("java.lang.Double", Double.class, F_FLOATING);
+    final public static Type STRING = new Type("java.lang.String", String.class, F_OBJECT|F_STRING);
+    final public static Type VOID = new Type("void", void.class, F_VOID);
+    final public static Type NUMBER = new Type("java.lang.Number", Number.class, F_NUMERIC);
+    // pseudo type representing an undefined primitive or object type
+    final public static Type UNDEFINED = new Type("", Undefined.class, F_UNKNOWN);
 
     final private static HashMap<String, Type> builtinTypes;
+    final private static HashMap<String, Type> primitiveTypes;
+    final private static HashMap<Type, Type> boxedTypes;
+    final private static HashMap<String, String> internalNames;
 
     static {
         builtinTypes = new HashMap<String, Type>();
+        // primitive type names
+        builtinTypes.put(Z.getName(), Z);
+        builtinTypes.put(B.getName(), B);
+        builtinTypes.put(S.getName(), S);
+        builtinTypes.put(C.getName(), C);
+        builtinTypes.put(I.getName(), I);
+        builtinTypes.put(J.getName(), J);
+        builtinTypes.put(F.getName(), F);
+        builtinTypes.put(D.getName(), D);
+        builtinTypes.put("$number$", N);
         // canonical names
         builtinTypes.put(BOOLEAN.getTargetClass().getName(), BOOLEAN);
         builtinTypes.put(BYTE.getTargetClass().getName(), BYTE);
@@ -385,18 +755,70 @@ public class Type {
         builtinTypes.put(NUMBER.getTargetClass().getName(), NUMBER);
         builtinTypes.put(UNDEFINED.getTargetClass().getName(), UNDEFINED);
         // nicknames
-        builtinTypes.put(BOOLEAN.getName(), BOOLEAN);
-        builtinTypes.put(BYTE.getName(), BYTE);
-        builtinTypes.put(SHORT.getName(), SHORT);
-        builtinTypes.put(CHARACTER.getName(), CHARACTER);
-        builtinTypes.put(INTEGER.getName(), INTEGER);
-        builtinTypes.put(LONG.getName(), LONG);
-        builtinTypes.put(FLOAT.getName(), FLOAT);
-        builtinTypes.put(STRING.getName(), STRING);
-        builtinTypes.put(VOID.getName(), VOID);
-        builtinTypes.put(NUMBER.getName(), NUMBER);
-        builtinTypes.put(UNDEFINED.getName(), UNDEFINED);
+        builtinTypes.put("Boolean", BOOLEAN);
+        builtinTypes.put("Byte", BYTE);
+        builtinTypes.put("Short", SHORT);
+        builtinTypes.put("Character", CHARACTER);
+        builtinTypes.put("Integer", INTEGER);
+        builtinTypes.put("Long", LONG);
+        builtinTypes.put("Float", FLOAT);
+        builtinTypes.put("String", STRING);
+        builtinTypes.put("Number", NUMBER);
+        builtinTypes.put("", UNDEFINED);
         // allow undefined to be spelled out
         builtinTypes.put("Undefined", UNDEFINED);
+
+        primitiveTypes = new HashMap<String, Type>();
+        primitiveTypes.put(Z.getName(), Z);
+        primitiveTypes.put(B.getName(), B);
+        primitiveTypes.put(S.getName(), S);
+        primitiveTypes.put(C.getName(), C);
+        primitiveTypes.put(I.getName(), I);
+        primitiveTypes.put(J.getName(), J);
+        primitiveTypes.put(F.getName(), F);
+        primitiveTypes.put(D.getName(), D);
+        primitiveTypes.put("$number$", N);
+
+        // allow for boxing
+        boxedTypes = new HashMap<Type, Type>();
+        boxedTypes.put(Z, BOOLEAN);
+        boxedTypes.put(B, BYTE);
+        boxedTypes.put(S, SHORT);
+        boxedTypes.put(C, CHARACTER);
+        boxedTypes.put(I, INTEGER);
+        boxedTypes.put(J, LONG);
+        boxedTypes.put(F, FLOAT);
+        boxedTypes.put(D, DOUBLE);
+        // also allow for unboxing
+        boxedTypes.put(BOOLEAN, Z);
+        boxedTypes.put(BYTE, B);
+        boxedTypes.put(SHORT, S);
+        boxedTypes.put(CHARACTER, C);
+        boxedTypes.put(INTEGER, I);
+        boxedTypes.put(LONG, J);
+        boxedTypes.put(FLOAT, F);
+        boxedTypes.put(DOUBLE, D);
+
+        internalNames = new HashMap<String, String>();
+        // add translations from primitive names to internal tag
+        internalNames.put("Z", "boolean");
+        internalNames.put("B", "byte");
+        internalNames.put("S", "short");
+        internalNames.put("C", "char");
+        internalNames.put("I", "int");
+        internalNames.put("J", "long");
+        internalNames.put("F", "float");
+        internalNames.put("D", "double");
+        internalNames.put("V", "void");
+        // also add reverse translations
+        internalNames.put("boolean", "Z");
+        internalNames.put("byte", "B");
+        internalNames.put("short", "S");
+        internalNames.put("char", "C");
+        internalNames.put("int", "I");
+        internalNames.put("long", "J");
+        internalNames.put("float", "F");
+        internalNames.put("double", "D");
+        internalNames.put("void", "V");
     }
 }

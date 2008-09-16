@@ -11,50 +11,78 @@ import org.jboss.jbossts.orchestration.rule.expression.ExpressionHelper;
 import org.jboss.jbossts.orchestration.rule.expression.Expression;
 import org.jboss.jbossts.orchestration.rule.grammar.ECATokenLexer;
 import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
+import org.jboss.jbossts.orchestration.rule.exception.ParseException;
+import org.jboss.jbossts.orchestration.rule.exception.TypeException;
+import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+
+import java.io.StringWriter;
 
 /**
- * Created by IntelliJ IDEA.
- * User: adinn
- * Date: 17-Jul-2008
- * Time: 15:20:18
- * To change this template use File | Settings | File Templates.
+ * class which represents a rule condition comprising a boolean expression
  */
-public class Condition
+public class Condition extends RuleElement
 {
-    public static Condition create(TypeGroup typeGroup, Bindings bindings, String text)
+    public static Condition create(Rule rule, CommonTree conditionTree) throws TypeException
+    {
+        Condition condition = new Condition(rule, conditionTree);
+        return condition;
+    }
+
+    public static Condition create(Rule rule, String text) throws ParseException, TypeException
     {
         if ("".equals(text)) {
-            return new Condition(typeGroup, bindings);
+            return new Condition(rule);
         }
         try {
             ECATokenLexer lexer = new ECATokenLexer(new ANTLRStringStream(text));
             CommonTokenStream tokenStream = new CommonTokenStream(lexer);
             ECAGrammarParser parser = new ECAGrammarParser(tokenStream);
-            ECAGrammarParser.condition_return parse = parser.condition();
+            ECAGrammarParser.eca_condition_return parse = parser.eca_condition();
             CommonTree conditionTree = (CommonTree) parse.getTree();
-            Condition condition = new Condition(typeGroup,  bindings, conditionTree);
+            Condition condition = new Condition(rule, conditionTree);
             return condition;
         } catch (RecognitionException e) {
-            System.err.println("org.jboss.jbossts.orchestration.rule.event : error parsing condition " + text);
-            return new Condition(typeGroup, bindings);
+            throw new ParseException("org.jboss.jbossts.orchestration.rule.Condition : error parsing condition " + text, e);
         }
     }
 
-    protected Condition(TypeGroup typeGroup, Bindings bindings, CommonTree conditionTree)
+    protected Condition(Rule rule, CommonTree conditionTree)
+            throws TypeException
     {
-        this.typeGroup = typeGroup;
-        this.bindings = bindings;
-        this.condition = ExpressionHelper.createExpression(this.bindings, conditionTree, Type.BOOLEAN);
+        super(rule);
+        this.condition = ExpressionHelper.createExpression(rule.getBindings(), conditionTree, Type.BOOLEAN);
     }
 
-    protected Condition(TypeGroup typeGroup, Bindings bindings)
+    protected Condition(Rule rule)
     {
-        this.typeGroup = typeGroup;
-        this.bindings = bindings;
+        super(rule);
         this.condition = null;
     }
 
+    public void typeCheck() throws TypeException {
+        if (condition != null) {
+            condition.typeCheck(getBindings(), getTypeGroup(), Type.Z);
+        }
+    }
+
+    public boolean interpret(Rule.BasicHelper helper)
+            throws ExecuteException
+    {
+        Boolean result = (Boolean)condition.interpret(helper);
+
+        return result;
+    }
+
+    public void writeTo(StringWriter stringWriter)
+    {
+        if (condition == null) {
+            stringWriter.write("IF   TRUE");
+        } else {
+            stringWriter.write("IF   ");
+            condition.writeTo(stringWriter);
+        }
+        stringWriter.write("\n");
+    }
+
     private Expression condition;
-    private TypeGroup typeGroup;
-    private Bindings bindings;
 }

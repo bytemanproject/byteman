@@ -2,18 +2,13 @@ package org.jboss.jbossts.orchestration.agent;
 
 import org.jboss.jbossts.orchestration.annotation.EventHandler;
 import org.jboss.jbossts.orchestration.annotation.EventHandlerClass;
-import org.jboss.jbossts.orchestration.rule.grammar.ECATokenLexer;
-import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
-import org.jboss.jbossts.orchestration.rule.Event;
-import org.jboss.jbossts.orchestration.rule.Condition;
-import org.jboss.jbossts.orchestration.rule.Action;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
+import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.type.TypeHelper;
+import org.jboss.jbossts.orchestration.rule.exception.ParseException;
+import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.objectweb.asm.*;
-import org.antlr.runtime.tree.CommonTree;
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
+import org.objectweb.asm.commons.EmptyVisitor;
+import org.objectweb.asm.util.TraceClassVisitor;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
@@ -24,6 +19,9 @@ import java.security.ProtectionDomain;
 import java.util.List;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.io.PrintWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * byte code transformer used to introduce orchestration events into JBoss code
@@ -49,7 +47,7 @@ public class Transformer implements ClassFileTransformer {
             for (Method method : ruleClass.getDeclaredMethods()) {
                 EventHandler eventHandler = method.getAnnotation(EventHandler.class);
                 if (eventHandler != null) {
-                    String target = externalize(eventHandler.targetClass());
+                    String target = eventHandler.targetClass();
                     if (isTransformable(target)) {
                         List<Annotation> clazzes = targetToHandlerClassMap.get(target);
                         if (clazzes == null) {
@@ -135,244 +133,157 @@ public class Transformer implements ClassFileTransformer {
                             byte[] classfileBuffer)
             throws IllegalClassFormatException
     {
+        byte[] newBuffer = classfileBuffer;
         // we only transform certain classes -- in  particular, we exclude bootstrap classes whose loader is null
         // and we exclude orchestration classes
-        if (loader == null || className.startsWith("org/jboss/jbossts/orchestration/") || !isTransformable(className)) {
-            return classfileBuffer;
+        String internalClassName = TypeHelper.internalizeClass(className);
+
+        if (loader == null || isOrchestrationClass(internalClassName) || !isTransformable(internalClassName)) {
+            return null;
         }
 
         // ok, we need to check whether there are any event handlers associated with this class and if so
         // we will consider transforming the byte code
 
-        List<Method> handlerMethods = targetToHandlerMethodMap.get(className);
+        List<Method> handlerMethods = targetToHandlerMethodMap.get(internalClassName);
 
         if (handlerMethods != null) {
             for (Method handlerMethod : handlerMethods) {
                 try {
-                    transform(handlerMethod.getAnnotation(EventHandler.class), loader, className,  classBeingRedefined, classfileBuffer);
+                    newBuffer = transform(handlerMethod.getAnnotation(EventHandler.class), loader, internalClassName,  classBeingRedefined, newBuffer);
                 } catch (Throwable th) {
                     System.err.println("transform  : caught throwable " + th);
+                    th.printStackTrace(System.err);
                 }
             }
         }
 
-        return classfileBuffer;
+        // if the class is not in the defautl package then we also need to look for handlers
+        // which specify the class without the package qualification
+
+        int dotIdx = internalClassName.lastIndexOf('.');
+
+        if (dotIdx >= 0) {
+            handlerMethods = targetToHandlerMethodMap.get(internalClassName.substring(dotIdx + 1));
+            if (handlerMethods != null) {
+                for (Method handlerMethod : handlerMethods) {
+                    try {
+                        newBuffer = transform(handlerMethod.getAnnotation(EventHandler.class), loader, internalClassName,  classBeingRedefined, newBuffer);
+                    } catch (Throwable th) {
+                        System.err.println("transform  : caught throwable " + th);
+                        th.printStackTrace(System.err);
+                    }
+                }
+            }
+        }
+
+        if (newBuffer != classfileBuffer) {
+            if (false) {
+                String name = (dotIdx < 0 ? internalClassName : internalClassName.substring(dotIdx + 1));
+                name += ".class";
+                System.out.println("Saving transformed bytes to " + name);
+                try {
+                    FileOutputStream fio = new FileOutputStream(name);
+                    fio.write(newBuffer);
+                    fio.close();
+                } catch (IOException ioe) {
+                    System.out.println("Error saving transformed bytes to" + name);
+                    ioe.printStackTrace(System.out);
+                }
+            }
+            return newBuffer;
+        } else {
+            return null;
+        }
     }
 
-    private byte[] transform(EventHandler handler, ClassLoader loader, String className, Class targetClass, byte[] targetClassBytes)
+    private byte[] transform(EventHandler handler, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
     {
-        // set up trees for parse;
-        CommonTree eventTree = null;
-        CommonTree conditionTree = null;
-        CommonTree actionTree = null;
-
+        final String handlerClass = handler.targetClass();
+        final String handlerMethod = handler.targetMethod();
+        final int handlerLine = handler.targetLine();
         System.out.println("org.jboss.jbossts.orchestration.agent.Transformer: Inserting trigger event");
-        System.out.println("                                                 : class " + className);
-        System.out.println("                                                 : method " + handler.targetMethod());
-        System.out.println("                                                 : line " + handler.targetLine());
-        Event event;
-        TypeGroup typeGroup;
-        Bindings bindings;
-        Condition condition;
-        Action action;
-        if ("".equals(handler.event())) {
-            System.out.println("                                                 : WHEN []");
-        } else {
-            System.out.println("                                                : " + handler.event());
+        System.out.println("  class " + handlerClass);
+        System.out.println("  method " + handlerMethod);
+        System.out.println("  line " + handlerLine);
+        final Rule rule;
+        String ruleName = handlerClass + "::" + handlerMethod;
+        if (handlerLine >= 0) {
+            ruleName += "@" + handlerLine;
         }
-        event = Event.create(handler.event());
-        typeGroup = event.getTypeGroup();
-        bindings = event.getBindings();
-        if ("".equals(handler.condition())) {
-            System.out.println("                                                 : IF true");
-        } else {
-            System.out.println("                                                : " + handler.condition());
+        try {
+            rule = Rule.create(ruleName, handler.event(), handler.condition(), handler.action(), loader);
+        } catch (ParseException pe) {
+            System.out.println("Transformer : error parsing rule : " + pe);
+            return targetClassBytes;
+        } catch (TypeException te) {
+            System.out.println("Transformer : error checking rule : " + te);
+            return targetClassBytes;
+        } catch (Throwable th) {
+            System.out.println("Transformer : error processing rule : " + th);
+            return targetClassBytes;
         }
-        condition = Condition.create(typeGroup, bindings, handler.condition());
-        if ("".equals(handler.action())) {
-            System.out.println("                                                 : DO nothing");
-        } else {
-            System.out.println("                                                 : " + handler.action());
+        System.out.println(rule);
+
+        // ok, we have a rule with a matchingclass and a candidiate method and line number
+        // we need to see if the class has a matching method and, if so, add a call to
+        // execute the rule when we hit the relevant line
+
+        ClassReader cr = new ClassReader(targetClassBytes);
+        // ClassWriter cw = new ClassWriter(0);
+        ClassVisitor empty = new EmptyVisitor();
+        RuleCheckAdapter checkAdapter = new RuleCheckAdapter(empty, className, handlerMethod, handlerLine);
+        // PrintWriter pw = new PrintWriter(System.out);
+        // ClassVisitor traceAdapter = new TraceClassVisitor(cw, pw);
+        // RuleCheckAdapter adapter = new RuleAdapter(traceAdapter, rule, className, handlerMethod, handlerLine, loader);
+        try {
+            cr.accept(checkAdapter, 0);
+        } catch (Throwable th) {
+            System.out.println("Transformer : error applying rule " + rule.getName() + " to class " + className + th);
+            th.printStackTrace(System.out);
+            return targetClassBytes;
         }
-        action = Action.create(typeGroup, bindings, handler.action());
-        final String finalClassName = className;
-        final EventHandler finalHandler = handler;
-        final ClassLoader finalLoader = loader;
-        final Class finalClass = targetClass;
-        final String targetMethod = handler.targetMethod();
-        final int targetLine = handler.targetLine();
-        final String targetName = parseMethodName(targetMethod);
-        final String targetSignature = parseMethodSignature(targetMethod);
-        final String ecaRuleFieldName = generateFieldName(targetName, targetSignature);
-
-        final ClassReader cr = new ClassReader(targetClassBytes);
-        ClassWriter cw = new ClassWriter(0);
-        ClassAdapter adapter = new ClassAdapter(cw) {
-            public void visit(final int version,
-                    final int access,
-                    final String name,
-                    final String signature,
-                    final String superName,
-                    final String[] interfaces)
-            {
-                // create a class derived from ECARule to implement the event handler and
-                // instantiate it with a singleton instance
-                //
-                // n.b. we have to wait until here to do this because we need to resolve type names
-                // in the rule dynamically aginst types which are only available via the target class
-                // and its class loader.
-                //
-                // TODO see if we need to throw up if we try to resolve types which are not yet loaded
-
-                Class handlerClazz = generateHandlerClass(finalHandler, finalLoader, finalClassName, finalClass);
-                Object handlerSingleton = null;
-                try {
-                    // TODO do we want to give the handler class some arguments?
-                    handlerSingleton = handlerClazz.newInstance();
-                } catch (InstantiationException e) {
-                    // should not happen!!!
-                } catch (IllegalAccessException e) {
-                    // should not happen!!!
-                }
-
-                // add a static field to the class to hold the singleton
-/*                FieldVisitor visitor = visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL,
-                        ecaRuleFieldName,
-                        handlerClazz.getName(),
-                        null,
-                        handlerSingleton);
-*/
+        // only insert the rule trigger call if there is a suitable line in the target method
+        if (checkAdapter.isVisitOk()) {
+            cr = new ClassReader(targetClassBytes);
+            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+            // PrintWriter pw = new PrintWriter(System.out);
+            // ClassVisitor traceAdapter = new TraceClassVisitor(cw, pw);
+            // RuleAdapter adapter = new RuleAdapter(traceAdapter, rule, className, handlerMethod, handlerLine);
+            RuleAdapter adapter = new RuleAdapter(cw, rule, className, handlerMethod, handlerLine);
+            try {
+                cr.accept(adapter, 0);
+            } catch (Throwable th) {
+                System.out.println("Transformer : error compiling rule " + rule.getName() + " for class " + className + th);
+                th.printStackTrace(System.out);
+                return targetClassBytes;
             }
+            // hand back the transformed byte code
+            return cw.toByteArray();
+        }
 
-            public MethodVisitor visitMethod(final int access,
-                                             final String name,
-                                             final String desc,
-                                             final String signature,
-                                             final String[] exceptions) {
-                MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-                if (name.equals(targetName) &&
-                        (targetSignature.length() == 0 || signature.equals(targetSignature))) {
-                    return new MethodAdapter(mv) {
-                        public void visitCode()
-                        {
-                            // generate try catch block for kill thread/JVM
-                            System.out.println("                                                 : // generate wrapper");
-                            System.out.println("                                                 : try { ");
-                            super.visitCode();
-                            System.out.println("                                                 : } catch (KillThreadException kte) { ");
-                            System.out.println("                                                 :   killThread();");
-                            System.out.println("                                                 : } catch (KillJVMException kje) { ");
-                            System.out.println("                                                 :   killJVM();");
-                            System.out.println("                                                 : }");
-                            // and the rest
-                        }
-                        public void visitLineNumber(final int line, final Label start)
-                        {
-                            if (line == targetLine) {
-                                // insert call to relevant event handler instance
-                                System.out.println("                                                 : // generate event notification");
-                                System.out.println("                                                 :    " + finalClassName + "." + ecaRuleFieldName + ".event(this, . . .);");
-                                System.out.println("                                                 : }");
-                            }
-                            super.visitLineNumber(line, start);
-                        }
-                    };
-                }
-                return mv;
-            }
-        };
-
-        cr.accept(adapter, 0);
         return targetClassBytes;
     }
 
     /**
-     * convert a classname from canonical form to the form used to represent it externally i.e. replace
-     * all dots with slashes
-     *
+     * test whether a class with a given name is located in the orchestration package
      * @param className
-     * @return
+     * @return true if a class is located in the orchestration package otherwise return false
      */
-    private String externalize(String className)
+    private boolean isOrchestrationClass(String className)
     {
-        return className.replaceAll("\\.", "/");
+        return className.startsWith("org.jboss.jbossts.orchestration.");
     }
 
     /**
-     * test whether a class witha given name is a potential candidate for insertion of event notifications
+     * test whether a class with a given name is a potential candidate for insertion of event notifications
      * @param className
      * @return true if a class is a potential candidate for insertion of event notifications otherwise return false
      */
     private boolean isTransformable(String className)
     {
-        return (className.startsWith("com/arjuna/"));
+        return (className.startsWith("com.arjuna."));
     }
-
-    /**
-     * split off the method name preceding the signature and return it
-     * @param targetMethod - the unqualified method name, possibly including signature
-     * @return
-     */
-    private String parseMethodName(String targetMethod) {
-        int sigIdx = targetMethod.indexOf("(");
-        if (sigIdx > 0) {
-            return targetMethod.substring(0, sigIdx).trim();
-        } else {
-            return targetMethod;
-        }
-    }
-
-    /**
-     * split off the signature following the method name and return it
-     * @param targetMethod - the unqualified method name, possibly including signature
-     * @return
-     */
-    private String parseMethodSignature(String targetMethod) {
-        int sigIdx = targetMethod.indexOf("(");
-        if (sigIdx >= 0) {
-            return targetMethod.substring(sigIdx, targetMethod.length()).trim();
-        } else {
-            return "";
-        }
-    }
-
-    /**
-     * split off the signature following the method name and return it
-     * @param targetName the unqualified method name, not including signature
-     * @param targetSignature the method signature including brackets types and return type
-     * @return
-     */
-    private String generateFieldName(String targetName, String targetSignature) {
-        String result = targetName;
-        int startIdx = targetSignature.indexOf("(");
-        int endIdx = targetSignature.indexOf(")");
-        if (startIdx < 0) {
-            startIdx = 0;
-        }
-        if (endIdx < 0) {
-            endIdx = targetSignature.length() - 1;
-        }
-
-        String args = targetSignature.substring(startIdx, endIdx + 1);
-
-        // remove any brackets, commas, spaces, semi-colons, slashes and '[' characters
-        args = args.replaceAll("\\(", "\\$_\\$");
-        args = args.replaceAll("\\)", "\\$_\\$");
-        args = args.replaceAll(",", "\\$1\\$");
-        args = args.replaceAll(" ", "\\$2\\$");
-        args = args.replaceAll(";", "\\$3\\$");
-        args = args.replaceAll("\\/", "\\$4\\$");
-        args = args.replaceAll("\\[", "\\$5\\$");
-
-        return result + args;
-    }
-
-    private Class generateHandlerClass(EventHandler handler, ClassLoader loader, String targetClassName, Class targetClass)
-    {
-        // TODO -- write this but use Object for now
-        return Object.class;
-    }
-
     /**
      * the instrumentation interface to the JVM
      */

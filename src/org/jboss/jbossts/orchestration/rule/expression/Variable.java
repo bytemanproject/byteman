@@ -3,7 +3,13 @@ package org.jboss.jbossts.orchestration.rule.expression;
 import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.binding.Binding;
 import org.jboss.jbossts.orchestration.rule.type.Type;
+import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
+import org.jboss.jbossts.orchestration.rule.exception.TypeException;
+import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.Rule;
 import org.antlr.runtime.Token;
+
+import java.io.StringWriter;
 
 /**
  * an expression which identifies a variable occurring either as an LVALUE on the LHS of an event
@@ -15,6 +21,11 @@ public class Variable extends Expression
     public Variable(Type type, Token token) {
         super(type, token);
         this.name = token.getText();
+    }
+
+    public Variable(Type type, Token token, String name) {
+        super(type, token);
+        this.name = name;
     }
 
     /**
@@ -35,16 +46,46 @@ public class Variable extends Expression
             System.err.println("VarExpresssion.bind : unbound variable " + name + getPos());                
             return false;
         }
-        // if the binding has a defined type and this has an undefined one then adopt it
+        // if this type is undefined then adopt the type of the binding so that this
+        // variable gets typed whenever the binding does otherwise ensure the types are
+        // compatible
 
+        type = Type.dereference(type);
+        
         if (type.isUndefined()) {
+            this.type = binding.getType();
+        } else {
             Type bindingType = binding.getType();
-            if (!bindingType.isUndefined()) {
-                this.type = bindingType;
+
+            if (!bindingType.isAssignableFrom(this.type)) {
+                System.err.println("VarExpresssion.bind : type " + this.type.getName() + " of variable " + name + " conflicts with bound type " + bindingType.getName() + getPos());                
+                return false;
             }
         }
 
         return true;
+    }
+
+    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+        // type must be defined by now or we are in trouble
+
+        type = Type.dereference(type);
+
+        if (type.isUndefined()) {
+            throw new TypeException("Variable.typeCheck : unable to derive type for variable " + name +  getPos());
+        }
+        if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
+            throw new TypeException("Variable.typeCheck() : invalid result type : " + expected.getName() + getPos());
+        }
+        return type;
+    }
+
+    public Object interpret(Rule.BasicHelper helper) throws ExecuteException {
+        return helper.getBinding(name);
+    }
+
+    public void writeTo(StringWriter stringWriter) {
+        stringWriter.write(name);
     }
 
     private String name;

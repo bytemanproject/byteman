@@ -1,8 +1,14 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
+import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.binding.Bindings;
+import org.jboss.jbossts.orchestration.rule.exception.TypeException;
+import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.Rule;
 import org.antlr.runtime.Token;
+
+import java.io.StringWriter;
 
 /**
  */
@@ -10,7 +16,7 @@ public class NumericLiteral extends Expression
 {
 
     public NumericLiteral(Token token) {
-        super(checkType(token.getText()), token);
+        super(check(token.getText()), token);
 
         this.text = token.getText();
     }
@@ -43,7 +49,22 @@ public class NumericLiteral extends Expression
         return true;
     }
 
-    private static Type checkType(String text)
+    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+        if (!expected.isNumeric()) {
+            throw new TypeException("NumericLiteral.typeCheck : invalid expected type " + expected.getName() + getPos());            
+        }
+        return type;
+    }
+
+    public Object interpret(Rule.BasicHelper helper) throws ExecuteException {
+        return value;
+    }
+
+    public void writeTo(StringWriter stringWriter) {
+        stringWriter.write(text);
+    }
+
+    private static Type check(String text)
     {
         if (text.contains("e") | text.contains("E") | text.contains(".")) {
             return checkFloat(text);

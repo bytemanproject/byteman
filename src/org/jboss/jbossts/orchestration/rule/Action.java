@@ -4,57 +4,92 @@ import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.expression.ExpressionHelper;
 import org.jboss.jbossts.orchestration.rule.expression.Expression;
 import org.jboss.jbossts.orchestration.rule.grammar.ECATokenLexer;
 import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
+import org.jboss.jbossts.orchestration.rule.exception.ParseException;
+import org.jboss.jbossts.orchestration.rule.exception.TypeException;
+import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 
 import java.util.List;
+import java.io.StringWriter;
 
 /**
- * Created by IntelliJ IDEA.
- * User: adinn
- * Date: 17-Jul-2008
- * Time: 15:20:18
- * To change this template use File | Settings | File Templates.
+ * class which represents a rule action comprising a void expression
  */
-public class Action
+public class Action extends RuleElement
 {
-    public static Action create(TypeGroup typeGroup, Bindings bindings, String text)
+    public static Action create(Rule rule, CommonTree actionTree)
+            throws TypeException
+    {
+        Action action = new Action(rule, actionTree);
+        return action;
+    }
+
+    public static Action create(Rule rule, String text)
+            throws ParseException, TypeException
     {
         if ("".equals(text)) {
-            return new Action(typeGroup, bindings);
+            return new Action(rule);
         }
         try {
             ECATokenLexer lexer = new ECATokenLexer(new ANTLRStringStream(text));
             CommonTokenStream tokenStream = new CommonTokenStream(lexer);
             ECAGrammarParser parser = new ECAGrammarParser(tokenStream);
-            ECAGrammarParser.action_return parse = parser.action();
+            ECAGrammarParser.eca_action_return parse = parser.eca_action();
             CommonTree actionTree = (CommonTree) parse.getTree();
-            Action action = new Action(typeGroup, bindings, actionTree);
+            Action action = new Action(rule, actionTree);
             return action;
         } catch (RecognitionException e) {
-            System.err.println("org.jboss.jbossts.orchestration.rule.event : error parsing action " + text);
-            return new Action(typeGroup, bindings);
+            throw new ParseException("org.jboss.jbossts.orchestration.rule.Action : error parsing action " + text);
         }
     }
-    protected Action(TypeGroup typeGroup, Bindings bindings, CommonTree actionTree)
+    protected Action(Rule rule, CommonTree actionTree) throws TypeException
     {
-        this.typeGroup = typeGroup;
-        this.bindings = bindings;
-        this.action = ExpressionHelper.createExpressionList(this.bindings, actionTree, Type.VOID);
+        super(rule);
+        this.action = ExpressionHelper.createExpressionList(this.getBindings(), actionTree, Type.VOID);
     }
 
-    protected Action(TypeGroup typeGroup, Bindings bindings)
+    protected Action(Rule rule)
     {
-        this.typeGroup = typeGroup;
-        this.bindings = bindings;
+        super(rule);
+        this.action = null;
+    }
+
+    public void typeCheck() throws TypeException {
+        if (action != null) {
+            for (Expression expr : action) {
+                expr.typeCheck(getBindings(), getTypeGroup(), Type.VOID);
+            }
+        }
+    }
+
+    public void interpret(Rule.BasicHelper helper)
+            throws ExecuteException
+    {
+        if (action != null) {
+            for (Expression expr : action) {
+                expr.interpret(helper);
+            }
+        }
+    }
+
+    public void writeTo(StringWriter stringWriter)
+    {
+        if (action == null) {
+            stringWriter.write("DO   NOTHING");
+        } else {
+            String prefix = "DO   ";
+            for (Expression expr : action) {
+                stringWriter.write(prefix);
+                expr.writeTo(stringWriter);
+                prefix = ",\n     ";
+            }
+        }
+        stringWriter.write("\n");
     }
 
     private List<Expression> action;
-    private TypeGroup typeGroup;
-    private Bindings bindings;
 }

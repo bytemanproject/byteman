@@ -1,4 +1,4 @@
-lexer grammar ECAToken;
+klexer grammar ECAToken;
 
 @header {
 package org.jboss.jbossts.orchestration.rule.grammar;
@@ -44,7 +44,7 @@ NUMBER	:	INTEGER | FLOAT
 
 // builtin symbols -- need to add these before addign the rules for adding any old symbol
 
-WHEN	:	'WHEN'
+BIND	:	'BIND'
 	;
 
 IF	:	'IF'

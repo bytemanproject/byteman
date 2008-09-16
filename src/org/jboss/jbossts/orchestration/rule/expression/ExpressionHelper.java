@@ -1,8 +1,10 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.binding.Bindings;
+import org.jboss.jbossts.orchestration.rule.binding.Binding;
 import static org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.*;
 import org.jboss.jbossts.orchestration.rule.type.Type;
+import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.Token;
 
@@ -15,11 +17,13 @@ import java.util.ArrayList;
 public class ExpressionHelper
 {
     public static Expression createExpression(Bindings bindings, CommonTree exprTree)
+            throws TypeException
     {
         return createExpression(bindings, exprTree, Type.UNDEFINED);
     }
 
     public static Expression createExpression(Bindings bindings, CommonTree exprTree, Type type)
+            throws TypeException
     {
         // we expect expr = simple_expr |
         //                  (UNARYOP unary_oper expr) |
@@ -37,7 +41,7 @@ public class ExpressionHelper
 
         Token token = exprTree.getToken();
         int tokenType = token.getType();
-        Expression expr = null;
+        Expression expr;
         switch (tokenType) {
             case DOLLARSYM:
             {
@@ -54,13 +58,13 @@ public class ExpressionHelper
                     // direct variable reference
                     expr = new Variable(type, token);
                 } else {
-                    // field reference either to an instance named by a field or or a static
+                    // field reference either to an instance named by a binding or or a static
 
                     String[] parts = text.split("\\.");
                     if (parts.length < 2) {
                         // oops malformed symbol either "." ro "foo." or ".foo"
-                        // shoudl nto happen but ...
-                        System.err.println("ExpressionHelper.createExpression : unexpected symbol "  + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
+                        // should not  happen but ...
+                        throw new TypeException("ExpressionHelper.createExpression : unexpected symbol "  + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
                     } else {
                         String prefix = parts[0];
 
@@ -69,14 +73,10 @@ public class ExpressionHelper
                             // instance field access
                             int l = parts.length - 1;
                             String[] fields = new String[l];
-                            for (int i = 0; i < l; i++) {
-                                fields[i] = parts[i + 1];
-                            }
+                            System.arraycopy(parts, 1, fields, 0, l);
                             expr = new FieldExpression(type, token, prefix, fields);
                         } else {
-                            String clazzName = text.substring(0, dotIdx);
-                            String fieldName = text.substring(dotIdx);
-                            expr = new StaticExpression(type, token, clazzName, fieldName);
+                            expr = new StaticExpression(type, token, parts);
                         }
                     }
                 }
@@ -88,14 +88,44 @@ public class ExpressionHelper
                 CommonTree child1 = (CommonTree) exprTree.getChild(1);
                 token = child0.getToken();
                 if (token.getType() != SYMBOL) {
-                    System.err.println("ExpressionHelper.createExpression : unexpected token Type in array expression tree " + tokenType + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
+                    throw new TypeException("ExpressionHelper.createExpression : unexpected token Type in array expression tree " + tokenType + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
+                }
+                Expression arrayRef;
+                // check for embedded dots
+
+                String text = token.getText();
+                int dotIdx = text.lastIndexOf('.');
+                if (dotIdx < 0) {
+                    // array name is direct variable reference
+                    arrayRef = new Variable(type, token);
                 } else {
-                    List<Expression> indices = createExpressionList(bindings, child1, Type.INTEGER);
-                    if (indices != null) {
-                        expr = new ArrayExpression(type, token, indices);
+                    // field reference either to an instance named by a binding or or a static
+
+                    String[] parts = text.split("\\.");
+                    if (parts.length < 2) {
+                        // oops malformed symbol either "." ro "foo." or ".foo"
+                        // should not  happen but ...
+                        throw new TypeException("ExpressionHelper.createExpression : unexpected symbol "  + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
                     } else {
-                        System.err.println("ExpressionHelper.createExpression : invalid array index expression @ " + token.getLine() + "." + token.getCharPositionInLine());
+                        String prefix = parts[0];
+
+                        if (bindings.lookup(prefix) != null) {
+                            // intitial segment of text identifies a bound variable so treat as
+                            // instance field access
+                            int l = parts.length - 1;
+                            String[] fields = new String[l];
+                            System.arraycopy(parts, 1, fields, 0, l);
+                            arrayRef = new FieldExpression(type, token, prefix, fields);
+                        } else {
+                            arrayRef = new StaticExpression(type, token, parts);
+                        }
                     }
+                }
+                List<Expression> indices = createExpressionList(bindings, child1, Type.INTEGER);
+                if (indices != null) {
+                    expr = new ArrayExpression(type, token, arrayRef, indices);
+                } else {
+                    throw new TypeException("ExpressionHelper.createExpression : invalid array index expression @ " + token.getLine() + "." + token.getCharPositionInLine());
                 }
             }
             break;
@@ -110,18 +140,9 @@ public class ExpressionHelper
                 }
                 token = child0.getToken();
                 if (token.getType() != SYMBOL) {
-                    System.err.println("ExpressionHelper.createExpression : unexpected token Type in method expression tree " + tokenType + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
-                } else if (child1 == null) {
-                    expr = new MethodExpression(type, token, new ArrayList<Expression>());
+                    throw new TypeException("ExpressionHelper.createExpression : unexpected token Type in method expression tree " + tokenType + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
                 } else {
-                    List<Expression> args = createExpressionList(bindings, child1);
-                    if (args != null) {
-                        // need to separate out builtins, instance methdo calls and
-                        // static method calls
-                        expr = new MethodExpression(type, token, args);
-                    } else {
-                        System.err.println("ExpressionHelper.createExpression : method argument @ " + token.getLine() + "." + token.getCharPositionInLine());
-                    }
+                    expr = createCallExpression(bindings, token, child1, type);
                 }
             }
             break;
@@ -152,35 +173,96 @@ public class ExpressionHelper
             break;
             default:
             {
-                System.err.println("ExpressionHelper.createExpression : unexpected token Type in expression tree " + tokenType + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
+                throw new TypeException("ExpressionHelper.createExpression : unexpected token Type in expression tree " + tokenType + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
             }
-            break;
         }
 
-        if (expr != null) {
-            Type exprType = Type.dereference(expr.getType());
-            Type targetType = Type.dereference(type);
-            if (exprType.isDefined() && targetType.isDefined() && !targetType.isAssignableFrom(exprType)) {
-                // we already know this is an invalid type so notify an error and return null
-                System.err.println("ExpressionHelper.createExpression : invalid expression type " + exprType.getName() + " expecting " + targetType.getName() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
-                return null;
-            } else if (targetType == Type.NUMBER && !exprType.isNumeric()) {
-                // we already know this is an invalid type so notify ane rror and return null
-                System.err.println("ExpressionHelper.createExpression : invalid expression type " + exprType.getName() + " expecting " + targetType.getName() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
-                return null;
-            }
-            if (expr.bind(bindings)) {
-                return expr;
-            } else {
-                System.err.println("ExpressionHelper.createExpression : unknown reference in expression @ " + token.getLine() + "." + token.getCharPositionInLine());
-                return null;
-            }
-        } else {
-            return null;
+        Type exprType = Type.dereference(expr.getType());
+        Type targetType = Type.dereference(type);
+        if (exprType.isDefined() && targetType.isDefined() && !targetType.isAssignableFrom(exprType)) {
+            // we already know this is an invalid type so notify an error and return null
+            throw new TypeException("ExpressionHelper.createExpression : invalid expression type " + exprType.getName() + " expecting " + targetType.getName() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
+        } else if (targetType.isNumeric() && !exprType.isNumeric()) {
+            // we already know this is an invalid type so notify an error and return null
+            throw new TypeException("ExpressionHelper.createExpression : invalid expression type " + exprType.getName() + " expecting " + targetType.getName() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
         }
+        if (!expr.bind(bindings)) {
+            throw new TypeException("ExpressionHelper.createExpression : unknown reference in expression @ " + token.getLine() + "." + token.getCharPositionInLine());
+        }
+
+        return expr;
     }
 
+     public static Expression createCallExpression(Bindings bindings, Token token, CommonTree argTree, Type type)
+             throws TypeException
+     {
+         Expression expr;
+         String callName;
+         Expression recipient;
+         List<Expression> args;
+
+         // we need to factor off the path from the method/builtin name
+
+         String text = token.getText();
+         int dotIdx = text.lastIndexOf('.');
+         if (dotIdx < 0) {
+             // a builtin call
+
+             recipient = null;
+             callName = text;
+         } else {
+             // prefix must be either a bound varibale, a field reference via a bound
+             // variable, or a static field reference
+
+             String[] path = text.split("\\.");
+             if (path.length < 2) {
+                 // oops malformed symbol either "." ro "foo." or ".foo"
+                 // should not happen but ...
+                 throw new TypeException("ExpressionHelper.createCallExpression : unexpected symbol "  + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
+             } else {
+                 // save the method name and only consider path preceding it
+                 int pathLength = path.length - 1;
+                 callName = path[pathLength];
+
+                 // see if the path starts with a bound variable
+                 String prefix = path[0];
+                 Binding binding = bindings.lookup(prefix);
+
+                 if (binding != null) {
+                     // intitial segment of text identifies a bound variable so treat as
+                     // a variable access or an instance field access depending upon how
+                     // many extra path elenments there are
+                     if (pathLength == 1) {
+                         // method call on bound variable
+                         recipient = new Variable(binding.getType(), token, binding.getName());
+                     } else {
+                         // method call on field of bound variable
+                         String[] fields = new String[pathLength - 1];
+                         System.arraycopy(path, 1, fields, 0, pathLength - 1);
+                         recipient = new FieldExpression(Type.UNDEFINED, token, prefix, fields);
+                     }
+                 } else {
+                     // ok, we need a version of the path without the method name on the end
+                     String[] realPath = new String[pathLength];
+                     System.arraycopy(path, 0, realPath, 0, pathLength);
+                     recipient = new StaticExpression(Type.UNDEFINED, token, realPath);
+                 }
+             }
+         }
+
+         if (argTree == null) {
+             args = new ArrayList<Expression>();
+         } else {
+             args = createExpressionList(bindings, argTree);
+         }
+
+         expr = new MethodExpression(type, token, callName, recipient, args);
+
+         return expr;
+     }
+
     public static Expression createUnaryExpression(Bindings bindings, CommonTree exprTree, Type type)
+            throws TypeException
     {
         // we expect ^(UNOP unary_oper expr)
 
@@ -194,37 +276,34 @@ public class ExpressionHelper
             case TWIDDLE:
             {
                 // the argument must be a numeric expression
-                Expression operand = createExpression(bindings, child1, Type.NUMBER);
-                if (operand != null) {
-                    expr = new TwiddleExpression(token, operand);
-                } else {
-                    expr = null;
+                if (!type.isUndefined() && !type.isVoid() && !type.isNumeric()) {
+                    throw new TypeException("ExpressionHelper.createUnaryExpression : invalid numeric expression @ " + token.getLine() + "." + token.getCharPositionInLine());
                 }
+                Expression operand = createExpression(bindings, child1, Type.NUMBER);
+                expr = new TwiddleExpression(token, operand);
             }
             break;
             case NOT:
             {
                 // the argument must be a boolean expression
-                Expression operand = createExpression(bindings, child1, Type.BOOLEAN);
-                if (operand != null) {
-                    expr = new NotExpression(token, operand);
-                } else {
-                    expr = null;
+                if (!type.isUndefined() && !type.isVoid() && !type.isBoolean()) {
+                    throw new TypeException("ExpressionHelper.createUnaryExpression : invalid boolean expression @ " + token.getLine() + "." + token.getCharPositionInLine());
                 }
+                Expression operand = createExpression(bindings, child1, Type.BOOLEAN);
+                expr = new NotExpression( token, operand);
             }
             break;
             default:
             {
-                System.err.println("ExpressionHelper.createUnaryExpression : unexpected token Type in expression tree " + token.getType() + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
-                expr = null;
+                throw new TypeException("ExpressionHelper.createUnaryExpression : unexpected token Type in expression tree " + token.getType() + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
             }
-            break;
         }
 
         return expr;
     }
 
     public static Expression createBinaryExpression(Bindings bindings, CommonTree exprTree, Type type)
+            throws TypeException
     {
         // we expect ^(BINOP infix_oper simple_expr expr)
 
@@ -233,8 +312,9 @@ public class ExpressionHelper
         CommonTree child2 = (CommonTree) exprTree.getChild(2);
         Expression expr;
         Token token = child0.getToken();
+        int oper = token.getType();
 
-        switch (token.getType())
+        switch (oper)
         {
             case PLUS:
             {
@@ -244,53 +324,29 @@ public class ExpressionHelper
                 if (type == Type.STRING) {
                     // must be doing String concatenation
                     operand1 = createExpression(bindings, child1, Type.STRING);
-                    operand2 = createExpression(bindings, child1, Type.STRING);
-                    if (operand1 != null && operand2 != null) {
-                        expr = new StringPlusExpression(token, operand1,  operand2);
-                    } else {
-                        expr = null;
-                    }
+                    operand2 = createExpression(bindings, child2, Type.STRING);
+                    expr = new StringPlusExpression(token, operand1,  operand2);
                 } else if (type.isNumeric()) {
                     // must be doing arithmetic
                     operand1 = createExpression(bindings, child1, Type.NUMBER);
-                    operand2 = createExpression(bindings, child1, Type.NUMBER);
-                    if (operand1 != null && operand2 != null) {
-                        expr = new ArithmeticExpression(PLUS, token, operand1,  operand2);
-                    } else {
-                        expr = null;
-                    }
+                    operand2 = createExpression(bindings, child2, Type.NUMBER);
+                    int convertedOper = OperExpression.convertOper(oper);
+                    expr = new ArithmeticExpression(convertedOper, token, operand1,  operand2);
                 } else {
                     // see if the operand gives us any type info
                     operand1 = createExpression(bindings, child1, Type.UNDEFINED);
-                    if (operand1 != null) {
-                        if (operand1.getType().isNumeric()) {
-                            operand2 = createExpression(bindings, child1, Type.NUMBER);
-                            if (operand2 != null) {
-                                expr = new ArithmeticExpression(PLUS, token, operand1, operand2);
-                            } else {
-                                expr = null;
-                            }
-                        } else if (operand1.getType() == Type.STRING) {
-                            operand2 = createExpression(bindings, child1, Type.STRING);
-                            if (operand2 != null) {
-                                expr = new StringPlusExpression(token, operand1,  operand2);
-                            } else {
-                                expr = null;
-                            }
-                        } else {
-                            operand2 = createExpression(bindings, child1, Type.UNDEFINED);
-                            if (operand2 != null) {
-                                // create as generic plus expression which we will replace later during type
-                                // checking
-                                expr = new PlusExpression(token, operand1,  operand2);
-                            } else {
-                                expr = null;
-                            }
-                        }
+                    if (operand1.getType().isNumeric()) {
+                        operand2 = createExpression(bindings, child2, Type.NUMBER);
+                        int convertedOper = OperExpression.convertOper(oper);
+                        expr = new ArithmeticExpression(convertedOper, token, operand1, operand2);
+                    } else if (operand1.getType() == Type.STRING) {
+                        operand2 = createExpression(bindings, child2, Type.STRING);
+                        expr = new StringPlusExpression(token, operand1,  operand2);
                     } else {
-                        // generate more errors if we can even though we are giving up
-                        operand2 = createExpression(bindings, child1, Type.UNDEFINED);
-                        expr = null;
+                        operand2 = createExpression(bindings, child2, Type.UNDEFINED);
+                        // create as generic plus expression which we will replace later during type
+                        // checking
+                        expr = new PlusExpression(token, operand1,  operand2);
                     }
                 }
             }
@@ -303,11 +359,8 @@ public class ExpressionHelper
                 Expression operand1 = createExpression(bindings, child1, Type.NUMBER);
                 Expression operand2 = createExpression(bindings, child2, Type.NUMBER);
 
-                if (operand1 != null & operand2 != null) {
-                    return new ArithmeticExpression(token.getType(), token, operand1, operand2);
-                } else {
-                    expr = null;
-                }
+                int convertedOper = OperExpression.convertOper(oper);
+                expr = new ArithmeticExpression(convertedOper, token, operand1, operand2);
             }
             break;
             case BAND:
@@ -317,11 +370,8 @@ public class ExpressionHelper
                 Expression operand1 = createExpression(bindings, child1, Type.NUMBER);
                 Expression operand2 = createExpression(bindings, child2, Type.NUMBER);
 
-                if (operand1 != null & operand2 != null) {
-                    return new BitExpression(token.getType(), token, operand1, operand2);
-                } else {
-                    expr = null;
-                }
+                int convertedOper = OperExpression.convertOper(oper);
+                expr = new BitExpression(convertedOper, token, operand1, operand2);
             }
             break;
             case AND:
@@ -330,11 +380,8 @@ public class ExpressionHelper
                 Expression operand1 = createExpression(bindings, child1, Type.BOOLEAN);
                 Expression operand2 = createExpression(bindings, child2, Type.BOOLEAN);
 
-                if (operand1 != null & operand2 != null) {
-                    expr = new LogicalExpression(token.getType(), token, operand1, operand2);
-                } else {
-                    expr = null;
-                }
+                int convertedOper = OperExpression.convertOper(oper);
+                expr = new LogicalExpression(convertedOper, token, operand1, operand2);
             }
             break;
             case EQ:
@@ -347,24 +394,21 @@ public class ExpressionHelper
                 Expression operand1 = createExpression(bindings, child1, Type.NUMBER);
                 Expression operand2 = createExpression(bindings, child2, Type.NUMBER);
 
-                if (operand1 != null & operand2 != null) {
-                    expr = new ComparisonExpression(token.getType(), token, operand1, operand2);
-                } else {
-                    expr = null;
-                }
-            }
-            default:
-            {
-                System.err.println("ExpressionHelper.createBinaryExpression : unexpected token Type in expression tree " + token.getType() + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
-                expr = null;
+                int convertedOper = OperExpression.convertOper(oper);
+                expr = new ComparisonExpression(convertedOper, token, operand1, operand2);
             }
             break;
+            default:
+            {
+                throw new TypeException("ExpressionHelper.createBinaryExpression : unexpected token Type in expression tree " + token.getType() + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
+            }
         }
 
         return expr;
     }
 
     public static Expression createTernaryExpression(Bindings bindings, CommonTree exprTree, Type type)
+            throws TypeException
     {
         // we expect ^(TERNOP ternary_oper simple_expr expr expr)
 
@@ -381,90 +425,97 @@ public class ExpressionHelper
             {
                 // the argument must be a numeric expression
                 Expression operand1 = createExpression(bindings, child1, Type.BOOLEAN);
-                Expression operand2 = createExpression(bindings, child1, Type.UNDEFINED);
-                Expression operand3 = createExpression(bindings, child1, Type.UNDEFINED);
-                if (operand1 != null && operand2 != null && operand3 != null) {
-                    Type type2 = Type.dereference(operand2.getType());
-                    Type type3 = Type.dereference(operand3.getType());
-                    if (type2.isNumeric() || type3.isNumeric()) {
-                        expr = new TernaryOperExpression(TERN_IF, Type.promote(type2, type3),  token, operand1,  operand2, operand3);
-                    } else if (type2.isDefined() && type3.isDefined()) {
-                        // since they are not numeric we have to have the same type
-                        if (type2 == type3) {
-                            // use this type
-                            expr = new TernaryOperExpression(TERN_IF, type2,  token, operand1,  operand2, operand3);
-                        } else {
-                            // mismatched types so don't generate a result
-                            System.err.println("ExpressionHelper.createTernaryExpression : mismatched types " + type2.getName() + " and " + type3.getName()  + " in conditional expression " + token.getType() + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
-                            expr = null;
-                        }
+                Expression operand2 = createExpression(bindings, child2, type);
+                Expression operand3 = createExpression(bindings, child3, type);
+                Type type2 = Type.dereference(operand2.getType());
+                Type type3 = Type.dereference(operand3.getType());
+                if (type2.isNumeric() || type3.isNumeric()) {
+                    if (!type.isUndefined() && !type.isVoid() && !type.isNumeric()) {
+                        throw new TypeException("ExpressionHelper.createUnaryExpression : invalid numeric expression @ " + token.getLine() + "." + token.getCharPositionInLine());
+                    }
+                    expr = new ConditionalEvalExpression(Type.promote(type2, type3),  token, operand1,  operand2, operand3);
+                } else if (type2.isDefined() && type3.isDefined()) {
+                    // since they are not numeric we have to have the same type
+                    if (type2 == type3) {
+                        // use this type
+                        expr = new ConditionalEvalExpression(type2,  token, operand1,  operand2, operand3);
                     } else {
-                        // have to wait for type check to resolve types
-                        expr = new TernaryOperExpression(TERN_IF, Type.UNDEFINED,  token, operand1,  operand2, operand3);
+                        // mismatched types so don't generate a result
+                        throw new TypeException("ExpressionHelper.createTernaryExpression : mismatched types " + type2.getName() + " and " + type3.getName()  + " in conditional expression " + token.getType() + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
                     }
                 } else {
-                    expr = null;
+                    // have to wait for type check to resolve types
+                    expr = new ConditionalEvalExpression(Type.UNDEFINED,  token, operand1,  operand2, operand3);
                 }
             }
             break;
             default:
             {
-                System.err.println("ExpressionHelper.createTernaryExpression : unexpected token Type in expression tree " + token.getType() + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
-                expr = null;
+                throw new TypeException("ExpressionHelper.createTernaryExpression : unexpected token Type in expression tree " + token.getType() + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
             }
-            break;
         }
 
         return expr;
     }
 
     public static List<Expression> createExpressionList(Bindings bindings, CommonTree exprTree)
+            throws TypeException
     {
         return createExpressionList(bindings, exprTree, Type.UNDEFINED);
 
     }
     public static List<Expression> createExpressionList(Bindings bindings, CommonTree exprTree, Type type)
+            throws TypeException
     {
         // we expect expr_list = ^(EXPR) |
         //                       ^(SEPR expr expr_list)
 
         List<Expression> exprList = new ArrayList<Expression>();
-        boolean success = true;
+        List<TypeException> exceptions = new ArrayList<TypeException>();
 
         while (exprTree != null)
         {
-            switch (exprTree.getToken().getType())
-            {
-                case SEPR:
+            try {
+                switch (exprTree.getToken().getType())
                 {
-                    CommonTree child0 = (CommonTree) exprTree.getChild(0);
-                    CommonTree child1 = (CommonTree) exprTree.getChild(1);
-                    Expression expr = createExpression(bindings, child0, type);
-                    if (expr != null) {
+                    case SEPR:
+                    {
+                        CommonTree child0 = (CommonTree) exprTree.getChild(0);
+                        // assign tree before we risk an exception
+                        exprTree = (CommonTree) exprTree.getChild(1);
+                        Expression expr = createExpression(bindings, child0, type);
                         exprList.add(expr);
-                    } else {
-                        success &= false;
                     }
-                    exprTree = child1;
-                }
-                break;
-                default:
-                {
-                    Expression expr = createExpression(bindings, exprTree, type);
-                    if (expr != null) {
+                    break;
+                    default:
+                    {
+                        // assign tree before we risk an exception
+                        CommonTree saveTree = exprTree;
+                        exprTree = null;
+                        Expression expr = createExpression(bindings, saveTree, type);
                         exprList.add(expr);
-                    } else {
-                        success &= false;
                     }
-                    exprTree = null;
+                    break;
                 }
-                break;
+            } catch (TypeException te) {
+                exceptions.add(te);
             }
         }
-        if (success) {
-            return exprList;
-        } else {
-            return null;
+
+        if (!exceptions.isEmpty()) {
+            if (exceptions.size() == 1) {
+                throw exceptions.get(0);
+            } else {
+                StringBuffer buffer = new StringBuffer();
+                buffer.append("ExpressionHelper.createExpressionList : errors checking expression sequence");
+                for (TypeException typeException : exceptions) {
+                    buffer.append("\n");
+                    buffer.append(typeException.toString());
+                }
+                throw new TypeException(buffer.toString());
+            }
         }
+
+        return exprList;
     }
 }

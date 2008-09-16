@@ -30,23 +30,30 @@ public class Bindings {
     }
 
     /**
-     * add a binding to the end of the list
+     * add the method parameter bindings to the front of the list
      *
-     * n.b. the caller msut ensure that no binding with the same name is already present in
-     * the list
+     * n.b. the caller must ensure that the bindings are only for the rule's
+     * positional parameters and have names constructed from successive non-negative integers
+     * @param bindings
+     */
+    public void addBindings(List<Binding> bindings)
+    {
+        this.bindings.addAll(0, bindings);
+    }
+
+    /**
+     * append a binding to the end of the currrent bindings list
      * @param binding
      * @return
      */
-    public Binding append(Binding binding)
+    public void append(Binding binding)
     {
-        Binding oldBinding = lookup(binding.getName());
-        if (oldBinding!= null) {
-            bindings.remove(binding);
-        }
-
         bindings.add(binding);
+    }
 
-        return oldBinding;
+    public Iterator<Binding> iterator()
+    {
+        return bindings.iterator();
     }
 
     /**

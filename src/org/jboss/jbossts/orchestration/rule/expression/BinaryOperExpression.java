@@ -2,12 +2,13 @@ package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.binding.Bindings;
+import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.antlr.runtime.Token;
 
 /**
  * binary operators includes arithmetic and comparison operators
  */
-public class BinaryOperExpression extends OperExpression
+public abstract class BinaryOperExpression extends OperExpression
 {
     public BinaryOperExpression(int oper, Type type, Token token, Expression operand1, Expression operand2)
     {

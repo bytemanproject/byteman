@@ -1,0 +1,8 @@
+BIND x : CoordinatorEngine = $0,
+     y : String = x.getId(),
+     z : boolean = x.isDurable()
+IF   z
+     AND
+     NOT getCountDown(y)
+DO   debug("Adding countdown for " + y),
+     addCountDown(x, 3)

@@ -7,38 +7,52 @@ import java.util.HashMap;
  */
 public class TypeGroup {
     protected HashMap<String, Type> typeTable;
+    private ClassLoader loader;
+    private boolean resolve;
 
     /**
      * create a type group for a rule containing all the basic types
      */
 
-    public TypeGroup()
+    public TypeGroup(ClassLoader loader)
     {
         // ensure default types are all in table
 
         typeTable = new HashMap<String, Type>();
 
-        typeTable.put("boolean", Type.BOOLEAN);
+        typeTable.put("boolean", Type.Z);
+        typeTable.put("java.lang.Boolean", Type.BOOLEAN);
         typeTable.put("Boolean", Type.BOOLEAN);
 
-        typeTable.put("byte", Type.BYTE);
+        typeTable.put("byte", Type.B);
+        typeTable.put("java.lang.Byte", Type.BYTE);
         typeTable.put("Byte", Type.BYTE);
-        typeTable.put("short", Type.SHORT);
+        typeTable.put("short", Type.S);
+        typeTable.put("java.lang.Short", Type.SHORT);
         typeTable.put("Short", Type.SHORT);
-        typeTable.put("char", Type.CHARACTER);
+        typeTable.put("char", Type.C);
+        typeTable.put("java.lang.Char", Type.CHARACTER);
         typeTable.put("Char", Type.CHARACTER);
-        typeTable.put("int", Type.INTEGER);
+        typeTable.put("int", Type.I);
+        typeTable.put("java.lang.Integer", Type.INTEGER);
         typeTable.put("Integer", Type.INTEGER);
-        typeTable.put("long", Type.LONG);
+        typeTable.put("long", Type.J);
+        typeTable.put("java.lang.Long", Type.LONG);
         typeTable.put("Long", Type.LONG);
 
-        typeTable.put("float", Type.FLOAT);
+        typeTable.put("float", Type.F);
+        typeTable.put("java.lang.Float", Type.FLOAT);
         typeTable.put("Float", Type.FLOAT);
-        typeTable.put("double", Type.DOUBLE);
-        typeTable.put("DOUBLE", Type.DOUBLE);
+        typeTable.put("double", Type.D);
+        typeTable.put("java.lang.Double", Type.DOUBLE);
+        typeTable.put("Double", Type.DOUBLE);
 
+        typeTable.put("java.lang.String", Type.STRING);
         typeTable.put("String", Type.STRING);
         typeTable.put("void", Type.VOID);
+
+        this.loader = loader;
+        this.resolve = false;
     }
 
     /**
@@ -76,41 +90,153 @@ public class TypeGroup {
     public Type create(String name, Class clazz)
     {
         Type existing = typeTable.get(name);
-        if (existing == null) {
-            Type newType = new Type(name, clazz);
-            if (checkAlias(newType)) {
-                return Type.dereference(newType);
+
+        if (existing != null) {
+            // use the existing type assuming we can match or upgrade the class
+            if (clazz != null) {
+                if (clazz == Type.dereference(existing).getTargetClass()) {
+                    return existing;
+                } else {
+                    return null;
+                }
             } else {
-                return null;
+                return existing;
             }
         } else {
-            if (existing.isAssignableFrom(clazz)) {
-                return Type.dereference(existing);
+            if (clazz == null && resolve) {
+                // try to find a class for this type using the class loader
+                try {
+                    clazz = loader.loadClass(name);
+                } catch (ClassNotFoundException cfe) {
+                    // ignore this for now as we may resolve it later
+                }
+            }
+
+            Type newType = new Type(name, clazz);
+            if (checkAlias(newType)) {
+                typeTable.put(name, newType);
+                return newType;
             } else {
                 return null;
             }
         }
     }
 
+    /**
+     * try to associate each type in the typegroup with a class 
+     */
+
+    public void resolveTypes() {
+        for (Type type : typeTable.values()) {
+            if (type.isUndefined()) {
+                type.resolve(loader);
+            }
+        }
+        resolve = true;
+    }
+
+    /**
+     * if the supplied type has a package qualified name ensure that any existing
+     * entry with the unqualified name is aliased to it or else add an entry with an
+     * unqualified name as an alias for it. do nothing if the type name is unqualified
+     * @param type the type to be checked for an alias
+     * @return true if the alias type is now or was already in the table or false if no such
+     * type can be installed because there is an existing alias to some other type
+     */
     private boolean checkAlias(Type type)
     {
         String name = type.getName();
         int dotIdx = name.lastIndexOf('.');
 
         if (dotIdx >= 0) {
-            // we are inserrting a qualified type -- ensure it does not clash with any
+            // we are inserting a qualified type -- ensure it does not clash with any
             // unqualified name
 
-            name = name.substring(dotIdx);
+            name = name.substring(dotIdx + 1);
 
             Type alias = typeTable.get(name);
 
-            if (alias != null && !alias.aliasTo(type)) {
-                return false;
+            if (alias != null) {
+                if (!alias.aliasTo(type)) {
+                    return false;
+                } else {
+                    return true;
+                }
+            } else {
+                // bag the unqualified name as an alias for this type
+
+                alias = new Type(name);
+                alias.aliasTo(type);
+
+                typeTable.put(name, alias);
             }
         }
 
         return true;
+    }
+
+    public Type createArray(Type baseType)
+    {
+        String arrayTypeName = baseType.getName() + "[]";
+        Type arrayType = typeTable.get(arrayTypeName);
+        if (arrayType == null) {
+            Class arrayClazz = null;
+            if (baseType.isPrimitive() || baseType.isDefined()) {
+                try {
+                    arrayClazz = loader.loadClass("[" + baseType.getInternalName());
+                } catch (ClassNotFoundException e) {
+                    // ignore
+                }
+            }
+            arrayType = baseType.arrayType(arrayClazz);
+        }
+
+        return arrayType;
+    }
+
+    public Type ensureType(Class clazz)
+    {
+        if (clazz.isArray()) {
+            Class baseClazz = clazz.getComponentType();
+            Type baseType = ensureType(baseClazz);
+            return createArray(baseType);
+        } else if (clazz.isPrimitive()) {
+            return typeTable.get(clazz.getName());
+        } else {
+            String name = clazz.getCanonicalName();
+            Type type = typeTable.get(name);
+            if (type == null) {
+                type = create(name, clazz);
+            }
+            return type;
+        }
+    }
+
+    public Type match(String[] path)
+    {
+        // check to see if the first element of path is a known type or an alias for a known type
+        Type type = typeTable.get(path[0]);
+        if (type != null) {
+            return Type.dereference(type);
+        }
+        // ok, see if we can find a type using some initial segment of the path
+        
+        String fullName = "";
+        String sepr = "";
+        int length = path.length;
+
+        for (int i = 0; i < length; i++) {
+            fullName += sepr + path[i];
+            sepr = "";
+            try {
+                Class clazz = loader.loadClass(fullName);
+                return ensureType(clazz);
+            } catch (ClassNotFoundException e) {
+                // ignore
+            }
+        }
+        
+        return null;
     }
 }
 

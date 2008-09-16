@@ -1,0 +1,13 @@
+BIND processor:CoordinatorProcessorImpl = $0,
+     context:ArjunaContext = $3,
+     identifier:String = context.getId(),
+     engine:CoordinatorEngine = processor.getCoordinator(identifier),
+     recovered:boolean = engine.isRecovered()
+IF   recovered
+     AND
+     debug("commit on recovered engine " + identifier)
+     AND
+     debug("counting down")
+     AND
+     countDown(identifier)
+DO   killThread()

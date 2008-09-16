@@ -2,14 +2,17 @@ package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.binding.Bindings;
+import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.antlr.runtime.Token;
+
+import java.io.StringWriter;
 
 /**
  * unary operators includes boolean NOT and arithmetic TWIDDLE
  * n.b. unary MINUS is not currently supported except as part of number
  * parsing
  */
-public class UnaryOperExpression extends OperExpression
+public abstract class UnaryOperExpression extends OperExpression
 {
     public UnaryOperExpression(int oper, Type type, Token token, Expression operand)
     {

@@ -6,10 +6,10 @@ import org.antlr.runtime.Token;
 /**
  * A binary arithmetic operator expression
  */
-public class BooleanExpression extends BinaryOperExpression
+public abstract class BooleanExpression extends BinaryOperExpression
 {
     public BooleanExpression(int oper, Token token, Expression left, Expression right)
     {
-        super(oper, Type.BOOLEAN, token, left, right);
+        super(oper, Type.Z, token, left, right);
     }
 }
