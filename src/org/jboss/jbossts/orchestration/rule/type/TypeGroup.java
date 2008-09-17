@@ -227,7 +227,7 @@ public class TypeGroup {
 
         for (int i = 0; i < length; i++) {
             fullName += sepr + path[i];
-            sepr = "";
+            sepr = ".";
             try {
                 Class clazz = loader.loadClass(fullName);
                 return ensureType(clazz);

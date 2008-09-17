@@ -51,7 +51,7 @@ public abstract class Expression
 
     public String getPos()
     {
-        return " @ " + line + "." + charPos;
+        return " @ line " + line + "." + charPos;
     }
 
     public Type getType()

@@ -86,12 +86,10 @@ public class HandlerClass {
             targetLine = 76,
             event = "coordinator = $0,\n" +
                     "cid : CoordinatorId = coordinator.identifier(),\n" +
-                    "PREPARED : int = 5,\n" +
-                    "COMMITTING : int = 6,\n" +
                     "status : int = coordinator.status()",
-            condition = "(status == ActionStatus.PREPARED)\n" +
+            condition = "(status == com.arjuna.ats.arjuna.coordinator.ActionStatus.PREPARED)\n" +
                     "OR" +
-                    "(status == ActionStatus.COMMITTING)\n",
+                    "(status == com.arjuna.ats.arjuna.coordinator.ActionStatus.COMMITTING)\n",
             action = "debug(\"replaying commit for prepared transaction \" + cid)"
     ) public static void handleReplayPhase2()
     {
@@ -103,9 +101,8 @@ public class HandlerClass {
             targetLine = 76,
             event = "coordinator = $0,\n" +
                     "cid : CoordinatorId = coordinator.identifier(),\n" +
-                    "COMMITTED : int = 7,\n" +
                     "status : int = coordinator.status()",
-            condition = "status == ActionStatus.COMMITTED",
+            condition = "status == com.arjuna.ats.arjuna.coordinator.ActionStatus.COMMITTED",
             action = "debug(\"replaying commit for heuristic committed transaction \" + cid)"
     ) public static void handleHeuristicCommittedReplayPhase2()
     {
