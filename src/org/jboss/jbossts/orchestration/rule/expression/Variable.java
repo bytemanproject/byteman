@@ -43,25 +43,12 @@ public class Variable extends Expression
         Binding binding = bindings.lookup(name);
 
         if (binding == null) {
-            System.err.println("VarExpresssion.bind : unbound variable " + name + getPos());                
+            System.err.println("Variable.bind : unbound variable " + name + getPos());
             return false;
         }
-        // if this type is undefined then adopt the type of the binding so that this
-        // variable gets typed whenever the binding does otherwise ensure the types are
-        // compatible
+        // adopt the binding type
 
-        type = Type.dereference(type);
-        
-        if (type.isUndefined()) {
-            this.type = binding.getType();
-        } else {
-            Type bindingType = binding.getType();
-
-            if (!bindingType.isAssignableFrom(this.type)) {
-                System.err.println("VarExpresssion.bind : type " + this.type.getName() + " of variable " + name + " conflicts with bound type " + bindingType.getName() + getPos());                
-                return false;
-            }
-        }
+        this.type = binding.getType();
 
         return true;
     }
@@ -69,7 +56,9 @@ public class Variable extends Expression
     public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
         // type must be defined by now or we are in trouble
 
-        type = Type.dereference(type);
+        Binding binding = bindings.lookup(name);
+
+        type = Type.dereference(binding.getType());
 
         if (type.isUndefined()) {
             throw new TypeException("Variable.typeCheck : unable to derive type for variable " + name +  getPos());

@@ -50,13 +50,6 @@ public class FieldExpression extends Expression
             return false;
         }
 
-        // use the binding type to type ref
-
-        if (ownerType[0].isUndefined()) {
-            Type bindingType = binding.getType();
-            ownerType[0] = bindingType;
-        }
-
         return true;
     }
 
@@ -64,7 +57,10 @@ public class FieldExpression extends Expression
         // check the owner type is defined and then start searching for
         // the types of each field referenced from it
 
-        ownerType[0] = Type.dereference(ownerType[0]);
+        Binding binding = bindings.lookup(ref);
+        Type bindingType = binding.getType();
+        ownerType[0] = Type.dereference(bindingType);
+        
         if (ownerType[0].isUndefined()) {
             throw new TypeException("FieldExpresssion.typeCheck : unbound instance " + ref + getPos());
         }

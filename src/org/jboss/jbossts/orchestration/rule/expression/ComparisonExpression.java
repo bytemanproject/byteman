@@ -16,12 +16,14 @@ public class ComparisonExpression extends BooleanExpression
     public ComparisonExpression(int oper, Token token, Expression left, Expression right)
     {
         super(oper, token, left, right);
+        comparisonType = Type.UNDEFINED;
     }
 
     public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
         // TODO allow comparison of non-numeric values
         Type type1 = getOperand(0).typeCheck(bindings, typegroup, Type.N);
         Type type2 = getOperand(1).typeCheck(bindings, typegroup, Type.N);
+        comparisonType = Type.promote(type1,  type2);
         type = Type.Z;
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
             throw new TypeException("ComparisonExpression.typeCheck : invalid expected result type " + expected.getName() + getPos());
@@ -38,7 +40,7 @@ public class ComparisonExpression extends BooleanExpression
             Number value2 = (Number)getOperand(1).interpret(helper);
             // type is the result of promoting one or other or both of the operands
             // and they should be converted to this type before doing the compare operation
-            if (type == type.B || type == type.S || type == type.I) {
+            if (comparisonType == type.B || comparisonType == type.S || comparisonType == type.I) {
                 int i1 = value1.intValue();
                 int i2 = value2.intValue();
                 boolean result;
@@ -67,7 +69,7 @@ public class ComparisonExpression extends BooleanExpression
                         break;
                 }
                 return result;
-            }  else if (type == type.J) {
+            }  else if (comparisonType == type.J) {
                 long l1 = value1.longValue();
                 long l2 = value2.longValue();
                 boolean result;
@@ -96,7 +98,7 @@ public class ComparisonExpression extends BooleanExpression
                         break;
                 }
                 return result;
-            }  else if (type == type.F) {
+            }  else if (comparisonType == type.F) {
                 float f1 = value1.floatValue();
                 float f2 = value2.floatValue();
                 boolean result;
@@ -125,7 +127,7 @@ public class ComparisonExpression extends BooleanExpression
                         break;
                 }
                 return result;
-            }  else if (type == type.D) {
+            }  else if (comparisonType == type.D) {
                 double d1 = value1.doubleValue();
                 double d2 = value2.doubleValue();
                 boolean result;
@@ -154,7 +156,7 @@ public class ComparisonExpression extends BooleanExpression
                         break;
                 }
                 return result;
-            }  else { // (type == type.C)
+            }  else { // (comparisonType == type.C)
                 char c1 = (char)value1.intValue();
                 char c2 = (char)value2.intValue();
                 boolean result;
@@ -190,4 +192,5 @@ public class ComparisonExpression extends BooleanExpression
             throw new ExecuteException("ComparisonExpression.interpret : unexpected exception for operation " + token + getPos() + " in rule " + helper.getName(), e);
         }
     }
+    private Type comparisonType;
 }

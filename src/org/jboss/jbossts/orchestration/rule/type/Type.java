@@ -436,7 +436,7 @@ public class Type {
     {
         this.typeName = typeName;
 
-        if (clazz == null && (flags & F_PRIMITIVE) == 0) {
+        if (clazz == null) {
             flags |= F_UNKNOWN;
         }
 
@@ -694,20 +694,20 @@ public class Type {
     // unknown type marker
     final public static int F_UNKNOWN       = 0x1000;
     // primitive type marker
-    final public static int F_PRIMITIVE     = 0x2000;
+    final public static int F_PRIMITIVE     = 0x2000;                
     // string type marker
     final public static int F_STRING        = 0x4000;
 
     // we need to cope with array types
 
-    final public static Type Z = new Type("boolean", null, F_BOOLEAN|F_PRIMITIVE);
-    final public static Type B = new Type("byte", null, F_INTEGRAL|F_PRIMITIVE);
-    final public static Type S = new Type("short", null, F_INTEGRAL|F_PRIMITIVE);
-    final public static Type C = new Type("char", null, F_INTEGRAL|F_PRIMITIVE);
-    final public static Type I = new Type("int", null, F_INTEGRAL|F_PRIMITIVE);
-    final public static Type J = new Type("long", null, F_INTEGRAL|F_PRIMITIVE);
-    final public static Type F = new Type("float", null, F_FLOATING|F_PRIMITIVE);
-    final public static Type D = new Type("double", null, F_FLOATING|F_PRIMITIVE);
+    final public static Type Z = new Type("boolean", boolean.class, F_BOOLEAN|F_PRIMITIVE);
+    final public static Type B = new Type("byte", byte.class, F_INTEGRAL|F_PRIMITIVE);
+    final public static Type S = new Type("short", short.class, F_INTEGRAL|F_PRIMITIVE);
+    final public static Type C = new Type("char", char.class, F_INTEGRAL|F_PRIMITIVE);
+    final public static Type I = new Type("int", int.class, F_INTEGRAL|F_PRIMITIVE);
+    final public static Type J = new Type("long", long.class, F_INTEGRAL|F_PRIMITIVE);
+    final public static Type F = new Type("float", float.class, F_FLOATING|F_PRIMITIVE);
+    final public static Type D = new Type("double", double.class, F_FLOATING|F_PRIMITIVE);
     // pseudo type representing an undefined numeric primitive type
     final public static Type N = new Type("", null, F_UNKNOWN|F_NUMERIC|F_PRIMITIVE);
 

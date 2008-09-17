@@ -179,7 +179,11 @@ public class Event extends RuleElement {
             String message = "Event.createBindings : rebinding disallowed for variable " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine();
             throw new TypeException(message);
         }
-
+        // if the binding type is undefined and the expression type is defined propagate the
+        // expression type to the binding
+        if (binding.getType() == Type.UNDEFINED && expr.getType() != Type.UNDEFINED) {
+            binding.setType(expr.getType());
+        }
         binding.setValue(expr);
         bindings.append(binding);
     }

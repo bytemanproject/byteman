@@ -54,7 +54,7 @@ public class HandlerClass {
                     "identifier:String = engine.getId()",
             condition = "recovered",
             action = "debug(\"adding countdown for \" + identifier),\n" +
-                    "addCountDown(identifier, 2)"
+                    "addCountDown(identifier, 1)"
     ) public static void handleNewEngine()
     {
         // activates a counter identified by a recovered engine's identifier when the engine is recreated
@@ -79,5 +79,36 @@ public class HandlerClass {
     {
         // kills the current thread when a committed message is received for an engine whose identifier identifies
         // an active counter
+    }
+    @EventHandler(
+            targetClass="org.jboss.jbossts.xts.recovery.RecoverACCoordinator",
+            targetMethod="replayPhase2",
+            targetLine = 76,
+            event = "coordinator = $0,\n" +
+                    "cid : CoordinatorId = coordinator.identifier(),\n" +
+                    "PREPARED : int = 5,\n" +
+                    "COMMITTING : int = 6,\n" +
+                    "status : int = coordinator.status()",
+            condition = "(status == ActionStatus.PREPARED)\n" +
+                    "OR" +
+                    "(status == ActionStatus.COMMITTING)\n",
+            action = "debug(\"replaying commit for prepared transaction \" + cid)"
+    ) public static void handleReplayPhase2()
+    {
+        // traces replay of a prepared transaction
+    }
+    @EventHandler(
+            targetClass="org.jboss.jbossts.xts.recovery.RecoverACCoordinator",
+            targetMethod="replayPhase2",
+            targetLine = 76,
+            event = "coordinator = $0,\n" +
+                    "cid : CoordinatorId = coordinator.identifier(),\n" +
+                    "COMMITTED : int = 7,\n" +
+                    "status : int = coordinator.status()",
+            condition = "status == ActionStatus.COMMITTED",
+            action = "debug(\"replaying commit for heuristic committed transaction \" + cid)"
+    ) public static void handleHeuristicCommittedReplayPhase2()
+    {
+        // traces replay of a heuristic committed transaction
     }
 }

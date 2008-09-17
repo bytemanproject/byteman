@@ -418,7 +418,7 @@ public class Rule
          */
         public boolean debug(String text)
         {
-            System.out.println("rule " + rule.getName() + " : " + text);
+            System.out.println("rule.debug{" + rule.getName() + "} : " + text);
             return true;
         }
 
@@ -692,7 +692,7 @@ public class Rule
         protected void execute0()
                 throws ExecuteException
         {
-            System.out.println(rule.getName() + " execute0");
+            // System.out.println(rule.getName() + " execute0");
             executeEvent();
             if (executeCondition()) {
                 executeAction();
@@ -712,21 +712,21 @@ public class Rule
         private void executeEvent()
                 throws ExecuteException
         {
-            System.out.println(rule.getName() + " executeEvent");
+            // System.out.println(rule.getName() + " executeEvent");
             rule.getEvent().interpret(this);
         }
 
         private boolean executeCondition()
                 throws ExecuteException
         {
-            System.out.println(rule.getName() + " executeCondition");
+            // System.out.println(rule.getName() + " executeCondition");
             return rule.getCondition().interpret(this);
         }
         
         private void executeAction()
                 throws ExecuteException
         {
-            System.out.println(rule.getName() + " executeAction");
+            // System.out.println(rule.getName() + " executeAction");
             rule.getAction().interpret(this);
         }
 

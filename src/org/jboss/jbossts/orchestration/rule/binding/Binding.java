@@ -15,7 +15,7 @@ public class Binding {
 
     public Binding(String name)
     {
-        this(name, null, null);
+        this(name, Type.UNDEFINED, null);
     }
 
     public Binding(String name, Type type)
@@ -26,7 +26,7 @@ public class Binding {
     public Binding(String name, Type type, Expression value)
     {
         this.name = name;
-        this.type = type;
+        this.type = (type != null ? type : Type.UNDEFINED);
         this.value = value;
         if (name.equals("-1")) {
             index = -1;
@@ -76,6 +76,10 @@ public class Binding {
     public Type getType()
     {
         return type;
+    }
+
+    public void setType(Type type)
+    {
     }
 
     public boolean isHelper()

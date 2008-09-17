@@ -48,7 +48,7 @@ public class Transformer implements ClassFileTransformer {
                 EventHandler eventHandler = method.getAnnotation(EventHandler.class);
                 if (eventHandler != null) {
                     String target = eventHandler.targetClass();
-                    if (isTransformable(target)) {
+                    if (isTransformable(target) && !isOrchestrationClass(target)) {
                         List<Annotation> clazzes = targetToHandlerClassMap.get(target);
                         if (clazzes == null) {
                             clazzes = new ArrayList<Annotation>();
@@ -282,7 +282,7 @@ public class Transformer implements ClassFileTransformer {
      */
     private boolean isTransformable(String className)
     {
-        return (className.startsWith("com.arjuna."));
+        return (className.startsWith("com.arjuna.") || className.startsWith("org.jboss."));
     }
     /**
      * the instrumentation interface to the JVM

@@ -324,7 +324,7 @@ public class ExpressionHelper
                 if (type == Type.STRING) {
                     // must be doing String concatenation
                     operand1 = createExpression(bindings, child1, Type.STRING);
-                    operand2 = createExpression(bindings, child2, Type.STRING);
+                    operand2 = createExpression(bindings, child2, Type.UNDEFINED);
                     expr = new StringPlusExpression(token, operand1,  operand2);
                 } else if (type.isNumeric()) {
                     // must be doing arithmetic
@@ -340,7 +340,7 @@ public class ExpressionHelper
                         int convertedOper = OperExpression.convertOper(oper);
                         expr = new ArithmeticExpression(convertedOper, token, operand1, operand2);
                     } else if (operand1.getType() == Type.STRING) {
-                        operand2 = createExpression(bindings, child2, Type.STRING);
+                        operand2 = createExpression(bindings, child2, Type.UNDEFINED);
                         expr = new StringPlusExpression(token, operand1,  operand2);
                     } else {
                         operand2 = createExpression(bindings, child2, Type.UNDEFINED);

@@ -58,12 +58,14 @@ The XTS installation directory must be specified with the XTS_HOME environment v
     load XTS code -->
 
     <property name="xts.lib.dir"     value="${xts.home}/lib"/>
+    <property name="xts.sar.dir"     value="${xts.home}/sar"/>
     <property name="jboss.lib.dir"     value="${jboss.home}/lib"/>
     <property name="jboss.client.dir"     value="${jboss.home}/client"/>
     <property name="jboss.server.lib.dir"     value="${jboss.home}/server/default/lib"/>
     <property name="jboss.server.deploy.dir"     value="${jboss.home}/server/default/deploy"/>
 
     <property name="xts.lib.jars" value="ws-c10.jar wscf10.jar wscf.jar ws-t10.jar ws-t.jar wstx11.jar wsas.jar ws-c11.jar wscf11.jar ws-c.jar ws-t11.jar wstx10.jar wstx.jar"/>
+    <property name="xts.sar.jars" value="jbossxts.sar"/>
     <property name="jboss.lib.jars" value="stax-api.jar"/>
     <property name="jboss.client.jars" value="jbossall-client.jar"/>
     <property name="jboss.server.lib.jars" value="jbossjta.jar jbossws-common.jar jbossws-framework.jar jbossws-spi.jar jbossws-native-saaj.jar jbossws-native-jaxws.jar jbossws-native-jaxws-ext.jar jbossws-native-jaxrpc.jar jboss-javaee.jar"/>
@@ -172,6 +174,7 @@ The XTS installation directory must be specified with the XTS_HOME environment v
                 <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
                 <!-- xts, jta and jboss as jars-->
                 <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
+                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
                 <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
                 <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
                 <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
@@ -196,6 +199,7 @@ The XTS installation directory must be specified with the XTS_HOME environment v
                 <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
                 <!-- xts, jta and jboss as jars-->
                 <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
+                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
                 <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
                 <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
                 <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
@@ -222,6 +226,7 @@ The XTS installation directory must be specified with the XTS_HOME environment v
                 <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
                 <!-- xts, jta and jboss as jars-->
                 <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
+                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
                 <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
                 <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
                 <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
@@ -244,6 +249,7 @@ The XTS installation directory must be specified with the XTS_HOME environment v
                 <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
                 <!-- xts, jta and jboss as jars-->
                 <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
+                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
                 <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
                 <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
                 <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
@@ -267,6 +273,7 @@ The XTS installation directory must be specified with the XTS_HOME environment v
                 <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
                 <!-- xts, jta and jboss as jars-->
                 <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
+                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
                 <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
                 <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
                 <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
@@ -288,6 +295,7 @@ The XTS installation directory must be specified with the XTS_HOME environment v
                 <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
                 <!-- xts, jta and jboss as jars-->
                 <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
+                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
                 <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
                 <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
                 <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
@@ -322,6 +330,7 @@ The XTS installation directory must be specified with the XTS_HOME environment v
                 <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
                 <!-- xts, jta and jboss as jars-->
                 <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
+                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
                 <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
                 <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
                 <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
@@ -339,6 +348,7 @@ The XTS installation directory must be specified with the XTS_HOME environment v
                 <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
                 <!-- xts, jta and jboss as jars-->
                 <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
+                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
                 <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
                 <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
                 <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
