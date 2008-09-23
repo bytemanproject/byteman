@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Enumeration;
 import java.io.File;
 import java.io.IOException;
+import java.io.FileInputStream;
 import java.net.URLClassLoader;
 import java.net.URL;
 import java.net.MalformedURLException;
@@ -19,7 +20,9 @@ import java.net.MalformedURLException;
  * agent class supplied at JVM startup to install orchestration package bytecode transformer
  */
 public class Main {
-    public static void premain(String args, Instrumentation inst) {
+    public static void premain(String args, Instrumentation inst)
+            throws Exception
+    {
         if (args != null) {
             // args are supplied eparated by ',' characters
             String[] argsArray = args.split(",");
@@ -27,12 +30,12 @@ public class Main {
             for (String arg : argsArray) {
                 if (arg.startsWith(BOOT_PREFIX)) {
                     bootJarPaths.add(arg.substring(BOOT_PREFIX.length(), arg.length()));
-                } else if (arg.startsWith(RULE_PREFIX)) {
-                    ruleJarPaths.add(arg.substring(RULE_PREFIX.length(), arg.length()));
+                } else if (arg.startsWith(SCRIPT_PREFIX)) {
+                    scriptPaths.add(arg.substring(SCRIPT_PREFIX.length(), arg.length()));
                 } else {
                     System.err.println("org.jboss.jbossts.orchestration.agent.Main:\n" +
                             "  illegal agent argument : " + arg + "\n" +
-                            "  valid arguments are boot:<path-to-jar> or rule:<path-to-jar>");
+                            "  valid arguments are boot:<path-to-jar> or script:<path-to-scriptr>");
                 }
             }
         }
@@ -46,53 +49,30 @@ public class Main {
                 // inst.appendToBootstrapClassLoaderSearch(jarfile);
             } catch (IOException ioe) {
                 System.err.println("org.jboss.jbossts.orchestration.agent.Main: unable to open boot jar file : " + bootJarPath);
+                throw ioe;
             }
         }
 
-        // look up rules in any rule jars
+        // look up rules in any script files
 
-        for (String ruleJarPath : ruleJarPaths) {
+        for (String scriptPath : scriptPaths) {
             try {
-                JarFile jarFile = new JarFile(new File(ruleJarPath));
-                processRules(jarFile);
+                System.out.println("processing script file " + scriptPath);
+
+                FileInputStream fis = new FileInputStream(scriptPath);
+                byte[] bytes = new byte[fis.available()];
+                fis.read(bytes);
+                String ruleScript = new String(bytes);
+                scripts.add(ruleScript);
             } catch (IOException ioe) {
-                System.err.println("org.jboss.jbossts.orchestration.agent.Main: unable to open rule jar file : " + ruleJarPath);
+                System.err.println("org.jboss.jbossts.orchestration.agent.Main: unable to read rule script file : " + scriptPath);
+                throw ioe;
             }
         }
 
         // install an instance of Transformer to instrument the bytecode
 
-        inst.addTransformer(new Transformer(inst, ruleClasses));
-    }
-
-    private static void processRules(JarFile jarFile)
-    {
-        try {
-            URLClassLoader classLoader = new URLClassLoader(new URL[] { new URL("file:" + jarFile.getName()) });
-            Enumeration<JarEntry> jarEntries = jarFile.entries();
-
-            while (jarEntries.hasMoreElements()) {
-                JarEntry jarEntry = jarEntries.nextElement();
-                String entryName = jarEntry.getName();
-
-                if (entryName.endsWith(CLASS_FILE_SUFFIX)) {
-                    // try to load the rule class
-                    int classNameLength = entryName.length() - CLASS_FILE_SUFFIX.length();
-                    String className = entryName.substring(0, classNameLength).replaceAll("/", ".");
-                    try {
-                        Class clazz = classLoader.loadClass(className);
-                        Annotation a = clazz.getAnnotation(EventHandlerClass.class);
-                        if (a != null) {
-                            ruleClasses.add(clazz);
-                        }
-                    } catch (ClassNotFoundException e) {
-                        System.err.println("org.jboss.jbossts.orchestration.agent.Main: unable to load class " + className + " from : " + jarFile.getName());
-                    }
-                }
-            }
-        } catch (MalformedURLException mue) {
-            System.err.println("org.jboss.jbossts.orchestration.agent.Main: unable to load classes from : " + jarFile.getName());
-        }
+        inst.addTransformer(new Transformer(inst, scriptPaths, scripts));
     }
 
     /**
@@ -101,16 +81,10 @@ public class Main {
     private static final String BOOT_PREFIX = "boot:";
 
     /**
-     * prefix used to specify rulejar argument for agent
+     * prefix used to specify script argument for agent
      */
 
-    private static final String RULE_PREFIX = "rule:";
-
-    /**
-     * suffix found on end of .class files (doh :-)
-     */
-
-    private static final String CLASS_FILE_SUFFIX = ".class";
+    private static final String SCRIPT_PREFIX = "script:";
 
     /**
      * list of paths to extra bootstrap jars supplied on command line
@@ -118,12 +92,12 @@ public class Main {
     private static List<String> bootJarPaths = new ArrayList<String>();
 
     /**
-     * list of paths to rule jars supplied on command line
+     * list of paths to script files supplied on command line
      */
-    private static List<String> ruleJarPaths = new ArrayList<String>();
+    private static List<String> scriptPaths = new ArrayList<String>();
 
     /**
-     * list of classes annotated with methods annotated with event handler annotations
+     * list of scripts read from script files
      */
-    private static List<Class> ruleClasses = new ArrayList<Class>();
+    private static List<String> scripts = new ArrayList<String>();
 }

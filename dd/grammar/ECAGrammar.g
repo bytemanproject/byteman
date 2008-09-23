@@ -23,6 +23,18 @@ tokens {
 package org.jboss.jbossts.orchestration.rule.grammar;
 }
 
+eca_script_rule :	rule=eca_script_rule_one EOF -> ^($rule)
+	;
+eca_script_rule_one
+	:	RULE n=SYMBOL
+		CLASS cl=SYMBOL
+		METHOD m=SYMBOL
+		LINE l=NUMBER
+		BIND e=event
+		IF c=condition
+		DO a=action
+		ENDRULE  -> ^(RULE $n $cl $m $l $e $c $a)
+	;
 eca_rule	:	eca EOF -> ^(eca)
 	;
 	
@@ -63,14 +75,17 @@ bind_sym	:	v=SYMBOL COLON t=SYMBOL	-> ^(COLON $v $t)
 // the type checking after parsing  n.b. we always have at least one condition as an empty (i.e.
 // vacuously true) condition is defined by an empty input string.
 
-condition	:	expr
+condition	:	TRUE		-> ^(TRUE)
+	|	FALSE		-> ^(FALSE)
+	|	expr
 	;
 
 // actions area defined as a sequence of expressions.it not type-constrained by the grammar -- it's
 // easier to do the type checking after parsing  n.b. we always have at least one action as
 // an  empty (i.e. do nothing) action is defined by an empty action string
 
-action	:	action_expr_list
+action	:	NOTHING		-> ^(NOTHING)
+	|	action_expr_list
 	;
 
 action_expr_list

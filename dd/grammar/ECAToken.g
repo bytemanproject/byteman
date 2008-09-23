@@ -1,4 +1,4 @@
-klexer grammar ECAToken;
+lexer grammar ECAToken;
 
 @header {
 package org.jboss.jbossts.orchestration.rule.grammar;
@@ -21,7 +21,6 @@ SIGN	:	'+'|'-'
 fragment
 BAREINT	:	'0' | (POSDIGIT (DIGIT)*)
 	;
-
 fragment
 INTEGER	:	SIGN? BAREINT
 	;
@@ -53,6 +52,30 @@ IF	:	'IF'
 DO	:	'DO'
 	;
 
+RULE	:	'RULE'
+	;
+	
+CLASS	:	'CLASS'
+	;
+	
+METHOD	:	'METHOD'
+	;
+	
+LINE	:	'LINE'
+	;
+	
+ENDRULE	:	'ENDRULE'
+	;
+
+NOTHING	:	'NOTHING'
+	;
+
+TRUE	: 	'TRUE' | 'true'
+	;
+
+FALSE	:	'FALSE'|'false'
+	;
+	
 // various bracket pairs
 
 LPAREN	:	'('
@@ -130,7 +153,7 @@ LT	:	'<'
 	;
 
 GEQ	:	'>='
-	|	'GEQ'
+	|	'EQ'
 	|	'geq'
 	;
 
@@ -223,7 +246,7 @@ fragment
 BARESYM	:	(LETTER | UNDERSCORE) (LETTER | DIGIT | UNDERSCORE)*
 	;
 fragment
-QUOTSYM	:	QUOTE (PUNCT |LETTER | UNDERSCORE | DIGIT | DQUOTE )* QUOTE
+QUOTSYM	:	QUOTE (PUNCT |LETTER | UNDERSCORE | DIGIT | DQUOTE |SPACE)* QUOTE
 	;
 
 // n.b. dot separated symbol can contain zero or more dot separators

@@ -1,4 +1,4 @@
-// $ANTLR 3.0.1 dd/grammar/ECAToken.g 2008-09-12 18:02:58
+// $ANTLR 3.0.1 dd/grammar/ECAToken.g 2008-09-22 16:26:17
 
 package org.jboss.jbossts.orchestration.rule.grammar;
 
@@ -9,64 +9,72 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class ECATokenLexer extends Lexer {
-    public static final int MINUS=41;
+    public static final int MINUS=49;
     public static final int NUMBER=12;
+    public static final int METHOD=18;
     public static final int FLOAT=11;
+    public static final int FALSE=23;
     public static final int POSDIGIT=5;
-    public static final int LEQ=33;
-    public static final int TWIDDLE=37;
-    public static final int MOD=42;
-    public static final int GEQ=32;
-    public static final int DQUOTE=48;
-    public static final int OR=25;
-    public static final int BOR=34;
+    public static final int TWIDDLE=45;
+    public static final int LEQ=41;
+    public static final int RULE=16;
+    public static final int MOD=50;
+    public static final int GEQ=40;
+    public static final int DQUOTE=56;
+    public static final int OR=33;
+    public static final int BOR=42;
     public static final int BAREINT=7;
-    public static final int LBRACE=20;
-    public static final int NEWLINE=50;
-    public static final int DOT=23;
-    public static final int RBRACE=21;
+    public static final int LBRACE=28;
+    public static final int NEWLINE=58;
+    public static final int DOT=31;
+    public static final int RBRACE=29;
     public static final int INTEGER=8;
-    public static final int AND=26;
-    public static final int ASSIGN=24;
-    public static final int SYMBOL=56;
-    public static final int RPAREN=17;
-    public static final int LPAREN=16;
+    public static final int AND=34;
+    public static final int ASSIGN=32;
+    public static final int SYMBOL=64;
+    public static final int RPAREN=25;
     public static final int SIGN=6;
+    public static final int LPAREN=24;
+    public static final int PLUS=48;
     public static final int DIGIT=4;
-    public static final int PLUS=40;
-    public static final int BAND=35;
-    public static final int NEQ=29;
-    public static final int SPACE=49;
-    public static final int LETTER=45;
-    public static final int LSQUARE=18;
+    public static final int LINE=19;
+    public static final int BAND=43;
+    public static final int NEQ=37;
+    public static final int SPACE=57;
+    public static final int LETTER=53;
+    public static final int LSQUARE=26;
     public static final int DO=15;
     public static final int POINT=9;
-    public static final int BARESYM=53;
-    public static final int SEPR=22;
-    public static final int WS=59;
-    public static final int STRING=52;
-    public static final int EQ=28;
-    public static final int QUOTSYM=54;
-    public static final int LT=31;
-    public static final int GT=30;
-    public static final int DOLLAR=57;
-    public static final int RSQUARE=19;
-    public static final int QUOTE=47;
-    public static final int TERN_IF=43;
-    public static final int MUL=38;
+    public static final int BARESYM=61;
+    public static final int NOTHING=21;
+    public static final int SEPR=30;
+    public static final int WS=67;
+    public static final int STRING=60;
+    public static final int EQ=36;
+    public static final int QUOTSYM=62;
+    public static final int LT=39;
+    public static final int GT=38;
+    public static final int DOLLAR=65;
+    public static final int RSQUARE=27;
+    public static final int QUOTE=55;
+    public static final int TERN_IF=51;
+    public static final int MUL=46;
+    public static final int CLASS=17;
     public static final int EXPPART=10;
-    public static final int PUNCT=51;
+    public static final int PUNCT=59;
     public static final int IF=14;
     public static final int EOF=-1;
-    public static final int Tokens=60;
-    public static final int COLON=44;
-    public static final int DIV=39;
-    public static final int DOTSYM=55;
-    public static final int BXOR=36;
+    public static final int Tokens=68;
+    public static final int COLON=52;
+    public static final int DIV=47;
+    public static final int DOTSYM=63;
+    public static final int BXOR=44;
+    public static final int ENDRULE=20;
     public static final int BIND=13;
-    public static final int NOT=27;
-    public static final int UNDERSCORE=46;
-    public static final int DOLLARSYM=58;
+    public static final int NOT=35;
+    public static final int TRUE=22;
+    public static final int UNDERSCORE=54;
+    public static final int DOLLARSYM=66;
     public ECATokenLexer() {;} 
     public ECATokenLexer(CharStream input) {
         super(input);
@@ -206,10 +214,10 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start INTEGER
     public final void mINTEGER() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:26:9: ( ( SIGN )? BAREINT )
-            // dd/grammar/ECAToken.g:26:11: ( SIGN )? BAREINT
+            // dd/grammar/ECAToken.g:25:9: ( ( SIGN )? BAREINT )
+            // dd/grammar/ECAToken.g:25:11: ( SIGN )? BAREINT
             {
-            // dd/grammar/ECAToken.g:26:11: ( SIGN )?
+            // dd/grammar/ECAToken.g:25:11: ( SIGN )?
             int alt3=2;
             int LA3_0 = input.LA(1);
 
@@ -218,7 +226,7 @@ public class ECATokenLexer extends Lexer {
             }
             switch (alt3) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:26:11: SIGN
+                    // dd/grammar/ECAToken.g:25:11: SIGN
                     {
                     mSIGN(); 
 
@@ -240,8 +248,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start POINT
     public final void mPOINT() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:30:7: ( '.' )
-            // dd/grammar/ECAToken.g:30:9: '.'
+            // dd/grammar/ECAToken.g:29:7: ( '.' )
+            // dd/grammar/ECAToken.g:29:9: '.'
             {
             match('.'); 
 
@@ -256,8 +264,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start EXPPART
     public final void mEXPPART() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:34:9: ( ( 'e' | 'E' ) INTEGER )
-            // dd/grammar/ECAToken.g:34:12: ( 'e' | 'E' ) INTEGER
+            // dd/grammar/ECAToken.g:33:9: ( ( 'e' | 'E' ) INTEGER )
+            // dd/grammar/ECAToken.g:33:12: ( 'e' | 'E' ) INTEGER
             {
             if ( input.LA(1)=='E'||input.LA(1)=='e' ) {
                 input.consume();
@@ -282,12 +290,12 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start FLOAT
     public final void mFLOAT() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:39:7: ( INTEGER POINT ( BAREINT )? ( EXPPART )? )
-            // dd/grammar/ECAToken.g:39:9: INTEGER POINT ( BAREINT )? ( EXPPART )?
+            // dd/grammar/ECAToken.g:38:7: ( INTEGER POINT ( BAREINT )? ( EXPPART )? )
+            // dd/grammar/ECAToken.g:38:9: INTEGER POINT ( BAREINT )? ( EXPPART )?
             {
             mINTEGER(); 
             mPOINT(); 
-            // dd/grammar/ECAToken.g:39:23: ( BAREINT )?
+            // dd/grammar/ECAToken.g:38:23: ( BAREINT )?
             int alt4=2;
             int LA4_0 = input.LA(1);
 
@@ -296,7 +304,7 @@ public class ECATokenLexer extends Lexer {
             }
             switch (alt4) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:39:23: BAREINT
+                    // dd/grammar/ECAToken.g:38:23: BAREINT
                     {
                     mBAREINT(); 
 
@@ -305,7 +313,7 @@ public class ECATokenLexer extends Lexer {
 
             }
 
-            // dd/grammar/ECAToken.g:39:32: ( EXPPART )?
+            // dd/grammar/ECAToken.g:38:32: ( EXPPART )?
             int alt5=2;
             int LA5_0 = input.LA(1);
 
@@ -314,7 +322,7 @@ public class ECATokenLexer extends Lexer {
             }
             switch (alt5) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:39:32: EXPPART
+                    // dd/grammar/ECAToken.g:38:32: EXPPART
                     {
                     mEXPPART(); 
 
@@ -336,19 +344,19 @@ public class ECATokenLexer extends Lexer {
     public final void mNUMBER() throws RecognitionException {
         try {
             int _type = NUMBER;
-            // dd/grammar/ECAToken.g:42:8: ( INTEGER | FLOAT )
+            // dd/grammar/ECAToken.g:41:8: ( INTEGER | FLOAT )
             int alt6=2;
             alt6 = dfa6.predict(input);
             switch (alt6) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:42:10: INTEGER
+                    // dd/grammar/ECAToken.g:41:10: INTEGER
                     {
                     mINTEGER(); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:42:20: FLOAT
+                    // dd/grammar/ECAToken.g:41:20: FLOAT
                     {
                     mFLOAT(); 
 
@@ -367,8 +375,8 @@ public class ECATokenLexer extends Lexer {
     public final void mBIND() throws RecognitionException {
         try {
             int _type = BIND;
-            // dd/grammar/ECAToken.g:47:6: ( 'BIND' )
-            // dd/grammar/ECAToken.g:47:8: 'BIND'
+            // dd/grammar/ECAToken.g:46:6: ( 'BIND' )
+            // dd/grammar/ECAToken.g:46:8: 'BIND'
             {
             match("BIND"); 
 
@@ -386,8 +394,8 @@ public class ECATokenLexer extends Lexer {
     public final void mIF() throws RecognitionException {
         try {
             int _type = IF;
-            // dd/grammar/ECAToken.g:50:4: ( 'IF' )
-            // dd/grammar/ECAToken.g:50:6: 'IF'
+            // dd/grammar/ECAToken.g:49:4: ( 'IF' )
+            // dd/grammar/ECAToken.g:49:6: 'IF'
             {
             match("IF"); 
 
@@ -405,8 +413,8 @@ public class ECATokenLexer extends Lexer {
     public final void mDO() throws RecognitionException {
         try {
             int _type = DO;
-            // dd/grammar/ECAToken.g:53:4: ( 'DO' )
-            // dd/grammar/ECAToken.g:53:6: 'DO'
+            // dd/grammar/ECAToken.g:52:4: ( 'DO' )
+            // dd/grammar/ECAToken.g:52:6: 'DO'
             {
             match("DO"); 
 
@@ -420,12 +428,218 @@ public class ECATokenLexer extends Lexer {
     }
     // $ANTLR end DO
 
+    // $ANTLR start RULE
+    public final void mRULE() throws RecognitionException {
+        try {
+            int _type = RULE;
+            // dd/grammar/ECAToken.g:55:6: ( 'RULE' )
+            // dd/grammar/ECAToken.g:55:8: 'RULE'
+            {
+            match("RULE"); 
+
+
+            }
+
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end RULE
+
+    // $ANTLR start CLASS
+    public final void mCLASS() throws RecognitionException {
+        try {
+            int _type = CLASS;
+            // dd/grammar/ECAToken.g:58:7: ( 'CLASS' )
+            // dd/grammar/ECAToken.g:58:9: 'CLASS'
+            {
+            match("CLASS"); 
+
+
+            }
+
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end CLASS
+
+    // $ANTLR start METHOD
+    public final void mMETHOD() throws RecognitionException {
+        try {
+            int _type = METHOD;
+            // dd/grammar/ECAToken.g:61:8: ( 'METHOD' )
+            // dd/grammar/ECAToken.g:61:10: 'METHOD'
+            {
+            match("METHOD"); 
+
+
+            }
+
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end METHOD
+
+    // $ANTLR start LINE
+    public final void mLINE() throws RecognitionException {
+        try {
+            int _type = LINE;
+            // dd/grammar/ECAToken.g:64:6: ( 'LINE' )
+            // dd/grammar/ECAToken.g:64:8: 'LINE'
+            {
+            match("LINE"); 
+
+
+            }
+
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end LINE
+
+    // $ANTLR start ENDRULE
+    public final void mENDRULE() throws RecognitionException {
+        try {
+            int _type = ENDRULE;
+            // dd/grammar/ECAToken.g:67:9: ( 'ENDRULE' )
+            // dd/grammar/ECAToken.g:67:11: 'ENDRULE'
+            {
+            match("ENDRULE"); 
+
+
+            }
+
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end ENDRULE
+
+    // $ANTLR start NOTHING
+    public final void mNOTHING() throws RecognitionException {
+        try {
+            int _type = NOTHING;
+            // dd/grammar/ECAToken.g:70:9: ( 'NOTHING' )
+            // dd/grammar/ECAToken.g:70:11: 'NOTHING'
+            {
+            match("NOTHING"); 
+
+
+            }
+
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end NOTHING
+
+    // $ANTLR start TRUE
+    public final void mTRUE() throws RecognitionException {
+        try {
+            int _type = TRUE;
+            // dd/grammar/ECAToken.g:73:6: ( 'TRUE' | 'true' )
+            int alt7=2;
+            int LA7_0 = input.LA(1);
+
+            if ( (LA7_0=='T') ) {
+                alt7=1;
+            }
+            else if ( (LA7_0=='t') ) {
+                alt7=2;
+            }
+            else {
+                NoViableAltException nvae =
+                    new NoViableAltException("73:1: TRUE : ( 'TRUE' | 'true' );", 7, 0, input);
+
+                throw nvae;
+            }
+            switch (alt7) {
+                case 1 :
+                    // dd/grammar/ECAToken.g:73:9: 'TRUE'
+                    {
+                    match("TRUE"); 
+
+
+                    }
+                    break;
+                case 2 :
+                    // dd/grammar/ECAToken.g:73:18: 'true'
+                    {
+                    match("true"); 
+
+
+                    }
+                    break;
+
+            }
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end TRUE
+
+    // $ANTLR start FALSE
+    public final void mFALSE() throws RecognitionException {
+        try {
+            int _type = FALSE;
+            // dd/grammar/ECAToken.g:76:7: ( 'FALSE' | 'false' )
+            int alt8=2;
+            int LA8_0 = input.LA(1);
+
+            if ( (LA8_0=='F') ) {
+                alt8=1;
+            }
+            else if ( (LA8_0=='f') ) {
+                alt8=2;
+            }
+            else {
+                NoViableAltException nvae =
+                    new NoViableAltException("76:1: FALSE : ( 'FALSE' | 'false' );", 8, 0, input);
+
+                throw nvae;
+            }
+            switch (alt8) {
+                case 1 :
+                    // dd/grammar/ECAToken.g:76:9: 'FALSE'
+                    {
+                    match("FALSE"); 
+
+
+                    }
+                    break;
+                case 2 :
+                    // dd/grammar/ECAToken.g:76:17: 'false'
+                    {
+                    match("false"); 
+
+
+                    }
+                    break;
+
+            }
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end FALSE
+
     // $ANTLR start LPAREN
     public final void mLPAREN() throws RecognitionException {
         try {
             int _type = LPAREN;
-            // dd/grammar/ECAToken.g:58:8: ( '(' )
-            // dd/grammar/ECAToken.g:58:10: '('
+            // dd/grammar/ECAToken.g:81:8: ( '(' )
+            // dd/grammar/ECAToken.g:81:10: '('
             {
             match('('); 
 
@@ -442,8 +656,8 @@ public class ECATokenLexer extends Lexer {
     public final void mRPAREN() throws RecognitionException {
         try {
             int _type = RPAREN;
-            // dd/grammar/ECAToken.g:61:8: ( ')' )
-            // dd/grammar/ECAToken.g:61:10: ')'
+            // dd/grammar/ECAToken.g:84:8: ( ')' )
+            // dd/grammar/ECAToken.g:84:10: ')'
             {
             match(')'); 
 
@@ -460,8 +674,8 @@ public class ECATokenLexer extends Lexer {
     public final void mLSQUARE() throws RecognitionException {
         try {
             int _type = LSQUARE;
-            // dd/grammar/ECAToken.g:64:9: ( '\\[' )
-            // dd/grammar/ECAToken.g:64:11: '\\['
+            // dd/grammar/ECAToken.g:87:9: ( '\\[' )
+            // dd/grammar/ECAToken.g:87:11: '\\['
             {
             match('['); 
 
@@ -478,8 +692,8 @@ public class ECATokenLexer extends Lexer {
     public final void mRSQUARE() throws RecognitionException {
         try {
             int _type = RSQUARE;
-            // dd/grammar/ECAToken.g:67:9: ( '\\]' )
-            // dd/grammar/ECAToken.g:67:11: '\\]'
+            // dd/grammar/ECAToken.g:90:9: ( '\\]' )
+            // dd/grammar/ECAToken.g:90:11: '\\]'
             {
             match(']'); 
 
@@ -496,8 +710,8 @@ public class ECATokenLexer extends Lexer {
     public final void mLBRACE() throws RecognitionException {
         try {
             int _type = LBRACE;
-            // dd/grammar/ECAToken.g:70:8: ( '{' )
-            // dd/grammar/ECAToken.g:70:10: '{'
+            // dd/grammar/ECAToken.g:93:8: ( '{' )
+            // dd/grammar/ECAToken.g:93:10: '{'
             {
             match('{'); 
 
@@ -514,8 +728,8 @@ public class ECATokenLexer extends Lexer {
     public final void mRBRACE() throws RecognitionException {
         try {
             int _type = RBRACE;
-            // dd/grammar/ECAToken.g:73:8: ( '}' )
-            // dd/grammar/ECAToken.g:73:10: '}'
+            // dd/grammar/ECAToken.g:96:8: ( '}' )
+            // dd/grammar/ECAToken.g:96:10: '}'
             {
             match('}'); 
 
@@ -532,7 +746,7 @@ public class ECATokenLexer extends Lexer {
     public final void mSEPR() throws RecognitionException {
         try {
             int _type = SEPR;
-            // dd/grammar/ECAToken.g:78:6: ( ';' | ',' )
+            // dd/grammar/ECAToken.g:101:6: ( ';' | ',' )
             // dd/grammar/ECAToken.g:
             {
             if ( input.LA(1)==','||input.LA(1)==';' ) {
@@ -559,8 +773,8 @@ public class ECATokenLexer extends Lexer {
     public final void mDOT() throws RecognitionException {
         try {
             int _type = DOT;
-            // dd/grammar/ECAToken.g:84:5: ( '.' )
-            // dd/grammar/ECAToken.g:84:7: '.'
+            // dd/grammar/ECAToken.g:107:5: ( '.' )
+            // dd/grammar/ECAToken.g:107:7: '.'
             {
             match('.'); 
 
@@ -577,32 +791,32 @@ public class ECATokenLexer extends Lexer {
     public final void mASSIGN() throws RecognitionException {
         try {
             int _type = ASSIGN;
-            // dd/grammar/ECAToken.g:89:8: ( '=' | '<--' )
-            int alt7=2;
-            int LA7_0 = input.LA(1);
+            // dd/grammar/ECAToken.g:112:8: ( '=' | '<--' )
+            int alt9=2;
+            int LA9_0 = input.LA(1);
 
-            if ( (LA7_0=='=') ) {
-                alt7=1;
+            if ( (LA9_0=='=') ) {
+                alt9=1;
             }
-            else if ( (LA7_0=='<') ) {
-                alt7=2;
+            else if ( (LA9_0=='<') ) {
+                alt9=2;
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("89:1: ASSIGN : ( '=' | '<--' );", 7, 0, input);
+                    new NoViableAltException("112:1: ASSIGN : ( '=' | '<--' );", 9, 0, input);
 
                 throw nvae;
             }
-            switch (alt7) {
+            switch (alt9) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:89:10: '='
+                    // dd/grammar/ECAToken.g:112:10: '='
                     {
                     match('='); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:90:4: '<--'
+                    // dd/grammar/ECAToken.g:113:4: '<--'
                     {
                     match("<--"); 
 
@@ -622,34 +836,34 @@ public class ECATokenLexer extends Lexer {
     public final void mOR() throws RecognitionException {
         try {
             int _type = OR;
-            // dd/grammar/ECAToken.g:95:4: ( '||' | 'OR' | 'or' )
-            int alt8=3;
+            // dd/grammar/ECAToken.g:118:4: ( '||' | 'OR' | 'or' )
+            int alt10=3;
             switch ( input.LA(1) ) {
             case '|':
                 {
-                alt8=1;
+                alt10=1;
                 }
                 break;
             case 'O':
                 {
-                alt8=2;
+                alt10=2;
                 }
                 break;
             case 'o':
                 {
-                alt8=3;
+                alt10=3;
                 }
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("95:1: OR : ( '||' | 'OR' | 'or' );", 8, 0, input);
+                    new NoViableAltException("118:1: OR : ( '||' | 'OR' | 'or' );", 10, 0, input);
 
                 throw nvae;
             }
 
-            switch (alt8) {
+            switch (alt10) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:95:6: '||'
+                    // dd/grammar/ECAToken.g:118:6: '||'
                     {
                     match("||"); 
 
@@ -657,7 +871,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:96:4: 'OR'
+                    // dd/grammar/ECAToken.g:119:4: 'OR'
                     {
                     match("OR"); 
 
@@ -665,7 +879,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:97:4: 'or'
+                    // dd/grammar/ECAToken.g:120:4: 'or'
                     {
                     match("or"); 
 
@@ -685,34 +899,34 @@ public class ECATokenLexer extends Lexer {
     public final void mAND() throws RecognitionException {
         try {
             int _type = AND;
-            // dd/grammar/ECAToken.g:100:5: ( '&&' | 'AND' | 'and' )
-            int alt9=3;
+            // dd/grammar/ECAToken.g:123:5: ( '&&' | 'AND' | 'and' )
+            int alt11=3;
             switch ( input.LA(1) ) {
             case '&':
                 {
-                alt9=1;
+                alt11=1;
                 }
                 break;
             case 'A':
                 {
-                alt9=2;
+                alt11=2;
                 }
                 break;
             case 'a':
                 {
-                alt9=3;
+                alt11=3;
                 }
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("100:1: AND : ( '&&' | 'AND' | 'and' );", 9, 0, input);
+                    new NoViableAltException("123:1: AND : ( '&&' | 'AND' | 'and' );", 11, 0, input);
 
                 throw nvae;
             }
 
-            switch (alt9) {
+            switch (alt11) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:100:7: '&&'
+                    // dd/grammar/ECAToken.g:123:7: '&&'
                     {
                     match("&&"); 
 
@@ -720,7 +934,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:101:4: 'AND'
+                    // dd/grammar/ECAToken.g:124:4: 'AND'
                     {
                     match("AND"); 
 
@@ -728,7 +942,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:102:4: 'and'
+                    // dd/grammar/ECAToken.g:125:4: 'and'
                     {
                     match("and"); 
 
@@ -748,132 +962,7 @@ public class ECATokenLexer extends Lexer {
     public final void mNOT() throws RecognitionException {
         try {
             int _type = NOT;
-            // dd/grammar/ECAToken.g:105:5: ( '!' | 'NOT' | 'not' )
-            int alt10=3;
-            switch ( input.LA(1) ) {
-            case '!':
-                {
-                alt10=1;
-                }
-                break;
-            case 'N':
-                {
-                alt10=2;
-                }
-                break;
-            case 'n':
-                {
-                alt10=3;
-                }
-                break;
-            default:
-                NoViableAltException nvae =
-                    new NoViableAltException("105:1: NOT : ( '!' | 'NOT' | 'not' );", 10, 0, input);
-
-                throw nvae;
-            }
-
-            switch (alt10) {
-                case 1 :
-                    // dd/grammar/ECAToken.g:105:7: '!'
-                    {
-                    match('!'); 
-
-                    }
-                    break;
-                case 2 :
-                    // dd/grammar/ECAToken.g:106:4: 'NOT'
-                    {
-                    match("NOT"); 
-
-
-                    }
-                    break;
-                case 3 :
-                    // dd/grammar/ECAToken.g:107:4: 'not'
-                    {
-                    match("not"); 
-
-
-                    }
-                    break;
-
-            }
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end NOT
-
-    // $ANTLR start EQ
-    public final void mEQ() throws RecognitionException {
-        try {
-            int _type = EQ;
-            // dd/grammar/ECAToken.g:112:4: ( '==' | 'EQ' | 'eq' )
-            int alt11=3;
-            switch ( input.LA(1) ) {
-            case '=':
-                {
-                alt11=1;
-                }
-                break;
-            case 'E':
-                {
-                alt11=2;
-                }
-                break;
-            case 'e':
-                {
-                alt11=3;
-                }
-                break;
-            default:
-                NoViableAltException nvae =
-                    new NoViableAltException("112:1: EQ : ( '==' | 'EQ' | 'eq' );", 11, 0, input);
-
-                throw nvae;
-            }
-
-            switch (alt11) {
-                case 1 :
-                    // dd/grammar/ECAToken.g:112:6: '=='
-                    {
-                    match("=="); 
-
-
-                    }
-                    break;
-                case 2 :
-                    // dd/grammar/ECAToken.g:113:4: 'EQ'
-                    {
-                    match("EQ"); 
-
-
-                    }
-                    break;
-                case 3 :
-                    // dd/grammar/ECAToken.g:114:4: 'eq'
-                    {
-                    match("eq"); 
-
-
-                    }
-                    break;
-
-            }
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end EQ
-
-    // $ANTLR start NEQ
-    public final void mNEQ() throws RecognitionException {
-        try {
-            int _type = NEQ;
-            // dd/grammar/ECAToken.g:117:5: ( '!=' | 'NEQ' | 'neq' )
+            // dd/grammar/ECAToken.g:128:5: ( '!' | 'NOT' | 'not' )
             int alt12=3;
             switch ( input.LA(1) ) {
             case '!':
@@ -893,14 +982,139 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("117:1: NEQ : ( '!=' | 'NEQ' | 'neq' );", 12, 0, input);
+                    new NoViableAltException("128:1: NOT : ( '!' | 'NOT' | 'not' );", 12, 0, input);
 
                 throw nvae;
             }
 
             switch (alt12) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:117:7: '!='
+                    // dd/grammar/ECAToken.g:128:7: '!'
+                    {
+                    match('!'); 
+
+                    }
+                    break;
+                case 2 :
+                    // dd/grammar/ECAToken.g:129:4: 'NOT'
+                    {
+                    match("NOT"); 
+
+
+                    }
+                    break;
+                case 3 :
+                    // dd/grammar/ECAToken.g:130:4: 'not'
+                    {
+                    match("not"); 
+
+
+                    }
+                    break;
+
+            }
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end NOT
+
+    // $ANTLR start EQ
+    public final void mEQ() throws RecognitionException {
+        try {
+            int _type = EQ;
+            // dd/grammar/ECAToken.g:135:4: ( '==' | 'EQ' | 'eq' )
+            int alt13=3;
+            switch ( input.LA(1) ) {
+            case '=':
+                {
+                alt13=1;
+                }
+                break;
+            case 'E':
+                {
+                alt13=2;
+                }
+                break;
+            case 'e':
+                {
+                alt13=3;
+                }
+                break;
+            default:
+                NoViableAltException nvae =
+                    new NoViableAltException("135:1: EQ : ( '==' | 'EQ' | 'eq' );", 13, 0, input);
+
+                throw nvae;
+            }
+
+            switch (alt13) {
+                case 1 :
+                    // dd/grammar/ECAToken.g:135:6: '=='
+                    {
+                    match("=="); 
+
+
+                    }
+                    break;
+                case 2 :
+                    // dd/grammar/ECAToken.g:136:4: 'EQ'
+                    {
+                    match("EQ"); 
+
+
+                    }
+                    break;
+                case 3 :
+                    // dd/grammar/ECAToken.g:137:4: 'eq'
+                    {
+                    match("eq"); 
+
+
+                    }
+                    break;
+
+            }
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end EQ
+
+    // $ANTLR start NEQ
+    public final void mNEQ() throws RecognitionException {
+        try {
+            int _type = NEQ;
+            // dd/grammar/ECAToken.g:140:5: ( '!=' | 'NEQ' | 'neq' )
+            int alt14=3;
+            switch ( input.LA(1) ) {
+            case '!':
+                {
+                alt14=1;
+                }
+                break;
+            case 'N':
+                {
+                alt14=2;
+                }
+                break;
+            case 'n':
+                {
+                alt14=3;
+                }
+                break;
+            default:
+                NoViableAltException nvae =
+                    new NoViableAltException("140:1: NEQ : ( '!=' | 'NEQ' | 'neq' );", 14, 0, input);
+
+                throw nvae;
+            }
+
+            switch (alt14) {
+                case 1 :
+                    // dd/grammar/ECAToken.g:140:7: '!='
                     {
                     match("!="); 
 
@@ -908,7 +1122,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:118:4: 'NEQ'
+                    // dd/grammar/ECAToken.g:141:4: 'NEQ'
                     {
                     match("NEQ"); 
 
@@ -916,7 +1130,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:119:4: 'neq'
+                    // dd/grammar/ECAToken.g:142:4: 'neq'
                     {
                     match("neq"); 
 
@@ -936,131 +1150,7 @@ public class ECATokenLexer extends Lexer {
     public final void mGT() throws RecognitionException {
         try {
             int _type = GT;
-            // dd/grammar/ECAToken.g:122:4: ( '>' | 'GT' | 'gt' )
-            int alt13=3;
-            switch ( input.LA(1) ) {
-            case '>':
-                {
-                alt13=1;
-                }
-                break;
-            case 'G':
-                {
-                alt13=2;
-                }
-                break;
-            case 'g':
-                {
-                alt13=3;
-                }
-                break;
-            default:
-                NoViableAltException nvae =
-                    new NoViableAltException("122:1: GT : ( '>' | 'GT' | 'gt' );", 13, 0, input);
-
-                throw nvae;
-            }
-
-            switch (alt13) {
-                case 1 :
-                    // dd/grammar/ECAToken.g:122:6: '>'
-                    {
-                    match('>'); 
-
-                    }
-                    break;
-                case 2 :
-                    // dd/grammar/ECAToken.g:123:4: 'GT'
-                    {
-                    match("GT"); 
-
-
-                    }
-                    break;
-                case 3 :
-                    // dd/grammar/ECAToken.g:124:4: 'gt'
-                    {
-                    match("gt"); 
-
-
-                    }
-                    break;
-
-            }
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end GT
-
-    // $ANTLR start LT
-    public final void mLT() throws RecognitionException {
-        try {
-            int _type = LT;
-            // dd/grammar/ECAToken.g:127:4: ( '<' | 'LT' | 'lt' )
-            int alt14=3;
-            switch ( input.LA(1) ) {
-            case '<':
-                {
-                alt14=1;
-                }
-                break;
-            case 'L':
-                {
-                alt14=2;
-                }
-                break;
-            case 'l':
-                {
-                alt14=3;
-                }
-                break;
-            default:
-                NoViableAltException nvae =
-                    new NoViableAltException("127:1: LT : ( '<' | 'LT' | 'lt' );", 14, 0, input);
-
-                throw nvae;
-            }
-
-            switch (alt14) {
-                case 1 :
-                    // dd/grammar/ECAToken.g:127:6: '<'
-                    {
-                    match('<'); 
-
-                    }
-                    break;
-                case 2 :
-                    // dd/grammar/ECAToken.g:128:4: 'LT'
-                    {
-                    match("LT"); 
-
-
-                    }
-                    break;
-                case 3 :
-                    // dd/grammar/ECAToken.g:129:4: 'lt'
-                    {
-                    match("lt"); 
-
-
-                    }
-                    break;
-
-            }
-            this.type = _type;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end LT
-
-    // $ANTLR start GEQ
-    public final void mGEQ() throws RecognitionException {
-        try {
-            int _type = GEQ;
-            // dd/grammar/ECAToken.g:132:5: ( '>=' | 'GEQ' | 'geq' )
+            // dd/grammar/ECAToken.g:145:4: ( '>' | 'GT' | 'gt' )
             int alt15=3;
             switch ( input.LA(1) ) {
             case '>':
@@ -1080,32 +1170,31 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("132:1: GEQ : ( '>=' | 'GEQ' | 'geq' );", 15, 0, input);
+                    new NoViableAltException("145:1: GT : ( '>' | 'GT' | 'gt' );", 15, 0, input);
 
                 throw nvae;
             }
 
             switch (alt15) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:132:7: '>='
+                    // dd/grammar/ECAToken.g:145:6: '>'
                     {
-                    match(">="); 
-
+                    match('>'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:133:4: 'GEQ'
+                    // dd/grammar/ECAToken.g:146:4: 'GT'
                     {
-                    match("GEQ"); 
+                    match("GT"); 
 
 
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:134:4: 'geq'
+                    // dd/grammar/ECAToken.g:147:4: 'gt'
                     {
-                    match("geq"); 
+                    match("gt"); 
 
 
                     }
@@ -1117,13 +1206,13 @@ public class ECATokenLexer extends Lexer {
         finally {
         }
     }
-    // $ANTLR end GEQ
+    // $ANTLR end GT
 
-    // $ANTLR start LEQ
-    public final void mLEQ() throws RecognitionException {
+    // $ANTLR start LT
+    public final void mLT() throws RecognitionException {
         try {
-            int _type = LEQ;
-            // dd/grammar/ECAToken.g:137:5: ( '<=' | 'LEQ' | 'leq' )
+            int _type = LT;
+            // dd/grammar/ECAToken.g:150:4: ( '<' | 'LT' | 'lt' )
             int alt16=3;
             switch ( input.LA(1) ) {
             case '<':
@@ -1143,14 +1232,139 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("137:1: LEQ : ( '<=' | 'LEQ' | 'leq' );", 16, 0, input);
+                    new NoViableAltException("150:1: LT : ( '<' | 'LT' | 'lt' );", 16, 0, input);
 
                 throw nvae;
             }
 
             switch (alt16) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:137:7: '<='
+                    // dd/grammar/ECAToken.g:150:6: '<'
+                    {
+                    match('<'); 
+
+                    }
+                    break;
+                case 2 :
+                    // dd/grammar/ECAToken.g:151:4: 'LT'
+                    {
+                    match("LT"); 
+
+
+                    }
+                    break;
+                case 3 :
+                    // dd/grammar/ECAToken.g:152:4: 'lt'
+                    {
+                    match("lt"); 
+
+
+                    }
+                    break;
+
+            }
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end LT
+
+    // $ANTLR start GEQ
+    public final void mGEQ() throws RecognitionException {
+        try {
+            int _type = GEQ;
+            // dd/grammar/ECAToken.g:155:5: ( '>=' | 'EQ' | 'geq' )
+            int alt17=3;
+            switch ( input.LA(1) ) {
+            case '>':
+                {
+                alt17=1;
+                }
+                break;
+            case 'E':
+                {
+                alt17=2;
+                }
+                break;
+            case 'g':
+                {
+                alt17=3;
+                }
+                break;
+            default:
+                NoViableAltException nvae =
+                    new NoViableAltException("155:1: GEQ : ( '>=' | 'EQ' | 'geq' );", 17, 0, input);
+
+                throw nvae;
+            }
+
+            switch (alt17) {
+                case 1 :
+                    // dd/grammar/ECAToken.g:155:7: '>='
+                    {
+                    match(">="); 
+
+
+                    }
+                    break;
+                case 2 :
+                    // dd/grammar/ECAToken.g:156:4: 'EQ'
+                    {
+                    match("EQ"); 
+
+
+                    }
+                    break;
+                case 3 :
+                    // dd/grammar/ECAToken.g:157:4: 'geq'
+                    {
+                    match("geq"); 
+
+
+                    }
+                    break;
+
+            }
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end GEQ
+
+    // $ANTLR start LEQ
+    public final void mLEQ() throws RecognitionException {
+        try {
+            int _type = LEQ;
+            // dd/grammar/ECAToken.g:160:5: ( '<=' | 'LEQ' | 'leq' )
+            int alt18=3;
+            switch ( input.LA(1) ) {
+            case '<':
+                {
+                alt18=1;
+                }
+                break;
+            case 'L':
+                {
+                alt18=2;
+                }
+                break;
+            case 'l':
+                {
+                alt18=3;
+                }
+                break;
+            default:
+                NoViableAltException nvae =
+                    new NoViableAltException("160:1: LEQ : ( '<=' | 'LEQ' | 'leq' );", 18, 0, input);
+
+                throw nvae;
+            }
+
+            switch (alt18) {
+                case 1 :
+                    // dd/grammar/ECAToken.g:160:7: '<='
                     {
                     match("<="); 
 
@@ -1158,7 +1372,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:138:4: 'LEQ'
+                    // dd/grammar/ECAToken.g:161:4: 'LEQ'
                     {
                     match("LEQ"); 
 
@@ -1166,7 +1380,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:139:4: 'leq'
+                    // dd/grammar/ECAToken.g:162:4: 'leq'
                     {
                     match("leq"); 
 
@@ -1186,8 +1400,8 @@ public class ECATokenLexer extends Lexer {
     public final void mBOR() throws RecognitionException {
         try {
             int _type = BOR;
-            // dd/grammar/ECAToken.g:144:5: ( '|' )
-            // dd/grammar/ECAToken.g:144:7: '|'
+            // dd/grammar/ECAToken.g:167:5: ( '|' )
+            // dd/grammar/ECAToken.g:167:7: '|'
             {
             match('|'); 
 
@@ -1204,8 +1418,8 @@ public class ECATokenLexer extends Lexer {
     public final void mBAND() throws RecognitionException {
         try {
             int _type = BAND;
-            // dd/grammar/ECAToken.g:147:6: ( '&' )
-            // dd/grammar/ECAToken.g:147:8: '&'
+            // dd/grammar/ECAToken.g:170:6: ( '&' )
+            // dd/grammar/ECAToken.g:170:8: '&'
             {
             match('&'); 
 
@@ -1222,8 +1436,8 @@ public class ECATokenLexer extends Lexer {
     public final void mBXOR() throws RecognitionException {
         try {
             int _type = BXOR;
-            // dd/grammar/ECAToken.g:150:6: ( '^' )
-            // dd/grammar/ECAToken.g:150:8: '^'
+            // dd/grammar/ECAToken.g:173:6: ( '^' )
+            // dd/grammar/ECAToken.g:173:8: '^'
             {
             match('^'); 
 
@@ -1240,8 +1454,8 @@ public class ECATokenLexer extends Lexer {
     public final void mTWIDDLE() throws RecognitionException {
         try {
             int _type = TWIDDLE;
-            // dd/grammar/ECAToken.g:153:9: ( '~' )
-            // dd/grammar/ECAToken.g:153:11: '~'
+            // dd/grammar/ECAToken.g:176:9: ( '~' )
+            // dd/grammar/ECAToken.g:176:11: '~'
             {
             match('~'); 
 
@@ -1258,41 +1472,41 @@ public class ECATokenLexer extends Lexer {
     public final void mMUL() throws RecognitionException {
         try {
             int _type = MUL;
-            // dd/grammar/ECAToken.g:158:5: ( '*' | 'TIMES' | 'times' )
-            int alt17=3;
+            // dd/grammar/ECAToken.g:181:5: ( '*' | 'TIMES' | 'times' )
+            int alt19=3;
             switch ( input.LA(1) ) {
             case '*':
                 {
-                alt17=1;
+                alt19=1;
                 }
                 break;
             case 'T':
                 {
-                alt17=2;
+                alt19=2;
                 }
                 break;
             case 't':
                 {
-                alt17=3;
+                alt19=3;
                 }
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("158:1: MUL : ( '*' | 'TIMES' | 'times' );", 17, 0, input);
+                    new NoViableAltException("181:1: MUL : ( '*' | 'TIMES' | 'times' );", 19, 0, input);
 
                 throw nvae;
             }
 
-            switch (alt17) {
+            switch (alt19) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:158:7: '*'
+                    // dd/grammar/ECAToken.g:181:7: '*'
                     {
                     match('*'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:159:4: 'TIMES'
+                    // dd/grammar/ECAToken.g:182:4: 'TIMES'
                     {
                     match("TIMES"); 
 
@@ -1300,7 +1514,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:160:4: 'times'
+                    // dd/grammar/ECAToken.g:183:4: 'times'
                     {
                     match("times"); 
 
@@ -1320,41 +1534,41 @@ public class ECATokenLexer extends Lexer {
     public final void mDIV() throws RecognitionException {
         try {
             int _type = DIV;
-            // dd/grammar/ECAToken.g:163:5: ( '/' | 'DIVIDE' | 'divide' )
-            int alt18=3;
+            // dd/grammar/ECAToken.g:186:5: ( '/' | 'DIVIDE' | 'divide' )
+            int alt20=3;
             switch ( input.LA(1) ) {
             case '/':
                 {
-                alt18=1;
+                alt20=1;
                 }
                 break;
             case 'D':
                 {
-                alt18=2;
+                alt20=2;
                 }
                 break;
             case 'd':
                 {
-                alt18=3;
+                alt20=3;
                 }
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("163:1: DIV : ( '/' | 'DIVIDE' | 'divide' );", 18, 0, input);
+                    new NoViableAltException("186:1: DIV : ( '/' | 'DIVIDE' | 'divide' );", 20, 0, input);
 
                 throw nvae;
             }
 
-            switch (alt18) {
+            switch (alt20) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:163:7: '/'
+                    // dd/grammar/ECAToken.g:186:7: '/'
                     {
                     match('/'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:164:4: 'DIVIDE'
+                    // dd/grammar/ECAToken.g:187:4: 'DIVIDE'
                     {
                     match("DIVIDE"); 
 
@@ -1362,7 +1576,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:165:4: 'divide'
+                    // dd/grammar/ECAToken.g:188:4: 'divide'
                     {
                     match("divide"); 
 
@@ -1382,41 +1596,41 @@ public class ECATokenLexer extends Lexer {
     public final void mPLUS() throws RecognitionException {
         try {
             int _type = PLUS;
-            // dd/grammar/ECAToken.g:168:6: ( '+' | 'PLUS' | 'plus' )
-            int alt19=3;
+            // dd/grammar/ECAToken.g:191:6: ( '+' | 'PLUS' | 'plus' )
+            int alt21=3;
             switch ( input.LA(1) ) {
             case '+':
                 {
-                alt19=1;
+                alt21=1;
                 }
                 break;
             case 'P':
                 {
-                alt19=2;
+                alt21=2;
                 }
                 break;
             case 'p':
                 {
-                alt19=3;
+                alt21=3;
                 }
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("168:1: PLUS : ( '+' | 'PLUS' | 'plus' );", 19, 0, input);
+                    new NoViableAltException("191:1: PLUS : ( '+' | 'PLUS' | 'plus' );", 21, 0, input);
 
                 throw nvae;
             }
 
-            switch (alt19) {
+            switch (alt21) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:168:8: '+'
+                    // dd/grammar/ECAToken.g:191:8: '+'
                     {
                     match('+'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:169:4: 'PLUS'
+                    // dd/grammar/ECAToken.g:192:4: 'PLUS'
                     {
                     match("PLUS"); 
 
@@ -1424,7 +1638,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:170:4: 'plus'
+                    // dd/grammar/ECAToken.g:193:4: 'plus'
                     {
                     match("plus"); 
 
@@ -1444,41 +1658,41 @@ public class ECATokenLexer extends Lexer {
     public final void mMINUS() throws RecognitionException {
         try {
             int _type = MINUS;
-            // dd/grammar/ECAToken.g:173:7: ( '-' | 'MINUS' | 'minus' )
-            int alt20=3;
+            // dd/grammar/ECAToken.g:196:7: ( '-' | 'MINUS' | 'minus' )
+            int alt22=3;
             switch ( input.LA(1) ) {
             case '-':
                 {
-                alt20=1;
+                alt22=1;
                 }
                 break;
             case 'M':
                 {
-                alt20=2;
+                alt22=2;
                 }
                 break;
             case 'm':
                 {
-                alt20=3;
+                alt22=3;
                 }
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("173:1: MINUS : ( '-' | 'MINUS' | 'minus' );", 20, 0, input);
+                    new NoViableAltException("196:1: MINUS : ( '-' | 'MINUS' | 'minus' );", 22, 0, input);
 
                 throw nvae;
             }
 
-            switch (alt20) {
+            switch (alt22) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:173:9: '-'
+                    // dd/grammar/ECAToken.g:196:9: '-'
                     {
                     match('-'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:174:4: 'MINUS'
+                    // dd/grammar/ECAToken.g:197:4: 'MINUS'
                     {
                     match("MINUS"); 
 
@@ -1486,7 +1700,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:175:4: 'minus'
+                    // dd/grammar/ECAToken.g:198:4: 'minus'
                     {
                     match("minus"); 
 
@@ -1506,41 +1720,41 @@ public class ECATokenLexer extends Lexer {
     public final void mMOD() throws RecognitionException {
         try {
             int _type = MOD;
-            // dd/grammar/ECAToken.g:178:5: ( '%' | 'MOD' | 'mod' )
-            int alt21=3;
+            // dd/grammar/ECAToken.g:201:5: ( '%' | 'MOD' | 'mod' )
+            int alt23=3;
             switch ( input.LA(1) ) {
             case '%':
                 {
-                alt21=1;
+                alt23=1;
                 }
                 break;
             case 'M':
                 {
-                alt21=2;
+                alt23=2;
                 }
                 break;
             case 'm':
                 {
-                alt21=3;
+                alt23=3;
                 }
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("178:1: MOD : ( '%' | 'MOD' | 'mod' );", 21, 0, input);
+                    new NoViableAltException("201:1: MOD : ( '%' | 'MOD' | 'mod' );", 23, 0, input);
 
                 throw nvae;
             }
 
-            switch (alt21) {
+            switch (alt23) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:178:7: '%'
+                    // dd/grammar/ECAToken.g:201:7: '%'
                     {
                     match('%'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:179:4: 'MOD'
+                    // dd/grammar/ECAToken.g:202:4: 'MOD'
                     {
                     match("MOD"); 
 
@@ -1548,7 +1762,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:180:4: 'mod'
+                    // dd/grammar/ECAToken.g:203:4: 'mod'
                     {
                     match("mod"); 
 
@@ -1568,8 +1782,8 @@ public class ECATokenLexer extends Lexer {
     public final void mTERN_IF() throws RecognitionException {
         try {
             int _type = TERN_IF;
-            // dd/grammar/ECAToken.g:185:9: ( '?' )
-            // dd/grammar/ECAToken.g:185:11: '?'
+            // dd/grammar/ECAToken.g:208:9: ( '?' )
+            // dd/grammar/ECAToken.g:208:11: '?'
             {
             match('?'); 
 
@@ -1586,8 +1800,8 @@ public class ECATokenLexer extends Lexer {
     public final void mCOLON() throws RecognitionException {
         try {
             int _type = COLON;
-            // dd/grammar/ECAToken.g:188:7: ( ':' )
-            // dd/grammar/ECAToken.g:188:9: ':'
+            // dd/grammar/ECAToken.g:211:7: ( ':' )
+            // dd/grammar/ECAToken.g:211:9: ':'
             {
             match(':'); 
 
@@ -1603,7 +1817,7 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start LETTER
     public final void mLETTER() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:194:8: ( 'a' .. 'z' | 'A' .. 'Z' )
+            // dd/grammar/ECAToken.g:217:8: ( 'a' .. 'z' | 'A' .. 'Z' )
             // dd/grammar/ECAToken.g:
             {
             if ( (input.LA(1)>='A' && input.LA(1)<='Z')||(input.LA(1)>='a' && input.LA(1)<='z') ) {
@@ -1628,8 +1842,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start UNDERSCORE
     public final void mUNDERSCORE() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:198:12: ( '_' )
-            // dd/grammar/ECAToken.g:198:14: '_'
+            // dd/grammar/ECAToken.g:221:12: ( '_' )
+            // dd/grammar/ECAToken.g:221:14: '_'
             {
             match('_'); 
 
@@ -1645,8 +1859,8 @@ public class ECATokenLexer extends Lexer {
     public final void mQUOTE() throws RecognitionException {
         try {
             int _type = QUOTE;
-            // dd/grammar/ECAToken.g:201:7: ( '\\'' )
-            // dd/grammar/ECAToken.g:201:9: '\\''
+            // dd/grammar/ECAToken.g:224:7: ( '\\'' )
+            // dd/grammar/ECAToken.g:224:9: '\\''
             {
             match('\''); 
 
@@ -1663,8 +1877,8 @@ public class ECATokenLexer extends Lexer {
     public final void mDQUOTE() throws RecognitionException {
         try {
             int _type = DQUOTE;
-            // dd/grammar/ECAToken.g:204:8: ( '\"' )
-            // dd/grammar/ECAToken.g:204:10: '\"'
+            // dd/grammar/ECAToken.g:227:8: ( '\"' )
+            // dd/grammar/ECAToken.g:227:10: '\"'
             {
             match('\"'); 
 
@@ -1680,7 +1894,7 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start SPACE
     public final void mSPACE() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:208:7: ( ' ' | '\\t' | '\\r' )
+            // dd/grammar/ECAToken.g:231:7: ( ' ' | '\\t' | '\\r' )
             // dd/grammar/ECAToken.g:
             {
             if ( input.LA(1)=='\t'||input.LA(1)=='\r'||input.LA(1)==' ' ) {
@@ -1705,8 +1919,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start NEWLINE
     public final void mNEWLINE() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:212:9: ( '\\n' )
-            // dd/grammar/ECAToken.g:212:11: '\\n'
+            // dd/grammar/ECAToken.g:235:9: ( '\\n' )
+            // dd/grammar/ECAToken.g:235:11: '\\n'
             {
             match('\n'); 
 
@@ -1721,7 +1935,7 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start PUNCT
     public final void mPUNCT() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:216:7: ( '!' | '$' | '%' | '^' | '&' | '*' | '(' | ')' | '-' | '+' | '=' | '{' | '}' | '[' | ']' | ':' | ';' | '@' | '~' | '#' | '|' | '\\\\' | '`' | ',' | '<' | '.' | '>' | '/' | '?' )
+            // dd/grammar/ECAToken.g:239:7: ( '!' | '$' | '%' | '^' | '&' | '*' | '(' | ')' | '-' | '+' | '=' | '{' | '}' | '[' | ']' | ':' | ';' | '@' | '~' | '#' | '|' | '\\\\' | '`' | ',' | '<' | '.' | '>' | '/' | '?' )
             // dd/grammar/ECAToken.g:
             {
             if ( input.LA(1)=='!'||(input.LA(1)>='#' && input.LA(1)<='&')||(input.LA(1)>='(' && input.LA(1)<='/')||(input.LA(1)>=':' && input.LA(1)<='@')||(input.LA(1)>='[' && input.LA(1)<='^')||input.LA(1)=='`'||(input.LA(1)>='{' && input.LA(1)<='~') ) {
@@ -1747,22 +1961,22 @@ public class ECATokenLexer extends Lexer {
     public final void mSTRING() throws RecognitionException {
         try {
             int _type = STRING;
-            // dd/grammar/ECAToken.g:219:8: ( DQUOTE ( SPACE | PUNCT | LETTER | UNDERSCORE | DIGIT | QUOTE )* DQUOTE )
-            // dd/grammar/ECAToken.g:219:10: DQUOTE ( SPACE | PUNCT | LETTER | UNDERSCORE | DIGIT | QUOTE )* DQUOTE
+            // dd/grammar/ECAToken.g:242:8: ( DQUOTE ( SPACE | PUNCT | LETTER | UNDERSCORE | DIGIT | QUOTE )* DQUOTE )
+            // dd/grammar/ECAToken.g:242:10: DQUOTE ( SPACE | PUNCT | LETTER | UNDERSCORE | DIGIT | QUOTE )* DQUOTE
             {
             mDQUOTE(); 
-            // dd/grammar/ECAToken.g:219:17: ( SPACE | PUNCT | LETTER | UNDERSCORE | DIGIT | QUOTE )*
-            loop22:
+            // dd/grammar/ECAToken.g:242:17: ( SPACE | PUNCT | LETTER | UNDERSCORE | DIGIT | QUOTE )*
+            loop24:
             do {
-                int alt22=2;
-                int LA22_0 = input.LA(1);
+                int alt24=2;
+                int LA24_0 = input.LA(1);
 
-                if ( (LA22_0=='\t'||LA22_0=='\r'||(LA22_0>=' ' && LA22_0<='!')||(LA22_0>='#' && LA22_0<='~')) ) {
-                    alt22=1;
+                if ( (LA24_0=='\t'||LA24_0=='\r'||(LA24_0>=' ' && LA24_0<='!')||(LA24_0>='#' && LA24_0<='~')) ) {
+                    alt24=1;
                 }
 
 
-                switch (alt22) {
+                switch (alt24) {
             	case 1 :
             	    // dd/grammar/ECAToken.g:
             	    {
@@ -1781,7 +1995,7 @@ public class ECATokenLexer extends Lexer {
             	    break;
 
             	default :
-            	    break loop22;
+            	    break loop24;
                 }
             } while (true);
 
@@ -1799,8 +2013,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start BARESYM
     public final void mBARESYM() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:223:9: ( ( LETTER | UNDERSCORE ) ( LETTER | DIGIT | UNDERSCORE )* )
-            // dd/grammar/ECAToken.g:223:11: ( LETTER | UNDERSCORE ) ( LETTER | DIGIT | UNDERSCORE )*
+            // dd/grammar/ECAToken.g:246:9: ( ( LETTER | UNDERSCORE ) ( LETTER | DIGIT | UNDERSCORE )* )
+            // dd/grammar/ECAToken.g:246:11: ( LETTER | UNDERSCORE ) ( LETTER | DIGIT | UNDERSCORE )*
             {
             if ( (input.LA(1)>='A' && input.LA(1)<='Z')||input.LA(1)=='_'||(input.LA(1)>='a' && input.LA(1)<='z') ) {
                 input.consume();
@@ -1812,18 +2026,18 @@ public class ECATokenLexer extends Lexer {
                 recover(mse);    throw mse;
             }
 
-            // dd/grammar/ECAToken.g:223:33: ( LETTER | DIGIT | UNDERSCORE )*
-            loop23:
+            // dd/grammar/ECAToken.g:246:33: ( LETTER | DIGIT | UNDERSCORE )*
+            loop25:
             do {
-                int alt23=2;
-                int LA23_0 = input.LA(1);
+                int alt25=2;
+                int LA25_0 = input.LA(1);
 
-                if ( ((LA23_0>='0' && LA23_0<='9')||(LA23_0>='A' && LA23_0<='Z')||LA23_0=='_'||(LA23_0>='a' && LA23_0<='z')) ) {
-                    alt23=1;
+                if ( ((LA25_0>='0' && LA25_0<='9')||(LA25_0>='A' && LA25_0<='Z')||LA25_0=='_'||(LA25_0>='a' && LA25_0<='z')) ) {
+                    alt25=1;
                 }
 
 
-                switch (alt23) {
+                switch (alt25) {
             	case 1 :
             	    // dd/grammar/ECAToken.g:
             	    {
@@ -1842,7 +2056,7 @@ public class ECATokenLexer extends Lexer {
             	    break;
 
             	default :
-            	    break loop23;
+            	    break loop25;
                 }
             } while (true);
 
@@ -1858,26 +2072,26 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start QUOTSYM
     public final void mQUOTSYM() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:226:9: ( QUOTE ( PUNCT | LETTER | UNDERSCORE | DIGIT | DQUOTE )* QUOTE )
-            // dd/grammar/ECAToken.g:226:11: QUOTE ( PUNCT | LETTER | UNDERSCORE | DIGIT | DQUOTE )* QUOTE
+            // dd/grammar/ECAToken.g:249:9: ( QUOTE ( PUNCT | LETTER | UNDERSCORE | DIGIT | DQUOTE | SPACE )* QUOTE )
+            // dd/grammar/ECAToken.g:249:11: QUOTE ( PUNCT | LETTER | UNDERSCORE | DIGIT | DQUOTE | SPACE )* QUOTE
             {
             mQUOTE(); 
-            // dd/grammar/ECAToken.g:226:17: ( PUNCT | LETTER | UNDERSCORE | DIGIT | DQUOTE )*
-            loop24:
+            // dd/grammar/ECAToken.g:249:17: ( PUNCT | LETTER | UNDERSCORE | DIGIT | DQUOTE | SPACE )*
+            loop26:
             do {
-                int alt24=2;
-                int LA24_0 = input.LA(1);
+                int alt26=2;
+                int LA26_0 = input.LA(1);
 
-                if ( ((LA24_0>='!' && LA24_0<='&')||(LA24_0>='(' && LA24_0<='~')) ) {
-                    alt24=1;
+                if ( (LA26_0=='\t'||LA26_0=='\r'||(LA26_0>=' ' && LA26_0<='&')||(LA26_0>='(' && LA26_0<='~')) ) {
+                    alt26=1;
                 }
 
 
-                switch (alt24) {
+                switch (alt26) {
             	case 1 :
             	    // dd/grammar/ECAToken.g:
             	    {
-            	    if ( (input.LA(1)>='!' && input.LA(1)<='&')||(input.LA(1)>='(' && input.LA(1)<='~') ) {
+            	    if ( input.LA(1)=='\t'||input.LA(1)=='\r'||(input.LA(1)>=' ' && input.LA(1)<='&')||(input.LA(1)>='(' && input.LA(1)<='~') ) {
             	        input.consume();
 
             	    }
@@ -1892,7 +2106,7 @@ public class ECATokenLexer extends Lexer {
             	    break;
 
             	default :
-            	    break loop24;
+            	    break loop26;
                 }
             } while (true);
 
@@ -1909,12 +2123,12 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start DOTSYM
     public final void mDOTSYM() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:231:8: ( BARESYM DOT DOTSYM | BARESYM )
-            int alt25=2;
-            alt25 = dfa25.predict(input);
-            switch (alt25) {
+            // dd/grammar/ECAToken.g:254:8: ( BARESYM DOT DOTSYM | BARESYM )
+            int alt27=2;
+            alt27 = dfa27.predict(input);
+            switch (alt27) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:231:10: BARESYM DOT DOTSYM
+                    // dd/grammar/ECAToken.g:254:10: BARESYM DOT DOTSYM
                     {
                     mBARESYM(); 
                     mDOT(); 
@@ -1923,7 +2137,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:232:4: BARESYM
+                    // dd/grammar/ECAToken.g:255:4: BARESYM
                     {
                     mBARESYM(); 
 
@@ -1941,32 +2155,32 @@ public class ECATokenLexer extends Lexer {
     public final void mSYMBOL() throws RecognitionException {
         try {
             int _type = SYMBOL;
-            // dd/grammar/ECAToken.g:235:8: ( DOTSYM | QUOTSYM )
-            int alt26=2;
-            int LA26_0 = input.LA(1);
+            // dd/grammar/ECAToken.g:258:8: ( DOTSYM | QUOTSYM )
+            int alt28=2;
+            int LA28_0 = input.LA(1);
 
-            if ( ((LA26_0>='A' && LA26_0<='Z')||LA26_0=='_'||(LA26_0>='a' && LA26_0<='z')) ) {
-                alt26=1;
+            if ( ((LA28_0>='A' && LA28_0<='Z')||LA28_0=='_'||(LA28_0>='a' && LA28_0<='z')) ) {
+                alt28=1;
             }
-            else if ( (LA26_0=='\'') ) {
-                alt26=2;
+            else if ( (LA28_0=='\'') ) {
+                alt28=2;
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("235:1: SYMBOL : ( DOTSYM | QUOTSYM );", 26, 0, input);
+                    new NoViableAltException("258:1: SYMBOL : ( DOTSYM | QUOTSYM );", 28, 0, input);
 
                 throw nvae;
             }
-            switch (alt26) {
+            switch (alt28) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:235:10: DOTSYM
+                    // dd/grammar/ECAToken.g:258:10: DOTSYM
                     {
                     mDOTSYM(); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:236:4: QUOTSYM
+                    // dd/grammar/ECAToken.g:259:4: QUOTSYM
                     {
                     mQUOTSYM(); 
 
@@ -1984,8 +2198,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start DOLLAR
     public final void mDOLLAR() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:241:8: ( '$' )
-            // dd/grammar/ECAToken.g:241:10: '$'
+            // dd/grammar/ECAToken.g:264:8: ( '$' )
+            // dd/grammar/ECAToken.g:264:10: '$'
             {
             match('$'); 
 
@@ -2001,36 +2215,36 @@ public class ECATokenLexer extends Lexer {
     public final void mDOLLARSYM() throws RecognitionException {
         try {
             int _type = DOLLARSYM;
-            // dd/grammar/ECAToken.g:246:11: ( DOLLAR ( BAREINT | BARESYM ) )
-            // dd/grammar/ECAToken.g:246:13: DOLLAR ( BAREINT | BARESYM )
+            // dd/grammar/ECAToken.g:269:11: ( DOLLAR ( BAREINT | BARESYM ) )
+            // dd/grammar/ECAToken.g:269:13: DOLLAR ( BAREINT | BARESYM )
             {
             mDOLLAR(); 
-            // dd/grammar/ECAToken.g:246:20: ( BAREINT | BARESYM )
-            int alt27=2;
-            int LA27_0 = input.LA(1);
+            // dd/grammar/ECAToken.g:269:20: ( BAREINT | BARESYM )
+            int alt29=2;
+            int LA29_0 = input.LA(1);
 
-            if ( ((LA27_0>='0' && LA27_0<='9')) ) {
-                alt27=1;
+            if ( ((LA29_0>='0' && LA29_0<='9')) ) {
+                alt29=1;
             }
-            else if ( ((LA27_0>='A' && LA27_0<='Z')||LA27_0=='_'||(LA27_0>='a' && LA27_0<='z')) ) {
-                alt27=2;
+            else if ( ((LA29_0>='A' && LA29_0<='Z')||LA29_0=='_'||(LA29_0>='a' && LA29_0<='z')) ) {
+                alt29=2;
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("246:20: ( BAREINT | BARESYM )", 27, 0, input);
+                    new NoViableAltException("269:20: ( BAREINT | BARESYM )", 29, 0, input);
 
                 throw nvae;
             }
-            switch (alt27) {
+            switch (alt29) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:246:21: BAREINT
+                    // dd/grammar/ECAToken.g:269:21: BAREINT
                     {
                     mBAREINT(); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:246:31: BARESYM
+                    // dd/grammar/ECAToken.g:269:31: BARESYM
                     {
                     mBARESYM(); 
 
@@ -2053,8 +2267,8 @@ public class ECATokenLexer extends Lexer {
     public final void mWS() throws RecognitionException {
         try {
             int _type = WS;
-            // dd/grammar/ECAToken.g:252:4: ( ( SPACE | NEWLINE ) )
-            // dd/grammar/ECAToken.g:252:6: ( SPACE | NEWLINE )
+            // dd/grammar/ECAToken.g:275:4: ( ( SPACE | NEWLINE ) )
+            // dd/grammar/ECAToken.g:275:6: ( SPACE | NEWLINE )
             {
             if ( (input.LA(1)>='\t' && input.LA(1)<='\n')||input.LA(1)=='\r'||input.LA(1)==' ' ) {
                 input.consume();
@@ -2078,18 +2292,18 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR end WS
 
     public void mTokens() throws RecognitionException {
-        // dd/grammar/ECAToken.g:1:8: ( NUMBER | BIND | IF | DO | LPAREN | RPAREN | LSQUARE | RSQUARE | LBRACE | RBRACE | SEPR | DOT | ASSIGN | OR | AND | NOT | EQ | NEQ | GT | LT | GEQ | LEQ | BOR | BAND | BXOR | TWIDDLE | MUL | DIV | PLUS | MINUS | MOD | TERN_IF | COLON | QUOTE | DQUOTE | STRING | SYMBOL | DOLLARSYM | WS )
-        int alt28=39;
+        // dd/grammar/ECAToken.g:1:8: ( NUMBER | BIND | IF | DO | RULE | CLASS | METHOD | LINE | ENDRULE | NOTHING | TRUE | FALSE | LPAREN | RPAREN | LSQUARE | RSQUARE | LBRACE | RBRACE | SEPR | DOT | ASSIGN | OR | AND | NOT | EQ | NEQ | GT | LT | GEQ | LEQ | BOR | BAND | BXOR | TWIDDLE | MUL | DIV | PLUS | MINUS | MOD | TERN_IF | COLON | QUOTE | DQUOTE | STRING | SYMBOL | DOLLARSYM | WS )
+        int alt30=47;
         switch ( input.LA(1) ) {
         case '+':
             {
-            int LA28_1 = input.LA(2);
+            int LA30_1 = input.LA(2);
 
-            if ( ((LA28_1>='0' && LA28_1<='9')) ) {
-                alt28=1;
+            if ( ((LA30_1>='0' && LA30_1<='9')) ) {
+                alt30=1;
             }
             else {
-                alt28=29;}
+                alt30=37;}
             }
             break;
         case '0':
@@ -2103,53 +2317,53 @@ public class ECATokenLexer extends Lexer {
         case '8':
         case '9':
             {
-            alt28=1;
+            alt30=1;
             }
             break;
         case 'B':
             {
-            int LA28_3 = input.LA(2);
+            int LA30_3 = input.LA(2);
 
-            if ( (LA28_3=='I') ) {
-                int LA28_53 = input.LA(3);
+            if ( (LA30_3=='I') ) {
+                int LA30_57 = input.LA(3);
 
-                if ( (LA28_53=='N') ) {
-                    int LA28_100 = input.LA(4);
+                if ( (LA30_57=='N') ) {
+                    int LA30_112 = input.LA(4);
 
-                    if ( (LA28_100=='D') ) {
-                        int LA28_123 = input.LA(5);
+                    if ( (LA30_112=='D') ) {
+                        int LA30_143 = input.LA(5);
 
-                        if ( (LA28_123=='.'||(LA28_123>='0' && LA28_123<='9')||(LA28_123>='A' && LA28_123<='Z')||LA28_123=='_'||(LA28_123>='a' && LA28_123<='z')) ) {
-                            alt28=37;
+                        if ( (LA30_143=='.'||(LA30_143>='0' && LA30_143<='9')||(LA30_143>='A' && LA30_143<='Z')||LA30_143=='_'||(LA30_143>='a' && LA30_143<='z')) ) {
+                            alt30=45;
                         }
                         else {
-                            alt28=2;}
+                            alt30=2;}
                     }
                     else {
-                        alt28=37;}
+                        alt30=45;}
                 }
                 else {
-                    alt28=37;}
+                    alt30=45;}
             }
             else {
-                alt28=37;}
+                alt30=45;}
             }
             break;
         case 'I':
             {
-            int LA28_4 = input.LA(2);
+            int LA30_4 = input.LA(2);
 
-            if ( (LA28_4=='F') ) {
-                int LA28_54 = input.LA(3);
+            if ( (LA30_4=='F') ) {
+                int LA30_58 = input.LA(3);
 
-                if ( (LA28_54=='.'||(LA28_54>='0' && LA28_54<='9')||(LA28_54>='A' && LA28_54<='Z')||LA28_54=='_'||(LA28_54>='a' && LA28_54<='z')) ) {
-                    alt28=37;
+                if ( (LA30_58=='.'||(LA30_58>='0' && LA30_58<='9')||(LA30_58>='A' && LA30_58<='Z')||LA30_58=='_'||(LA30_58>='a' && LA30_58<='z')) ) {
+                    alt30=45;
                 }
                 else {
-                    alt28=3;}
+                    alt30=3;}
             }
             else {
-                alt28=37;}
+                alt30=45;}
             }
             break;
         case 'D':
@@ -2157,236 +2371,325 @@ public class ECATokenLexer extends Lexer {
             switch ( input.LA(2) ) {
             case 'O':
                 {
-                int LA28_55 = input.LA(3);
+                int LA30_59 = input.LA(3);
 
-                if ( (LA28_55=='.'||(LA28_55>='0' && LA28_55<='9')||(LA28_55>='A' && LA28_55<='Z')||LA28_55=='_'||(LA28_55>='a' && LA28_55<='z')) ) {
-                    alt28=37;
+                if ( (LA30_59=='.'||(LA30_59>='0' && LA30_59<='9')||(LA30_59>='A' && LA30_59<='Z')||LA30_59=='_'||(LA30_59>='a' && LA30_59<='z')) ) {
+                    alt30=45;
                 }
                 else {
-                    alt28=4;}
+                    alt30=4;}
                 }
                 break;
             case 'I':
                 {
-                int LA28_56 = input.LA(3);
+                int LA30_60 = input.LA(3);
 
-                if ( (LA28_56=='V') ) {
-                    int LA28_103 = input.LA(4);
+                if ( (LA30_60=='V') ) {
+                    int LA30_115 = input.LA(4);
 
-                    if ( (LA28_103=='I') ) {
-                        int LA28_124 = input.LA(5);
+                    if ( (LA30_115=='I') ) {
+                        int LA30_144 = input.LA(5);
 
-                        if ( (LA28_124=='D') ) {
-                            int LA28_133 = input.LA(6);
+                        if ( (LA30_144=='D') ) {
+                            int LA30_163 = input.LA(6);
 
-                            if ( (LA28_133=='E') ) {
-                                int LA28_139 = input.LA(7);
+                            if ( (LA30_163=='E') ) {
+                                int LA30_178 = input.LA(7);
 
-                                if ( (LA28_139=='.'||(LA28_139>='0' && LA28_139<='9')||(LA28_139>='A' && LA28_139<='Z')||LA28_139=='_'||(LA28_139>='a' && LA28_139<='z')) ) {
-                                    alt28=37;
+                                if ( (LA30_178=='.'||(LA30_178>='0' && LA30_178<='9')||(LA30_178>='A' && LA30_178<='Z')||LA30_178=='_'||(LA30_178>='a' && LA30_178<='z')) ) {
+                                    alt30=45;
                                 }
                                 else {
-                                    alt28=28;}
+                                    alt30=36;}
                             }
                             else {
-                                alt28=37;}
+                                alt30=45;}
                         }
                         else {
-                            alt28=37;}
+                            alt30=45;}
                     }
                     else {
-                        alt28=37;}
+                        alt30=45;}
                 }
                 else {
-                    alt28=37;}
+                    alt30=45;}
                 }
                 break;
             default:
-                alt28=37;}
+                alt30=45;}
 
             }
             break;
-        case '(':
+        case 'R':
             {
-            alt28=5;
-            }
-            break;
-        case ')':
-            {
-            alt28=6;
-            }
-            break;
-        case '[':
-            {
-            alt28=7;
-            }
-            break;
-        case ']':
-            {
-            alt28=8;
-            }
-            break;
-        case '{':
-            {
-            alt28=9;
-            }
-            break;
-        case '}':
-            {
-            alt28=10;
-            }
-            break;
-        case ',':
-        case ';':
-            {
-            alt28=11;
-            }
-            break;
-        case '.':
-            {
-            alt28=12;
-            }
-            break;
-        case '=':
-            {
-            int LA28_14 = input.LA(2);
+            int LA30_6 = input.LA(2);
 
-            if ( (LA28_14=='=') ) {
-                alt28=17;
+            if ( (LA30_6=='U') ) {
+                int LA30_61 = input.LA(3);
+
+                if ( (LA30_61=='L') ) {
+                    int LA30_116 = input.LA(4);
+
+                    if ( (LA30_116=='E') ) {
+                        int LA30_145 = input.LA(5);
+
+                        if ( (LA30_145=='.'||(LA30_145>='0' && LA30_145<='9')||(LA30_145>='A' && LA30_145<='Z')||LA30_145=='_'||(LA30_145>='a' && LA30_145<='z')) ) {
+                            alt30=45;
+                        }
+                        else {
+                            alt30=5;}
+                    }
+                    else {
+                        alt30=45;}
+                }
+                else {
+                    alt30=45;}
             }
             else {
-                alt28=13;}
+                alt30=45;}
             }
             break;
-        case '<':
+        case 'C':
+            {
+            int LA30_7 = input.LA(2);
+
+            if ( (LA30_7=='L') ) {
+                int LA30_62 = input.LA(3);
+
+                if ( (LA30_62=='A') ) {
+                    int LA30_117 = input.LA(4);
+
+                    if ( (LA30_117=='S') ) {
+                        int LA30_146 = input.LA(5);
+
+                        if ( (LA30_146=='S') ) {
+                            int LA30_165 = input.LA(6);
+
+                            if ( (LA30_165=='.'||(LA30_165>='0' && LA30_165<='9')||(LA30_165>='A' && LA30_165<='Z')||LA30_165=='_'||(LA30_165>='a' && LA30_165<='z')) ) {
+                                alt30=45;
+                            }
+                            else {
+                                alt30=6;}
+                        }
+                        else {
+                            alt30=45;}
+                    }
+                    else {
+                        alt30=45;}
+                }
+                else {
+                    alt30=45;}
+            }
+            else {
+                alt30=45;}
+            }
+            break;
+        case 'M':
             {
             switch ( input.LA(2) ) {
-            case '=':
+            case 'I':
                 {
-                alt28=22;
+                int LA30_63 = input.LA(3);
+
+                if ( (LA30_63=='N') ) {
+                    int LA30_118 = input.LA(4);
+
+                    if ( (LA30_118=='U') ) {
+                        int LA30_147 = input.LA(5);
+
+                        if ( (LA30_147=='S') ) {
+                            int LA30_166 = input.LA(6);
+
+                            if ( (LA30_166=='.'||(LA30_166>='0' && LA30_166<='9')||(LA30_166>='A' && LA30_166<='Z')||LA30_166=='_'||(LA30_166>='a' && LA30_166<='z')) ) {
+                                alt30=45;
+                            }
+                            else {
+                                alt30=38;}
+                        }
+                        else {
+                            alt30=45;}
+                    }
+                    else {
+                        alt30=45;}
+                }
+                else {
+                    alt30=45;}
                 }
                 break;
-            case '-':
+            case 'E':
                 {
-                alt28=13;
+                int LA30_64 = input.LA(3);
+
+                if ( (LA30_64=='T') ) {
+                    int LA30_119 = input.LA(4);
+
+                    if ( (LA30_119=='H') ) {
+                        int LA30_148 = input.LA(5);
+
+                        if ( (LA30_148=='O') ) {
+                            int LA30_167 = input.LA(6);
+
+                            if ( (LA30_167=='D') ) {
+                                int LA30_180 = input.LA(7);
+
+                                if ( (LA30_180=='.'||(LA30_180>='0' && LA30_180<='9')||(LA30_180>='A' && LA30_180<='Z')||LA30_180=='_'||(LA30_180>='a' && LA30_180<='z')) ) {
+                                    alt30=45;
+                                }
+                                else {
+                                    alt30=7;}
+                            }
+                            else {
+                                alt30=45;}
+                        }
+                        else {
+                            alt30=45;}
+                    }
+                    else {
+                        alt30=45;}
+                }
+                else {
+                    alt30=45;}
+                }
+                break;
+            case 'O':
+                {
+                int LA30_65 = input.LA(3);
+
+                if ( (LA30_65=='D') ) {
+                    int LA30_120 = input.LA(4);
+
+                    if ( (LA30_120=='.'||(LA30_120>='0' && LA30_120<='9')||(LA30_120>='A' && LA30_120<='Z')||LA30_120=='_'||(LA30_120>='a' && LA30_120<='z')) ) {
+                        alt30=45;
+                    }
+                    else {
+                        alt30=39;}
+                }
+                else {
+                    alt30=45;}
                 }
                 break;
             default:
-                alt28=20;}
+                alt30=45;}
 
             }
             break;
-        case '|':
+        case 'L':
             {
-            int LA28_16 = input.LA(2);
+            switch ( input.LA(2) ) {
+            case 'T':
+                {
+                int LA30_66 = input.LA(3);
 
-            if ( (LA28_16=='|') ) {
-                alt28=14;
-            }
-            else {
-                alt28=23;}
-            }
-            break;
-        case 'O':
-            {
-            int LA28_17 = input.LA(2);
-
-            if ( (LA28_17=='R') ) {
-                int LA28_63 = input.LA(3);
-
-                if ( (LA28_63=='.'||(LA28_63>='0' && LA28_63<='9')||(LA28_63>='A' && LA28_63<='Z')||LA28_63=='_'||(LA28_63>='a' && LA28_63<='z')) ) {
-                    alt28=37;
+                if ( (LA30_66=='.'||(LA30_66>='0' && LA30_66<='9')||(LA30_66>='A' && LA30_66<='Z')||LA30_66=='_'||(LA30_66>='a' && LA30_66<='z')) ) {
+                    alt30=45;
                 }
                 else {
-                    alt28=14;}
-            }
-            else {
-                alt28=37;}
-            }
-            break;
-        case 'o':
-            {
-            int LA28_18 = input.LA(2);
-
-            if ( (LA28_18=='r') ) {
-                int LA28_64 = input.LA(3);
-
-                if ( (LA28_64=='.'||(LA28_64>='0' && LA28_64<='9')||(LA28_64>='A' && LA28_64<='Z')||LA28_64=='_'||(LA28_64>='a' && LA28_64<='z')) ) {
-                    alt28=37;
+                    alt30=28;}
                 }
-                else {
-                    alt28=14;}
-            }
-            else {
-                alt28=37;}
-            }
-            break;
-        case '&':
-            {
-            int LA28_19 = input.LA(2);
+                break;
+            case 'I':
+                {
+                int LA30_67 = input.LA(3);
 
-            if ( (LA28_19=='&') ) {
-                alt28=15;
-            }
-            else {
-                alt28=24;}
-            }
-            break;
-        case 'A':
-            {
-            int LA28_20 = input.LA(2);
+                if ( (LA30_67=='N') ) {
+                    int LA30_121 = input.LA(4);
 
-            if ( (LA28_20=='N') ) {
-                int LA28_67 = input.LA(3);
+                    if ( (LA30_121=='E') ) {
+                        int LA30_149 = input.LA(5);
 
-                if ( (LA28_67=='D') ) {
-                    int LA28_104 = input.LA(4);
-
-                    if ( (LA28_104=='.'||(LA28_104>='0' && LA28_104<='9')||(LA28_104>='A' && LA28_104<='Z')||LA28_104=='_'||(LA28_104>='a' && LA28_104<='z')) ) {
-                        alt28=37;
+                        if ( (LA30_149=='.'||(LA30_149>='0' && LA30_149<='9')||(LA30_149>='A' && LA30_149<='Z')||LA30_149=='_'||(LA30_149>='a' && LA30_149<='z')) ) {
+                            alt30=45;
+                        }
+                        else {
+                            alt30=8;}
                     }
                     else {
-                        alt28=15;}
+                        alt30=45;}
                 }
                 else {
-                    alt28=37;}
-            }
-            else {
-                alt28=37;}
-            }
-            break;
-        case 'a':
-            {
-            int LA28_21 = input.LA(2);
+                    alt30=45;}
+                }
+                break;
+            case 'E':
+                {
+                int LA30_68 = input.LA(3);
 
-            if ( (LA28_21=='n') ) {
-                int LA28_68 = input.LA(3);
+                if ( (LA30_68=='Q') ) {
+                    int LA30_122 = input.LA(4);
 
-                if ( (LA28_68=='d') ) {
-                    int LA28_105 = input.LA(4);
-
-                    if ( (LA28_105=='.'||(LA28_105>='0' && LA28_105<='9')||(LA28_105>='A' && LA28_105<='Z')||LA28_105=='_'||(LA28_105>='a' && LA28_105<='z')) ) {
-                        alt28=37;
+                    if ( (LA30_122=='.'||(LA30_122>='0' && LA30_122<='9')||(LA30_122>='A' && LA30_122<='Z')||LA30_122=='_'||(LA30_122>='a' && LA30_122<='z')) ) {
+                        alt30=45;
                     }
                     else {
-                        alt28=15;}
+                        alt30=30;}
                 }
                 else {
-                    alt28=37;}
-            }
-            else {
-                alt28=37;}
+                    alt30=45;}
+                }
+                break;
+            default:
+                alt30=45;}
+
             }
             break;
-        case '!':
+        case 'E':
             {
-            int LA28_22 = input.LA(2);
+            switch ( input.LA(2) ) {
+            case 'N':
+                {
+                int LA30_69 = input.LA(3);
 
-            if ( (LA28_22=='=') ) {
-                alt28=18;
-            }
-            else {
-                alt28=16;}
+                if ( (LA30_69=='D') ) {
+                    int LA30_123 = input.LA(4);
+
+                    if ( (LA30_123=='R') ) {
+                        int LA30_150 = input.LA(5);
+
+                        if ( (LA30_150=='U') ) {
+                            int LA30_169 = input.LA(6);
+
+                            if ( (LA30_169=='L') ) {
+                                int LA30_181 = input.LA(7);
+
+                                if ( (LA30_181=='E') ) {
+                                    int LA30_186 = input.LA(8);
+
+                                    if ( (LA30_186=='.'||(LA30_186>='0' && LA30_186<='9')||(LA30_186>='A' && LA30_186<='Z')||LA30_186=='_'||(LA30_186>='a' && LA30_186<='z')) ) {
+                                        alt30=45;
+                                    }
+                                    else {
+                                        alt30=9;}
+                                }
+                                else {
+                                    alt30=45;}
+                            }
+                            else {
+                                alt30=45;}
+                        }
+                        else {
+                            alt30=45;}
+                    }
+                    else {
+                        alt30=45;}
+                }
+                else {
+                    alt30=45;}
+                }
+                break;
+            case 'Q':
+                {
+                int LA30_70 = input.LA(3);
+
+                if ( (LA30_70=='.'||(LA30_70>='0' && LA30_70<='9')||(LA30_70>='A' && LA30_70<='Z')||LA30_70=='_'||(LA30_70>='a' && LA30_70<='z')) ) {
+                    alt30=45;
+                }
+                else {
+                    alt30=25;}
+                }
+                break;
+            default:
+                alt30=45;}
+
             }
             break;
         case 'N':
@@ -2394,626 +2697,893 @@ public class ECATokenLexer extends Lexer {
             switch ( input.LA(2) ) {
             case 'E':
                 {
-                int LA28_71 = input.LA(3);
+                int LA30_71 = input.LA(3);
 
-                if ( (LA28_71=='Q') ) {
-                    int LA28_106 = input.LA(4);
+                if ( (LA30_71=='Q') ) {
+                    int LA30_124 = input.LA(4);
 
-                    if ( (LA28_106=='.'||(LA28_106>='0' && LA28_106<='9')||(LA28_106>='A' && LA28_106<='Z')||LA28_106=='_'||(LA28_106>='a' && LA28_106<='z')) ) {
-                        alt28=37;
+                    if ( (LA30_124=='.'||(LA30_124>='0' && LA30_124<='9')||(LA30_124>='A' && LA30_124<='Z')||LA30_124=='_'||(LA30_124>='a' && LA30_124<='z')) ) {
+                        alt30=45;
                     }
                     else {
-                        alt28=18;}
+                        alt30=26;}
                 }
                 else {
-                    alt28=37;}
+                    alt30=45;}
                 }
                 break;
             case 'O':
                 {
-                int LA28_72 = input.LA(3);
+                int LA30_72 = input.LA(3);
 
-                if ( (LA28_72=='T') ) {
-                    int LA28_107 = input.LA(4);
+                if ( (LA30_72=='T') ) {
+                    switch ( input.LA(4) ) {
+                    case 'H':
+                        {
+                        int LA30_151 = input.LA(5);
 
-                    if ( (LA28_107=='.'||(LA28_107>='0' && LA28_107<='9')||(LA28_107>='A' && LA28_107<='Z')||LA28_107=='_'||(LA28_107>='a' && LA28_107<='z')) ) {
-                        alt28=37;
-                    }
-                    else {
-                        alt28=16;}
+                        if ( (LA30_151=='I') ) {
+                            int LA30_170 = input.LA(6);
+
+                            if ( (LA30_170=='N') ) {
+                                int LA30_182 = input.LA(7);
+
+                                if ( (LA30_182=='G') ) {
+                                    int LA30_187 = input.LA(8);
+
+                                    if ( (LA30_187=='.'||(LA30_187>='0' && LA30_187<='9')||(LA30_187>='A' && LA30_187<='Z')||LA30_187=='_'||(LA30_187>='a' && LA30_187<='z')) ) {
+                                        alt30=45;
+                                    }
+                                    else {
+                                        alt30=10;}
+                                }
+                                else {
+                                    alt30=45;}
+                            }
+                            else {
+                                alt30=45;}
+                        }
+                        else {
+                            alt30=45;}
+                        }
+                        break;
+                    case '.':
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                    case 'A':
+                    case 'B':
+                    case 'C':
+                    case 'D':
+                    case 'E':
+                    case 'F':
+                    case 'G':
+                    case 'I':
+                    case 'J':
+                    case 'K':
+                    case 'L':
+                    case 'M':
+                    case 'N':
+                    case 'O':
+                    case 'P':
+                    case 'Q':
+                    case 'R':
+                    case 'S':
+                    case 'T':
+                    case 'U':
+                    case 'V':
+                    case 'W':
+                    case 'X':
+                    case 'Y':
+                    case 'Z':
+                    case '_':
+                    case 'a':
+                    case 'b':
+                    case 'c':
+                    case 'd':
+                    case 'e':
+                    case 'f':
+                    case 'g':
+                    case 'h':
+                    case 'i':
+                    case 'j':
+                    case 'k':
+                    case 'l':
+                    case 'm':
+                    case 'n':
+                    case 'o':
+                    case 'p':
+                    case 'q':
+                    case 'r':
+                    case 's':
+                    case 't':
+                    case 'u':
+                    case 'v':
+                    case 'w':
+                    case 'x':
+                    case 'y':
+                    case 'z':
+                        {
+                        alt30=45;
+                        }
+                        break;
+                    default:
+                        alt30=24;}
+
                 }
                 else {
-                    alt28=37;}
+                    alt30=45;}
                 }
                 break;
             default:
-                alt28=37;}
+                alt30=45;}
 
+            }
+            break;
+        case 'T':
+            {
+            switch ( input.LA(2) ) {
+            case 'I':
+                {
+                int LA30_73 = input.LA(3);
+
+                if ( (LA30_73=='M') ) {
+                    int LA30_126 = input.LA(4);
+
+                    if ( (LA30_126=='E') ) {
+                        int LA30_152 = input.LA(5);
+
+                        if ( (LA30_152=='S') ) {
+                            int LA30_171 = input.LA(6);
+
+                            if ( (LA30_171=='.'||(LA30_171>='0' && LA30_171<='9')||(LA30_171>='A' && LA30_171<='Z')||LA30_171=='_'||(LA30_171>='a' && LA30_171<='z')) ) {
+                                alt30=45;
+                            }
+                            else {
+                                alt30=35;}
+                        }
+                        else {
+                            alt30=45;}
+                    }
+                    else {
+                        alt30=45;}
+                }
+                else {
+                    alt30=45;}
+                }
+                break;
+            case 'R':
+                {
+                int LA30_74 = input.LA(3);
+
+                if ( (LA30_74=='U') ) {
+                    int LA30_127 = input.LA(4);
+
+                    if ( (LA30_127=='E') ) {
+                        int LA30_153 = input.LA(5);
+
+                        if ( (LA30_153=='.'||(LA30_153>='0' && LA30_153<='9')||(LA30_153>='A' && LA30_153<='Z')||LA30_153=='_'||(LA30_153>='a' && LA30_153<='z')) ) {
+                            alt30=45;
+                        }
+                        else {
+                            alt30=11;}
+                    }
+                    else {
+                        alt30=45;}
+                }
+                else {
+                    alt30=45;}
+                }
+                break;
+            default:
+                alt30=45;}
+
+            }
+            break;
+        case 't':
+            {
+            switch ( input.LA(2) ) {
+            case 'i':
+                {
+                int LA30_75 = input.LA(3);
+
+                if ( (LA30_75=='m') ) {
+                    int LA30_128 = input.LA(4);
+
+                    if ( (LA30_128=='e') ) {
+                        int LA30_154 = input.LA(5);
+
+                        if ( (LA30_154=='s') ) {
+                            int LA30_173 = input.LA(6);
+
+                            if ( (LA30_173=='.'||(LA30_173>='0' && LA30_173<='9')||(LA30_173>='A' && LA30_173<='Z')||LA30_173=='_'||(LA30_173>='a' && LA30_173<='z')) ) {
+                                alt30=45;
+                            }
+                            else {
+                                alt30=35;}
+                        }
+                        else {
+                            alt30=45;}
+                    }
+                    else {
+                        alt30=45;}
+                }
+                else {
+                    alt30=45;}
+                }
+                break;
+            case 'r':
+                {
+                int LA30_76 = input.LA(3);
+
+                if ( (LA30_76=='u') ) {
+                    int LA30_129 = input.LA(4);
+
+                    if ( (LA30_129=='e') ) {
+                        int LA30_155 = input.LA(5);
+
+                        if ( (LA30_155=='.'||(LA30_155>='0' && LA30_155<='9')||(LA30_155>='A' && LA30_155<='Z')||LA30_155=='_'||(LA30_155>='a' && LA30_155<='z')) ) {
+                            alt30=45;
+                        }
+                        else {
+                            alt30=11;}
+                    }
+                    else {
+                        alt30=45;}
+                }
+                else {
+                    alt30=45;}
+                }
+                break;
+            default:
+                alt30=45;}
+
+            }
+            break;
+        case 'F':
+            {
+            int LA30_14 = input.LA(2);
+
+            if ( (LA30_14=='A') ) {
+                int LA30_77 = input.LA(3);
+
+                if ( (LA30_77=='L') ) {
+                    int LA30_130 = input.LA(4);
+
+                    if ( (LA30_130=='S') ) {
+                        int LA30_156 = input.LA(5);
+
+                        if ( (LA30_156=='E') ) {
+                            int LA30_174 = input.LA(6);
+
+                            if ( (LA30_174=='.'||(LA30_174>='0' && LA30_174<='9')||(LA30_174>='A' && LA30_174<='Z')||LA30_174=='_'||(LA30_174>='a' && LA30_174<='z')) ) {
+                                alt30=45;
+                            }
+                            else {
+                                alt30=12;}
+                        }
+                        else {
+                            alt30=45;}
+                    }
+                    else {
+                        alt30=45;}
+                }
+                else {
+                    alt30=45;}
+            }
+            else {
+                alt30=45;}
+            }
+            break;
+        case 'f':
+            {
+            int LA30_15 = input.LA(2);
+
+            if ( (LA30_15=='a') ) {
+                int LA30_78 = input.LA(3);
+
+                if ( (LA30_78=='l') ) {
+                    int LA30_131 = input.LA(4);
+
+                    if ( (LA30_131=='s') ) {
+                        int LA30_157 = input.LA(5);
+
+                        if ( (LA30_157=='e') ) {
+                            int LA30_175 = input.LA(6);
+
+                            if ( (LA30_175=='.'||(LA30_175>='0' && LA30_175<='9')||(LA30_175>='A' && LA30_175<='Z')||LA30_175=='_'||(LA30_175>='a' && LA30_175<='z')) ) {
+                                alt30=45;
+                            }
+                            else {
+                                alt30=12;}
+                        }
+                        else {
+                            alt30=45;}
+                    }
+                    else {
+                        alt30=45;}
+                }
+                else {
+                    alt30=45;}
+            }
+            else {
+                alt30=45;}
+            }
+            break;
+        case '(':
+            {
+            alt30=13;
+            }
+            break;
+        case ')':
+            {
+            alt30=14;
+            }
+            break;
+        case '[':
+            {
+            alt30=15;
+            }
+            break;
+        case ']':
+            {
+            alt30=16;
+            }
+            break;
+        case '{':
+            {
+            alt30=17;
+            }
+            break;
+        case '}':
+            {
+            alt30=18;
+            }
+            break;
+        case ',':
+        case ';':
+            {
+            alt30=19;
+            }
+            break;
+        case '.':
+            {
+            alt30=20;
+            }
+            break;
+        case '=':
+            {
+            int LA30_24 = input.LA(2);
+
+            if ( (LA30_24=='=') ) {
+                alt30=25;
+            }
+            else {
+                alt30=21;}
+            }
+            break;
+        case '<':
+            {
+            switch ( input.LA(2) ) {
+            case '-':
+                {
+                alt30=21;
+                }
+                break;
+            case '=':
+                {
+                alt30=30;
+                }
+                break;
+            default:
+                alt30=28;}
+
+            }
+            break;
+        case '|':
+            {
+            int LA30_26 = input.LA(2);
+
+            if ( (LA30_26=='|') ) {
+                alt30=22;
+            }
+            else {
+                alt30=31;}
+            }
+            break;
+        case 'O':
+            {
+            int LA30_27 = input.LA(2);
+
+            if ( (LA30_27=='R') ) {
+                int LA30_85 = input.LA(3);
+
+                if ( (LA30_85=='.'||(LA30_85>='0' && LA30_85<='9')||(LA30_85>='A' && LA30_85<='Z')||LA30_85=='_'||(LA30_85>='a' && LA30_85<='z')) ) {
+                    alt30=45;
+                }
+                else {
+                    alt30=22;}
+            }
+            else {
+                alt30=45;}
+            }
+            break;
+        case 'o':
+            {
+            int LA30_28 = input.LA(2);
+
+            if ( (LA30_28=='r') ) {
+                int LA30_86 = input.LA(3);
+
+                if ( (LA30_86=='.'||(LA30_86>='0' && LA30_86<='9')||(LA30_86>='A' && LA30_86<='Z')||LA30_86=='_'||(LA30_86>='a' && LA30_86<='z')) ) {
+                    alt30=45;
+                }
+                else {
+                    alt30=22;}
+            }
+            else {
+                alt30=45;}
+            }
+            break;
+        case '&':
+            {
+            int LA30_29 = input.LA(2);
+
+            if ( (LA30_29=='&') ) {
+                alt30=23;
+            }
+            else {
+                alt30=32;}
+            }
+            break;
+        case 'A':
+            {
+            int LA30_30 = input.LA(2);
+
+            if ( (LA30_30=='N') ) {
+                int LA30_89 = input.LA(3);
+
+                if ( (LA30_89=='D') ) {
+                    int LA30_132 = input.LA(4);
+
+                    if ( (LA30_132=='.'||(LA30_132>='0' && LA30_132<='9')||(LA30_132>='A' && LA30_132<='Z')||LA30_132=='_'||(LA30_132>='a' && LA30_132<='z')) ) {
+                        alt30=45;
+                    }
+                    else {
+                        alt30=23;}
+                }
+                else {
+                    alt30=45;}
+            }
+            else {
+                alt30=45;}
+            }
+            break;
+        case 'a':
+            {
+            int LA30_31 = input.LA(2);
+
+            if ( (LA30_31=='n') ) {
+                int LA30_90 = input.LA(3);
+
+                if ( (LA30_90=='d') ) {
+                    int LA30_133 = input.LA(4);
+
+                    if ( (LA30_133=='.'||(LA30_133>='0' && LA30_133<='9')||(LA30_133>='A' && LA30_133<='Z')||LA30_133=='_'||(LA30_133>='a' && LA30_133<='z')) ) {
+                        alt30=45;
+                    }
+                    else {
+                        alt30=23;}
+                }
+                else {
+                    alt30=45;}
+            }
+            else {
+                alt30=45;}
+            }
+            break;
+        case '!':
+            {
+            int LA30_32 = input.LA(2);
+
+            if ( (LA30_32=='=') ) {
+                alt30=26;
+            }
+            else {
+                alt30=24;}
             }
             break;
         case 'n':
             {
             switch ( input.LA(2) ) {
-            case 'e':
-                {
-                int LA28_73 = input.LA(3);
-
-                if ( (LA28_73=='q') ) {
-                    int LA28_108 = input.LA(4);
-
-                    if ( (LA28_108=='.'||(LA28_108>='0' && LA28_108<='9')||(LA28_108>='A' && LA28_108<='Z')||LA28_108=='_'||(LA28_108>='a' && LA28_108<='z')) ) {
-                        alt28=37;
-                    }
-                    else {
-                        alt28=18;}
-                }
-                else {
-                    alt28=37;}
-                }
-                break;
             case 'o':
                 {
-                int LA28_74 = input.LA(3);
+                int LA30_93 = input.LA(3);
 
-                if ( (LA28_74=='t') ) {
-                    int LA28_109 = input.LA(4);
+                if ( (LA30_93=='t') ) {
+                    int LA30_134 = input.LA(4);
 
-                    if ( (LA28_109=='.'||(LA28_109>='0' && LA28_109<='9')||(LA28_109>='A' && LA28_109<='Z')||LA28_109=='_'||(LA28_109>='a' && LA28_109<='z')) ) {
-                        alt28=37;
+                    if ( (LA30_134=='.'||(LA30_134>='0' && LA30_134<='9')||(LA30_134>='A' && LA30_134<='Z')||LA30_134=='_'||(LA30_134>='a' && LA30_134<='z')) ) {
+                        alt30=45;
                     }
                     else {
-                        alt28=16;}
+                        alt30=24;}
                 }
                 else {
-                    alt28=37;}
+                    alt30=45;}
+                }
+                break;
+            case 'e':
+                {
+                int LA30_94 = input.LA(3);
+
+                if ( (LA30_94=='q') ) {
+                    int LA30_135 = input.LA(4);
+
+                    if ( (LA30_135=='.'||(LA30_135>='0' && LA30_135<='9')||(LA30_135>='A' && LA30_135<='Z')||LA30_135=='_'||(LA30_135>='a' && LA30_135<='z')) ) {
+                        alt30=45;
+                    }
+                    else {
+                        alt30=26;}
+                }
+                else {
+                    alt30=45;}
                 }
                 break;
             default:
-                alt28=37;}
+                alt30=45;}
 
-            }
-            break;
-        case 'E':
-            {
-            int LA28_25 = input.LA(2);
-
-            if ( (LA28_25=='Q') ) {
-                int LA28_75 = input.LA(3);
-
-                if ( (LA28_75=='.'||(LA28_75>='0' && LA28_75<='9')||(LA28_75>='A' && LA28_75<='Z')||LA28_75=='_'||(LA28_75>='a' && LA28_75<='z')) ) {
-                    alt28=37;
-                }
-                else {
-                    alt28=17;}
-            }
-            else {
-                alt28=37;}
             }
             break;
         case 'e':
             {
-            int LA28_26 = input.LA(2);
+            int LA30_34 = input.LA(2);
 
-            if ( (LA28_26=='q') ) {
-                int LA28_76 = input.LA(3);
+            if ( (LA30_34=='q') ) {
+                int LA30_95 = input.LA(3);
 
-                if ( (LA28_76=='.'||(LA28_76>='0' && LA28_76<='9')||(LA28_76>='A' && LA28_76<='Z')||LA28_76=='_'||(LA28_76>='a' && LA28_76<='z')) ) {
-                    alt28=37;
+                if ( (LA30_95=='.'||(LA30_95>='0' && LA30_95<='9')||(LA30_95>='A' && LA30_95<='Z')||LA30_95=='_'||(LA30_95>='a' && LA30_95<='z')) ) {
+                    alt30=45;
                 }
                 else {
-                    alt28=17;}
+                    alt30=25;}
             }
             else {
-                alt28=37;}
+                alt30=45;}
             }
             break;
         case '>':
             {
-            int LA28_27 = input.LA(2);
+            int LA30_35 = input.LA(2);
 
-            if ( (LA28_27=='=') ) {
-                alt28=21;
+            if ( (LA30_35=='=') ) {
+                alt30=29;
             }
             else {
-                alt28=19;}
+                alt30=27;}
             }
             break;
         case 'G':
             {
-            switch ( input.LA(2) ) {
-            case 'T':
-                {
-                int LA28_79 = input.LA(3);
+            int LA30_36 = input.LA(2);
 
-                if ( (LA28_79=='.'||(LA28_79>='0' && LA28_79<='9')||(LA28_79>='A' && LA28_79<='Z')||LA28_79=='_'||(LA28_79>='a' && LA28_79<='z')) ) {
-                    alt28=37;
+            if ( (LA30_36=='T') ) {
+                int LA30_98 = input.LA(3);
+
+                if ( (LA30_98=='.'||(LA30_98>='0' && LA30_98<='9')||(LA30_98>='A' && LA30_98<='Z')||LA30_98=='_'||(LA30_98>='a' && LA30_98<='z')) ) {
+                    alt30=45;
                 }
                 else {
-                    alt28=19;}
-                }
-                break;
-            case 'E':
-                {
-                int LA28_80 = input.LA(3);
-
-                if ( (LA28_80=='Q') ) {
-                    int LA28_110 = input.LA(4);
-
-                    if ( (LA28_110=='.'||(LA28_110>='0' && LA28_110<='9')||(LA28_110>='A' && LA28_110<='Z')||LA28_110=='_'||(LA28_110>='a' && LA28_110<='z')) ) {
-                        alt28=37;
-                    }
-                    else {
-                        alt28=21;}
-                }
-                else {
-                    alt28=37;}
-                }
-                break;
-            default:
-                alt28=37;}
-
+                    alt30=27;}
+            }
+            else {
+                alt30=45;}
             }
             break;
         case 'g':
             {
             switch ( input.LA(2) ) {
-            case 't':
-                {
-                int LA28_81 = input.LA(3);
-
-                if ( (LA28_81=='.'||(LA28_81>='0' && LA28_81<='9')||(LA28_81>='A' && LA28_81<='Z')||LA28_81=='_'||(LA28_81>='a' && LA28_81<='z')) ) {
-                    alt28=37;
-                }
-                else {
-                    alt28=19;}
-                }
-                break;
             case 'e':
                 {
-                int LA28_82 = input.LA(3);
+                int LA30_99 = input.LA(3);
 
-                if ( (LA28_82=='q') ) {
-                    int LA28_111 = input.LA(4);
+                if ( (LA30_99=='q') ) {
+                    int LA30_136 = input.LA(4);
 
-                    if ( (LA28_111=='.'||(LA28_111>='0' && LA28_111<='9')||(LA28_111>='A' && LA28_111<='Z')||LA28_111=='_'||(LA28_111>='a' && LA28_111<='z')) ) {
-                        alt28=37;
+                    if ( (LA30_136=='.'||(LA30_136>='0' && LA30_136<='9')||(LA30_136>='A' && LA30_136<='Z')||LA30_136=='_'||(LA30_136>='a' && LA30_136<='z')) ) {
+                        alt30=45;
                     }
                     else {
-                        alt28=21;}
+                        alt30=29;}
                 }
                 else {
-                    alt28=37;}
+                    alt30=45;}
+                }
+                break;
+            case 't':
+                {
+                int LA30_100 = input.LA(3);
+
+                if ( (LA30_100=='.'||(LA30_100>='0' && LA30_100<='9')||(LA30_100>='A' && LA30_100<='Z')||LA30_100=='_'||(LA30_100>='a' && LA30_100<='z')) ) {
+                    alt30=45;
+                }
+                else {
+                    alt30=27;}
                 }
                 break;
             default:
-                alt28=37;}
-
-            }
-            break;
-        case 'L':
-            {
-            switch ( input.LA(2) ) {
-            case 'E':
-                {
-                int LA28_83 = input.LA(3);
-
-                if ( (LA28_83=='Q') ) {
-                    int LA28_112 = input.LA(4);
-
-                    if ( (LA28_112=='.'||(LA28_112>='0' && LA28_112<='9')||(LA28_112>='A' && LA28_112<='Z')||LA28_112=='_'||(LA28_112>='a' && LA28_112<='z')) ) {
-                        alt28=37;
-                    }
-                    else {
-                        alt28=22;}
-                }
-                else {
-                    alt28=37;}
-                }
-                break;
-            case 'T':
-                {
-                int LA28_84 = input.LA(3);
-
-                if ( (LA28_84=='.'||(LA28_84>='0' && LA28_84<='9')||(LA28_84>='A' && LA28_84<='Z')||LA28_84=='_'||(LA28_84>='a' && LA28_84<='z')) ) {
-                    alt28=37;
-                }
-                else {
-                    alt28=20;}
-                }
-                break;
-            default:
-                alt28=37;}
+                alt30=45;}
 
             }
             break;
         case 'l':
             {
             switch ( input.LA(2) ) {
-            case 'e':
-                {
-                int LA28_85 = input.LA(3);
-
-                if ( (LA28_85=='q') ) {
-                    int LA28_113 = input.LA(4);
-
-                    if ( (LA28_113=='.'||(LA28_113>='0' && LA28_113<='9')||(LA28_113>='A' && LA28_113<='Z')||LA28_113=='_'||(LA28_113>='a' && LA28_113<='z')) ) {
-                        alt28=37;
-                    }
-                    else {
-                        alt28=22;}
-                }
-                else {
-                    alt28=37;}
-                }
-                break;
             case 't':
                 {
-                int LA28_86 = input.LA(3);
+                int LA30_101 = input.LA(3);
 
-                if ( (LA28_86=='.'||(LA28_86>='0' && LA28_86<='9')||(LA28_86>='A' && LA28_86<='Z')||LA28_86=='_'||(LA28_86>='a' && LA28_86<='z')) ) {
-                    alt28=37;
+                if ( (LA30_101=='.'||(LA30_101>='0' && LA30_101<='9')||(LA30_101>='A' && LA30_101<='Z')||LA30_101=='_'||(LA30_101>='a' && LA30_101<='z')) ) {
+                    alt30=45;
                 }
                 else {
-                    alt28=20;}
+                    alt30=28;}
+                }
+                break;
+            case 'e':
+                {
+                int LA30_102 = input.LA(3);
+
+                if ( (LA30_102=='q') ) {
+                    int LA30_137 = input.LA(4);
+
+                    if ( (LA30_137=='.'||(LA30_137>='0' && LA30_137<='9')||(LA30_137>='A' && LA30_137<='Z')||LA30_137=='_'||(LA30_137>='a' && LA30_137<='z')) ) {
+                        alt30=45;
+                    }
+                    else {
+                        alt30=30;}
+                }
+                else {
+                    alt30=45;}
                 }
                 break;
             default:
-                alt28=37;}
+                alt30=45;}
 
             }
             break;
         case '^':
             {
-            alt28=25;
+            alt30=33;
             }
             break;
         case '~':
             {
-            alt28=26;
+            alt30=34;
             }
             break;
         case '*':
             {
-            alt28=27;
-            }
-            break;
-        case 'T':
-            {
-            int LA28_35 = input.LA(2);
-
-            if ( (LA28_35=='I') ) {
-                int LA28_87 = input.LA(3);
-
-                if ( (LA28_87=='M') ) {
-                    int LA28_114 = input.LA(4);
-
-                    if ( (LA28_114=='E') ) {
-                        int LA28_125 = input.LA(5);
-
-                        if ( (LA28_125=='S') ) {
-                            int LA28_134 = input.LA(6);
-
-                            if ( (LA28_134=='.'||(LA28_134>='0' && LA28_134<='9')||(LA28_134>='A' && LA28_134<='Z')||LA28_134=='_'||(LA28_134>='a' && LA28_134<='z')) ) {
-                                alt28=37;
-                            }
-                            else {
-                                alt28=27;}
-                        }
-                        else {
-                            alt28=37;}
-                    }
-                    else {
-                        alt28=37;}
-                }
-                else {
-                    alt28=37;}
-            }
-            else {
-                alt28=37;}
-            }
-            break;
-        case 't':
-            {
-            int LA28_36 = input.LA(2);
-
-            if ( (LA28_36=='i') ) {
-                int LA28_88 = input.LA(3);
-
-                if ( (LA28_88=='m') ) {
-                    int LA28_115 = input.LA(4);
-
-                    if ( (LA28_115=='e') ) {
-                        int LA28_126 = input.LA(5);
-
-                        if ( (LA28_126=='s') ) {
-                            int LA28_135 = input.LA(6);
-
-                            if ( (LA28_135=='.'||(LA28_135>='0' && LA28_135<='9')||(LA28_135>='A' && LA28_135<='Z')||LA28_135=='_'||(LA28_135>='a' && LA28_135<='z')) ) {
-                                alt28=37;
-                            }
-                            else {
-                                alt28=27;}
-                        }
-                        else {
-                            alt28=37;}
-                    }
-                    else {
-                        alt28=37;}
-                }
-                else {
-                    alt28=37;}
-            }
-            else {
-                alt28=37;}
+            alt30=35;
             }
             break;
         case '/':
             {
-            alt28=28;
+            alt30=36;
             }
             break;
         case 'd':
             {
-            int LA28_38 = input.LA(2);
+            int LA30_43 = input.LA(2);
 
-            if ( (LA28_38=='i') ) {
-                int LA28_89 = input.LA(3);
+            if ( (LA30_43=='i') ) {
+                int LA30_103 = input.LA(3);
 
-                if ( (LA28_89=='v') ) {
-                    int LA28_116 = input.LA(4);
+                if ( (LA30_103=='v') ) {
+                    int LA30_138 = input.LA(4);
 
-                    if ( (LA28_116=='i') ) {
-                        int LA28_127 = input.LA(5);
+                    if ( (LA30_138=='i') ) {
+                        int LA30_158 = input.LA(5);
 
-                        if ( (LA28_127=='d') ) {
-                            int LA28_136 = input.LA(6);
+                        if ( (LA30_158=='d') ) {
+                            int LA30_176 = input.LA(6);
 
-                            if ( (LA28_136=='e') ) {
-                                int LA28_140 = input.LA(7);
+                            if ( (LA30_176=='e') ) {
+                                int LA30_184 = input.LA(7);
 
-                                if ( (LA28_140=='.'||(LA28_140>='0' && LA28_140<='9')||(LA28_140>='A' && LA28_140<='Z')||LA28_140=='_'||(LA28_140>='a' && LA28_140<='z')) ) {
-                                    alt28=37;
+                                if ( (LA30_184=='.'||(LA30_184>='0' && LA30_184<='9')||(LA30_184>='A' && LA30_184<='Z')||LA30_184=='_'||(LA30_184>='a' && LA30_184<='z')) ) {
+                                    alt30=45;
                                 }
                                 else {
-                                    alt28=28;}
+                                    alt30=36;}
                             }
                             else {
-                                alt28=37;}
+                                alt30=45;}
                         }
                         else {
-                            alt28=37;}
+                            alt30=45;}
                     }
                     else {
-                        alt28=37;}
+                        alt30=45;}
                 }
                 else {
-                    alt28=37;}
+                    alt30=45;}
             }
             else {
-                alt28=37;}
+                alt30=45;}
             }
             break;
         case '-':
             {
-            int LA28_39 = input.LA(2);
+            int LA30_44 = input.LA(2);
 
-            if ( ((LA28_39>='0' && LA28_39<='9')) ) {
-                alt28=1;
+            if ( ((LA30_44>='0' && LA30_44<='9')) ) {
+                alt30=1;
             }
             else {
-                alt28=30;}
+                alt30=38;}
             }
             break;
         case 'P':
             {
-            int LA28_40 = input.LA(2);
+            int LA30_45 = input.LA(2);
 
-            if ( (LA28_40=='L') ) {
-                int LA28_91 = input.LA(3);
+            if ( (LA30_45=='L') ) {
+                int LA30_105 = input.LA(3);
 
-                if ( (LA28_91=='U') ) {
-                    int LA28_117 = input.LA(4);
+                if ( (LA30_105=='U') ) {
+                    int LA30_139 = input.LA(4);
 
-                    if ( (LA28_117=='S') ) {
-                        int LA28_128 = input.LA(5);
+                    if ( (LA30_139=='S') ) {
+                        int LA30_159 = input.LA(5);
 
-                        if ( (LA28_128=='.'||(LA28_128>='0' && LA28_128<='9')||(LA28_128>='A' && LA28_128<='Z')||LA28_128=='_'||(LA28_128>='a' && LA28_128<='z')) ) {
-                            alt28=37;
+                        if ( (LA30_159=='.'||(LA30_159>='0' && LA30_159<='9')||(LA30_159>='A' && LA30_159<='Z')||LA30_159=='_'||(LA30_159>='a' && LA30_159<='z')) ) {
+                            alt30=45;
                         }
                         else {
-                            alt28=29;}
+                            alt30=37;}
                     }
                     else {
-                        alt28=37;}
+                        alt30=45;}
                 }
                 else {
-                    alt28=37;}
+                    alt30=45;}
             }
             else {
-                alt28=37;}
+                alt30=45;}
             }
             break;
         case 'p':
             {
-            int LA28_41 = input.LA(2);
+            int LA30_46 = input.LA(2);
 
-            if ( (LA28_41=='l') ) {
-                int LA28_92 = input.LA(3);
+            if ( (LA30_46=='l') ) {
+                int LA30_106 = input.LA(3);
 
-                if ( (LA28_92=='u') ) {
-                    int LA28_118 = input.LA(4);
+                if ( (LA30_106=='u') ) {
+                    int LA30_140 = input.LA(4);
 
-                    if ( (LA28_118=='s') ) {
-                        int LA28_129 = input.LA(5);
+                    if ( (LA30_140=='s') ) {
+                        int LA30_160 = input.LA(5);
 
-                        if ( (LA28_129=='.'||(LA28_129>='0' && LA28_129<='9')||(LA28_129>='A' && LA28_129<='Z')||LA28_129=='_'||(LA28_129>='a' && LA28_129<='z')) ) {
-                            alt28=37;
+                        if ( (LA30_160=='.'||(LA30_160>='0' && LA30_160<='9')||(LA30_160>='A' && LA30_160<='Z')||LA30_160=='_'||(LA30_160>='a' && LA30_160<='z')) ) {
+                            alt30=45;
                         }
                         else {
-                            alt28=29;}
+                            alt30=37;}
                     }
                     else {
-                        alt28=37;}
+                        alt30=45;}
                 }
                 else {
-                    alt28=37;}
+                    alt30=45;}
             }
             else {
-                alt28=37;}
-            }
-            break;
-        case 'M':
-            {
-            switch ( input.LA(2) ) {
-            case 'O':
-                {
-                int LA28_93 = input.LA(3);
-
-                if ( (LA28_93=='D') ) {
-                    int LA28_119 = input.LA(4);
-
-                    if ( (LA28_119=='.'||(LA28_119>='0' && LA28_119<='9')||(LA28_119>='A' && LA28_119<='Z')||LA28_119=='_'||(LA28_119>='a' && LA28_119<='z')) ) {
-                        alt28=37;
-                    }
-                    else {
-                        alt28=31;}
-                }
-                else {
-                    alt28=37;}
-                }
-                break;
-            case 'I':
-                {
-                int LA28_94 = input.LA(3);
-
-                if ( (LA28_94=='N') ) {
-                    int LA28_120 = input.LA(4);
-
-                    if ( (LA28_120=='U') ) {
-                        int LA28_130 = input.LA(5);
-
-                        if ( (LA28_130=='S') ) {
-                            int LA28_137 = input.LA(6);
-
-                            if ( (LA28_137=='.'||(LA28_137>='0' && LA28_137<='9')||(LA28_137>='A' && LA28_137<='Z')||LA28_137=='_'||(LA28_137>='a' && LA28_137<='z')) ) {
-                                alt28=37;
-                            }
-                            else {
-                                alt28=30;}
-                        }
-                        else {
-                            alt28=37;}
-                    }
-                    else {
-                        alt28=37;}
-                }
-                else {
-                    alt28=37;}
-                }
-                break;
-            default:
-                alt28=37;}
-
+                alt30=45;}
             }
             break;
         case 'm':
             {
             switch ( input.LA(2) ) {
-            case 'o':
-                {
-                int LA28_95 = input.LA(3);
-
-                if ( (LA28_95=='d') ) {
-                    int LA28_121 = input.LA(4);
-
-                    if ( (LA28_121=='.'||(LA28_121>='0' && LA28_121<='9')||(LA28_121>='A' && LA28_121<='Z')||LA28_121=='_'||(LA28_121>='a' && LA28_121<='z')) ) {
-                        alt28=37;
-                    }
-                    else {
-                        alt28=31;}
-                }
-                else {
-                    alt28=37;}
-                }
-                break;
             case 'i':
                 {
-                int LA28_96 = input.LA(3);
+                int LA30_107 = input.LA(3);
 
-                if ( (LA28_96=='n') ) {
-                    int LA28_122 = input.LA(4);
+                if ( (LA30_107=='n') ) {
+                    int LA30_141 = input.LA(4);
 
-                    if ( (LA28_122=='u') ) {
-                        int LA28_131 = input.LA(5);
+                    if ( (LA30_141=='u') ) {
+                        int LA30_161 = input.LA(5);
 
-                        if ( (LA28_131=='s') ) {
-                            int LA28_138 = input.LA(6);
+                        if ( (LA30_161=='s') ) {
+                            int LA30_177 = input.LA(6);
 
-                            if ( (LA28_138=='.'||(LA28_138>='0' && LA28_138<='9')||(LA28_138>='A' && LA28_138<='Z')||LA28_138=='_'||(LA28_138>='a' && LA28_138<='z')) ) {
-                                alt28=37;
+                            if ( (LA30_177=='.'||(LA30_177>='0' && LA30_177<='9')||(LA30_177>='A' && LA30_177<='Z')||LA30_177=='_'||(LA30_177>='a' && LA30_177<='z')) ) {
+                                alt30=45;
                             }
                             else {
-                                alt28=30;}
+                                alt30=38;}
                         }
                         else {
-                            alt28=37;}
+                            alt30=45;}
                     }
                     else {
-                        alt28=37;}
+                        alt30=45;}
                 }
                 else {
-                    alt28=37;}
+                    alt30=45;}
+                }
+                break;
+            case 'o':
+                {
+                int LA30_108 = input.LA(3);
+
+                if ( (LA30_108=='d') ) {
+                    int LA30_142 = input.LA(4);
+
+                    if ( (LA30_142=='.'||(LA30_142>='0' && LA30_142<='9')||(LA30_142>='A' && LA30_142<='Z')||LA30_142=='_'||(LA30_142>='a' && LA30_142<='z')) ) {
+                        alt30=45;
+                    }
+                    else {
+                        alt30=39;}
+                }
+                else {
+                    alt30=45;}
                 }
                 break;
             default:
-                alt28=37;}
+                alt30=45;}
 
             }
             break;
         case '%':
             {
-            alt28=31;
+            alt30=39;
             }
             break;
         case '?':
             {
-            alt28=32;
+            alt30=40;
             }
             break;
         case ':':
             {
-            alt28=33;
+            alt30=41;
             }
             break;
         case '\'':
             {
-            int LA28_47 = input.LA(2);
+            int LA30_51 = input.LA(2);
 
-            if ( ((LA28_47>='!' && LA28_47<='~')) ) {
-                alt28=37;
+            if ( (LA30_51=='\t'||LA30_51=='\r'||(LA30_51>=' ' && LA30_51<='~')) ) {
+                alt30=45;
             }
             else {
-                alt28=34;}
+                alt30=42;}
             }
             break;
         case '\"':
             {
-            int LA28_48 = input.LA(2);
+            int LA30_52 = input.LA(2);
 
-            if ( (LA28_48=='\t'||LA28_48=='\r'||(LA28_48>=' ' && LA28_48<='~')) ) {
-                alt28=36;
+            if ( (LA30_52=='\t'||LA30_52=='\r'||(LA30_52>=' ' && LA30_52<='~')) ) {
+                alt30=44;
             }
             else {
-                alt28=35;}
+                alt30=43;}
             }
             break;
-        case 'C':
-        case 'F':
         case 'H':
         case 'J':
         case 'K':
         case 'Q':
-        case 'R':
         case 'S':
         case 'U':
         case 'V':
@@ -3024,7 +3594,6 @@ public class ECATokenLexer extends Lexer {
         case '_':
         case 'b':
         case 'c':
-        case 'f':
         case 'h':
         case 'i':
         case 'j':
@@ -3039,12 +3608,12 @@ public class ECATokenLexer extends Lexer {
         case 'y':
         case 'z':
             {
-            alt28=37;
+            alt30=45;
             }
             break;
         case '$':
             {
-            alt28=38;
+            alt30=46;
             }
             break;
         case '\t':
@@ -3052,17 +3621,17 @@ public class ECATokenLexer extends Lexer {
         case '\r':
         case ' ':
             {
-            alt28=39;
+            alt30=47;
             }
             break;
         default:
             NoViableAltException nvae =
-                new NoViableAltException("1:1: Tokens : ( NUMBER | BIND | IF | DO | LPAREN | RPAREN | LSQUARE | RSQUARE | LBRACE | RBRACE | SEPR | DOT | ASSIGN | OR | AND | NOT | EQ | NEQ | GT | LT | GEQ | LEQ | BOR | BAND | BXOR | TWIDDLE | MUL | DIV | PLUS | MINUS | MOD | TERN_IF | COLON | QUOTE | DQUOTE | STRING | SYMBOL | DOLLARSYM | WS );", 28, 0, input);
+                new NoViableAltException("1:1: Tokens : ( NUMBER | BIND | IF | DO | RULE | CLASS | METHOD | LINE | ENDRULE | NOTHING | TRUE | FALSE | LPAREN | RPAREN | LSQUARE | RSQUARE | LBRACE | RBRACE | SEPR | DOT | ASSIGN | OR | AND | NOT | EQ | NEQ | GT | LT | GEQ | LEQ | BOR | BAND | BXOR | TWIDDLE | MUL | DIV | PLUS | MINUS | MOD | TERN_IF | COLON | QUOTE | DQUOTE | STRING | SYMBOL | DOLLARSYM | WS );", 30, 0, input);
 
             throw nvae;
         }
 
-        switch (alt28) {
+        switch (alt30) {
             case 1 :
                 // dd/grammar/ECAToken.g:1:10: NUMBER
                 {
@@ -3092,245 +3661,301 @@ public class ECATokenLexer extends Lexer {
                 }
                 break;
             case 5 :
-                // dd/grammar/ECAToken.g:1:28: LPAREN
+                // dd/grammar/ECAToken.g:1:28: RULE
+                {
+                mRULE(); 
+
+                }
+                break;
+            case 6 :
+                // dd/grammar/ECAToken.g:1:33: CLASS
+                {
+                mCLASS(); 
+
+                }
+                break;
+            case 7 :
+                // dd/grammar/ECAToken.g:1:39: METHOD
+                {
+                mMETHOD(); 
+
+                }
+                break;
+            case 8 :
+                // dd/grammar/ECAToken.g:1:46: LINE
+                {
+                mLINE(); 
+
+                }
+                break;
+            case 9 :
+                // dd/grammar/ECAToken.g:1:51: ENDRULE
+                {
+                mENDRULE(); 
+
+                }
+                break;
+            case 10 :
+                // dd/grammar/ECAToken.g:1:59: NOTHING
+                {
+                mNOTHING(); 
+
+                }
+                break;
+            case 11 :
+                // dd/grammar/ECAToken.g:1:67: TRUE
+                {
+                mTRUE(); 
+
+                }
+                break;
+            case 12 :
+                // dd/grammar/ECAToken.g:1:72: FALSE
+                {
+                mFALSE(); 
+
+                }
+                break;
+            case 13 :
+                // dd/grammar/ECAToken.g:1:78: LPAREN
                 {
                 mLPAREN(); 
 
                 }
                 break;
-            case 6 :
-                // dd/grammar/ECAToken.g:1:35: RPAREN
+            case 14 :
+                // dd/grammar/ECAToken.g:1:85: RPAREN
                 {
                 mRPAREN(); 
 
                 }
                 break;
-            case 7 :
-                // dd/grammar/ECAToken.g:1:42: LSQUARE
+            case 15 :
+                // dd/grammar/ECAToken.g:1:92: LSQUARE
                 {
                 mLSQUARE(); 
 
                 }
                 break;
-            case 8 :
-                // dd/grammar/ECAToken.g:1:50: RSQUARE
+            case 16 :
+                // dd/grammar/ECAToken.g:1:100: RSQUARE
                 {
                 mRSQUARE(); 
 
                 }
                 break;
-            case 9 :
-                // dd/grammar/ECAToken.g:1:58: LBRACE
+            case 17 :
+                // dd/grammar/ECAToken.g:1:108: LBRACE
                 {
                 mLBRACE(); 
 
                 }
                 break;
-            case 10 :
-                // dd/grammar/ECAToken.g:1:65: RBRACE
+            case 18 :
+                // dd/grammar/ECAToken.g:1:115: RBRACE
                 {
                 mRBRACE(); 
 
                 }
                 break;
-            case 11 :
-                // dd/grammar/ECAToken.g:1:72: SEPR
+            case 19 :
+                // dd/grammar/ECAToken.g:1:122: SEPR
                 {
                 mSEPR(); 
 
                 }
                 break;
-            case 12 :
-                // dd/grammar/ECAToken.g:1:77: DOT
+            case 20 :
+                // dd/grammar/ECAToken.g:1:127: DOT
                 {
                 mDOT(); 
 
                 }
                 break;
-            case 13 :
-                // dd/grammar/ECAToken.g:1:81: ASSIGN
+            case 21 :
+                // dd/grammar/ECAToken.g:1:131: ASSIGN
                 {
                 mASSIGN(); 
 
                 }
                 break;
-            case 14 :
-                // dd/grammar/ECAToken.g:1:88: OR
+            case 22 :
+                // dd/grammar/ECAToken.g:1:138: OR
                 {
                 mOR(); 
 
                 }
                 break;
-            case 15 :
-                // dd/grammar/ECAToken.g:1:91: AND
+            case 23 :
+                // dd/grammar/ECAToken.g:1:141: AND
                 {
                 mAND(); 
 
                 }
                 break;
-            case 16 :
-                // dd/grammar/ECAToken.g:1:95: NOT
+            case 24 :
+                // dd/grammar/ECAToken.g:1:145: NOT
                 {
                 mNOT(); 
 
                 }
                 break;
-            case 17 :
-                // dd/grammar/ECAToken.g:1:99: EQ
+            case 25 :
+                // dd/grammar/ECAToken.g:1:149: EQ
                 {
                 mEQ(); 
 
                 }
                 break;
-            case 18 :
-                // dd/grammar/ECAToken.g:1:102: NEQ
+            case 26 :
+                // dd/grammar/ECAToken.g:1:152: NEQ
                 {
                 mNEQ(); 
 
                 }
                 break;
-            case 19 :
-                // dd/grammar/ECAToken.g:1:106: GT
+            case 27 :
+                // dd/grammar/ECAToken.g:1:156: GT
                 {
                 mGT(); 
 
                 }
                 break;
-            case 20 :
-                // dd/grammar/ECAToken.g:1:109: LT
+            case 28 :
+                // dd/grammar/ECAToken.g:1:159: LT
                 {
                 mLT(); 
 
                 }
                 break;
-            case 21 :
-                // dd/grammar/ECAToken.g:1:112: GEQ
+            case 29 :
+                // dd/grammar/ECAToken.g:1:162: GEQ
                 {
                 mGEQ(); 
 
                 }
                 break;
-            case 22 :
-                // dd/grammar/ECAToken.g:1:116: LEQ
+            case 30 :
+                // dd/grammar/ECAToken.g:1:166: LEQ
                 {
                 mLEQ(); 
 
                 }
                 break;
-            case 23 :
-                // dd/grammar/ECAToken.g:1:120: BOR
+            case 31 :
+                // dd/grammar/ECAToken.g:1:170: BOR
                 {
                 mBOR(); 
 
                 }
                 break;
-            case 24 :
-                // dd/grammar/ECAToken.g:1:124: BAND
+            case 32 :
+                // dd/grammar/ECAToken.g:1:174: BAND
                 {
                 mBAND(); 
 
                 }
                 break;
-            case 25 :
-                // dd/grammar/ECAToken.g:1:129: BXOR
+            case 33 :
+                // dd/grammar/ECAToken.g:1:179: BXOR
                 {
                 mBXOR(); 
 
                 }
                 break;
-            case 26 :
-                // dd/grammar/ECAToken.g:1:134: TWIDDLE
+            case 34 :
+                // dd/grammar/ECAToken.g:1:184: TWIDDLE
                 {
                 mTWIDDLE(); 
 
                 }
                 break;
-            case 27 :
-                // dd/grammar/ECAToken.g:1:142: MUL
+            case 35 :
+                // dd/grammar/ECAToken.g:1:192: MUL
                 {
                 mMUL(); 
 
                 }
                 break;
-            case 28 :
-                // dd/grammar/ECAToken.g:1:146: DIV
+            case 36 :
+                // dd/grammar/ECAToken.g:1:196: DIV
                 {
                 mDIV(); 
 
                 }
                 break;
-            case 29 :
-                // dd/grammar/ECAToken.g:1:150: PLUS
+            case 37 :
+                // dd/grammar/ECAToken.g:1:200: PLUS
                 {
                 mPLUS(); 
 
                 }
                 break;
-            case 30 :
-                // dd/grammar/ECAToken.g:1:155: MINUS
+            case 38 :
+                // dd/grammar/ECAToken.g:1:205: MINUS
                 {
                 mMINUS(); 
 
                 }
                 break;
-            case 31 :
-                // dd/grammar/ECAToken.g:1:161: MOD
+            case 39 :
+                // dd/grammar/ECAToken.g:1:211: MOD
                 {
                 mMOD(); 
 
                 }
                 break;
-            case 32 :
-                // dd/grammar/ECAToken.g:1:165: TERN_IF
+            case 40 :
+                // dd/grammar/ECAToken.g:1:215: TERN_IF
                 {
                 mTERN_IF(); 
 
                 }
                 break;
-            case 33 :
-                // dd/grammar/ECAToken.g:1:173: COLON
+            case 41 :
+                // dd/grammar/ECAToken.g:1:223: COLON
                 {
                 mCOLON(); 
 
                 }
                 break;
-            case 34 :
-                // dd/grammar/ECAToken.g:1:179: QUOTE
+            case 42 :
+                // dd/grammar/ECAToken.g:1:229: QUOTE
                 {
                 mQUOTE(); 
 
                 }
                 break;
-            case 35 :
-                // dd/grammar/ECAToken.g:1:185: DQUOTE
+            case 43 :
+                // dd/grammar/ECAToken.g:1:235: DQUOTE
                 {
                 mDQUOTE(); 
 
                 }
                 break;
-            case 36 :
-                // dd/grammar/ECAToken.g:1:192: STRING
+            case 44 :
+                // dd/grammar/ECAToken.g:1:242: STRING
                 {
                 mSTRING(); 
 
                 }
                 break;
-            case 37 :
-                // dd/grammar/ECAToken.g:1:199: SYMBOL
+            case 45 :
+                // dd/grammar/ECAToken.g:1:249: SYMBOL
                 {
                 mSYMBOL(); 
 
                 }
                 break;
-            case 38 :
-                // dd/grammar/ECAToken.g:1:206: DOLLARSYM
+            case 46 :
+                // dd/grammar/ECAToken.g:1:256: DOLLARSYM
                 {
                 mDOLLARSYM(); 
 
                 }
                 break;
-            case 39 :
-                // dd/grammar/ECAToken.g:1:216: WS
+            case 47 :
+                // dd/grammar/ECAToken.g:1:266: WS
                 {
                 mWS(); 
 
@@ -3343,7 +3968,7 @@ public class ECATokenLexer extends Lexer {
 
 
     protected DFA6 dfa6 = new DFA6(this);
-    protected DFA25 dfa25 = new DFA25(this);
+    protected DFA27 dfa27 = new DFA27(this);
     static final String DFA6_eotS =
         "\2\uffff\2\4\2\uffff\1\4";
     static final String DFA6_eofS =
@@ -3396,22 +4021,22 @@ public class ECATokenLexer extends Lexer {
             this.transition = DFA6_transition;
         }
         public String getDescription() {
-            return "42:1: NUMBER : ( INTEGER | FLOAT );";
+            return "41:1: NUMBER : ( INTEGER | FLOAT );";
         }
     }
-    static final String DFA25_eotS =
+    static final String DFA27_eotS =
         "\1\uffff\2\3\2\uffff";
-    static final String DFA25_eofS =
+    static final String DFA27_eofS =
         "\5\uffff";
-    static final String DFA25_minS =
+    static final String DFA27_minS =
         "\1\101\2\56\2\uffff";
-    static final String DFA25_maxS =
+    static final String DFA27_maxS =
         "\3\172\2\uffff";
-    static final String DFA25_acceptS =
+    static final String DFA27_acceptS =
         "\3\uffff\1\2\1\1";
-    static final String DFA25_specialS =
+    static final String DFA27_specialS =
         "\5\uffff}>";
-    static final String[] DFA25_transitionS = {
+    static final String[] DFA27_transitionS = {
             "\32\1\4\uffff\1\1\1\uffff\32\1",
             "\1\4\1\uffff\12\2\7\uffff\32\2\4\uffff\1\2\1\uffff\32\2",
             "\1\4\1\uffff\12\2\7\uffff\32\2\4\uffff\1\2\1\uffff\32\2",
@@ -3419,37 +4044,37 @@ public class ECATokenLexer extends Lexer {
             ""
     };
 
-    static final short[] DFA25_eot = DFA.unpackEncodedString(DFA25_eotS);
-    static final short[] DFA25_eof = DFA.unpackEncodedString(DFA25_eofS);
-    static final char[] DFA25_min = DFA.unpackEncodedStringToUnsignedChars(DFA25_minS);
-    static final char[] DFA25_max = DFA.unpackEncodedStringToUnsignedChars(DFA25_maxS);
-    static final short[] DFA25_accept = DFA.unpackEncodedString(DFA25_acceptS);
-    static final short[] DFA25_special = DFA.unpackEncodedString(DFA25_specialS);
-    static final short[][] DFA25_transition;
+    static final short[] DFA27_eot = DFA.unpackEncodedString(DFA27_eotS);
+    static final short[] DFA27_eof = DFA.unpackEncodedString(DFA27_eofS);
+    static final char[] DFA27_min = DFA.unpackEncodedStringToUnsignedChars(DFA27_minS);
+    static final char[] DFA27_max = DFA.unpackEncodedStringToUnsignedChars(DFA27_maxS);
+    static final short[] DFA27_accept = DFA.unpackEncodedString(DFA27_acceptS);
+    static final short[] DFA27_special = DFA.unpackEncodedString(DFA27_specialS);
+    static final short[][] DFA27_transition;
 
     static {
-        int numStates = DFA25_transitionS.length;
-        DFA25_transition = new short[numStates][];
+        int numStates = DFA27_transitionS.length;
+        DFA27_transition = new short[numStates][];
         for (int i=0; i<numStates; i++) {
-            DFA25_transition[i] = DFA.unpackEncodedString(DFA25_transitionS[i]);
+            DFA27_transition[i] = DFA.unpackEncodedString(DFA27_transitionS[i]);
         }
     }
 
-    class DFA25 extends DFA {
+    class DFA27 extends DFA {
 
-        public DFA25(BaseRecognizer recognizer) {
+        public DFA27(BaseRecognizer recognizer) {
             this.recognizer = recognizer;
-            this.decisionNumber = 25;
-            this.eot = DFA25_eot;
-            this.eof = DFA25_eof;
-            this.min = DFA25_min;
-            this.max = DFA25_max;
-            this.accept = DFA25_accept;
-            this.special = DFA25_special;
-            this.transition = DFA25_transition;
+            this.decisionNumber = 27;
+            this.eot = DFA27_eot;
+            this.eof = DFA27_eof;
+            this.min = DFA27_min;
+            this.max = DFA27_max;
+            this.accept = DFA27_accept;
+            this.special = DFA27_special;
+            this.transition = DFA27_transition;
         }
         public String getDescription() {
-            return "230:1: fragment DOTSYM : ( BARESYM DOT DOTSYM | BARESYM );";
+            return "253:1: fragment DOTSYM : ( BARESYM DOT DOTSYM | BARESYM );";
         }
     }
  

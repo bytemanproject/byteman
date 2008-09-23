@@ -19,6 +19,7 @@ import java.security.ProtectionDomain;
 import java.util.List;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.io.PrintWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -33,37 +34,89 @@ public class Transformer implements ClassFileTransformer {
      *
      * @param inst the instrumentation object used to interface to the JVM
      */
-    public Transformer(Instrumentation inst, List<Class> ruleClasses)
+    public Transformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts)
+            throws Exception
     {
         this.inst = inst;
-        this.ruleClasses = ruleClasses;
-        targetToHandlerClassMap = new HashMap<String, List<Annotation>>();
-        targetToHandlerMethodMap = new HashMap<String, List<Method>>();
+        targetToScriptMap = new HashMap<String, List<Script>>();
 
-        // insert all event handling methods into the map indexed by the associated target class
-
-        for (Class ruleClass : ruleClasses) {
-            Annotation classAnnotation = ruleClass.getAnnotation(EventHandlerClass.class);
-            for (Method method : ruleClass.getDeclaredMethods()) {
-                EventHandler eventHandler = method.getAnnotation(EventHandler.class);
-                if (eventHandler != null) {
-                    String target = eventHandler.targetClass();
-                    if (isTransformable(target) && !isOrchestrationClass(target)) {
-                        List<Annotation> clazzes = targetToHandlerClassMap.get(target);
-                        if (clazzes == null) {
-                            clazzes = new ArrayList<Annotation>();
+        Iterator<String> iter = scriptTexts.iterator();
+        int scriptIdx = 0;
+        while (iter.hasNext()) {
+            String scriptText = iter.next();
+            if (scriptText != null) {
+                // split rules into separate lines
+                String[] lines = scriptText.split("\n");
+                List<String> rules = new ArrayList<String>();
+                String nextRule = "";
+                String sepr = "";
+                String name = null;
+                String targetClass = null;
+                String targetMethod = null;
+                int targetLine = -1;
+                int lineNumber = 0;
+                int maxLines = lines.length;
+                boolean inRule = false;
+                for (String line : lines) {
+                   lineNumber++;
+                    if (line.trim().startsWith("#")) {
+                        if (inRule) {
+                            // add a blank line in place of the comment so the line numbers
+                            // are reported consistently during parsing
+                            nextRule += sepr;
+                            sepr = "\n";
+                        } // else { // just drop comment line }
+                    } else if (line.startsWith("RULE ")) {
+                        inRule = true;
+                        name = line.substring(5).trim();
+                    } else if (!inRule) {
+                        if (!line.trim().equals("")) {
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: invalid text outside of RULE/ENDRULE " + "at line " + lineNumber + " in script " + scriptPaths.get(scriptIdx));
                         }
-                        if (!clazzes.contains(classAnnotation)) {
-                            clazzes.add(classAnnotation);
+                    } else if (line.startsWith("CLASS ")) {
+                        targetClass = line.substring(6).trim();
+                    } else if (line.startsWith("METHOD ")) {
+                        targetMethod = line.substring(7).trim();
+                    } else if (line.startsWith("LINE ")) {
+                        String lineSpec = line.substring(5).trim();
+                        try {
+                            targetLine = Integer.valueOf(lineSpec);
+                        } catch (NumberFormatException e) {
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: invalid LINE specification " + lineSpec + "for RULE " + name + " in script " + scriptPaths.get(scriptIdx));
                         }
-                        List<Method> methods = targetToHandlerMethodMap.get(target);
-                        if (methods == null) {
-                            methods = new ArrayList<Method>();
-                            targetToHandlerMethodMap.put(target, methods);
+                    } else if (line.startsWith("ENDRULE")) {
+                        if (name == null) {
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: no matching RULE for ENDRULE at line " + lineNumber + " in script " + scriptPaths.get(scriptIdx));
+                        } else if (targetClass == null) {
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: no CLASS for RULE  " + name + " in script " + scriptPaths.get(scriptIdx));
+                        } else if (targetMethod == null) {
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: no METHOD for RULE  " + name + " in script " + scriptPaths.get(scriptIdx));
+                        } else {
+                            List<Script> scripts = targetToScriptMap.get(targetClass);
+                            if (scripts == null) {
+                                scripts = new ArrayList<Script>();
+                                targetToScriptMap.put(targetClass, scripts);
+                            }
+                            Script script = new Script(name, targetClass, targetMethod, targetLine, nextRule);
+                            scripts.add(script);
+                            System.out.println("RULE " + script.getName());
+                            System.out.println("CLASS " + script.getTargetClass());
+                            System.out.println("METHOD " + script.getTargetMethod());
+                            System.out.println("LINE " + script.getTargetLine());
+                            System.out.println(script.getRuleText());
+                            System.out.println("ENDRULE");
                         }
-                        methods.add(method);
+                        name = null;
+                        targetClass = null;
+                        targetMethod = null;
+                        nextRule = "";
+                        sepr = "";
+                        inRule = false;
+                    } else if (lineNumber == maxLines && !nextRule.trim().equals("")) {
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: no matching ENDRULE for RULE " + name + " in script " + scriptPaths.get(scriptIdx));
                     } else {
-                        System.err.println("org.jboss.jbossts.orchestration.agent.Transformer: requested to transform invalid class " + target);
+                        nextRule += sepr + line;
+                        sepr = "\n";
                     }
                 }
             }
@@ -142,42 +195,45 @@ public class Transformer implements ClassFileTransformer {
             return null;
         }
 
-        // ok, we need to check whether there are any event handlers associated with this class and if so
+        // ok, we need to check whether there are any scripts associated with this class and if so
         // we will consider transforming the byte code
 
-        List<Method> handlerMethods = targetToHandlerMethodMap.get(internalClassName);
+        List<Script> scripts = targetToScriptMap.get(internalClassName);
 
-        if (handlerMethods != null) {
-            for (Method handlerMethod : handlerMethods) {
+        if (scripts != null) {
+            for (Script script : scripts) {
                 try {
-                    newBuffer = transform(handlerMethod.getAnnotation(EventHandler.class), loader, internalClassName,  classBeingRedefined, newBuffer);
+                    newBuffer = transform(script, loader, internalClassName,  classBeingRedefined, newBuffer);
                 } catch (Throwable th) {
-                    System.err.println("transform  : caught throwable " + th);
+                    System.err.println("Transformer.transform : caught throwable " + th);
                     th.printStackTrace(System.err);
                 }
             }
         }
 
-        // if the class is not in the defautl package then we also need to look for handlers
+        // if the class is not in the default package then we also need to look for scripts
         // which specify the class without the package qualification
 
         int dotIdx = internalClassName.lastIndexOf('.');
 
         if (dotIdx >= 0) {
-            handlerMethods = targetToHandlerMethodMap.get(internalClassName.substring(dotIdx + 1));
-            if (handlerMethods != null) {
-                for (Method handlerMethod : handlerMethods) {
+            scripts = targetToScriptMap.get(internalClassName.substring(dotIdx + 1));
+
+            if (scripts != null) {
+                for (Script script : scripts) {
                     try {
-                        newBuffer = transform(handlerMethod.getAnnotation(EventHandler.class), loader, internalClassName,  classBeingRedefined, newBuffer);
+                        newBuffer = transform(script, loader, internalClassName,  classBeingRedefined, newBuffer);
                     } catch (Throwable th) {
-                        System.err.println("transform  : caught throwable " + th);
+                        System.err.println("Transformer.transform : caught throwable " + th);
                         th.printStackTrace(System.err);
                     }
                 }
             }
+
         }
 
         if (newBuffer != classfileBuffer) {
+            // switch on to dump transformed bytecode for checking
             if (false) {
                 String name = (dotIdx < 0 ? internalClassName : internalClassName.substring(dotIdx + 1));
                 name += ".class";
@@ -197,22 +253,20 @@ public class Transformer implements ClassFileTransformer {
         }
     }
 
-    private byte[] transform(EventHandler handler, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
+
+    private byte[] transform(Script script, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
     {
-        final String handlerClass = handler.targetClass();
-        final String handlerMethod = handler.targetMethod();
-        final int handlerLine = handler.targetLine();
+        final String handlerClass = script.getTargetClass();
+        final String handlerMethod = script.getTargetMethod();
+        final int handlerLine = script.getTargetLine();
         System.out.println("org.jboss.jbossts.orchestration.agent.Transformer: Inserting trigger event");
         System.out.println("  class " + handlerClass);
         System.out.println("  method " + handlerMethod);
         System.out.println("  line " + handlerLine);
         final Rule rule;
-        String ruleName = handlerClass + "::" + handlerMethod;
-        if (handlerLine >= 0) {
-            ruleName += "@" + handlerLine;
-        }
+        String ruleName = script.getName();
         try {
-            rule = Rule.create(ruleName, handler.event(), handler.condition(), handler.action(), loader);
+            rule = Rule.create(ruleName, handlerClass, handlerMethod, handlerLine, script.getRuleText(), loader);
         } catch (ParseException pe) {
             System.out.println("Transformer : error parsing rule : " + pe);
             return targetClassBytes;
@@ -290,24 +344,51 @@ public class Transformer implements ClassFileTransformer {
     private final Instrumentation inst;
 
     /**
-     * the set of rule classes supplied to the agent program
+     * a mapping from class names which appear in rule targets to a script object holding the
+     * rule details
      */
-    private final List<Class> ruleClasses;
+
+    private final HashMap<String, List<Script>> targetToScriptMap;
 
     /**
-     * a mapping from class names which appear in rule targets to the associated event handling methods
+     * information about a single rule derived from a rule script
      */
-
-    private final HashMap<String, List<Method>> targetToHandlerMethodMap;
-
-    /**
-     * a mapping from class names which appear in rule targets to the associated event handling classes
-     */
-
-    private final HashMap<String, List<Annotation>> targetToHandlerClassMap;
     
-    /**
-     * external form of ECA rule class from which synthesised ECA handler classes are derived
-     */
-    private static final String ECA_RULE_CLASS_NAME = "org/jboss/jbossts/orchestration/rule/ECARule";
+    private static class Script
+    {
+        private String name;
+        private String targetClass;
+        private String targetMethod;
+        private int targetLine;
+        private String ruleText;
+
+        Script (String name, String targetClass, String targetMethod, int targetLine, String ruleText)
+        {
+            this.name = name;
+            this.targetClass = targetClass;
+            this.targetMethod = targetMethod;
+            this.targetLine = targetLine;
+            this.ruleText = ruleText;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getTargetClass() {
+            return targetClass;
+        }
+
+        public String getTargetMethod() {
+            return targetMethod;
+        }
+
+        public int getTargetLine() {
+            return targetLine;
+        }
+
+        public String getRuleText() {
+            return ruleText;
+        }
+    }
 }

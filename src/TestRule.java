@@ -37,7 +37,7 @@ public class TestRule
             } else if ("-rule".equals(args[i])) {
                 System.out.println("Creating rule from " + args[++i]);
                 try {
-                    rule = Rule.create("TestRule" + i, args[i], loader);
+                    rule = Rule.create("TestRule" + i, className, methodName, -1, args[i], loader);
                     System.out.print(rule);
                     if (methodName != null &&
                             className != null) {
@@ -51,7 +51,7 @@ public class TestRule
             } else if ("-event".equals(args[i])) {
                 System.out.println("Creating event from " + args[++i]);
                 try {
-                    rule = Rule.create("TestRule" + i, loader);
+                    rule = Rule.create("TestRule" + i, className, methodName, -1, null, loader);
                     rule.setEvent(args[i]);
                     System.out.print(rule);
                 } catch (Throwable th) {
@@ -63,7 +63,7 @@ public class TestRule
                 System.out.println("Creating condition from " + args[++i]);
                 try {
                     if (rule == null || rule.getCondition() != null) {
-                        rule = Rule.create("TestRule" + i, loader);
+                        rule = Rule.create("TestRule" + i, className, methodName, -1, null, loader);
                     }
                     if (rule.getEvent() == null) {
                         rule.setEvent("");
@@ -79,7 +79,7 @@ public class TestRule
                 System.out.println("Creating action from " + args[++i]);
                 try {
                     if (rule == null || rule.getAction() != null) {
-                        rule = Rule.create("TestRule" + i, loader);
+                        rule = Rule.create("TestRule" + i, className, methodName, -1, null, loader);
                     }
                     if (rule.getEvent() == null) {
                         rule.setEvent("");
@@ -108,7 +108,7 @@ public class TestRule
                     bytes = new byte[fis.available()];
                     fis.read(bytes);
                     text = new String(bytes);
-                    rule = Rule.create("TestRule" + i, text, loader);
+                    rule = Rule.create("TestRule" + i, className, methodName, -1, text, loader);
                     System.out.print(rule);
                     if (methodName != null &&
                             className != null) {

@@ -118,7 +118,7 @@ public class TestJar
                                     String event = eventHandler.event();
                                     String condition = eventHandler.condition();
                                     String action = eventHandler.action();
-                                    Rule rule = Rule.create(ruleName, event, condition, action, loader);
+                                    Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetLine, event, condition, action, loader);
                                     System.err.println("TestJar: parsed rule " + ruleName);
                                     System.err.println(rule);
                                     rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc);
@@ -148,7 +148,7 @@ public class TestJar
                                         String event = eventHandler.event();
                                         String condition = eventHandler.condition();
                                         String action = eventHandler.action();
-                                        Rule rule = Rule.create(ruleName, event, condition, action, loader);
+                                        Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetLine, event, condition, action, loader);
                                         System.err.println("TestJar: parsed rule " + ruleName);
                                         System.err.println(rule);
                                         rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc);

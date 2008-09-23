@@ -14,6 +14,7 @@ import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.io.StringWriter;
 
 /**
@@ -49,7 +50,11 @@ public class Action extends RuleElement
     protected Action(Rule rule, CommonTree actionTree) throws TypeException
     {
         super(rule);
-        this.action = ExpressionHelper.createExpressionList(this.getBindings(), actionTree, Type.VOID);
+        if (actionTree.getToken().getType() == ECAGrammarParser.NOTHING) {
+            this.action = new ArrayList<Expression>();
+        } else {
+            this.action = ExpressionHelper.createExpressionList(this.getBindings(), actionTree, Type.VOID);
+        }
     }
 
     protected Action(Rule rule)

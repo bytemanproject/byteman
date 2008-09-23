@@ -1,7 +1,8 @@
 Type 'ant jar' to create the orchestration package library which
 supports definition of Event Condition Action rules for orchestrating
 JBossTS test scenarios via insertion of event triggers into com.arjuna
-methods, either at start of method code or at specific line numbers.
+or org.jboss methods, either at start of method code or at specific
+line numbers.
 
 Set up
 ------
@@ -22,30 +23,55 @@ the orchestration jar as a java agent. This jar implements
 The agent is passed to the JVM using the -javaagent option of the java
 command by setting JAVA_OPTS as follows:
 
-export JAVA_OPTS="-javaagent:${HOME}/jboss/workspace/adinn/orchestration/build/lib/orchestration.jar=rule:${HOME}/jboss/workspace/adinn/orchestration/build/lib/orchestration.jar"
+export JAVA_OPTS="-javaagent:${HOME}/jboss/workspace/adinn/orchestration/build/lib/orchestration.jar=script:${HOME}/jboss/workspace/adinn/orchestration/handler.txt"
 
-The =rule:<jar> option to the -javaagent argument tells the agent
-premain to search <jar> for rules, i.e. classes and methods annotated
-with, respectively, EventHandlerClass and EventHandler
-annotations. The agent will parse them to identify rules for
-transforming com.arjuna.* classes. The agent jar contains a simple
-test class, org.jboss.jbossts.test.HandlerClass, which defines 4 rules
-used for testing a specific scenario in XTS coordinator crash
+The =script:<scriptFile> option to the -javaagent argument tells the
+agent premain to search <scriptFile> for rules. Multiple scripts may
+be supplied by repeating the =script:<scriptFile> argument separated
+by a ','. The agent will parse each script file to identify rules to
+be triggered from methods occurring in com.arjuna.* and org.jboss.*
+classes. File handler.txt contains an example script which defines 6
+rules used for testing a specific scenario in XTS coordinator crash
 recovery. See these (or the code :-) to get a taste of what the rule
 language offers (that's all foax, for now at least -- sorry).
 
 Rule Definition
 ---------------
-Rules are defined via class and method anotations on a host class. Any
-class tagged with an EventHandlerClass annotation is a host class and
-is able to define a set of rules. Any static method of a host class
-annotated with an EventHandler annotation defines an individual
-rule. The EventHandler annotation must define a target class for the
-rule, a target method and a target method line number (or -1 for start
-of method). Text elements in the annotation specify the rule event,
-condition and action. The event handler class and event handler static
-method code are available for use in the rule but they need not be
-invoked.
+
+The orchestration package employs Event Condition Action rules
+although, strictly, the event component is limited to matching an
+invocation of a specific method when execution reaches a particular
+soure code line number in the method body. The event automatically
+binds the arguments of the trigger method at the point where the rule
+is triggered. It may also compute bindings for an optional set of
+local variables by evaluating a Java expression. The condition is an
+expression with boolean type. The action is a sequence of expressions
+of arbitrary type which are only evaluated if the condition is
+true. Expressions are composed from builtin operations, references to
+static or bound values, method invocations and combinations of
+sub-expressions using the usual set of operators. Note that
+assignment, new operations and throw operations are not allowed in
+expressions.
+
+Rule definitiosn specify a target class, a target method and a target
+line number (default is -1) in the method source code. The agent code
+identifies classes and methods at load time which match the target
+class and name and inserts a trigger call at the specified line which
+invokes the rule (or at the method start if the line number is
+-1). When execution reaches a trigger point the associated rule is
+executed and can performs any delay, synchronization, trace or other
+operation appropriate to the test. Normally, control returns to the
+trigger method and execution continues by executing the target line.
+
+It is possible for a rule to alter the flow of control. A rule action
+can invoke a builtin to 'kill' the current thread, by throwing a
+runtime exception. This may not actually kill the thread if the
+trigger method code or one of its callers catches a generic exception
+but it can be used effectively. Another builtin can be used to signal
+other waiting threads and cause them to 'abort'. Finally, a third
+builtin allows the JVM to be halted. It is possible to call arbitrary
+Java code inside rule actions so the opportunites for messing around
+with control flow extend beyond these builtin options.
 
 The target class may be specified with or without a full package
 qualification. If no package is specified then all classes whose
@@ -56,28 +82,35 @@ targetClass="TransactionImple" would match all the transaction
 implementation classes in the JTA, JTS and XTS packages but would not
 match any org.jboss implementations.
 
-Note that a rule is deliberately not defined using the host class code
-(the class tagged with annotation EventHandlerClass).  It is quite
-legitimate to call host class methods from within a rule event,
-condition or action but they cannot provide the complete definition of
-the rule itself.  Rules need to refer to the target class and,
-possibly, classes that it references. Defining the rule via the host
-class implementation would impose recursive class loader dependencies
-between the host class and the class into which it is trying to insert
-trigger code.
+Class names mentioned in rules are resolved against a candidate
+trigger class and related classes at runtime as they are being loaded
+into a specific class loader. If the type checker cannot resolve the
+declared types of variables, methods and fields mentioned in the rule
+against candidate classes it prints type check errors and disables
+execution of the rule for the class in question. Note that if a class
+is loaded more than once by different class loaders then each version
+of the class may be a candidate for trigger insertion from the same
+rule. Use of unqualified class names (i.e. without package) also
+potentially allows a rule to be applied in more than one case.
 
-Note also that classes mentioned in the rule are only identified by
-name. Such names are resolved at runtime against a target class and
-related classes as they are being loaded into a specific class
-loader. So, if a class is loaded more than once then each version of
-the class may be a candidate for trigger insertion. As a consequence,
-class names emloyed in rules may also be quoted without package
-qualification. However, it must be possible for the rule compiler to
-translate them unambiguously to fully qualified class names by
-inferring the types from the target class and target method signature
-identified at transform time or by deriving them from field references
-and method signatures of classes associated with the target class and
-method.
+Method names may be specified using just the method name or by
+supplying the name and a bracketed list of parameters, optionally
+followed by a return type. If just the name is specified then any
+method with the correct name will be considered as a candidate for
+trigger insertion. Again, this allows the rule to be applied to
+multiple cases (this is only really useful if the line number is -1).
+If a signature is provided then the trigger call will only be inserted
+into a method whose arguments match the signature. The types employed
+in a signature may also omit the package name if desired.
+
+Note that a rule is deliberately defined via a script rather than
+using annotations, especially not annotations on the trigger class.
+Rules refer to the target class and, possibly, classes that it
+references by name only. Defining the rule via annotations on the
+target class implementation would require loading the class before
+having the chance to modify its byte code. Also, the point of using
+rules is so that tests may be rigged up without having to redefine and
+rebuild the test code base.
 
 Rule Events
 -----------
@@ -89,7 +122,7 @@ using the special syntax $0 (for this, when the target method is not
 static) and $1...$N for arguments 1..N of the target method. Further
 bindings, using symbolic names for the bound variables, can be
 established by assigning a symbolic constant to an expression which
-may refer to previously bound variables. For example,
+may refer to previously bound variables or static data. For example,
 
   'coordinator:Coordinator = $0,
    recovered:boolean = coordinator.recovered,

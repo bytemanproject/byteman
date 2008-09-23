@@ -53,6 +53,11 @@ public class ExpressionHelper
                 // check for embedded dots
 
                 String text = token.getText();
+                int length = text.length();
+                // strip off any surrounding single quotes
+                if (length > 1 && text.charAt(0) == '\'' && text.charAt(length - 1) == '\'') {
+                    text = text.substring(1, length - 1);
+                }
                 int dotIdx = text.lastIndexOf('.');
                 if (dotIdx < 0) {
                     // direct variable reference

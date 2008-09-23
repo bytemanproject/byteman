@@ -4,11 +4,14 @@ import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
+import org.antlr.runtime.Token;
 import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.expression.ExpressionHelper;
 import org.jboss.jbossts.orchestration.rule.expression.Expression;
+import org.jboss.jbossts.orchestration.rule.expression.BooleanExpression;
+import org.jboss.jbossts.orchestration.rule.expression.BooleanLiteral;
 import org.jboss.jbossts.orchestration.rule.grammar.ECATokenLexer;
 import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
@@ -50,9 +53,16 @@ public class Condition extends RuleElement
             throws TypeException
     {
         super(rule);
-        this.condition = ExpressionHelper.createExpression(rule.getBindings(), conditionTree, Type.BOOLEAN);
+        Token token = conditionTree.getToken();
+        if (token.getType() == ECAGrammarParser.TRUE) {
+            this.condition = new BooleanLiteral(token, true);
+        } else if (token.getType() == ECAGrammarParser.FALSE) {
+            this.condition = new BooleanLiteral(token, false);
+        } else {
+            this.condition = ExpressionHelper.createExpression(rule.getBindings(), conditionTree, Type.BOOLEAN);
+        }
     }
-
+    
     protected Condition(Rule rule)
     {
         super(rule);

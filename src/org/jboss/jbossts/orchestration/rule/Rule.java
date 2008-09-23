@@ -18,6 +18,8 @@ import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.tree.CommonTree;
 import org.objectweb.asm.Opcodes;
 
+import static org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.*;
+
 import java.io.StringWriter;
 import java.util.List;
 import java.util.ArrayList;
@@ -30,28 +32,137 @@ import java.util.Iterator;
  */
 public class Rule
 {
-    private Event event;
-    private Condition condition;
-    private Action action;
-    Bindings bindings;
-    private TypeGroup typeGroup;
+    /**
+     * the name of this rule supplied in the rule script
+     */
     private String name;
-    private boolean checked;
-    private boolean checkFailed;
+    /**
+     * the name of the target class for this rule supplied in the rule script
+     */
+    private String targetClass;
+    /**
+     * the name of the triggering method on the target class for this rule supplied in the
+     * rule script
+     */
+    private String targetMethod;
+    /**
+     * the line number at which to insert the trigger call in the target method for this rule
+     * supplied in the rule script
+     */
+    private int targetLine;
+    /**
+     * the parsed event derived from the script for this rule
+     */
+    private Event event;
+    /**
+     * the parsed condition derived from the script for this rule
+     */
+    private Condition condition;
+    /**
+     * the parsed condition derived from the script for this rule
+     */
+    private Action action;
+    /**
+     * the set of bindings derived from the event supplemented, post type checking, with bindings
+     * derived from the trigger method. we may eventually also be able to install bindings for
+     * method local variables.
+     *
+     * Note that use of the name bindings is slightly misleading since this instance identifies the
+     * name and type of each of the available bound variables and, in the case of an event binding,
+     * the expression to be evaluated in order to initialise the variable. It does not identify
+     * any bound values for the variable. These are stored <em>per rule-firing</em> in a set
+     * attached to the Helper instance used to implement the execute method for the rule.
+     */
+    private Bindings bindings;
+    /**
+     * the fully qualified name of the class to which this rule has been attached by the code
+     * transformation package. note that this may not be the same as targetClass since the
+     * latter may not specify a package.
+     */
     private String triggerClass;
+    /**
+     * the name of the trigger method in which a trigger call for this rule has been inserted by
+     * the code transformation package, not including the descriptor component. note that this
+     * may not be the same as the targetMethod since the latter may include an argument list.
+     */
     private String triggerMethod;
+    /**
+     * the descriptor of the trigger method in which a trigger call for this rule has been inserted
+     * by the code transformation package. note that this will be in encoded format e.g. "(IZ)V"
+     * rather than declaration format e.g. "void (int, boolean)"
+     */
     private String triggerDescriptor;
+    /**
+     * the access mode for the target method defined using flag bits defined in the asm Opcodes
+     * class.
+     */
     private int triggerAccess;
+    /**
+     * the set of types employed by the rule, inlcuding types referenced by abbreviated name (without
+     * mentioning the package), array type sand/or their base types and standard builtin types.
+     */
+    private TypeGroup typeGroup;
+    /**
+     * flag set to true only after the rule has been type checked
+     */
+    private boolean checked;
+    /**
+     * flag set to true only after the rule has been type checked successfully
+     */
+    private boolean checkFailed;
 
-    private Rule(String name, ClassLoader loader)
+    private Rule(String script, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
-        this.name = name;
+        CommonTree ruleTree;
+
         typeGroup = new TypeGroup(loader);
         bindings = new Bindings();
-        event = null;
-        condition = null;
-        action = null;
+        try {
+            ECATokenLexer lexer = new ECATokenLexer(new ANTLRStringStream(script));
+            CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+            ECAGrammarParser parser = new ECAGrammarParser(tokenStream);
+            ECAGrammarParser.eca_script_rule_return eca_script_rule = parser.eca_script_rule();
+            ruleTree = (CommonTree) eca_script_rule.getTree();
+        } catch (RecognitionException e) {
+            throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : error parsing rule " + script, e);
+        }
+        // format is ^(RULE name class method line event condition action)
+
+        CommonTree nameTree = (CommonTree)ruleTree.getChild(0);
+        CommonTree classTree = (CommonTree)ruleTree.getChild(1);
+        CommonTree methodTree = (CommonTree)ruleTree.getChild(2);
+        CommonTree lineTree = (CommonTree)ruleTree.getChild(3);
+        CommonTree eventTree = (CommonTree)ruleTree.getChild(4);
+        CommonTree conditionTree = (CommonTree)ruleTree.getChild(5);
+        CommonTree actionTree = (CommonTree)ruleTree.getChild(6);
+        if (nameTree.getToken().getType() != SYMBOL) {
+            throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : invalid rule name " + script);
+        } else {
+            name = nameTree.getToken().getText();
+        }
+        if (classTree.getToken().getType() != SYMBOL) {
+            throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : invalid class name " + script);
+        } else {
+            targetClass = classTree.getToken().getText();
+        }
+        if (methodTree.getToken().getType() != SYMBOL) {
+            throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : invalid method name " + script);
+        } else {
+            targetMethod = methodTree.getToken().getText();
+        }
+        if (lineTree.getToken().getType() != NUMBER) {
+            throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : invalid line number" + script);
+        } else {
+            try {
+                targetLine = Integer.valueOf(lineTree.getToken().getText());
+            } catch (NumberFormatException ne) {
+                throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : invalid format for line number" + script);
+            }
+        }
+        event = Event.create(this, eventTree);
+        condition = Condition.create(this, conditionTree);
+        action = Action.create(this, actionTree);
         checked = false;
         triggerClass = null;
         triggerMethod = null;
@@ -59,7 +170,7 @@ public class Rule
         triggerAccess = 0;
     }
 
-    private Rule(String name, String eventSpec, String conditionSpec, String actionSpec, ClassLoader loader)
+    private Rule(String name, String targetClass, String targetMethod, int targetLine, String eventSpec, String conditionSpec, String actionSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
         this.name = name;
@@ -70,13 +181,16 @@ public class Rule
         condition = Condition.create(this, conditionSpec);
         action = Action.create(this, actionSpec);
         checked = false;
+        this.targetClass = targetClass;
+        this.targetMethod = targetMethod;
+        this.targetLine = targetLine;
         triggerClass = null;
         triggerMethod = null;
         triggerDescriptor = null;
         triggerAccess = 0;
     }
 
-    private Rule(String name, String ruleSpec, ClassLoader loader)
+    private Rule(String name, String targetClass, String targetMethod, int targetLine, String ruleSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
         CommonTree ruleTree;
@@ -84,22 +198,27 @@ public class Rule
         this.name = name;
         typeGroup = new TypeGroup(loader);
         bindings = new Bindings();
-        try {
-            ECATokenLexer lexer = new ECATokenLexer(new ANTLRStringStream(ruleSpec));
-            CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-            ECAGrammarParser parser = new ECAGrammarParser(tokenStream);
-            ECAGrammarParser.eca_rule_return rule_parse = parser.eca_rule();
-            ruleTree = (CommonTree) rule_parse.getTree();
-        } catch (RecognitionException e) {
-            throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : error parsing rule " + ruleSpec, e);
+        if (ruleSpec != null) {
+            try {
+                ECATokenLexer lexer = new ECATokenLexer(new ANTLRStringStream(ruleSpec));
+                CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+                ECAGrammarParser parser = new ECAGrammarParser(tokenStream);
+                ECAGrammarParser.eca_rule_return rule_parse = parser.eca_rule();
+                ruleTree = (CommonTree) rule_parse.getTree();
+            } catch (RecognitionException e) {
+                throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : error parsing rule " + ruleSpec, e);
+            }
+            CommonTree eventTree = (CommonTree)ruleTree.getChild(0);
+            CommonTree conditionTree = (CommonTree)ruleTree.getChild(1);
+            CommonTree actionTree = (CommonTree)ruleTree.getChild(2);
+            event = Event.create(this, eventTree);
+            condition = Condition.create(this, conditionTree);
+            action = Action.create(this, actionTree);
         }
-        CommonTree eventTree = (CommonTree)ruleTree.getChild(0);
-        CommonTree conditionTree = (CommonTree)ruleTree.getChild(1);
-        CommonTree actionTree = (CommonTree)ruleTree.getChild(2);
-        event = Event.create(this, eventTree);
-        condition = Condition.create(this, conditionTree);
-        action = Action.create(this, actionTree);
         checked = false;
+        this.targetClass = targetClass;
+        this.targetMethod = targetMethod;
+        this.targetLine = targetLine;
         triggerClass = null;
         triggerMethod = null;
         triggerDescriptor = null;
@@ -120,6 +239,18 @@ public class Rule
         return name;
     }
 
+    public String getTargetClass() {
+        return targetClass;
+    }
+
+    public String getTargetMethod() {
+        return targetMethod;
+    }
+
+    public int getTargetLine() {
+        return targetLine;
+    }
+
     public Event getEvent()
     {
         return event;
@@ -133,22 +264,22 @@ public class Rule
         return action;
     }
 
-    public static Rule create(String name, String eventSpec, String conditionSpec, String actionSpec, ClassLoader loader)
+    public static Rule create(String name, String targetClass, String targetMethod, int targetLine, String eventSpec, String conditionSpec, String actionSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
-            return new Rule(name, eventSpec, conditionSpec, actionSpec, loader);
+            return new Rule(name, targetClass, targetMethod,  targetLine,  eventSpec, conditionSpec, actionSpec, loader);
     }
 
-    public static Rule create(String name, String ruleSpec, ClassLoader loader)
+    public static Rule create(String name, String targetClass, String targetMethod, int targetLine, String ruleSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
-            return new Rule(name, ruleSpec, loader);
+            return new Rule(name, targetClass, targetMethod,  targetLine, ruleSpec, loader);
     }
 
-    public static Rule create(String name, ClassLoader loader)
+    public static Rule create(String ruleScript, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
-            return new Rule(name, loader);
+            return new Rule(ruleScript, loader);
     }
 
     public void setEvent(String eventSpec) throws ParseException, TypeException
