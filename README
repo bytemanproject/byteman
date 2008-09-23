@@ -30,7 +30,7 @@ agent premain to search <scriptFile> for rules. Multiple scripts may
 be supplied by repeating the =script:<scriptFile> argument separated
 by a ','. The agent will parse each script file to identify rules to
 be triggered from methods occurring in com.arjuna.* and org.jboss.*
-classes. File handler.txt contains an example script which defines 6
+classes. File handler.txt contains an example script which defines
 rules used for testing a specific scenario in XTS coordinator crash
 recovery. See these (or the code :-) to get a taste of what the rule
 language offers (that's all foax, for now at least -- sorry).
@@ -207,3 +207,9 @@ resumed and killed. Methods to support rendezvous will be added
 soon. Adding a method to Helper automatically makes it available as a
 builtin (type-checking happens automically too) so it should be easy
 to extend the rule language as nw requirements arise.
+
+Type Checking Scripts
+---------------------
+Rule scripts may be checked offline by running the TestScript program.
+See build.xml for an example of how to use it to check the example
+test scenario defined in file handler.txt.
