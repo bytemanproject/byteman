@@ -159,7 +159,7 @@ IF recovered
    AND
    getCountDown(identifier)
 DO debug("!!!killing committed thread for " + identifier + "!!!"),
-   killThread()
+   return
 ENDRULE
 
 #######################################################################

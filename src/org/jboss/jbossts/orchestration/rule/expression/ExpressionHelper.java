@@ -37,6 +37,8 @@ public class ExpressionHelper
         //                     (METH SYMBOL expr_list)
         //                     (NUMBER)
         //                     (STRING)
+        //                     (RETURN)
+        //                     (RETURN expr)
         //                     expr
 
         Token token = exprTree.getToken();
@@ -159,6 +161,18 @@ public class ExpressionHelper
             case STRING:
             {
                 expr = new StringLiteral(token);
+            }
+            break;
+            case RETURN:
+            {
+                Expression returnValue;
+                if (exprTree.getChildCount() > 0) {
+                    CommonTree child0 = (CommonTree) exprTree.getChild(0);
+                    returnValue = createExpression(bindings,child0);
+                } else {
+                    returnValue = null;
+                }
+                expr = new ReturnExpression(token, returnValue);
             }
             break;
             case UNOP:

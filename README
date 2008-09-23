@@ -64,14 +64,19 @@ operation appropriate to the test. Normally, control returns to the
 trigger method and execution continues by executing the target line.
 
 It is possible for a rule to alter the flow of control. A rule action
-can invoke a builtin to 'kill' the current thread, by throwing a
-runtime exception. This may not actually kill the thread if the
-trigger method code or one of its callers catches a generic exception
-but it can be used effectively. Another builtin can be used to signal
-other waiting threads and cause them to 'abort'. Finally, a third
-builtin allows the JVM to be halted. It is possible to call arbitrary
-Java code inside rule actions so the opportunites for messing around
-with control flow extend beyond these builtin options.
+may employ the return builtin to force a return from the triggering
+method at the point where the trigger call was made. If the triggering
+method is is not void then the return expression must include an
+argument whose type is compatible with the method return type. A rule
+action can also invoke a builtin to 'kill' the current thread, by
+throwing a runtime exception. This may not actually kill the thread if
+the trigger method code or one of its callers catches a generic
+exception but it can still be used effectively in many cases. Another
+builtin can be used to signal other waiting threads and cause them to
+'abort'. Finally, a third builtin allows the JVM to be halted. It is
+possible to call arbitrary Java code inside rule actions so the
+opportunites for messing around with control flow extend beyond these
+builtin options.
 
 The target class may be specified with or without a full package
 qualification. If no package is specified then all classes whose

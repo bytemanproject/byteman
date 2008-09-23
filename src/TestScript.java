@@ -81,9 +81,9 @@ public class TestScript
         ClassLoader loader = getClass().getClassLoader();
         
         for (String script : ruleScripts) {
+            String ruleName = "";
             try {
                 String[] lines = script.split("\n");
-                String ruleName;
                 String targetClassName;
                 String targetMethodName;
                 int targetLine;
@@ -205,13 +205,13 @@ public class TestScript
                     System.err.println("TestJar: multiple matching methods for rule " + ruleName);
                 }
             } catch (ParseException e) {
-                System.err.println("TestScript: parse exception for rule " + script + " : " + e);
+                System.err.println("TestScript: parse exception for rule " + ruleName + " : " + e);
                 e.printStackTrace(System.err);
             } catch (TypeException e) {
-                System.err.println("TestScript: type exception for rule " + script + " : " + e);
+                System.err.println("TestScript: type exception for rule " + ruleName + " : " + e);
                 e.printStackTrace(System.err);
             } catch (CompileException e) {
-                System.err.println("TestScript: compile exception for rule " + " : " + script + e);
+                System.err.println("TestScript: compile exception for rule " + " : " + ruleName + e);
                 e.printStackTrace(System.err);
             }
         }

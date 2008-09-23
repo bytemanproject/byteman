@@ -76,6 +76,9 @@ TRUE	: 	'TRUE' | 'true'
 FALSE	:	'FALSE'|'false'
 	;
 	
+RETURN	:	'RETURN'|'return'
+	;
+	
 // various bracket pairs
 
 LPAREN	:	'('

@@ -32,8 +32,10 @@ public class Binding {
             index = -1;
         } else if (name.matches("[0-9].*")) {
             index = Integer.valueOf(name);
-        } else {
+        } else if (name.equals("$!")) {
             index = -2;
+        } else {
+            index = -3;
         }
     }
 
@@ -97,9 +99,14 @@ public class Binding {
         return index > 0;
     }
 
+    public boolean isReturn()
+    {
+        return index == -2;
+    }
+
     public boolean isVar()
     {
-        return index < -1;
+        return index < -2;
     }
 
     public int getIndex()

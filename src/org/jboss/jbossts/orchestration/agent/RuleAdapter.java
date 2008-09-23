@@ -120,6 +120,21 @@ public class RuleAdapter extends ClassAdapter
         public void visitEnd()
         {
             Type exceptionType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.exception.ExecuteException"));
+            Type earlyReturnExceptionType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.exception.EarlyReturnException"));
+            Type returnType =  Type.getReturnType(descriptor);
+            // add exception handling code subclass first
+            super.catchException(startLabel, endLabel, earlyReturnExceptionType);
+            if (returnType == Type.VOID_TYPE) {
+                // drop exception and just return
+                super.pop();
+                super.visitInsn(Opcodes.RETURN);
+            } else {
+                // fetch value from exception, unbox if needed and return value
+                Method getReturnValueMethod = Method.getMethod("Object getReturnValue()");
+                super.invokeVirtual(earlyReturnExceptionType, getReturnValueMethod);
+                super.unbox(returnType);
+                super.returnValue();
+            }
             super.catchException(startLabel, endLabel, exceptionType);
             super.throwException(exceptionType, rule.getName() + " execution exception ");
             super.visitEnd();

@@ -368,20 +368,27 @@ public class Rule
             Binding binding =  new Binding("0", type);
             parameterBindings.add(binding);
         }
-        List<String> parameterTypenames = Type.parseDescriptor(descriptor, false);
+        List<String> parameterTypenames = Type.parseDescriptor(descriptor, true);
         int paramIdx = 1;
+        int last = parameterTypenames.size();
         if (parameterTypenames != null) {
             for (String typeName : parameterTypenames) {
                 String[] typeAndArrayBounds = typeName.split("\\[");
                 Type baseType = typeGroup.create(typeAndArrayBounds[0]);
                 Type paramType = baseType;
+                Binding binding;
                 if (baseType.isUndefined()) {
                     throw new TypeException("Rule.installParameters : Rule " + name + " unable to load class " + baseType);
                 }
                 for (int i = 1; i < typeAndArrayBounds.length ; i++) {
                     paramType = typeGroup.createArray(baseType);
                 }
-                Binding binding = new Binding(Integer.toString(paramIdx++), paramType);
+                if (paramIdx == last) {
+                    // we also add a special binding to allow us to identify the return type
+                    binding = new Binding("$!", paramType);
+                } else {
+                    binding = new Binding(Integer.toString(paramIdx++), paramType);
+                }
                 parameterBindings.add(binding);
             }
         }
@@ -801,12 +808,14 @@ public class Rule
                 Type type = binding.getType();
                 if (binding.isHelper()) {
                     bindingMap.put(name, this);
+                    bindingTypeMap.put(name, type);
                 } else if (binding.isRecipient()) {
                     bindingMap.put(name, recipient);
+                    bindingTypeMap.put(name, type);
                 } else if (binding.isParam()) {
                     bindingMap.put(name, args[binding.getIndex() - 1]);
+                    bindingTypeMap.put(name, type);
                 }
-                bindingTypeMap.put(name, type);
             }
 
             // now do the actual execution

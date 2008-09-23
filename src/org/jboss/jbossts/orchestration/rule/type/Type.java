@@ -643,9 +643,13 @@ public class Type {
                     } else {
                         // skip any trailing spaces before the return type
                         idx++;
-                        while (descriptor.charAt(idx) == ' ')
+                        while (idx < length && descriptor.charAt(idx) == ' ')
                         {
                             idx++;
+                        }
+                        if (idx == length) {
+                            // ok, we need to add a void return type
+                            argTypes.add("void");
                         }
                     }
                 }

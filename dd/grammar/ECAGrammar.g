@@ -93,7 +93,9 @@ action_expr_list
 	|	action_expr
 	;
 
-action_expr	:	expr
+action_expr	:	RETURN		-> ^(RETURN)
+	|	RETURN expr		-> ^(RETURN expr)
+	|	expr
 	;
 
 expr	:	simple_expr infix_oper expr		-> ^(BINOP infix_oper simple_expr expr)
