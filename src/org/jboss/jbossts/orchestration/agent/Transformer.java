@@ -91,6 +91,8 @@ public class Transformer implements ClassFileTransformer {
                             throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: no CLASS for RULE  " + name + " in script " + scriptPaths.get(scriptIdx));
                         } else if (targetMethod == null) {
                             throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: no METHOD for RULE  " + name + " in script " + scriptPaths.get(scriptIdx));
+                        } else if (targetMethod.startsWith("<init>") && targetLine < 0) {
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: rule for constructor METHOD " + targetMethod + " must specify source LINE in RULE " + name + " in script " + scriptPaths.get(scriptIdx));
                         } else {
                             List<Script> scripts = targetToScriptMap.get(targetClass);
                             if (scripts == null) {
@@ -234,7 +236,7 @@ public class Transformer implements ClassFileTransformer {
 
         if (newBuffer != classfileBuffer) {
             // switch on to dump transformed bytecode for checking
-            if (false) {
+            if (true) {
                 String name = (dotIdx < 0 ? internalClassName : internalClassName.substring(dotIdx + 1));
                 name += ".class";
                 System.out.println("Saving transformed bytes to " + name);

@@ -21,10 +21,7 @@ import org.objectweb.asm.Opcodes;
 import static org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.*;
 
 import java.io.StringWriter;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * A rule ties together an event, condition and action. It also maintains a TypeGroup
@@ -560,6 +557,43 @@ public class Rule
             return true;
         }
 
+        // flag support
+        /**
+         * set a flag keyed by the supplied object if it is not already set
+         * @param identifier the object identifying the relevant flag
+         * @return true if the flag was clear before this call otherwise false
+         */
+        public boolean flag(Object identifier)
+        {
+            synchronized (flagSet) {
+                return flagSet.add(identifier);
+            }
+        }
+
+        /**
+         * test the state of the flag keyed by the supplied object
+         * @param identifier the object identifying the relevant flag
+         * @return true if the flag is set otherwise false
+         */
+        public boolean flagged(Object identifier)
+        {
+            synchronized (flagSet) {
+                return flagSet.contains(identifier);
+            }
+        }
+
+        /**
+         * clear the flag keyed by the supplied object if it is not already clear
+         * @param identifier the object identifying the relevant flag
+         * @return true if the flag was clear before this call otherwise false
+         */
+        public boolean clear(Object identifier)
+        {
+            synchronized (flagSet) {
+                return flagSet.remove(identifier);
+            }
+        }
+
         // countdown support
         /**
          * builtin to test test if a countdown has been installed
@@ -624,13 +658,23 @@ public class Rule
 
         // wait/notify support
         /**
+         * test if there are threads waiting for an event identified by the supplied object to
+         * be signalled
+         * @param identifier an object identifying the event to be signalled
+         * @return true if threads are waiting for the associated event to be signalled
+         */
+        public boolean waiting(Object identifier)
+        {
+            return (getWaiter(identifier, false) != null);
+        }
+        /**
          * wait for another thread to signal an event with no timeout. see
          * @link{#waitFor(Object, long)} for details and caveats regarding calling this builtin.
-         * @param object an object used to identify the signal that is to be waited on.
+         * @param identifier an object used to identify the signal that is to be waited on.
          */
-        public void waitFor(Object object)
+        public void waitFor(Object identifier)
         {
-            waitFor(object, 0);
+            waitFor(identifier, 0);
         }
 
         /**
@@ -644,32 +688,32 @@ public class Rule
          * waiting threads has the desired effect. n.b. care must also be employed if the current
          * thread is inside a synchronized block since there is a potential for the waitFor call to
          * cause deadlock.
-         * @param object an object used to identify the signal that is to be waited on. n.b. the
+         * @param identifier an object used to identify the signal that is to be waited on. n.b. the
          * wait operation is not performed using synchronization on the supplied object as the rule
          * system cannot safely release and reobtain locks on application data. this argument is used
          * as a key to identify a synchronization object private to the rule system.
          */
-        public void waitFor(Object object, long millisecs)
+        public void waitFor(Object identifier, long millisecs)
         {
-            Waiter waiter = getWaiter(object, true);
+            Waiter waiter = getWaiter(identifier, true);
 
             waiter.waitFor(millisecs);
         }
 
         /**
-         * signal an event identified by the suppied object, causing all waiting threads to resume
+         * signal an event identified by the supplied object, causing all waiting threads to resume
          * rule processing and clearing the event. if there are no threads waiting either because
          * there has been no call to @link{#waitFor} or because some other thread has sent the signal
          * then this call returns false, otherwise it returns true. This operation is atomic,
          * allowing the builtin to be used in rule conditions.
-         * @param object an object used to identify the which waiting threads the signal should
+         * @param identifier an object used to identify the which waiting threads the signal should
          * be delivered to. n.b. the operation is not performed using a notify on the supplied object.
          * this argument is used as a key to identify a synchronization object private to the rule
          * system.
          */
-        public boolean signal(Object object)
+        public boolean signal(Object identifier)
         {
-            Waiter waiter = removeWaiter(object);
+            Waiter waiter = removeWaiter(identifier);
 
             if (waiter != null) {
                 return waiter.signal();
@@ -684,14 +728,14 @@ public class Rule
          * no call to @link{#waitFor} or because some other thread has already sent the signal, then this
          * call returns false, otherwise it returns true. This operation is atomic, allowing the builtin
          * to be used safely in rule conditions.
-         * @param object an object used to identify the which waiting threads the signal should
+         * @param identifier an object used to identify the which waiting threads the signal should
          * be delivered to. n.b. the operation is not performed using a notify on the supplied object.
          * this argument is used as a key to identify a synchronization object private to the rule
          * system.
          */
-        public boolean signalKill(Object object)
+        public boolean signalKill(Object identifier)
         {
-            Waiter waiter = removeWaiter(object);
+            Waiter waiter = removeWaiter(identifier);
 
             if (waiter != null) {
                 return waiter.signalKill();
@@ -717,6 +761,16 @@ public class Rule
          */
 
         public void killJVM()
+        {
+            killJVM(-1);
+        }
+
+        /**
+         * cause the current JVM to halt immediately, simulating a crash as near as possible. exit code -1
+         * is returned
+         */
+
+        public void killJVM(int exitCode)
         {
             java.lang.Runtime.getRuntime().halt(-1);
         }
@@ -874,7 +928,14 @@ public class Rule
             return rule.getName();
         }
     }
-    
+
+    /**
+     * a set used to identify settings for boolean flags associated with arbitrary objects. if
+     * an object is in the set then the flag associated with the object is set (true) otherwise
+     * it is clear (false).
+     */
+    private static Set<Object> flagSet = new HashSet<Object>();
+
     /**
      * a hash map used to identify countdowns from their identifying objects
      */

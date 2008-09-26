@@ -86,7 +86,7 @@ public class TestScript
                 String[] lines = script.split("\n");
                 String targetClassName;
                 String targetMethodName;
-                int targetLine;
+                int targetLine = -1;
                 String text = "";
                 String sepr = "";
                 int idx = 0;
@@ -96,7 +96,7 @@ public class TestScript
                     idx++;
                 }
                 if (lines[idx].startsWith("RULE ")) {
-                    ruleName = lines[idx].substring(5);
+                    ruleName = lines[idx].substring(5).trim();
                     idx++;
                 } else {
                     throw new ParseException("Rule should start with RULE : " + lines[idx]);
@@ -105,7 +105,7 @@ public class TestScript
                     idx++;
                 }
                 if (lines[idx].startsWith("CLASS ")) {
-                    targetClassName = lines[idx].substring(6);
+                    targetClassName = lines[idx].substring(6).trim();
                     idx++;
                 } else {
                     throw new ParseException("CLASS should follow RULE : " + lines[idx]) ;
@@ -114,7 +114,7 @@ public class TestScript
                     idx++;
                 }
                 if (lines[idx].startsWith("METHOD ")) {
-                    targetMethodName = lines[idx].substring(7);
+                    targetMethodName = lines[idx].substring(7).trim();
                     idx++;
                 } else {
                     throw new ParseException("METHOD should follow CLASS : " + lines[idx]) ;
@@ -123,11 +123,9 @@ public class TestScript
                     idx++;
                 }
                 if (lines[idx].startsWith("LINE ")) {
-                    String targetLineString = lines[idx].substring(5);
+                    String targetLineString = lines[idx].substring(5).trim();
                     targetLine = Integer.valueOf(targetLineString);
                     idx++;
-                } else {
-                    throw new ParseException("LINE should follow METHOD : " + lines[idx]) ;
                 }
                 for (;idx < len; idx++) {
                     if (lines[idx].trim().startsWith("#")) {
@@ -138,6 +136,9 @@ public class TestScript
                     }
                     text += sepr + lines[idx];
                     sepr = "\n";
+                }
+                if (targetMethodName.startsWith("<init>") && (targetLine < 0)) {
+                    throw new ParseException("constructor method " + targetMethodName + " must specify target line in rule " + ruleName);
                 }
                 Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetLine, text, loader);
                 System.err.println("TestScript: parsed rule " + rule.getName());

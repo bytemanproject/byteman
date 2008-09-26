@@ -1,4 +1,4 @@
-// $ANTLR 3.0.1 dd/grammar/ECAGrammar.g 2008-09-23 13:29:23
+// $ANTLR 3.0.1 dd/grammar/ECAGrammar.g 2008-09-25 12:22:36
 
 package org.jboss.jbossts.orchestration.rule.grammar;
 
@@ -314,7 +314,7 @@ public class ECAGrammarParser extends Parser {
 
 
             // AST REWRITE
-            // elements: n, cl, l, m, a, c, e, RULE
+            // elements: RULE, c, e, a, l, n, cl, m
             // token labels: cl, m, n, l
             // rule labels: a, c, retval, e
             // token list labels: 
@@ -749,7 +749,7 @@ public class ECAGrammarParser extends Parser {
             if ( backtracking==0 ) stream_action.add(a.getTree());
 
             // AST REWRITE
-            // elements: BIND, a, c, e
+            // elements: e, BIND, a, c
             // token labels: 
             // rule labels: a, c, retval, e
             // token list labels: 
@@ -921,7 +921,7 @@ public class ECAGrammarParser extends Parser {
                     if ( backtracking==0 ) stream_bindings.add(bindings24.getTree());
 
                     // AST REWRITE
-                    // elements: binding, bindings, SEPR
+                    // elements: SEPR, bindings, binding
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -1025,7 +1025,7 @@ public class ECAGrammarParser extends Parser {
             if ( backtracking==0 ) stream_expr.add(expr28.getTree());
 
             // AST REWRITE
-            // elements: expr, bind_sym, ASSIGN
+            // elements: ASSIGN, expr, bind_sym
             // token labels: 
             // rule labels: retval
             // token list labels: 
@@ -1143,7 +1143,7 @@ public class ECAGrammarParser extends Parser {
 
 
                     // AST REWRITE
-                    // elements: COLON, t, v
+                    // elements: v, COLON, t
                     // token labels: t, v
                     // rule labels: retval
                     // token list labels: 
@@ -1663,7 +1663,7 @@ public class ECAGrammarParser extends Parser {
                     if ( backtracking==0 ) stream_action_expr_list.add(action_expr_list38.getTree());
 
                     // AST REWRITE
-                    // elements: SEPR, action_expr_list, action_expr
+                    // elements: action_expr_list, SEPR, action_expr
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -2233,7 +2233,7 @@ public class ECAGrammarParser extends Parser {
                     if ( backtracking==0 ) stream_expr.add(expr46.getTree());
 
                     // AST REWRITE
-                    // elements: simple_expr, expr, infix_oper
+                    // elements: expr, infix_oper, simple_expr
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -2291,7 +2291,7 @@ public class ECAGrammarParser extends Parser {
                     if ( backtracking==0 ) stream_expr.add(expr49.getTree());
 
                     // AST REWRITE
-                    // elements: expr, unary_oper
+                    // elements: unary_oper, expr
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -2348,16 +2348,16 @@ public class ECAGrammarParser extends Parser {
                     if ( backtracking==0 ) stream_expr.add(iffalse.getTree());
 
                     // AST REWRITE
-                    // elements: cond, iffalse, iftrue
+                    // elements: iffalse, cond, iftrue
                     // token labels: 
-                    // rule labels: iftrue, iffalse, cond, retval
+                    // rule labels: iftrue, cond, iffalse, retval
                     // token list labels: 
                     // rule list labels: 
                     if ( backtracking==0 ) {
                     retval.tree = root_0;
                     RewriteRuleSubtreeStream stream_iftrue=new RewriteRuleSubtreeStream(adaptor,"token iftrue",iftrue!=null?iftrue.tree:null);
-                    RewriteRuleSubtreeStream stream_iffalse=new RewriteRuleSubtreeStream(adaptor,"token iffalse",iffalse!=null?iffalse.tree:null);
                     RewriteRuleSubtreeStream stream_cond=new RewriteRuleSubtreeStream(adaptor,"token cond",cond!=null?cond.tree:null);
+                    RewriteRuleSubtreeStream stream_iffalse=new RewriteRuleSubtreeStream(adaptor,"token iffalse",iffalse!=null?iffalse.tree:null);
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
@@ -2977,7 +2977,7 @@ public class ECAGrammarParser extends Parser {
                     if ( backtracking==0 ) stream_expr_list.add(expr_list63.getTree());
 
                     // AST REWRITE
-                    // elements: expr, SEPR, expr_list
+                    // elements: expr_list, expr, SEPR
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
