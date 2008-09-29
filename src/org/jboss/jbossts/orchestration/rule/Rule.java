@@ -887,13 +887,13 @@ public class Rule
                 throws ExecuteException
         {
             // System.out.println(rule.getName() + " execute0");
-            executeEvent();
-            if (executeCondition()) {
-                executeAction();
+            bind();
+            if (test()) {
+                fire();
             }
         }
 
-        public void bind(String name, Object value)
+        public void bindVariable(String name, Object value)
         {
             bindingMap.put(name, value);
         }
@@ -903,24 +903,24 @@ public class Rule
             return bindingMap.get(name);
         }
 
-        private void executeEvent()
+        private void bind()
                 throws ExecuteException
         {
-            // System.out.println(rule.getName() + " executeEvent");
+            // System.out.println(rule.getName() + " bind");
             rule.getEvent().interpret(this);
         }
 
-        private boolean executeCondition()
+        private boolean test()
                 throws ExecuteException
         {
-            // System.out.println(rule.getName() + " executeCondition");
+            // System.out.println(rule.getName() + " test");
             return rule.getCondition().interpret(this);
         }
         
-        private void executeAction()
+        private void fire()
                 throws ExecuteException
         {
-            // System.out.println(rule.getName() + " executeAction");
+            // System.out.println(rule.getName() + " fire");
             rule.getAction().interpret(this);
         }
 

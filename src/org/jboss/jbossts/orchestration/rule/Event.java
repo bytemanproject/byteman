@@ -13,7 +13,6 @@ import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
 import org.jboss.jbossts.orchestration.rule.expression.Expression;
 import org.jboss.jbossts.orchestration.rule.expression.ExpressionHelper;
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
@@ -232,7 +231,7 @@ public class Event extends RuleElement {
 
             if (binding.isVar()) {
                 Object value = binding.getValue().interpret(helper);
-                helper.bind(binding.getName(), value);
+                helper.bindVariable(binding.getName(), value);
             }
         }
 
