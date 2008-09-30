@@ -1,6 +1,8 @@
 package org.jboss.jbossts.orchestration.rule.type;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * the collection of types associated with an ECA rule
@@ -9,6 +11,7 @@ public class TypeGroup {
     protected HashMap<String, Type> typeTable;
     private ClassLoader loader;
     private boolean resolve;
+    private List<Type> exceptionTypes;
 
     /**
      * create a type group for a rule containing all the basic types
@@ -53,6 +56,7 @@ public class TypeGroup {
 
         this.loader = loader;
         this.resolve = false;
+        exceptionTypes = new ArrayList<Type>();
     }
 
     /**
@@ -192,6 +196,17 @@ public class TypeGroup {
         }
 
         return arrayType;
+    }
+
+    public void addExceptionTypes(String[] exceptionTypeNames) {
+        for (String exceptionTypeName : exceptionTypeNames) {
+            exceptionTypes.add(create(TypeHelper.internalizeClass(exceptionTypeName)));
+        }
+    }
+
+    public List<Type> getExceptionTypes()
+    {
+        return exceptionTypes;
     }
 
     public Type ensureType(Class clazz)

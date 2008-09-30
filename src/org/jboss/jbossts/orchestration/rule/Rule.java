@@ -90,6 +90,11 @@ public class Rule
      */
     private String triggerDescriptor;
     /**
+     * the name sof all the exceptions declared by the trigger method in which a trigger call for
+     * this rule has been inserted by the code transformation package.
+     */
+    private String[] triggerExceptions;
+    /**
      * the access mode for the target method defined using flag bits defined in the asm Opcodes
      * class.
      */
@@ -300,12 +305,13 @@ public class Rule
         }
     }
 
-    public void setTypeInfo(final String className, final int access, final String methodName, final String desc)
+    public void setTypeInfo(final String className, final int access, final String methodName, final String desc, String[] exceptions)
     {
         triggerClass = className;
         triggerAccess = access;
         triggerMethod = methodName;
         triggerDescriptor = desc;
+        triggerExceptions = exceptions;
     }
 
     private synchronized boolean ensureTypeCheckedCompiled()
@@ -333,6 +339,9 @@ public class Rule
     public void typeCheck()
             throws TypeException
     {
+        // ensure that the type group includes the exception types
+        typeGroup.addExceptionTypes(triggerExceptions);
+
         // try to resolve all types in the type group to classes
 
         typeGroup.resolveTypes();

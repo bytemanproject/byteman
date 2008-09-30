@@ -178,7 +178,7 @@ METHOD replayPhase2
 LINE 76
 BIND coordinator = $0,
      uid : Uid = coordinator.identifier(),
-     status : int = coordinator.status(),
+     status : int = coordinator.status()
 IF (status == com.arjuna.ats.arjuna.coordinator.ActionStatus.PREPARED)
      OR
      (status == com.arjuna.ats.arjuna.coordinator.ActionStatus.COMMITTING)

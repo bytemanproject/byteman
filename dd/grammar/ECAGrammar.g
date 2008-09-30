@@ -93,8 +93,10 @@ action_expr_list
 	|	action_expr
 	;
 
-action_expr	:	RETURN		-> ^(RETURN)
-	|	RETURN expr		-> ^(RETURN expr)
+action_expr	:	RETURN				-> ^(RETURN)
+	|	RETURN expr				-> ^(RETURN expr)
+	|	THROW e=SYMBOL LPAREN RPAREN		-> ^(THROW $e)
+	|	THROW e=SYMBOL LPAREN args=expr_list RPAREN	-> ^(THROW $e $args)
 	|	expr
 	;
 

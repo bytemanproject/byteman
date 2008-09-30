@@ -122,7 +122,7 @@ public class MethodExpression extends Expression
         type = typegroup.ensureType(method.getReturnType());
 
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
-            throw new TypeException("FieldExpresssion.typeCheck : invalid expected type " + expected.getName() + getPos());
+            throw new TypeException("MethodExpression.typeCheck : invalid expected type " + expected.getName() + getPos());
         }
 
         return type;

@@ -164,10 +164,16 @@ public class TestScript
                                     }
                                     found = true;
                                     int access = 0;
+                                    Class<?>[] exceptionClasses = candidate.getExceptionTypes();
+                                    int l = exceptionClasses.length;
+                                    String[] exceptionNames = new String[l];
+                                    for (int i = 0; i < l; i++) {
+                                        exceptionNames[i] = exceptionClasses[i].getCanonicalName();
+                                    }
                                     if ((candidate.getModifiers() & Modifier.STATIC) != 0) {
                                         access = Opcodes.ACC_STATIC;
                                     }
-                                    rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc);
+                                    rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
                                     rule.typeCheck();
                                     System.err.println("TestJar: type checked rule " + ruleName);
                                 }
@@ -187,10 +193,16 @@ public class TestScript
                                     }
                                     found = true;
                                     int access = 0;
+                                    Class<?>[] exceptionClasses = constructor.getExceptionTypes();
+                                    int l = exceptionClasses.length;
+                                    String[] exceptionNames = new String[l];
+                                    for (int i = 0; i < l; i++) {
+                                        exceptionNames[i] = exceptionClasses[i].getCanonicalName();
+                                    }
                                     if ((constructor.getModifiers() & Modifier.STATIC) != 0) {
                                         access = Opcodes.ACC_STATIC;
                                     }
-                                    rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc);
+                                    rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
                                     rule.typeCheck();
                                     System.err.println("TestJar: type checked rule " + ruleName);
                                 }

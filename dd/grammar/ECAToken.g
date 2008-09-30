@@ -79,6 +79,9 @@ FALSE	:	'FALSE'|'false'
 RETURN	:	'RETURN'|'return'
 	;
 	
+THROW	:	'THROW'|'throw'
+	;
+	
 // various bracket pairs
 
 LPAREN	:	'('

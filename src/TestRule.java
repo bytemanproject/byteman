@@ -162,10 +162,16 @@ public class TestRule
                 try {
                     int modifiers = method.getModifiers();
                     int access = 0;
+                    Class<?>[] exceptionClasses = method.getExceptionTypes();
+                    int l = exceptionClasses.length;
+                    String[] exceptionNames = new String[l];
+                    for (int i = 0; i < l; i++) {
+                        exceptionNames[i] = exceptionClasses[i].getCanonicalName();
+                    }
                     if ((modifiers & Modifier.STATIC) != 0) {
                         access |= Opcodes.ACC_STATIC;
                     }
-                    rule.setTypeInfo(className, access, methodName,  descriptor);
+                    rule.setTypeInfo(className, access, methodName,  descriptor, exceptionNames);
                     rule.typeCheck();
                 } catch (TypeException te) {
                     System.out.println("error typechecking against " + className + "." + methodName + " : " + te);

@@ -94,7 +94,7 @@ public class RuleAdapter extends ClassAdapter
 
         public void visitLineNumber(final int line, final Label start) {
             if (!visitedLine && (targetLine < 0 || targetLine == line)) {
-                rule.setTypeInfo(targetClass, access, name, descriptor);
+                rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
                 String key = rule.getKey();
                 Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.Rule"));
                 Method method = Method.getMethod("void execute(String, Object, Object[])");
@@ -152,6 +152,8 @@ public class RuleAdapter extends ClassAdapter
              */
             Type exceptionType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.exception.ExecuteException"));
             Type earlyReturnExceptionType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.exception.EarlyReturnException"));
+            Type throwExceptionType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.exception.ThrowException"));
+            Type throwableType = Type.getType(TypeHelper.externalizeType("java.lang.Throwable"));
             Type returnType =  Type.getReturnType(descriptor);
             // add exception handling code subclass first
             super.catchException(startLabel, endLabel, earlyReturnExceptionType);
@@ -166,6 +168,12 @@ public class RuleAdapter extends ClassAdapter
                 super.unbox(returnType);
                 super.returnValue();
             }
+            super.catchException(startLabel, endLabel, throwExceptionType);
+            // fetch value from exception, unbox if needed and return value
+            Method getThrowableMethod = Method.getMethod("Throwable getThrowable()");
+            super.invokeVirtual(throwExceptionType, getThrowableMethod);
+            super.throwException();
+
             super.catchException(startLabel, endLabel, exceptionType);
             super.throwException(exceptionType, rule.getName() + " execution exception ");
             // ok now recompute the stack size

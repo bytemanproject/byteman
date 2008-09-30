@@ -35,6 +35,8 @@ public class ExpressionHelper
         //                     (ARRAY SYMBOL idx_list)
         //                     (METH SYMBOL)
         //                     (METH SYMBOL expr_list)
+        //                     (THROW SYMBOL)
+        //                     (THROW SYMBOL expr_list)
         //                     (NUMBER)
         //                     (STRING)
         //                     (RETURN)
@@ -150,6 +152,23 @@ public class ExpressionHelper
                     throw new TypeException("ExpressionHelper.createExpression : unexpected token Type in method expression tree " + tokenType + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
                 } else {
                     expr = createCallExpression(bindings, token, child1, type);
+                }
+            }
+            break;
+            case THROW:
+            {
+                CommonTree child0 = (CommonTree) exprTree.getChild(0);
+                CommonTree child1;
+                if (exprTree.getChildCount() > 1) {
+                    child1 = (CommonTree) exprTree.getChild(1);
+                } else {
+                    child1 = null;
+                }
+                token = child0.getToken();
+                if (token.getType() != SYMBOL) {
+                    throw new TypeException("ExpressionHelper.createExpression : unexpected token Type in throw expression tree " + tokenType + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
+                } else {
+                    expr = createThrowExpression(bindings, token, child1, type);
                 }
             }
             break;
@@ -279,6 +298,26 @@ public class ExpressionHelper
 
          return expr;
      }
+
+    public static Expression createThrowExpression(Bindings bindings, Token token, CommonTree argTree, Type type)
+            throws TypeException
+    {
+        Expression expr;
+        String className;
+        List<Expression> args;
+
+        String typeName = token.getText();
+
+        if (argTree == null) {
+            args = new ArrayList<Expression>();
+        } else {
+            args = createExpressionList(bindings, argTree);
+        }
+
+        expr = new ThrowExpression(typeName, token, args);
+
+        return expr;
+    }
 
     public static Expression createUnaryExpression(Bindings bindings, CommonTree exprTree, Type type)
             throws TypeException
