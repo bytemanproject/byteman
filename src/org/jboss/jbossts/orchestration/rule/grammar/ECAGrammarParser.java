@@ -1,4 +1,4 @@
-// $ANTLR 3.0.1 dd/grammar/ECAGrammar.g 2008-09-30 13:45:25
+// $ANTLR 3.0.1 dd/grammar/ECAGrammar.g 2008-10-01 15:50:08
 
 package org.jboss.jbossts.orchestration.rule.grammar;
 
@@ -116,7 +116,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start eca_script_rule
-    // dd/grammar/ECAGrammar.g:26:1: eca_script_rule : rule= eca_script_rule_one EOF -> ^( $rule) ;
+    // dd/grammar/ECAGrammar.g:49:1: eca_script_rule : rule= eca_script_rule_one EOF -> ^( $rule) ;
     public final eca_script_rule_return eca_script_rule() throws RecognitionException {
         eca_script_rule_return retval = new eca_script_rule_return();
         retval.start = input.LT(1);
@@ -131,16 +131,16 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleTokenStream stream_EOF=new RewriteRuleTokenStream(adaptor,"token EOF");
         RewriteRuleSubtreeStream stream_eca_script_rule_one=new RewriteRuleSubtreeStream(adaptor,"rule eca_script_rule_one");
         try {
-            // dd/grammar/ECAGrammar.g:26:17: (rule= eca_script_rule_one EOF -> ^( $rule) )
-            // dd/grammar/ECAGrammar.g:26:19: rule= eca_script_rule_one EOF
+            // dd/grammar/ECAGrammar.g:49:17: (rule= eca_script_rule_one EOF -> ^( $rule) )
+            // dd/grammar/ECAGrammar.g:49:19: rule= eca_script_rule_one EOF
             {
-            pushFollow(FOLLOW_eca_script_rule_one_in_eca_script_rule88);
+            pushFollow(FOLLOW_eca_script_rule_one_in_eca_script_rule90);
             rule=eca_script_rule_one();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_eca_script_rule_one.add(rule.getTree());
             EOF1=(Token)input.LT(1);
-            match(input,EOF,FOLLOW_EOF_in_eca_script_rule90); if (failed) return retval;
+            match(input,EOF,FOLLOW_EOF_in_eca_script_rule92); if (failed) return retval;
             if ( backtracking==0 ) stream_EOF.add(EOF1);
 
 
@@ -156,9 +156,9 @@ public class ECAGrammarParser extends Parser {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 26:48: -> ^( $rule)
+            // 49:48: -> ^( $rule)
             {
-                // dd/grammar/ECAGrammar.g:26:51: ^( $rule)
+                // dd/grammar/ECAGrammar.g:49:51: ^( $rule)
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(stream_rule.nextNode(), root_1);
@@ -195,7 +195,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start eca_script_rule_one
-    // dd/grammar/ECAGrammar.g:28:1: eca_script_rule_one : RULE n= SYMBOL CLASS cl= SYMBOL METHOD m= SYMBOL LINE l= NUMBER BIND e= event IF c= condition DO a= action ENDRULE -> ^( RULE $n $cl $m $l $e $c $a) ;
+    // dd/grammar/ECAGrammar.g:51:1: eca_script_rule_one : RULE n= SYMBOL CLASS cl= SYMBOL METHOD m= SYMBOL LINE l= NUMBER BIND e= event IF c= condition DO a= action ENDRULE -> ^( RULE $n $cl $m $l $e $c $a) ;
     public final eca_script_rule_one_return eca_script_rule_one() throws RecognitionException {
         eca_script_rule_one_return retval = new eca_script_rule_one_return();
         retval.start = input.LT(1);
@@ -247,75 +247,75 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleSubtreeStream stream_event=new RewriteRuleSubtreeStream(adaptor,"rule event");
         RewriteRuleSubtreeStream stream_condition=new RewriteRuleSubtreeStream(adaptor,"rule condition");
         try {
-            // dd/grammar/ECAGrammar.g:29:2: ( RULE n= SYMBOL CLASS cl= SYMBOL METHOD m= SYMBOL LINE l= NUMBER BIND e= event IF c= condition DO a= action ENDRULE -> ^( RULE $n $cl $m $l $e $c $a) )
-            // dd/grammar/ECAGrammar.g:29:4: RULE n= SYMBOL CLASS cl= SYMBOL METHOD m= SYMBOL LINE l= NUMBER BIND e= event IF c= condition DO a= action ENDRULE
+            // dd/grammar/ECAGrammar.g:52:2: ( RULE n= SYMBOL CLASS cl= SYMBOL METHOD m= SYMBOL LINE l= NUMBER BIND e= event IF c= condition DO a= action ENDRULE -> ^( RULE $n $cl $m $l $e $c $a) )
+            // dd/grammar/ECAGrammar.g:52:4: RULE n= SYMBOL CLASS cl= SYMBOL METHOD m= SYMBOL LINE l= NUMBER BIND e= event IF c= condition DO a= action ENDRULE
             {
             RULE2=(Token)input.LT(1);
-            match(input,RULE,FOLLOW_RULE_in_eca_script_rule_one107); if (failed) return retval;
+            match(input,RULE,FOLLOW_RULE_in_eca_script_rule_one109); if (failed) return retval;
             if ( backtracking==0 ) stream_RULE.add(RULE2);
 
             n=(Token)input.LT(1);
-            match(input,SYMBOL,FOLLOW_SYMBOL_in_eca_script_rule_one111); if (failed) return retval;
+            match(input,SYMBOL,FOLLOW_SYMBOL_in_eca_script_rule_one113); if (failed) return retval;
             if ( backtracking==0 ) stream_SYMBOL.add(n);
 
             CLASS3=(Token)input.LT(1);
-            match(input,CLASS,FOLLOW_CLASS_in_eca_script_rule_one115); if (failed) return retval;
+            match(input,CLASS,FOLLOW_CLASS_in_eca_script_rule_one117); if (failed) return retval;
             if ( backtracking==0 ) stream_CLASS.add(CLASS3);
 
             cl=(Token)input.LT(1);
-            match(input,SYMBOL,FOLLOW_SYMBOL_in_eca_script_rule_one119); if (failed) return retval;
+            match(input,SYMBOL,FOLLOW_SYMBOL_in_eca_script_rule_one121); if (failed) return retval;
             if ( backtracking==0 ) stream_SYMBOL.add(cl);
 
             METHOD4=(Token)input.LT(1);
-            match(input,METHOD,FOLLOW_METHOD_in_eca_script_rule_one123); if (failed) return retval;
+            match(input,METHOD,FOLLOW_METHOD_in_eca_script_rule_one125); if (failed) return retval;
             if ( backtracking==0 ) stream_METHOD.add(METHOD4);
 
             m=(Token)input.LT(1);
-            match(input,SYMBOL,FOLLOW_SYMBOL_in_eca_script_rule_one127); if (failed) return retval;
+            match(input,SYMBOL,FOLLOW_SYMBOL_in_eca_script_rule_one129); if (failed) return retval;
             if ( backtracking==0 ) stream_SYMBOL.add(m);
 
             LINE5=(Token)input.LT(1);
-            match(input,LINE,FOLLOW_LINE_in_eca_script_rule_one131); if (failed) return retval;
+            match(input,LINE,FOLLOW_LINE_in_eca_script_rule_one133); if (failed) return retval;
             if ( backtracking==0 ) stream_LINE.add(LINE5);
 
             l=(Token)input.LT(1);
-            match(input,NUMBER,FOLLOW_NUMBER_in_eca_script_rule_one135); if (failed) return retval;
+            match(input,NUMBER,FOLLOW_NUMBER_in_eca_script_rule_one137); if (failed) return retval;
             if ( backtracking==0 ) stream_NUMBER.add(l);
 
             BIND6=(Token)input.LT(1);
-            match(input,BIND,FOLLOW_BIND_in_eca_script_rule_one139); if (failed) return retval;
+            match(input,BIND,FOLLOW_BIND_in_eca_script_rule_one141); if (failed) return retval;
             if ( backtracking==0 ) stream_BIND.add(BIND6);
 
-            pushFollow(FOLLOW_event_in_eca_script_rule_one143);
+            pushFollow(FOLLOW_event_in_eca_script_rule_one145);
             e=event();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_event.add(e.getTree());
             IF7=(Token)input.LT(1);
-            match(input,IF,FOLLOW_IF_in_eca_script_rule_one147); if (failed) return retval;
+            match(input,IF,FOLLOW_IF_in_eca_script_rule_one149); if (failed) return retval;
             if ( backtracking==0 ) stream_IF.add(IF7);
 
-            pushFollow(FOLLOW_condition_in_eca_script_rule_one151);
+            pushFollow(FOLLOW_condition_in_eca_script_rule_one153);
             c=condition();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_condition.add(c.getTree());
             DO8=(Token)input.LT(1);
-            match(input,DO,FOLLOW_DO_in_eca_script_rule_one155); if (failed) return retval;
+            match(input,DO,FOLLOW_DO_in_eca_script_rule_one157); if (failed) return retval;
             if ( backtracking==0 ) stream_DO.add(DO8);
 
-            pushFollow(FOLLOW_action_in_eca_script_rule_one159);
+            pushFollow(FOLLOW_action_in_eca_script_rule_one161);
             a=action();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_action.add(a.getTree());
             ENDRULE9=(Token)input.LT(1);
-            match(input,ENDRULE,FOLLOW_ENDRULE_in_eca_script_rule_one163); if (failed) return retval;
+            match(input,ENDRULE,FOLLOW_ENDRULE_in_eca_script_rule_one165); if (failed) return retval;
             if ( backtracking==0 ) stream_ENDRULE.add(ENDRULE9);
 
 
             // AST REWRITE
-            // elements: m, cl, a, n, c, e, RULE, l
+            // elements: n, a, l, RULE, c, e, m, cl
             // token labels: cl, m, n, l
             // rule labels: a, c, retval, e
             // token list labels: 
@@ -332,9 +332,9 @@ public class ECAGrammarParser extends Parser {
             RewriteRuleSubtreeStream stream_e=new RewriteRuleSubtreeStream(adaptor,"token e",e!=null?e.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 36:12: -> ^( RULE $n $cl $m $l $e $c $a)
+            // 59:12: -> ^( RULE $n $cl $m $l $e $c $a)
             {
-                // dd/grammar/ECAGrammar.g:36:15: ^( RULE $n $cl $m $l $e $c $a)
+                // dd/grammar/ECAGrammar.g:59:15: ^( RULE $n $cl $m $l $e $c $a)
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(stream_RULE.next(), root_1);
@@ -379,7 +379,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start eca_rule
-    // dd/grammar/ECAGrammar.g:38:1: eca_rule : eca EOF -> ^( eca ) ;
+    // dd/grammar/ECAGrammar.g:61:1: eca_rule : eca EOF -> ^( eca ) ;
     public final eca_rule_return eca_rule() throws RecognitionException {
         eca_rule_return retval = new eca_rule_return();
         retval.start = input.LT(1);
@@ -394,16 +394,16 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleTokenStream stream_EOF=new RewriteRuleTokenStream(adaptor,"token EOF");
         RewriteRuleSubtreeStream stream_eca=new RewriteRuleSubtreeStream(adaptor,"rule eca");
         try {
-            // dd/grammar/ECAGrammar.g:38:10: ( eca EOF -> ^( eca ) )
-            // dd/grammar/ECAGrammar.g:38:12: eca EOF
+            // dd/grammar/ECAGrammar.g:61:10: ( eca EOF -> ^( eca ) )
+            // dd/grammar/ECAGrammar.g:61:12: eca EOF
             {
-            pushFollow(FOLLOW_eca_in_eca_rule200);
+            pushFollow(FOLLOW_eca_in_eca_rule202);
             eca10=eca();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_eca.add(eca10.getTree());
             EOF11=(Token)input.LT(1);
-            match(input,EOF,FOLLOW_EOF_in_eca_rule202); if (failed) return retval;
+            match(input,EOF,FOLLOW_EOF_in_eca_rule204); if (failed) return retval;
             if ( backtracking==0 ) stream_EOF.add(EOF11);
 
 
@@ -418,9 +418,9 @@ public class ECAGrammarParser extends Parser {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 38:20: -> ^( eca )
+            // 61:20: -> ^( eca )
             {
-                // dd/grammar/ECAGrammar.g:38:23: ^( eca )
+                // dd/grammar/ECAGrammar.g:61:23: ^( eca )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(stream_eca.nextNode(), root_1);
@@ -457,7 +457,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start eca_event
-    // dd/grammar/ECAGrammar.g:41:1: eca_event : event EOF -> ^( event ) ;
+    // dd/grammar/ECAGrammar.g:64:1: eca_event : event EOF -> ^( event ) ;
     public final eca_event_return eca_event() throws RecognitionException {
         eca_event_return retval = new eca_event_return();
         retval.start = input.LT(1);
@@ -472,16 +472,16 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleTokenStream stream_EOF=new RewriteRuleTokenStream(adaptor,"token EOF");
         RewriteRuleSubtreeStream stream_event=new RewriteRuleSubtreeStream(adaptor,"rule event");
         try {
-            // dd/grammar/ECAGrammar.g:41:11: ( event EOF -> ^( event ) )
-            // dd/grammar/ECAGrammar.g:41:13: event EOF
+            // dd/grammar/ECAGrammar.g:64:11: ( event EOF -> ^( event ) )
+            // dd/grammar/ECAGrammar.g:64:13: event EOF
             {
-            pushFollow(FOLLOW_event_in_eca_event219);
+            pushFollow(FOLLOW_event_in_eca_event221);
             event12=event();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_event.add(event12.getTree());
             EOF13=(Token)input.LT(1);
-            match(input,EOF,FOLLOW_EOF_in_eca_event221); if (failed) return retval;
+            match(input,EOF,FOLLOW_EOF_in_eca_event223); if (failed) return retval;
             if ( backtracking==0 ) stream_EOF.add(EOF13);
 
 
@@ -496,9 +496,9 @@ public class ECAGrammarParser extends Parser {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 41:23: -> ^( event )
+            // 64:23: -> ^( event )
             {
-                // dd/grammar/ECAGrammar.g:41:26: ^( event )
+                // dd/grammar/ECAGrammar.g:64:26: ^( event )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(stream_event.nextNode(), root_1);
@@ -535,7 +535,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start eca_condition
-    // dd/grammar/ECAGrammar.g:44:1: eca_condition : condition EOF -> ^( condition ) ;
+    // dd/grammar/ECAGrammar.g:67:1: eca_condition : condition EOF -> ^( condition ) ;
     public final eca_condition_return eca_condition() throws RecognitionException {
         eca_condition_return retval = new eca_condition_return();
         retval.start = input.LT(1);
@@ -550,16 +550,16 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleTokenStream stream_EOF=new RewriteRuleTokenStream(adaptor,"token EOF");
         RewriteRuleSubtreeStream stream_condition=new RewriteRuleSubtreeStream(adaptor,"rule condition");
         try {
-            // dd/grammar/ECAGrammar.g:44:15: ( condition EOF -> ^( condition ) )
-            // dd/grammar/ECAGrammar.g:44:17: condition EOF
+            // dd/grammar/ECAGrammar.g:67:15: ( condition EOF -> ^( condition ) )
+            // dd/grammar/ECAGrammar.g:67:17: condition EOF
             {
-            pushFollow(FOLLOW_condition_in_eca_condition237);
+            pushFollow(FOLLOW_condition_in_eca_condition239);
             condition14=condition();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_condition.add(condition14.getTree());
             EOF15=(Token)input.LT(1);
-            match(input,EOF,FOLLOW_EOF_in_eca_condition239); if (failed) return retval;
+            match(input,EOF,FOLLOW_EOF_in_eca_condition241); if (failed) return retval;
             if ( backtracking==0 ) stream_EOF.add(EOF15);
 
 
@@ -574,9 +574,9 @@ public class ECAGrammarParser extends Parser {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 44:31: -> ^( condition )
+            // 67:31: -> ^( condition )
             {
-                // dd/grammar/ECAGrammar.g:44:34: ^( condition )
+                // dd/grammar/ECAGrammar.g:67:34: ^( condition )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(stream_condition.nextNode(), root_1);
@@ -613,7 +613,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start eca_action
-    // dd/grammar/ECAGrammar.g:47:1: eca_action : action EOF -> ^( action ) ;
+    // dd/grammar/ECAGrammar.g:70:1: eca_action : action EOF -> ^( action ) ;
     public final eca_action_return eca_action() throws RecognitionException {
         eca_action_return retval = new eca_action_return();
         retval.start = input.LT(1);
@@ -628,16 +628,16 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleTokenStream stream_EOF=new RewriteRuleTokenStream(adaptor,"token EOF");
         RewriteRuleSubtreeStream stream_action=new RewriteRuleSubtreeStream(adaptor,"rule action");
         try {
-            // dd/grammar/ECAGrammar.g:47:12: ( action EOF -> ^( action ) )
-            // dd/grammar/ECAGrammar.g:47:14: action EOF
+            // dd/grammar/ECAGrammar.g:70:12: ( action EOF -> ^( action ) )
+            // dd/grammar/ECAGrammar.g:70:14: action EOF
             {
-            pushFollow(FOLLOW_action_in_eca_action255);
+            pushFollow(FOLLOW_action_in_eca_action257);
             action16=action();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_action.add(action16.getTree());
             EOF17=(Token)input.LT(1);
-            match(input,EOF,FOLLOW_EOF_in_eca_action257); if (failed) return retval;
+            match(input,EOF,FOLLOW_EOF_in_eca_action259); if (failed) return retval;
             if ( backtracking==0 ) stream_EOF.add(EOF17);
 
 
@@ -652,9 +652,9 @@ public class ECAGrammarParser extends Parser {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 47:25: -> ^( action )
+            // 70:25: -> ^( action )
             {
-                // dd/grammar/ECAGrammar.g:47:28: ^( action )
+                // dd/grammar/ECAGrammar.g:70:28: ^( action )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(stream_action.nextNode(), root_1);
@@ -691,7 +691,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start eca
-    // dd/grammar/ECAGrammar.g:50:1: eca : BIND e= event IF c= condition DO a= action -> ^( BIND $e $c $a) ;
+    // dd/grammar/ECAGrammar.g:73:1: eca : BIND e= event IF c= condition DO a= action -> ^( BIND $e $c $a) ;
     public final eca_return eca() throws RecognitionException {
         eca_return retval = new eca_return();
         retval.start = input.LT(1);
@@ -718,39 +718,39 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleSubtreeStream stream_event=new RewriteRuleSubtreeStream(adaptor,"rule event");
         RewriteRuleSubtreeStream stream_condition=new RewriteRuleSubtreeStream(adaptor,"rule condition");
         try {
-            // dd/grammar/ECAGrammar.g:50:5: ( BIND e= event IF c= condition DO a= action -> ^( BIND $e $c $a) )
-            // dd/grammar/ECAGrammar.g:50:7: BIND e= event IF c= condition DO a= action
+            // dd/grammar/ECAGrammar.g:73:5: ( BIND e= event IF c= condition DO a= action -> ^( BIND $e $c $a) )
+            // dd/grammar/ECAGrammar.g:73:7: BIND e= event IF c= condition DO a= action
             {
             BIND18=(Token)input.LT(1);
-            match(input,BIND,FOLLOW_BIND_in_eca273); if (failed) return retval;
+            match(input,BIND,FOLLOW_BIND_in_eca275); if (failed) return retval;
             if ( backtracking==0 ) stream_BIND.add(BIND18);
 
-            pushFollow(FOLLOW_event_in_eca277);
+            pushFollow(FOLLOW_event_in_eca279);
             e=event();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_event.add(e.getTree());
             IF19=(Token)input.LT(1);
-            match(input,IF,FOLLOW_IF_in_eca281); if (failed) return retval;
+            match(input,IF,FOLLOW_IF_in_eca283); if (failed) return retval;
             if ( backtracking==0 ) stream_IF.add(IF19);
 
-            pushFollow(FOLLOW_condition_in_eca285);
+            pushFollow(FOLLOW_condition_in_eca287);
             c=condition();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_condition.add(c.getTree());
             DO20=(Token)input.LT(1);
-            match(input,DO,FOLLOW_DO_in_eca289); if (failed) return retval;
+            match(input,DO,FOLLOW_DO_in_eca291); if (failed) return retval;
             if ( backtracking==0 ) stream_DO.add(DO20);
 
-            pushFollow(FOLLOW_action_in_eca293);
+            pushFollow(FOLLOW_action_in_eca295);
             a=action();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_action.add(a.getTree());
 
             // AST REWRITE
-            // elements: BIND, c, a, e
+            // elements: e, a, c, BIND
             // token labels: 
             // rule labels: a, c, retval, e
             // token list labels: 
@@ -763,9 +763,9 @@ public class ECAGrammarParser extends Parser {
             RewriteRuleSubtreeStream stream_e=new RewriteRuleSubtreeStream(adaptor,"token e",e!=null?e.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 52:15: -> ^( BIND $e $c $a)
+            // 75:15: -> ^( BIND $e $c $a)
             {
-                // dd/grammar/ECAGrammar.g:52:18: ^( BIND $e $c $a)
+                // dd/grammar/ECAGrammar.g:75:18: ^( BIND $e $c $a)
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(stream_BIND.next(), root_1);
@@ -806,7 +806,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start event
-    // dd/grammar/ECAGrammar.g:57:1: event : bindings ;
+    // dd/grammar/ECAGrammar.g:80:1: event : bindings ;
     public final event_return event() throws RecognitionException {
         event_return retval = new event_return();
         retval.start = input.LT(1);
@@ -818,12 +818,12 @@ public class ECAGrammarParser extends Parser {
 
 
         try {
-            // dd/grammar/ECAGrammar.g:57:7: ( bindings )
-            // dd/grammar/ECAGrammar.g:57:9: bindings
+            // dd/grammar/ECAGrammar.g:80:7: ( bindings )
+            // dd/grammar/ECAGrammar.g:80:9: bindings
             {
             root_0 = (Object)adaptor.nil();
 
-            pushFollow(FOLLOW_bindings_in_event320);
+            pushFollow(FOLLOW_bindings_in_event322);
             bindings21=bindings();
             _fsp--;
             if (failed) return retval;
@@ -854,7 +854,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start bindings
-    // dd/grammar/ECAGrammar.g:62:1: bindings : ( binding SEPR bindings -> ^( SEPR binding bindings ) | binding );
+    // dd/grammar/ECAGrammar.g:85:1: bindings : ( binding SEPR bindings -> ^( SEPR binding bindings ) | binding );
     public final bindings_return bindings() throws RecognitionException {
         bindings_return retval = new bindings_return();
         retval.start = input.LT(1);
@@ -874,7 +874,7 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleSubtreeStream stream_bindings=new RewriteRuleSubtreeStream(adaptor,"rule bindings");
         RewriteRuleSubtreeStream stream_binding=new RewriteRuleSubtreeStream(adaptor,"rule binding");
         try {
-            // dd/grammar/ECAGrammar.g:62:10: ( binding SEPR bindings -> ^( SEPR binding bindings ) | binding )
+            // dd/grammar/ECAGrammar.g:85:10: ( binding SEPR bindings -> ^( SEPR binding bindings ) | binding )
             int alt1=2;
             int LA1_0 = input.LA(1);
 
@@ -890,7 +890,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("62:1: bindings : ( binding SEPR bindings -> ^( SEPR binding bindings ) | binding );", 1, 1, input);
+                        new NoViableAltException("85:1: bindings : ( binding SEPR bindings -> ^( SEPR binding bindings ) | binding );", 1, 1, input);
 
                     throw nvae;
                 }
@@ -898,31 +898,31 @@ public class ECAGrammarParser extends Parser {
             else {
                 if (backtracking>0) {failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("62:1: bindings : ( binding SEPR bindings -> ^( SEPR binding bindings ) | binding );", 1, 0, input);
+                    new NoViableAltException("85:1: bindings : ( binding SEPR bindings -> ^( SEPR binding bindings ) | binding );", 1, 0, input);
 
                 throw nvae;
             }
             switch (alt1) {
                 case 1 :
-                    // dd/grammar/ECAGrammar.g:62:12: binding SEPR bindings
+                    // dd/grammar/ECAGrammar.g:85:12: binding SEPR bindings
                     {
-                    pushFollow(FOLLOW_binding_in_bindings332);
+                    pushFollow(FOLLOW_binding_in_bindings334);
                     binding22=binding();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_binding.add(binding22.getTree());
                     SEPR23=(Token)input.LT(1);
-                    match(input,SEPR,FOLLOW_SEPR_in_bindings334); if (failed) return retval;
+                    match(input,SEPR,FOLLOW_SEPR_in_bindings336); if (failed) return retval;
                     if ( backtracking==0 ) stream_SEPR.add(SEPR23);
 
-                    pushFollow(FOLLOW_bindings_in_bindings336);
+                    pushFollow(FOLLOW_bindings_in_bindings338);
                     bindings24=bindings();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_bindings.add(bindings24.getTree());
 
                     // AST REWRITE
-                    // elements: binding, bindings, SEPR
+                    // elements: bindings, SEPR, binding
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -932,9 +932,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 62:34: -> ^( SEPR binding bindings )
+                    // 85:34: -> ^( SEPR binding bindings )
                     {
-                        // dd/grammar/ECAGrammar.g:62:37: ^( SEPR binding bindings )
+                        // dd/grammar/ECAGrammar.g:85:37: ^( SEPR binding bindings )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_SEPR.next(), root_1);
@@ -952,11 +952,11 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAGrammar.g:63:4: binding
+                    // dd/grammar/ECAGrammar.g:86:4: binding
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    pushFollow(FOLLOW_binding_in_bindings351);
+                    pushFollow(FOLLOW_binding_in_bindings353);
                     binding25=binding();
                     _fsp--;
                     if (failed) return retval;
@@ -989,7 +989,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start binding
-    // dd/grammar/ECAGrammar.g:66:1: binding : bind_sym ASSIGN expr -> ^( ASSIGN bind_sym expr ) ;
+    // dd/grammar/ECAGrammar.g:89:1: binding : bind_sym ASSIGN expr -> ^( ASSIGN bind_sym expr ) ;
     public final binding_return binding() throws RecognitionException {
         binding_return retval = new binding_return();
         retval.start = input.LT(1);
@@ -1007,26 +1007,26 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleSubtreeStream stream_expr=new RewriteRuleSubtreeStream(adaptor,"rule expr");
         RewriteRuleSubtreeStream stream_bind_sym=new RewriteRuleSubtreeStream(adaptor,"rule bind_sym");
         try {
-            // dd/grammar/ECAGrammar.g:66:9: ( bind_sym ASSIGN expr -> ^( ASSIGN bind_sym expr ) )
-            // dd/grammar/ECAGrammar.g:66:11: bind_sym ASSIGN expr
+            // dd/grammar/ECAGrammar.g:89:9: ( bind_sym ASSIGN expr -> ^( ASSIGN bind_sym expr ) )
+            // dd/grammar/ECAGrammar.g:89:11: bind_sym ASSIGN expr
             {
-            pushFollow(FOLLOW_bind_sym_in_binding361);
+            pushFollow(FOLLOW_bind_sym_in_binding363);
             bind_sym26=bind_sym();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_bind_sym.add(bind_sym26.getTree());
             ASSIGN27=(Token)input.LT(1);
-            match(input,ASSIGN,FOLLOW_ASSIGN_in_binding363); if (failed) return retval;
+            match(input,ASSIGN,FOLLOW_ASSIGN_in_binding365); if (failed) return retval;
             if ( backtracking==0 ) stream_ASSIGN.add(ASSIGN27);
 
-            pushFollow(FOLLOW_expr_in_binding365);
+            pushFollow(FOLLOW_expr_in_binding367);
             expr28=expr();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_expr.add(expr28.getTree());
 
             // AST REWRITE
-            // elements: expr, ASSIGN, bind_sym
+            // elements: bind_sym, ASSIGN, expr
             // token labels: 
             // rule labels: retval
             // token list labels: 
@@ -1036,9 +1036,9 @@ public class ECAGrammarParser extends Parser {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 66:32: -> ^( ASSIGN bind_sym expr )
+            // 89:32: -> ^( ASSIGN bind_sym expr )
             {
-                // dd/grammar/ECAGrammar.g:66:35: ^( ASSIGN bind_sym expr )
+                // dd/grammar/ECAGrammar.g:89:35: ^( ASSIGN bind_sym expr )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(stream_ASSIGN.next(), root_1);
@@ -1078,7 +1078,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start bind_sym
-    // dd/grammar/ECAGrammar.g:70:1: bind_sym : (v= SYMBOL COLON t= SYMBOL -> ^( COLON $v $t) | SYMBOL );
+    // dd/grammar/ECAGrammar.g:93:1: bind_sym : (v= SYMBOL COLON t= SYMBOL -> ^( COLON $v $t) | SYMBOL );
     public final bind_sym_return bind_sym() throws RecognitionException {
         bind_sym_return retval = new bind_sym_return();
         retval.start = input.LT(1);
@@ -1098,7 +1098,7 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleTokenStream stream_SYMBOL=new RewriteRuleTokenStream(adaptor,"token SYMBOL");
 
         try {
-            // dd/grammar/ECAGrammar.g:70:10: (v= SYMBOL COLON t= SYMBOL -> ^( COLON $v $t) | SYMBOL )
+            // dd/grammar/ECAGrammar.g:93:10: (v= SYMBOL COLON t= SYMBOL -> ^( COLON $v $t) | SYMBOL )
             int alt2=2;
             int LA2_0 = input.LA(1);
 
@@ -1114,7 +1114,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("70:1: bind_sym : (v= SYMBOL COLON t= SYMBOL -> ^( COLON $v $t) | SYMBOL );", 2, 1, input);
+                        new NoViableAltException("93:1: bind_sym : (v= SYMBOL COLON t= SYMBOL -> ^( COLON $v $t) | SYMBOL );", 2, 1, input);
 
                     throw nvae;
                 }
@@ -1122,24 +1122,24 @@ public class ECAGrammarParser extends Parser {
             else {
                 if (backtracking>0) {failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("70:1: bind_sym : (v= SYMBOL COLON t= SYMBOL -> ^( COLON $v $t) | SYMBOL );", 2, 0, input);
+                    new NoViableAltException("93:1: bind_sym : (v= SYMBOL COLON t= SYMBOL -> ^( COLON $v $t) | SYMBOL );", 2, 0, input);
 
                 throw nvae;
             }
             switch (alt2) {
                 case 1 :
-                    // dd/grammar/ECAGrammar.g:70:12: v= SYMBOL COLON t= SYMBOL
+                    // dd/grammar/ECAGrammar.g:93:12: v= SYMBOL COLON t= SYMBOL
                     {
                     v=(Token)input.LT(1);
-                    match(input,SYMBOL,FOLLOW_SYMBOL_in_bind_sym388); if (failed) return retval;
+                    match(input,SYMBOL,FOLLOW_SYMBOL_in_bind_sym390); if (failed) return retval;
                     if ( backtracking==0 ) stream_SYMBOL.add(v);
 
                     COLON29=(Token)input.LT(1);
-                    match(input,COLON,FOLLOW_COLON_in_bind_sym390); if (failed) return retval;
+                    match(input,COLON,FOLLOW_COLON_in_bind_sym392); if (failed) return retval;
                     if ( backtracking==0 ) stream_COLON.add(COLON29);
 
                     t=(Token)input.LT(1);
-                    match(input,SYMBOL,FOLLOW_SYMBOL_in_bind_sym394); if (failed) return retval;
+                    match(input,SYMBOL,FOLLOW_SYMBOL_in_bind_sym396); if (failed) return retval;
                     if ( backtracking==0 ) stream_SYMBOL.add(t);
 
 
@@ -1156,9 +1156,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 70:36: -> ^( COLON $v $t)
+                    // 93:36: -> ^( COLON $v $t)
                     {
-                        // dd/grammar/ECAGrammar.g:70:39: ^( COLON $v $t)
+                        // dd/grammar/ECAGrammar.g:93:39: ^( COLON $v $t)
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_COLON.next(), root_1);
@@ -1176,12 +1176,12 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAGrammar.g:71:4: SYMBOL
+                    // dd/grammar/ECAGrammar.g:94:4: SYMBOL
                     {
                     root_0 = (Object)adaptor.nil();
 
                     SYMBOL30=(Token)input.LT(1);
-                    match(input,SYMBOL,FOLLOW_SYMBOL_in_bind_sym412); if (failed) return retval;
+                    match(input,SYMBOL,FOLLOW_SYMBOL_in_bind_sym414); if (failed) return retval;
                     if ( backtracking==0 ) {
                     SYMBOL30_tree = (Object)adaptor.create(SYMBOL30);
                     adaptor.addChild(root_0, SYMBOL30_tree);
@@ -1214,7 +1214,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start condition
-    // dd/grammar/ECAGrammar.g:78:1: condition : ( TRUE -> ^( TRUE ) | FALSE -> ^( FALSE ) | expr );
+    // dd/grammar/ECAGrammar.g:101:1: condition : ( TRUE -> ^( TRUE ) | FALSE -> ^( FALSE ) | expr );
     public final condition_return condition() throws RecognitionException {
         condition_return retval = new condition_return();
         retval.start = input.LT(1);
@@ -1232,7 +1232,7 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleTokenStream stream_FALSE=new RewriteRuleTokenStream(adaptor,"token FALSE");
 
         try {
-            // dd/grammar/ECAGrammar.g:78:11: ( TRUE -> ^( TRUE ) | FALSE -> ^( FALSE ) | expr )
+            // dd/grammar/ECAGrammar.g:101:11: ( TRUE -> ^( TRUE ) | FALSE -> ^( FALSE ) | expr )
             int alt3=3;
             switch ( input.LA(1) ) {
             case TRUE:
@@ -1259,17 +1259,17 @@ public class ECAGrammarParser extends Parser {
             default:
                 if (backtracking>0) {failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("78:1: condition : ( TRUE -> ^( TRUE ) | FALSE -> ^( FALSE ) | expr );", 3, 0, input);
+                    new NoViableAltException("101:1: condition : ( TRUE -> ^( TRUE ) | FALSE -> ^( FALSE ) | expr );", 3, 0, input);
 
                 throw nvae;
             }
 
             switch (alt3) {
                 case 1 :
-                    // dd/grammar/ECAGrammar.g:78:13: TRUE
+                    // dd/grammar/ECAGrammar.g:101:13: TRUE
                     {
                     TRUE31=(Token)input.LT(1);
-                    match(input,TRUE,FOLLOW_TRUE_in_condition426); if (failed) return retval;
+                    match(input,TRUE,FOLLOW_TRUE_in_condition428); if (failed) return retval;
                     if ( backtracking==0 ) stream_TRUE.add(TRUE31);
 
 
@@ -1284,9 +1284,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 78:19: -> ^( TRUE )
+                    // 101:19: -> ^( TRUE )
                     {
-                        // dd/grammar/ECAGrammar.g:78:22: ^( TRUE )
+                        // dd/grammar/ECAGrammar.g:101:22: ^( TRUE )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_TRUE.next(), root_1);
@@ -1301,10 +1301,10 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAGrammar.g:79:4: FALSE
+                    // dd/grammar/ECAGrammar.g:102:4: FALSE
                     {
                     FALSE32=(Token)input.LT(1);
-                    match(input,FALSE,FOLLOW_FALSE_in_condition438); if (failed) return retval;
+                    match(input,FALSE,FOLLOW_FALSE_in_condition440); if (failed) return retval;
                     if ( backtracking==0 ) stream_FALSE.add(FALSE32);
 
 
@@ -1319,9 +1319,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 79:11: -> ^( FALSE )
+                    // 102:11: -> ^( FALSE )
                     {
-                        // dd/grammar/ECAGrammar.g:79:14: ^( FALSE )
+                        // dd/grammar/ECAGrammar.g:102:14: ^( FALSE )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_FALSE.next(), root_1);
@@ -1336,11 +1336,11 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAGrammar.g:80:4: expr
+                    // dd/grammar/ECAGrammar.g:103:4: expr
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    pushFollow(FOLLOW_expr_in_condition450);
+                    pushFollow(FOLLOW_expr_in_condition452);
                     expr33=expr();
                     _fsp--;
                     if (failed) return retval;
@@ -1373,7 +1373,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start action
-    // dd/grammar/ECAGrammar.g:87:1: action : ( NOTHING -> ^( NOTHING ) | action_expr_list );
+    // dd/grammar/ECAGrammar.g:110:1: action : ( NOTHING -> ^( NOTHING ) | action_expr_list );
     public final action_return action() throws RecognitionException {
         action_return retval = new action_return();
         retval.start = input.LT(1);
@@ -1388,7 +1388,7 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleTokenStream stream_NOTHING=new RewriteRuleTokenStream(adaptor,"token NOTHING");
 
         try {
-            // dd/grammar/ECAGrammar.g:87:8: ( NOTHING -> ^( NOTHING ) | action_expr_list )
+            // dd/grammar/ECAGrammar.g:110:8: ( NOTHING -> ^( NOTHING ) | action_expr_list )
             int alt4=2;
             int LA4_0 = input.LA(1);
 
@@ -1401,16 +1401,16 @@ public class ECAGrammarParser extends Parser {
             else {
                 if (backtracking>0) {failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("87:1: action : ( NOTHING -> ^( NOTHING ) | action_expr_list );", 4, 0, input);
+                    new NoViableAltException("110:1: action : ( NOTHING -> ^( NOTHING ) | action_expr_list );", 4, 0, input);
 
                 throw nvae;
             }
             switch (alt4) {
                 case 1 :
-                    // dd/grammar/ECAGrammar.g:87:10: NOTHING
+                    // dd/grammar/ECAGrammar.g:110:10: NOTHING
                     {
                     NOTHING34=(Token)input.LT(1);
-                    match(input,NOTHING,FOLLOW_NOTHING_in_action464); if (failed) return retval;
+                    match(input,NOTHING,FOLLOW_NOTHING_in_action466); if (failed) return retval;
                     if ( backtracking==0 ) stream_NOTHING.add(NOTHING34);
 
 
@@ -1425,9 +1425,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 87:19: -> ^( NOTHING )
+                    // 110:19: -> ^( NOTHING )
                     {
-                        // dd/grammar/ECAGrammar.g:87:22: ^( NOTHING )
+                        // dd/grammar/ECAGrammar.g:110:22: ^( NOTHING )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_NOTHING.next(), root_1);
@@ -1442,11 +1442,11 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAGrammar.g:88:4: action_expr_list
+                    // dd/grammar/ECAGrammar.g:111:4: action_expr_list
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    pushFollow(FOLLOW_action_expr_list_in_action476);
+                    pushFollow(FOLLOW_action_expr_list_in_action478);
                     action_expr_list35=action_expr_list();
                     _fsp--;
                     if (failed) return retval;
@@ -1479,7 +1479,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start action_expr_list
-    // dd/grammar/ECAGrammar.g:91:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );
+    // dd/grammar/ECAGrammar.g:114:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );
     public final action_expr_list_return action_expr_list() throws RecognitionException {
         action_expr_list_return retval = new action_expr_list_return();
         retval.start = input.LT(1);
@@ -1499,7 +1499,7 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleSubtreeStream stream_action_expr_list=new RewriteRuleSubtreeStream(adaptor,"rule action_expr_list");
         RewriteRuleSubtreeStream stream_action_expr=new RewriteRuleSubtreeStream(adaptor,"rule action_expr");
         try {
-            // dd/grammar/ECAGrammar.g:92:2: ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr )
+            // dd/grammar/ECAGrammar.g:115:2: ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr )
             int alt5=2;
             switch ( input.LA(1) ) {
             case RETURN:
@@ -1515,7 +1515,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("91:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 1, input);
+                        new NoViableAltException("114:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 1, input);
 
                     throw nvae;
                 }
@@ -1534,7 +1534,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("91:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 2, input);
+                        new NoViableAltException("114:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 2, input);
 
                     throw nvae;
                 }
@@ -1553,7 +1553,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("91:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 3, input);
+                        new NoViableAltException("114:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 3, input);
 
                     throw nvae;
                 }
@@ -1572,7 +1572,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("91:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 4, input);
+                        new NoViableAltException("114:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 4, input);
 
                     throw nvae;
                 }
@@ -1591,7 +1591,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("91:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 5, input);
+                        new NoViableAltException("114:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 5, input);
 
                     throw nvae;
                 }
@@ -1610,7 +1610,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("91:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 6, input);
+                        new NoViableAltException("114:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 6, input);
 
                     throw nvae;
                 }
@@ -1629,7 +1629,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("91:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 7, input);
+                        new NoViableAltException("114:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 7, input);
 
                     throw nvae;
                 }
@@ -1649,7 +1649,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("91:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 8, input);
+                        new NoViableAltException("114:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 8, input);
 
                     throw nvae;
                 }
@@ -1658,32 +1658,32 @@ public class ECAGrammarParser extends Parser {
             default:
                 if (backtracking>0) {failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("91:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 0, input);
+                    new NoViableAltException("114:1: action_expr_list : ( action_expr SEPR action_expr_list -> ^( SEPR action_expr action_expr_list ) | action_expr );", 5, 0, input);
 
                 throw nvae;
             }
 
             switch (alt5) {
                 case 1 :
-                    // dd/grammar/ECAGrammar.g:92:4: action_expr SEPR action_expr_list
+                    // dd/grammar/ECAGrammar.g:115:4: action_expr SEPR action_expr_list
                     {
-                    pushFollow(FOLLOW_action_expr_in_action_expr_list487);
+                    pushFollow(FOLLOW_action_expr_in_action_expr_list489);
                     action_expr36=action_expr();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_action_expr.add(action_expr36.getTree());
                     SEPR37=(Token)input.LT(1);
-                    match(input,SEPR,FOLLOW_SEPR_in_action_expr_list489); if (failed) return retval;
+                    match(input,SEPR,FOLLOW_SEPR_in_action_expr_list491); if (failed) return retval;
                     if ( backtracking==0 ) stream_SEPR.add(SEPR37);
 
-                    pushFollow(FOLLOW_action_expr_list_in_action_expr_list491);
+                    pushFollow(FOLLOW_action_expr_list_in_action_expr_list493);
                     action_expr_list38=action_expr_list();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_action_expr_list.add(action_expr_list38.getTree());
 
                     // AST REWRITE
-                    // elements: action_expr, SEPR, action_expr_list
+                    // elements: SEPR, action_expr, action_expr_list
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -1693,9 +1693,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 92:38: -> ^( SEPR action_expr action_expr_list )
+                    // 115:38: -> ^( SEPR action_expr action_expr_list )
                     {
-                        // dd/grammar/ECAGrammar.g:92:41: ^( SEPR action_expr action_expr_list )
+                        // dd/grammar/ECAGrammar.g:115:41: ^( SEPR action_expr action_expr_list )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_SEPR.next(), root_1);
@@ -1713,11 +1713,11 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAGrammar.g:93:4: action_expr
+                    // dd/grammar/ECAGrammar.g:116:4: action_expr
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    pushFollow(FOLLOW_action_expr_in_action_expr_list506);
+                    pushFollow(FOLLOW_action_expr_in_action_expr_list508);
                     action_expr39=action_expr();
                     _fsp--;
                     if (failed) return retval;
@@ -1750,7 +1750,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start action_expr
-    // dd/grammar/ECAGrammar.g:96:1: action_expr : ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr );
+    // dd/grammar/ECAGrammar.g:119:1: action_expr : ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr );
     public final action_expr_return action_expr() throws RecognitionException {
         action_expr_return retval = new action_expr_return();
         retval.start = input.LT(1);
@@ -1790,7 +1790,7 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleSubtreeStream stream_expr_list=new RewriteRuleSubtreeStream(adaptor,"rule expr_list");
         RewriteRuleSubtreeStream stream_expr=new RewriteRuleSubtreeStream(adaptor,"rule expr");
         try {
-            // dd/grammar/ECAGrammar.g:96:13: ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr )
+            // dd/grammar/ECAGrammar.g:119:13: ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr )
             int alt6=5;
             switch ( input.LA(1) ) {
             case RETURN:
@@ -1806,7 +1806,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("96:1: action_expr : ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr );", 6, 1, input);
+                        new NoViableAltException("119:1: action_expr : ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr );", 6, 1, input);
 
                     throw nvae;
                 }
@@ -1831,7 +1831,7 @@ public class ECAGrammarParser extends Parser {
                         else {
                             if (backtracking>0) {failed=true; return retval;}
                             NoViableAltException nvae =
-                                new NoViableAltException("96:1: action_expr : ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr );", 6, 7, input);
+                                new NoViableAltException("119:1: action_expr : ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr );", 6, 7, input);
 
                             throw nvae;
                         }
@@ -1839,7 +1839,7 @@ public class ECAGrammarParser extends Parser {
                     else {
                         if (backtracking>0) {failed=true; return retval;}
                         NoViableAltException nvae =
-                            new NoViableAltException("96:1: action_expr : ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr );", 6, 6, input);
+                            new NoViableAltException("119:1: action_expr : ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr );", 6, 6, input);
 
                         throw nvae;
                     }
@@ -1847,7 +1847,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("96:1: action_expr : ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr );", 6, 2, input);
+                        new NoViableAltException("119:1: action_expr : ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr );", 6, 2, input);
 
                     throw nvae;
                 }
@@ -1867,17 +1867,17 @@ public class ECAGrammarParser extends Parser {
             default:
                 if (backtracking>0) {failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("96:1: action_expr : ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr );", 6, 0, input);
+                    new NoViableAltException("119:1: action_expr : ( RETURN -> ^( RETURN ) | RETURN expr -> ^( RETURN expr ) | THROW e= SYMBOL LPAREN RPAREN -> ^( THROW $e) | THROW e= SYMBOL LPAREN args= expr_list RPAREN -> ^( THROW $e $args) | expr );", 6, 0, input);
 
                 throw nvae;
             }
 
             switch (alt6) {
                 case 1 :
-                    // dd/grammar/ECAGrammar.g:96:15: RETURN
+                    // dd/grammar/ECAGrammar.g:119:15: RETURN
                     {
                     RETURN40=(Token)input.LT(1);
-                    match(input,RETURN,FOLLOW_RETURN_in_action_expr516); if (failed) return retval;
+                    match(input,RETURN,FOLLOW_RETURN_in_action_expr518); if (failed) return retval;
                     if ( backtracking==0 ) stream_RETURN.add(RETURN40);
 
 
@@ -1892,9 +1892,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 96:25: -> ^( RETURN )
+                    // 119:25: -> ^( RETURN )
                     {
-                        // dd/grammar/ECAGrammar.g:96:28: ^( RETURN )
+                        // dd/grammar/ECAGrammar.g:119:28: ^( RETURN )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_RETURN.next(), root_1);
@@ -1909,20 +1909,20 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAGrammar.g:97:4: RETURN expr
+                    // dd/grammar/ECAGrammar.g:120:4: RETURN expr
                     {
                     RETURN41=(Token)input.LT(1);
-                    match(input,RETURN,FOLLOW_RETURN_in_action_expr530); if (failed) return retval;
+                    match(input,RETURN,FOLLOW_RETURN_in_action_expr532); if (failed) return retval;
                     if ( backtracking==0 ) stream_RETURN.add(RETURN41);
 
-                    pushFollow(FOLLOW_expr_in_action_expr532);
+                    pushFollow(FOLLOW_expr_in_action_expr534);
                     expr42=expr();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_expr.add(expr42.getTree());
 
                     // AST REWRITE
-                    // elements: RETURN, expr
+                    // elements: expr, RETURN
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -1932,9 +1932,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 97:19: -> ^( RETURN expr )
+                    // 120:19: -> ^( RETURN expr )
                     {
-                        // dd/grammar/ECAGrammar.g:97:22: ^( RETURN expr )
+                        // dd/grammar/ECAGrammar.g:120:22: ^( RETURN expr )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_RETURN.next(), root_1);
@@ -1951,22 +1951,22 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAGrammar.g:98:4: THROW e= SYMBOL LPAREN RPAREN
+                    // dd/grammar/ECAGrammar.g:121:4: THROW e= SYMBOL LPAREN RPAREN
                     {
                     THROW43=(Token)input.LT(1);
-                    match(input,THROW,FOLLOW_THROW_in_action_expr548); if (failed) return retval;
+                    match(input,THROW,FOLLOW_THROW_in_action_expr550); if (failed) return retval;
                     if ( backtracking==0 ) stream_THROW.add(THROW43);
 
                     e=(Token)input.LT(1);
-                    match(input,SYMBOL,FOLLOW_SYMBOL_in_action_expr552); if (failed) return retval;
+                    match(input,SYMBOL,FOLLOW_SYMBOL_in_action_expr554); if (failed) return retval;
                     if ( backtracking==0 ) stream_SYMBOL.add(e);
 
                     LPAREN44=(Token)input.LT(1);
-                    match(input,LPAREN,FOLLOW_LPAREN_in_action_expr554); if (failed) return retval;
+                    match(input,LPAREN,FOLLOW_LPAREN_in_action_expr556); if (failed) return retval;
                     if ( backtracking==0 ) stream_LPAREN.add(LPAREN44);
 
                     RPAREN45=(Token)input.LT(1);
-                    match(input,RPAREN,FOLLOW_RPAREN_in_action_expr556); if (failed) return retval;
+                    match(input,RPAREN,FOLLOW_RPAREN_in_action_expr558); if (failed) return retval;
                     if ( backtracking==0 ) stream_RPAREN.add(RPAREN45);
 
 
@@ -1982,9 +1982,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 98:34: -> ^( THROW $e)
+                    // 121:34: -> ^( THROW $e)
                     {
-                        // dd/grammar/ECAGrammar.g:98:37: ^( THROW $e)
+                        // dd/grammar/ECAGrammar.g:121:37: ^( THROW $e)
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_THROW.next(), root_1);
@@ -2001,32 +2001,32 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // dd/grammar/ECAGrammar.g:99:4: THROW e= SYMBOL LPAREN args= expr_list RPAREN
+                    // dd/grammar/ECAGrammar.g:122:4: THROW e= SYMBOL LPAREN args= expr_list RPAREN
                     {
                     THROW46=(Token)input.LT(1);
-                    match(input,THROW,FOLLOW_THROW_in_action_expr571); if (failed) return retval;
+                    match(input,THROW,FOLLOW_THROW_in_action_expr573); if (failed) return retval;
                     if ( backtracking==0 ) stream_THROW.add(THROW46);
 
                     e=(Token)input.LT(1);
-                    match(input,SYMBOL,FOLLOW_SYMBOL_in_action_expr575); if (failed) return retval;
+                    match(input,SYMBOL,FOLLOW_SYMBOL_in_action_expr577); if (failed) return retval;
                     if ( backtracking==0 ) stream_SYMBOL.add(e);
 
                     LPAREN47=(Token)input.LT(1);
-                    match(input,LPAREN,FOLLOW_LPAREN_in_action_expr577); if (failed) return retval;
+                    match(input,LPAREN,FOLLOW_LPAREN_in_action_expr579); if (failed) return retval;
                     if ( backtracking==0 ) stream_LPAREN.add(LPAREN47);
 
-                    pushFollow(FOLLOW_expr_list_in_action_expr581);
+                    pushFollow(FOLLOW_expr_list_in_action_expr583);
                     args=expr_list();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_expr_list.add(args.getTree());
                     RPAREN48=(Token)input.LT(1);
-                    match(input,RPAREN,FOLLOW_RPAREN_in_action_expr583); if (failed) return retval;
+                    match(input,RPAREN,FOLLOW_RPAREN_in_action_expr585); if (failed) return retval;
                     if ( backtracking==0 ) stream_RPAREN.add(RPAREN48);
 
 
                     // AST REWRITE
-                    // elements: args, THROW, e
+                    // elements: args, e, THROW
                     // token labels: e
                     // rule labels: args, retval
                     // token list labels: 
@@ -2038,9 +2038,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 99:48: -> ^( THROW $e $args)
+                    // 122:48: -> ^( THROW $e $args)
                     {
-                        // dd/grammar/ECAGrammar.g:99:51: ^( THROW $e $args)
+                        // dd/grammar/ECAGrammar.g:122:51: ^( THROW $e $args)
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_THROW.next(), root_1);
@@ -2058,11 +2058,11 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 5 :
-                    // dd/grammar/ECAGrammar.g:100:4: expr
+                    // dd/grammar/ECAGrammar.g:123:4: expr
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    pushFollow(FOLLOW_expr_in_action_expr600);
+                    pushFollow(FOLLOW_expr_in_action_expr602);
                     expr49=expr();
                     _fsp--;
                     if (failed) return retval;
@@ -2095,7 +2095,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start expr
-    // dd/grammar/ECAGrammar.g:103:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );
+    // dd/grammar/ECAGrammar.g:126:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );
     public final expr_return expr() throws RecognitionException {
         expr_return retval = new expr_return();
         retval.start = input.LT(1);
@@ -2132,7 +2132,7 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleSubtreeStream stream_expr=new RewriteRuleSubtreeStream(adaptor,"rule expr");
         RewriteRuleSubtreeStream stream_simple_expr=new RewriteRuleSubtreeStream(adaptor,"rule simple_expr");
         try {
-            // dd/grammar/ECAGrammar.g:103:6: ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) )
+            // dd/grammar/ECAGrammar.g:126:6: ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) )
             int alt7=4;
             switch ( input.LA(1) ) {
             case DOLLARSYM:
@@ -2177,7 +2177,7 @@ public class ECAGrammarParser extends Parser {
                 default:
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("103:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 1, input);
+                        new NoViableAltException("126:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 1, input);
 
                     throw nvae;
                 }
@@ -2203,7 +2203,7 @@ public class ECAGrammarParser extends Parser {
                     else {
                         if (backtracking>0) {failed=true; return retval;}
                         NoViableAltException nvae =
-                            new NoViableAltException("103:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 10, input);
+                            new NoViableAltException("126:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 10, input);
 
                         throw nvae;
                     }
@@ -2230,7 +2230,7 @@ public class ECAGrammarParser extends Parser {
                     else {
                         if (backtracking>0) {failed=true; return retval;}
                         NoViableAltException nvae =
-                            new NoViableAltException("103:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 11, input);
+                            new NoViableAltException("126:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 11, input);
 
                         throw nvae;
                     }
@@ -2270,7 +2270,7 @@ public class ECAGrammarParser extends Parser {
                 default:
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("103:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 2, input);
+                        new NoViableAltException("126:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 2, input);
 
                     throw nvae;
                 }
@@ -2319,7 +2319,7 @@ public class ECAGrammarParser extends Parser {
                 default:
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("103:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 3, input);
+                        new NoViableAltException("126:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 3, input);
 
                     throw nvae;
                 }
@@ -2368,7 +2368,7 @@ public class ECAGrammarParser extends Parser {
                 default:
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("103:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 4, input);
+                        new NoViableAltException("126:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 4, input);
 
                     throw nvae;
                 }
@@ -2391,7 +2391,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("103:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 5, input);
+                        new NoViableAltException("126:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 5, input);
 
                     throw nvae;
                 }
@@ -2406,33 +2406,33 @@ public class ECAGrammarParser extends Parser {
             default:
                 if (backtracking>0) {failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("103:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 0, input);
+                    new NoViableAltException("126:1: expr : ( simple_expr infix_oper expr -> ^( BINOP infix_oper simple_expr expr ) | simple_expr | unary_oper expr -> ^( UNOP unary_oper expr ) | cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr -> ^( TERNOP $cond $iftrue $iffalse) );", 7, 0, input);
 
                 throw nvae;
             }
 
             switch (alt7) {
                 case 1 :
-                    // dd/grammar/ECAGrammar.g:103:8: simple_expr infix_oper expr
+                    // dd/grammar/ECAGrammar.g:126:8: simple_expr infix_oper expr
                     {
-                    pushFollow(FOLLOW_simple_expr_in_expr610);
+                    pushFollow(FOLLOW_simple_expr_in_expr612);
                     simple_expr50=simple_expr();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_simple_expr.add(simple_expr50.getTree());
-                    pushFollow(FOLLOW_infix_oper_in_expr612);
+                    pushFollow(FOLLOW_infix_oper_in_expr614);
                     infix_oper51=infix_oper();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_infix_oper.add(infix_oper51.getTree());
-                    pushFollow(FOLLOW_expr_in_expr614);
+                    pushFollow(FOLLOW_expr_in_expr616);
                     expr52=expr();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_expr.add(expr52.getTree());
 
                     // AST REWRITE
-                    // elements: expr, simple_expr, infix_oper
+                    // elements: infix_oper, expr, simple_expr
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -2442,9 +2442,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 103:37: -> ^( BINOP infix_oper simple_expr expr )
+                    // 126:37: -> ^( BINOP infix_oper simple_expr expr )
                     {
-                        // dd/grammar/ECAGrammar.g:103:40: ^( BINOP infix_oper simple_expr expr )
+                        // dd/grammar/ECAGrammar.g:126:40: ^( BINOP infix_oper simple_expr expr )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(BINOP, "BINOP"), root_1);
@@ -2463,11 +2463,11 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAGrammar.g:104:4: simple_expr
+                    // dd/grammar/ECAGrammar.g:127:4: simple_expr
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    pushFollow(FOLLOW_simple_expr_in_expr632);
+                    pushFollow(FOLLOW_simple_expr_in_expr634);
                     simple_expr53=simple_expr();
                     _fsp--;
                     if (failed) return retval;
@@ -2476,14 +2476,14 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAGrammar.g:105:4: unary_oper expr
+                    // dd/grammar/ECAGrammar.g:128:4: unary_oper expr
                     {
-                    pushFollow(FOLLOW_unary_oper_in_expr637);
+                    pushFollow(FOLLOW_unary_oper_in_expr639);
                     unary_oper54=unary_oper();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_unary_oper.add(unary_oper54.getTree());
-                    pushFollow(FOLLOW_expr_in_expr639);
+                    pushFollow(FOLLOW_expr_in_expr641);
                     expr55=expr();
                     _fsp--;
                     if (failed) return retval;
@@ -2500,9 +2500,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 105:22: -> ^( UNOP unary_oper expr )
+                    // 128:22: -> ^( UNOP unary_oper expr )
                     {
-                        // dd/grammar/ECAGrammar.g:105:25: ^( UNOP unary_oper expr )
+                        // dd/grammar/ECAGrammar.g:128:25: ^( UNOP unary_oper expr )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(UNOP, "UNOP"), root_1);
@@ -2520,49 +2520,49 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // dd/grammar/ECAGrammar.g:106:4: cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr
+                    // dd/grammar/ECAGrammar.g:129:4: cond= simple_expr TERN_IF iftrue= expr COLON iffalse= expr
                     {
-                    pushFollow(FOLLOW_simple_expr_in_expr658);
+                    pushFollow(FOLLOW_simple_expr_in_expr660);
                     cond=simple_expr();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_simple_expr.add(cond.getTree());
                     TERN_IF56=(Token)input.LT(1);
-                    match(input,TERN_IF,FOLLOW_TERN_IF_in_expr660); if (failed) return retval;
+                    match(input,TERN_IF,FOLLOW_TERN_IF_in_expr662); if (failed) return retval;
                     if ( backtracking==0 ) stream_TERN_IF.add(TERN_IF56);
 
-                    pushFollow(FOLLOW_expr_in_expr664);
+                    pushFollow(FOLLOW_expr_in_expr666);
                     iftrue=expr();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_expr.add(iftrue.getTree());
                     COLON57=(Token)input.LT(1);
-                    match(input,COLON,FOLLOW_COLON_in_expr666); if (failed) return retval;
+                    match(input,COLON,FOLLOW_COLON_in_expr668); if (failed) return retval;
                     if ( backtracking==0 ) stream_COLON.add(COLON57);
 
-                    pushFollow(FOLLOW_expr_in_expr670);
+                    pushFollow(FOLLOW_expr_in_expr672);
                     iffalse=expr();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_expr.add(iffalse.getTree());
 
                     // AST REWRITE
-                    // elements: iffalse, iftrue, cond
+                    // elements: cond, iftrue, iffalse
                     // token labels: 
-                    // rule labels: iftrue, cond, iffalse, retval
+                    // rule labels: iftrue, iffalse, cond, retval
                     // token list labels: 
                     // rule list labels: 
                     if ( backtracking==0 ) {
                     retval.tree = root_0;
                     RewriteRuleSubtreeStream stream_iftrue=new RewriteRuleSubtreeStream(adaptor,"token iftrue",iftrue!=null?iftrue.tree:null);
-                    RewriteRuleSubtreeStream stream_cond=new RewriteRuleSubtreeStream(adaptor,"token cond",cond!=null?cond.tree:null);
                     RewriteRuleSubtreeStream stream_iffalse=new RewriteRuleSubtreeStream(adaptor,"token iffalse",iffalse!=null?iffalse.tree:null);
+                    RewriteRuleSubtreeStream stream_cond=new RewriteRuleSubtreeStream(adaptor,"token cond",cond!=null?cond.tree:null);
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 106:60: -> ^( TERNOP $cond $iftrue $iffalse)
+                    // 129:60: -> ^( TERNOP $cond $iftrue $iffalse)
                     {
-                        // dd/grammar/ECAGrammar.g:106:63: ^( TERNOP $cond $iftrue $iffalse)
+                        // dd/grammar/ECAGrammar.g:129:63: ^( TERNOP $cond $iftrue $iffalse)
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(TERNOP, "TERNOP"), root_1);
@@ -2605,7 +2605,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start simple_expr
-    // dd/grammar/ECAGrammar.g:109:1: simple_expr : (v= DOLLARSYM | v= SYMBOL idx= array_idx -> ^( ARRAY $v $idx) | v= SYMBOL LPAREN RPAREN -> ^( METH $v) | v= SYMBOL | v= SYMBOL LPAREN args= expr_list RPAREN -> ^( METH $v $args) | NUMBER | STRING | LPAREN expr RPAREN -> ^( expr ) );
+    // dd/grammar/ECAGrammar.g:132:1: simple_expr : (v= DOLLARSYM | v= SYMBOL idx= array_idx -> ^( ARRAY $v $idx) | v= SYMBOL LPAREN RPAREN -> ^( METH $v) | v= SYMBOL | v= SYMBOL LPAREN args= expr_list RPAREN -> ^( METH $v $args) | NUMBER | STRING | LPAREN expr RPAREN -> ^( expr ) );
     public final simple_expr_return simple_expr() throws RecognitionException {
         simple_expr_return retval = new simple_expr_return();
         retval.start = input.LT(1);
@@ -2644,7 +2644,7 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleSubtreeStream stream_expr=new RewriteRuleSubtreeStream(adaptor,"rule expr");
         RewriteRuleSubtreeStream stream_array_idx=new RewriteRuleSubtreeStream(adaptor,"rule array_idx");
         try {
-            // dd/grammar/ECAGrammar.g:109:13: (v= DOLLARSYM | v= SYMBOL idx= array_idx -> ^( ARRAY $v $idx) | v= SYMBOL LPAREN RPAREN -> ^( METH $v) | v= SYMBOL | v= SYMBOL LPAREN args= expr_list RPAREN -> ^( METH $v $args) | NUMBER | STRING | LPAREN expr RPAREN -> ^( expr ) )
+            // dd/grammar/ECAGrammar.g:132:13: (v= DOLLARSYM | v= SYMBOL idx= array_idx -> ^( ARRAY $v $idx) | v= SYMBOL LPAREN RPAREN -> ^( METH $v) | v= SYMBOL | v= SYMBOL LPAREN args= expr_list RPAREN -> ^( METH $v $args) | NUMBER | STRING | LPAREN expr RPAREN -> ^( expr ) )
             int alt8=8;
             switch ( input.LA(1) ) {
             case DOLLARSYM:
@@ -2668,7 +2668,7 @@ public class ECAGrammarParser extends Parser {
                     else {
                         if (backtracking>0) {failed=true; return retval;}
                         NoViableAltException nvae =
-                            new NoViableAltException("109:1: simple_expr : (v= DOLLARSYM | v= SYMBOL idx= array_idx -> ^( ARRAY $v $idx) | v= SYMBOL LPAREN RPAREN -> ^( METH $v) | v= SYMBOL | v= SYMBOL LPAREN args= expr_list RPAREN -> ^( METH $v $args) | NUMBER | STRING | LPAREN expr RPAREN -> ^( expr ) );", 8, 6, input);
+                            new NoViableAltException("132:1: simple_expr : (v= DOLLARSYM | v= SYMBOL idx= array_idx -> ^( ARRAY $v $idx) | v= SYMBOL LPAREN RPAREN -> ^( METH $v) | v= SYMBOL | v= SYMBOL LPAREN args= expr_list RPAREN -> ^( METH $v $args) | NUMBER | STRING | LPAREN expr RPAREN -> ^( expr ) );", 8, 6, input);
 
                         throw nvae;
                     }
@@ -2710,7 +2710,7 @@ public class ECAGrammarParser extends Parser {
                 default:
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("109:1: simple_expr : (v= DOLLARSYM | v= SYMBOL idx= array_idx -> ^( ARRAY $v $idx) | v= SYMBOL LPAREN RPAREN -> ^( METH $v) | v= SYMBOL | v= SYMBOL LPAREN args= expr_list RPAREN -> ^( METH $v $args) | NUMBER | STRING | LPAREN expr RPAREN -> ^( expr ) );", 8, 2, input);
+                        new NoViableAltException("132:1: simple_expr : (v= DOLLARSYM | v= SYMBOL idx= array_idx -> ^( ARRAY $v $idx) | v= SYMBOL LPAREN RPAREN -> ^( METH $v) | v= SYMBOL | v= SYMBOL LPAREN args= expr_list RPAREN -> ^( METH $v $args) | NUMBER | STRING | LPAREN expr RPAREN -> ^( expr ) );", 8, 2, input);
 
                     throw nvae;
                 }
@@ -2735,19 +2735,19 @@ public class ECAGrammarParser extends Parser {
             default:
                 if (backtracking>0) {failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("109:1: simple_expr : (v= DOLLARSYM | v= SYMBOL idx= array_idx -> ^( ARRAY $v $idx) | v= SYMBOL LPAREN RPAREN -> ^( METH $v) | v= SYMBOL | v= SYMBOL LPAREN args= expr_list RPAREN -> ^( METH $v $args) | NUMBER | STRING | LPAREN expr RPAREN -> ^( expr ) );", 8, 0, input);
+                    new NoViableAltException("132:1: simple_expr : (v= DOLLARSYM | v= SYMBOL idx= array_idx -> ^( ARRAY $v $idx) | v= SYMBOL LPAREN RPAREN -> ^( METH $v) | v= SYMBOL | v= SYMBOL LPAREN args= expr_list RPAREN -> ^( METH $v $args) | NUMBER | STRING | LPAREN expr RPAREN -> ^( expr ) );", 8, 0, input);
 
                 throw nvae;
             }
 
             switch (alt8) {
                 case 1 :
-                    // dd/grammar/ECAGrammar.g:109:15: v= DOLLARSYM
+                    // dd/grammar/ECAGrammar.g:132:15: v= DOLLARSYM
                     {
                     root_0 = (Object)adaptor.nil();
 
                     v=(Token)input.LT(1);
-                    match(input,DOLLARSYM,FOLLOW_DOLLARSYM_in_simple_expr697); if (failed) return retval;
+                    match(input,DOLLARSYM,FOLLOW_DOLLARSYM_in_simple_expr699); if (failed) return retval;
                     if ( backtracking==0 ) {
                     v_tree = (Object)adaptor.create(v);
                     adaptor.addChild(root_0, v_tree);
@@ -2756,20 +2756,20 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAGrammar.g:110:4: v= SYMBOL idx= array_idx
+                    // dd/grammar/ECAGrammar.g:133:4: v= SYMBOL idx= array_idx
                     {
                     v=(Token)input.LT(1);
-                    match(input,SYMBOL,FOLLOW_SYMBOL_in_simple_expr704); if (failed) return retval;
+                    match(input,SYMBOL,FOLLOW_SYMBOL_in_simple_expr706); if (failed) return retval;
                     if ( backtracking==0 ) stream_SYMBOL.add(v);
 
-                    pushFollow(FOLLOW_array_idx_in_simple_expr708);
+                    pushFollow(FOLLOW_array_idx_in_simple_expr710);
                     idx=array_idx();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_array_idx.add(idx.getTree());
 
                     // AST REWRITE
-                    // elements: v, idx
+                    // elements: idx, v
                     // token labels: v
                     // rule labels: idx, retval
                     // token list labels: 
@@ -2781,9 +2781,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 110:29: -> ^( ARRAY $v $idx)
+                    // 133:29: -> ^( ARRAY $v $idx)
                     {
-                        // dd/grammar/ECAGrammar.g:110:32: ^( ARRAY $v $idx)
+                        // dd/grammar/ECAGrammar.g:133:32: ^( ARRAY $v $idx)
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(ARRAY, "ARRAY"), root_1);
@@ -2801,18 +2801,18 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAGrammar.g:111:4: v= SYMBOL LPAREN RPAREN
+                    // dd/grammar/ECAGrammar.g:134:4: v= SYMBOL LPAREN RPAREN
                     {
                     v=(Token)input.LT(1);
-                    match(input,SYMBOL,FOLLOW_SYMBOL_in_simple_expr729); if (failed) return retval;
+                    match(input,SYMBOL,FOLLOW_SYMBOL_in_simple_expr731); if (failed) return retval;
                     if ( backtracking==0 ) stream_SYMBOL.add(v);
 
                     LPAREN58=(Token)input.LT(1);
-                    match(input,LPAREN,FOLLOW_LPAREN_in_simple_expr731); if (failed) return retval;
+                    match(input,LPAREN,FOLLOW_LPAREN_in_simple_expr733); if (failed) return retval;
                     if ( backtracking==0 ) stream_LPAREN.add(LPAREN58);
 
                     RPAREN59=(Token)input.LT(1);
-                    match(input,RPAREN,FOLLOW_RPAREN_in_simple_expr733); if (failed) return retval;
+                    match(input,RPAREN,FOLLOW_RPAREN_in_simple_expr735); if (failed) return retval;
                     if ( backtracking==0 ) stream_RPAREN.add(RPAREN59);
 
 
@@ -2828,9 +2828,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 111:29: -> ^( METH $v)
+                    // 134:29: -> ^( METH $v)
                     {
-                        // dd/grammar/ECAGrammar.g:111:32: ^( METH $v)
+                        // dd/grammar/ECAGrammar.g:134:32: ^( METH $v)
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(METH, "METH"), root_1);
@@ -2847,12 +2847,12 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // dd/grammar/ECAGrammar.g:112:4: v= SYMBOL
+                    // dd/grammar/ECAGrammar.g:135:4: v= SYMBOL
                     {
                     root_0 = (Object)adaptor.nil();
 
                     v=(Token)input.LT(1);
-                    match(input,SYMBOL,FOLLOW_SYMBOL_in_simple_expr751); if (failed) return retval;
+                    match(input,SYMBOL,FOLLOW_SYMBOL_in_simple_expr753); if (failed) return retval;
                     if ( backtracking==0 ) {
                     v_tree = (Object)adaptor.create(v);
                     adaptor.addChild(root_0, v_tree);
@@ -2861,23 +2861,23 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 5 :
-                    // dd/grammar/ECAGrammar.g:113:4: v= SYMBOL LPAREN args= expr_list RPAREN
+                    // dd/grammar/ECAGrammar.g:136:4: v= SYMBOL LPAREN args= expr_list RPAREN
                     {
                     v=(Token)input.LT(1);
-                    match(input,SYMBOL,FOLLOW_SYMBOL_in_simple_expr758); if (failed) return retval;
+                    match(input,SYMBOL,FOLLOW_SYMBOL_in_simple_expr760); if (failed) return retval;
                     if ( backtracking==0 ) stream_SYMBOL.add(v);
 
                     LPAREN60=(Token)input.LT(1);
-                    match(input,LPAREN,FOLLOW_LPAREN_in_simple_expr760); if (failed) return retval;
+                    match(input,LPAREN,FOLLOW_LPAREN_in_simple_expr762); if (failed) return retval;
                     if ( backtracking==0 ) stream_LPAREN.add(LPAREN60);
 
-                    pushFollow(FOLLOW_expr_list_in_simple_expr764);
+                    pushFollow(FOLLOW_expr_list_in_simple_expr766);
                     args=expr_list();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_expr_list.add(args.getTree());
                     RPAREN61=(Token)input.LT(1);
-                    match(input,RPAREN,FOLLOW_RPAREN_in_simple_expr766); if (failed) return retval;
+                    match(input,RPAREN,FOLLOW_RPAREN_in_simple_expr768); if (failed) return retval;
                     if ( backtracking==0 ) stream_RPAREN.add(RPAREN61);
 
 
@@ -2894,9 +2894,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 113:43: -> ^( METH $v $args)
+                    // 136:43: -> ^( METH $v $args)
                     {
-                        // dd/grammar/ECAGrammar.g:113:46: ^( METH $v $args)
+                        // dd/grammar/ECAGrammar.g:136:46: ^( METH $v $args)
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(METH, "METH"), root_1);
@@ -2914,12 +2914,12 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 6 :
-                    // dd/grammar/ECAGrammar.g:114:4: NUMBER
+                    // dd/grammar/ECAGrammar.g:137:4: NUMBER
                     {
                     root_0 = (Object)adaptor.nil();
 
                     NUMBER62=(Token)input.LT(1);
-                    match(input,NUMBER,FOLLOW_NUMBER_in_simple_expr785); if (failed) return retval;
+                    match(input,NUMBER,FOLLOW_NUMBER_in_simple_expr787); if (failed) return retval;
                     if ( backtracking==0 ) {
                     NUMBER62_tree = (Object)adaptor.create(NUMBER62);
                     adaptor.addChild(root_0, NUMBER62_tree);
@@ -2928,12 +2928,12 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 7 :
-                    // dd/grammar/ECAGrammar.g:115:4: STRING
+                    // dd/grammar/ECAGrammar.g:138:4: STRING
                     {
                     root_0 = (Object)adaptor.nil();
 
                     STRING63=(Token)input.LT(1);
-                    match(input,STRING,FOLLOW_STRING_in_simple_expr790); if (failed) return retval;
+                    match(input,STRING,FOLLOW_STRING_in_simple_expr792); if (failed) return retval;
                     if ( backtracking==0 ) {
                     STRING63_tree = (Object)adaptor.create(STRING63);
                     adaptor.addChild(root_0, STRING63_tree);
@@ -2942,19 +2942,19 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 8 :
-                    // dd/grammar/ECAGrammar.g:116:4: LPAREN expr RPAREN
+                    // dd/grammar/ECAGrammar.g:139:4: LPAREN expr RPAREN
                     {
                     LPAREN64=(Token)input.LT(1);
-                    match(input,LPAREN,FOLLOW_LPAREN_in_simple_expr795); if (failed) return retval;
+                    match(input,LPAREN,FOLLOW_LPAREN_in_simple_expr797); if (failed) return retval;
                     if ( backtracking==0 ) stream_LPAREN.add(LPAREN64);
 
-                    pushFollow(FOLLOW_expr_in_simple_expr797);
+                    pushFollow(FOLLOW_expr_in_simple_expr799);
                     expr65=expr();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_expr.add(expr65.getTree());
                     RPAREN66=(Token)input.LT(1);
-                    match(input,RPAREN,FOLLOW_RPAREN_in_simple_expr799); if (failed) return retval;
+                    match(input,RPAREN,FOLLOW_RPAREN_in_simple_expr801); if (failed) return retval;
                     if ( backtracking==0 ) stream_RPAREN.add(RPAREN66);
 
 
@@ -2969,9 +2969,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 116:25: -> ^( expr )
+                    // 139:25: -> ^( expr )
                     {
-                        // dd/grammar/ECAGrammar.g:116:28: ^( expr )
+                        // dd/grammar/ECAGrammar.g:139:28: ^( expr )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_expr.nextNode(), root_1);
@@ -3010,7 +3010,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start expr_list
-    // dd/grammar/ECAGrammar.g:119:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );
+    // dd/grammar/ECAGrammar.g:142:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );
     public final expr_list_return expr_list() throws RecognitionException {
         expr_list_return retval = new expr_list_return();
         retval.start = input.LT(1);
@@ -3030,7 +3030,7 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleSubtreeStream stream_expr_list=new RewriteRuleSubtreeStream(adaptor,"rule expr_list");
         RewriteRuleSubtreeStream stream_expr=new RewriteRuleSubtreeStream(adaptor,"rule expr");
         try {
-            // dd/grammar/ECAGrammar.g:120:2: ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr )
+            // dd/grammar/ECAGrammar.g:143:2: ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr )
             int alt9=2;
             switch ( input.LA(1) ) {
             case DOLLARSYM:
@@ -3046,7 +3046,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("119:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 1, input);
+                        new NoViableAltException("142:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 1, input);
 
                     throw nvae;
                 }
@@ -3065,7 +3065,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("119:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 2, input);
+                        new NoViableAltException("142:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 2, input);
 
                     throw nvae;
                 }
@@ -3084,7 +3084,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("119:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 3, input);
+                        new NoViableAltException("142:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 3, input);
 
                     throw nvae;
                 }
@@ -3103,7 +3103,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("119:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 4, input);
+                        new NoViableAltException("142:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 4, input);
 
                     throw nvae;
                 }
@@ -3122,7 +3122,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("119:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 5, input);
+                        new NoViableAltException("142:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 5, input);
 
                     throw nvae;
                 }
@@ -3142,7 +3142,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("119:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 6, input);
+                        new NoViableAltException("142:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 6, input);
 
                     throw nvae;
                 }
@@ -3151,32 +3151,32 @@ public class ECAGrammarParser extends Parser {
             default:
                 if (backtracking>0) {failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("119:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 0, input);
+                    new NoViableAltException("142:1: expr_list : ( expr SEPR expr_list -> ^( SEPR expr expr_list ) | expr );", 9, 0, input);
 
                 throw nvae;
             }
 
             switch (alt9) {
                 case 1 :
-                    // dd/grammar/ECAGrammar.g:120:4: expr SEPR expr_list
+                    // dd/grammar/ECAGrammar.g:143:4: expr SEPR expr_list
                     {
-                    pushFollow(FOLLOW_expr_in_expr_list818);
+                    pushFollow(FOLLOW_expr_in_expr_list820);
                     expr67=expr();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_expr.add(expr67.getTree());
                     SEPR68=(Token)input.LT(1);
-                    match(input,SEPR,FOLLOW_SEPR_in_expr_list820); if (failed) return retval;
+                    match(input,SEPR,FOLLOW_SEPR_in_expr_list822); if (failed) return retval;
                     if ( backtracking==0 ) stream_SEPR.add(SEPR68);
 
-                    pushFollow(FOLLOW_expr_list_in_expr_list822);
+                    pushFollow(FOLLOW_expr_list_in_expr_list824);
                     expr_list69=expr_list();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_expr_list.add(expr_list69.getTree());
 
                     // AST REWRITE
-                    // elements: expr_list, SEPR, expr
+                    // elements: SEPR, expr, expr_list
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -3186,9 +3186,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 120:26: -> ^( SEPR expr expr_list )
+                    // 143:26: -> ^( SEPR expr expr_list )
                     {
-                        // dd/grammar/ECAGrammar.g:120:29: ^( SEPR expr expr_list )
+                        // dd/grammar/ECAGrammar.g:143:29: ^( SEPR expr expr_list )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_SEPR.next(), root_1);
@@ -3206,11 +3206,11 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAGrammar.g:121:4: expr
+                    // dd/grammar/ECAGrammar.g:144:4: expr
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    pushFollow(FOLLOW_expr_in_expr_list839);
+                    pushFollow(FOLLOW_expr_in_expr_list841);
                     expr70=expr();
                     _fsp--;
                     if (failed) return retval;
@@ -3243,7 +3243,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start array_idx_list
-    // dd/grammar/ECAGrammar.g:124:1: array_idx_list : ( array_idx array_idx_list -> ^( SEPR array_idx array_idx_list ) | array_idx );
+    // dd/grammar/ECAGrammar.g:147:1: array_idx_list : ( array_idx array_idx_list -> ^( SEPR array_idx array_idx_list ) | array_idx );
     public final array_idx_list_return array_idx_list() throws RecognitionException {
         array_idx_list_return retval = new array_idx_list_return();
         retval.start = input.LT(1);
@@ -3260,7 +3260,7 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleSubtreeStream stream_array_idx=new RewriteRuleSubtreeStream(adaptor,"rule array_idx");
         RewriteRuleSubtreeStream stream_array_idx_list=new RewriteRuleSubtreeStream(adaptor,"rule array_idx_list");
         try {
-            // dd/grammar/ECAGrammar.g:125:2: ( array_idx array_idx_list -> ^( SEPR array_idx array_idx_list ) | array_idx )
+            // dd/grammar/ECAGrammar.g:148:2: ( array_idx array_idx_list -> ^( SEPR array_idx array_idx_list ) | array_idx )
             int alt10=2;
             int LA10_0 = input.LA(1);
 
@@ -3276,7 +3276,7 @@ public class ECAGrammarParser extends Parser {
                 else {
                     if (backtracking>0) {failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("124:1: array_idx_list : ( array_idx array_idx_list -> ^( SEPR array_idx array_idx_list ) | array_idx );", 10, 1, input);
+                        new NoViableAltException("147:1: array_idx_list : ( array_idx array_idx_list -> ^( SEPR array_idx array_idx_list ) | array_idx );", 10, 1, input);
 
                     throw nvae;
                 }
@@ -3284,27 +3284,27 @@ public class ECAGrammarParser extends Parser {
             else {
                 if (backtracking>0) {failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("124:1: array_idx_list : ( array_idx array_idx_list -> ^( SEPR array_idx array_idx_list ) | array_idx );", 10, 0, input);
+                    new NoViableAltException("147:1: array_idx_list : ( array_idx array_idx_list -> ^( SEPR array_idx array_idx_list ) | array_idx );", 10, 0, input);
 
                 throw nvae;
             }
             switch (alt10) {
                 case 1 :
-                    // dd/grammar/ECAGrammar.g:125:4: array_idx array_idx_list
+                    // dd/grammar/ECAGrammar.g:148:4: array_idx array_idx_list
                     {
-                    pushFollow(FOLLOW_array_idx_in_array_idx_list850);
+                    pushFollow(FOLLOW_array_idx_in_array_idx_list852);
                     array_idx71=array_idx();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_array_idx.add(array_idx71.getTree());
-                    pushFollow(FOLLOW_array_idx_list_in_array_idx_list852);
+                    pushFollow(FOLLOW_array_idx_list_in_array_idx_list854);
                     array_idx_list72=array_idx_list();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_array_idx_list.add(array_idx_list72.getTree());
 
                     // AST REWRITE
-                    // elements: array_idx_list, array_idx
+                    // elements: array_idx, array_idx_list
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -3314,9 +3314,9 @@ public class ECAGrammarParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 125:31: -> ^( SEPR array_idx array_idx_list )
+                    // 148:31: -> ^( SEPR array_idx array_idx_list )
                     {
-                        // dd/grammar/ECAGrammar.g:125:34: ^( SEPR array_idx array_idx_list )
+                        // dd/grammar/ECAGrammar.g:148:34: ^( SEPR array_idx array_idx_list )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(SEPR, "SEPR"), root_1);
@@ -3334,11 +3334,11 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAGrammar.g:126:4: array_idx
+                    // dd/grammar/ECAGrammar.g:149:4: array_idx
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    pushFollow(FOLLOW_array_idx_in_array_idx_list869);
+                    pushFollow(FOLLOW_array_idx_in_array_idx_list871);
                     array_idx73=array_idx();
                     _fsp--;
                     if (failed) return retval;
@@ -3371,7 +3371,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start array_idx
-    // dd/grammar/ECAGrammar.g:129:1: array_idx : LSQUARE expr RSQUARE -> ^( expr ) ;
+    // dd/grammar/ECAGrammar.g:152:1: array_idx : LSQUARE expr RSQUARE -> ^( expr ) ;
     public final array_idx_return array_idx() throws RecognitionException {
         array_idx_return retval = new array_idx_return();
         retval.start = input.LT(1);
@@ -3389,20 +3389,20 @@ public class ECAGrammarParser extends Parser {
         RewriteRuleTokenStream stream_RSQUARE=new RewriteRuleTokenStream(adaptor,"token RSQUARE");
         RewriteRuleSubtreeStream stream_expr=new RewriteRuleSubtreeStream(adaptor,"rule expr");
         try {
-            // dd/grammar/ECAGrammar.g:130:2: ( LSQUARE expr RSQUARE -> ^( expr ) )
-            // dd/grammar/ECAGrammar.g:130:4: LSQUARE expr RSQUARE
+            // dd/grammar/ECAGrammar.g:153:2: ( LSQUARE expr RSQUARE -> ^( expr ) )
+            // dd/grammar/ECAGrammar.g:153:4: LSQUARE expr RSQUARE
             {
             LSQUARE74=(Token)input.LT(1);
-            match(input,LSQUARE,FOLLOW_LSQUARE_in_array_idx880); if (failed) return retval;
+            match(input,LSQUARE,FOLLOW_LSQUARE_in_array_idx882); if (failed) return retval;
             if ( backtracking==0 ) stream_LSQUARE.add(LSQUARE74);
 
-            pushFollow(FOLLOW_expr_in_array_idx882);
+            pushFollow(FOLLOW_expr_in_array_idx884);
             expr75=expr();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_expr.add(expr75.getTree());
             RSQUARE76=(Token)input.LT(1);
-            match(input,RSQUARE,FOLLOW_RSQUARE_in_array_idx884); if (failed) return retval;
+            match(input,RSQUARE,FOLLOW_RSQUARE_in_array_idx886); if (failed) return retval;
             if ( backtracking==0 ) stream_RSQUARE.add(RSQUARE76);
 
 
@@ -3417,9 +3417,9 @@ public class ECAGrammarParser extends Parser {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"token retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 130:27: -> ^( expr )
+            // 153:27: -> ^( expr )
             {
-                // dd/grammar/ECAGrammar.g:130:30: ^( expr )
+                // dd/grammar/ECAGrammar.g:153:30: ^( expr )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(stream_expr.nextNode(), root_1);
@@ -3456,7 +3456,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start infix_oper
-    // dd/grammar/ECAGrammar.g:133:1: infix_oper : ( infix_bit_oper | infix_arith_oper | infix_bool_oper | infix_cmp_oper );
+    // dd/grammar/ECAGrammar.g:156:1: infix_oper : ( infix_bit_oper | infix_arith_oper | infix_bool_oper | infix_cmp_oper );
     public final infix_oper_return infix_oper() throws RecognitionException {
         infix_oper_return retval = new infix_oper_return();
         retval.start = input.LT(1);
@@ -3474,7 +3474,7 @@ public class ECAGrammarParser extends Parser {
 
 
         try {
-            // dd/grammar/ECAGrammar.g:133:12: ( infix_bit_oper | infix_arith_oper | infix_bool_oper | infix_cmp_oper )
+            // dd/grammar/ECAGrammar.g:156:12: ( infix_bit_oper | infix_arith_oper | infix_bool_oper | infix_cmp_oper )
             int alt11=4;
             switch ( input.LA(1) ) {
             case BOR:
@@ -3511,18 +3511,18 @@ public class ECAGrammarParser extends Parser {
             default:
                 if (backtracking>0) {failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("133:1: infix_oper : ( infix_bit_oper | infix_arith_oper | infix_bool_oper | infix_cmp_oper );", 11, 0, input);
+                    new NoViableAltException("156:1: infix_oper : ( infix_bit_oper | infix_arith_oper | infix_bool_oper | infix_cmp_oper );", 11, 0, input);
 
                 throw nvae;
             }
 
             switch (alt11) {
                 case 1 :
-                    // dd/grammar/ECAGrammar.g:133:14: infix_bit_oper
+                    // dd/grammar/ECAGrammar.g:156:14: infix_bit_oper
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    pushFollow(FOLLOW_infix_bit_oper_in_infix_oper902);
+                    pushFollow(FOLLOW_infix_bit_oper_in_infix_oper904);
                     infix_bit_oper77=infix_bit_oper();
                     _fsp--;
                     if (failed) return retval;
@@ -3531,11 +3531,11 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAGrammar.g:134:4: infix_arith_oper
+                    // dd/grammar/ECAGrammar.g:157:4: infix_arith_oper
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    pushFollow(FOLLOW_infix_arith_oper_in_infix_oper907);
+                    pushFollow(FOLLOW_infix_arith_oper_in_infix_oper909);
                     infix_arith_oper78=infix_arith_oper();
                     _fsp--;
                     if (failed) return retval;
@@ -3544,11 +3544,11 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAGrammar.g:135:4: infix_bool_oper
+                    // dd/grammar/ECAGrammar.g:158:4: infix_bool_oper
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    pushFollow(FOLLOW_infix_bool_oper_in_infix_oper912);
+                    pushFollow(FOLLOW_infix_bool_oper_in_infix_oper914);
                     infix_bool_oper79=infix_bool_oper();
                     _fsp--;
                     if (failed) return retval;
@@ -3557,11 +3557,11 @@ public class ECAGrammarParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // dd/grammar/ECAGrammar.g:136:4: infix_cmp_oper
+                    // dd/grammar/ECAGrammar.g:159:4: infix_cmp_oper
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    pushFollow(FOLLOW_infix_cmp_oper_in_infix_oper917);
+                    pushFollow(FOLLOW_infix_cmp_oper_in_infix_oper919);
                     infix_cmp_oper80=infix_cmp_oper();
                     _fsp--;
                     if (failed) return retval;
@@ -3594,7 +3594,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start infix_bit_oper
-    // dd/grammar/ECAGrammar.g:139:1: infix_bit_oper : ( BAND | BOR | BXOR );
+    // dd/grammar/ECAGrammar.g:162:1: infix_bit_oper : ( BAND | BOR | BXOR );
     public final infix_bit_oper_return infix_bit_oper() throws RecognitionException {
         infix_bit_oper_return retval = new infix_bit_oper_return();
         retval.start = input.LT(1);
@@ -3606,7 +3606,7 @@ public class ECAGrammarParser extends Parser {
         Object set81_tree=null;
 
         try {
-            // dd/grammar/ECAGrammar.g:140:2: ( BAND | BOR | BXOR )
+            // dd/grammar/ECAGrammar.g:163:2: ( BAND | BOR | BXOR )
             // dd/grammar/ECAGrammar.g:
             {
             root_0 = (Object)adaptor.nil();
@@ -3650,7 +3650,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start infix_arith_oper
-    // dd/grammar/ECAGrammar.g:145:1: infix_arith_oper : ( MUL | DIV | PLUS | MINUS );
+    // dd/grammar/ECAGrammar.g:168:1: infix_arith_oper : ( MUL | DIV | PLUS | MINUS );
     public final infix_arith_oper_return infix_arith_oper() throws RecognitionException {
         infix_arith_oper_return retval = new infix_arith_oper_return();
         retval.start = input.LT(1);
@@ -3662,7 +3662,7 @@ public class ECAGrammarParser extends Parser {
         Object set82_tree=null;
 
         try {
-            // dd/grammar/ECAGrammar.g:146:2: ( MUL | DIV | PLUS | MINUS )
+            // dd/grammar/ECAGrammar.g:169:2: ( MUL | DIV | PLUS | MINUS )
             // dd/grammar/ECAGrammar.g:
             {
             root_0 = (Object)adaptor.nil();
@@ -3706,7 +3706,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start infix_bool_oper
-    // dd/grammar/ECAGrammar.g:152:1: infix_bool_oper : ( AND | OR );
+    // dd/grammar/ECAGrammar.g:175:1: infix_bool_oper : ( AND | OR );
     public final infix_bool_oper_return infix_bool_oper() throws RecognitionException {
         infix_bool_oper_return retval = new infix_bool_oper_return();
         retval.start = input.LT(1);
@@ -3718,7 +3718,7 @@ public class ECAGrammarParser extends Parser {
         Object set83_tree=null;
 
         try {
-            // dd/grammar/ECAGrammar.g:153:2: ( AND | OR )
+            // dd/grammar/ECAGrammar.g:176:2: ( AND | OR )
             // dd/grammar/ECAGrammar.g:
             {
             root_0 = (Object)adaptor.nil();
@@ -3762,7 +3762,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start infix_cmp_oper
-    // dd/grammar/ECAGrammar.g:157:1: infix_cmp_oper : ( EQ | NEQ | GT | LT | GEQ | LEQ );
+    // dd/grammar/ECAGrammar.g:180:1: infix_cmp_oper : ( EQ | NEQ | GT | LT | GEQ | LEQ );
     public final infix_cmp_oper_return infix_cmp_oper() throws RecognitionException {
         infix_cmp_oper_return retval = new infix_cmp_oper_return();
         retval.start = input.LT(1);
@@ -3774,7 +3774,7 @@ public class ECAGrammarParser extends Parser {
         Object set84_tree=null;
 
         try {
-            // dd/grammar/ECAGrammar.g:158:2: ( EQ | NEQ | GT | LT | GEQ | LEQ )
+            // dd/grammar/ECAGrammar.g:181:2: ( EQ | NEQ | GT | LT | GEQ | LEQ )
             // dd/grammar/ECAGrammar.g:
             {
             root_0 = (Object)adaptor.nil();
@@ -3818,7 +3818,7 @@ public class ECAGrammarParser extends Parser {
     };
 
     // $ANTLR start unary_oper
-    // dd/grammar/ECAGrammar.g:166:1: unary_oper : ( NOT | TWIDDLE );
+    // dd/grammar/ECAGrammar.g:189:1: unary_oper : ( NOT | TWIDDLE );
     public final unary_oper_return unary_oper() throws RecognitionException {
         unary_oper_return retval = new unary_oper_return();
         retval.start = input.LT(1);
@@ -3830,7 +3830,7 @@ public class ECAGrammarParser extends Parser {
         Object set85_tree=null;
 
         try {
-            // dd/grammar/ECAGrammar.g:166:12: ( NOT | TWIDDLE )
+            // dd/grammar/ECAGrammar.g:189:12: ( NOT | TWIDDLE )
             // dd/grammar/ECAGrammar.g:
             {
             root_0 = (Object)adaptor.nil();
@@ -3870,15 +3870,15 @@ public class ECAGrammarParser extends Parser {
 
     // $ANTLR start synpred1
     public final void synpred1_fragment() throws RecognitionException {   
-        // dd/grammar/ECAGrammar.g:62:12: ( binding SEPR bindings )
-        // dd/grammar/ECAGrammar.g:62:12: binding SEPR bindings
+        // dd/grammar/ECAGrammar.g:85:12: ( binding SEPR bindings )
+        // dd/grammar/ECAGrammar.g:85:12: binding SEPR bindings
         {
-        pushFollow(FOLLOW_binding_in_synpred1332);
+        pushFollow(FOLLOW_binding_in_synpred1334);
         binding();
         _fsp--;
         if (failed) return ;
-        match(input,SEPR,FOLLOW_SEPR_in_synpred1334); if (failed) return ;
-        pushFollow(FOLLOW_bindings_in_synpred1336);
+        match(input,SEPR,FOLLOW_SEPR_in_synpred1336); if (failed) return ;
+        pushFollow(FOLLOW_bindings_in_synpred1338);
         bindings();
         _fsp--;
         if (failed) return ;
@@ -3889,15 +3889,15 @@ public class ECAGrammarParser extends Parser {
 
     // $ANTLR start synpred6
     public final void synpred6_fragment() throws RecognitionException {   
-        // dd/grammar/ECAGrammar.g:92:4: ( action_expr SEPR action_expr_list )
-        // dd/grammar/ECAGrammar.g:92:4: action_expr SEPR action_expr_list
+        // dd/grammar/ECAGrammar.g:115:4: ( action_expr SEPR action_expr_list )
+        // dd/grammar/ECAGrammar.g:115:4: action_expr SEPR action_expr_list
         {
-        pushFollow(FOLLOW_action_expr_in_synpred6487);
+        pushFollow(FOLLOW_action_expr_in_synpred6489);
         action_expr();
         _fsp--;
         if (failed) return ;
-        match(input,SEPR,FOLLOW_SEPR_in_synpred6489); if (failed) return ;
-        pushFollow(FOLLOW_action_expr_list_in_synpred6491);
+        match(input,SEPR,FOLLOW_SEPR_in_synpred6491); if (failed) return ;
+        pushFollow(FOLLOW_action_expr_list_in_synpred6493);
         action_expr_list();
         _fsp--;
         if (failed) return ;
@@ -3908,18 +3908,18 @@ public class ECAGrammarParser extends Parser {
 
     // $ANTLR start synpred11
     public final void synpred11_fragment() throws RecognitionException {   
-        // dd/grammar/ECAGrammar.g:103:8: ( simple_expr infix_oper expr )
-        // dd/grammar/ECAGrammar.g:103:8: simple_expr infix_oper expr
+        // dd/grammar/ECAGrammar.g:126:8: ( simple_expr infix_oper expr )
+        // dd/grammar/ECAGrammar.g:126:8: simple_expr infix_oper expr
         {
-        pushFollow(FOLLOW_simple_expr_in_synpred11610);
+        pushFollow(FOLLOW_simple_expr_in_synpred11612);
         simple_expr();
         _fsp--;
         if (failed) return ;
-        pushFollow(FOLLOW_infix_oper_in_synpred11612);
+        pushFollow(FOLLOW_infix_oper_in_synpred11614);
         infix_oper();
         _fsp--;
         if (failed) return ;
-        pushFollow(FOLLOW_expr_in_synpred11614);
+        pushFollow(FOLLOW_expr_in_synpred11616);
         expr();
         _fsp--;
         if (failed) return ;
@@ -3930,10 +3930,10 @@ public class ECAGrammarParser extends Parser {
 
     // $ANTLR start synpred12
     public final void synpred12_fragment() throws RecognitionException {   
-        // dd/grammar/ECAGrammar.g:104:4: ( simple_expr )
-        // dd/grammar/ECAGrammar.g:104:4: simple_expr
+        // dd/grammar/ECAGrammar.g:127:4: ( simple_expr )
+        // dd/grammar/ECAGrammar.g:127:4: simple_expr
         {
-        pushFollow(FOLLOW_simple_expr_in_synpred12632);
+        pushFollow(FOLLOW_simple_expr_in_synpred12634);
         simple_expr();
         _fsp--;
         if (failed) return ;
@@ -3944,15 +3944,15 @@ public class ECAGrammarParser extends Parser {
 
     // $ANTLR start synpred21
     public final void synpred21_fragment() throws RecognitionException {   
-        // dd/grammar/ECAGrammar.g:120:4: ( expr SEPR expr_list )
-        // dd/grammar/ECAGrammar.g:120:4: expr SEPR expr_list
+        // dd/grammar/ECAGrammar.g:143:4: ( expr SEPR expr_list )
+        // dd/grammar/ECAGrammar.g:143:4: expr SEPR expr_list
         {
-        pushFollow(FOLLOW_expr_in_synpred21818);
+        pushFollow(FOLLOW_expr_in_synpred21820);
         expr();
         _fsp--;
         if (failed) return ;
-        match(input,SEPR,FOLLOW_SEPR_in_synpred21820); if (failed) return ;
-        pushFollow(FOLLOW_expr_list_in_synpred21822);
+        match(input,SEPR,FOLLOW_SEPR_in_synpred21822); if (failed) return ;
+        pushFollow(FOLLOW_expr_list_in_synpred21824);
         expr_list();
         _fsp--;
         if (failed) return ;
@@ -3963,14 +3963,14 @@ public class ECAGrammarParser extends Parser {
 
     // $ANTLR start synpred22
     public final void synpred22_fragment() throws RecognitionException {   
-        // dd/grammar/ECAGrammar.g:125:4: ( array_idx array_idx_list )
-        // dd/grammar/ECAGrammar.g:125:4: array_idx array_idx_list
+        // dd/grammar/ECAGrammar.g:148:4: ( array_idx array_idx_list )
+        // dd/grammar/ECAGrammar.g:148:4: array_idx array_idx_list
         {
-        pushFollow(FOLLOW_array_idx_in_synpred22850);
+        pushFollow(FOLLOW_array_idx_in_synpred22852);
         array_idx();
         _fsp--;
         if (failed) return ;
-        pushFollow(FOLLOW_array_idx_list_in_synpred22852);
+        pushFollow(FOLLOW_array_idx_list_in_synpred22854);
         array_idx_list();
         _fsp--;
         if (failed) return ;
@@ -4067,131 +4067,131 @@ public class ECAGrammarParser extends Parser {
 
  
 
-    public static final BitSet FOLLOW_eca_script_rule_one_in_eca_script_rule88 = new BitSet(new long[]{0x0000000000000000L});
-    public static final BitSet FOLLOW_EOF_in_eca_script_rule90 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_RULE_in_eca_script_rule_one107 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_SYMBOL_in_eca_script_rule_one111 = new BitSet(new long[]{0x0000000000020000L});
-    public static final BitSet FOLLOW_CLASS_in_eca_script_rule_one115 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_SYMBOL_in_eca_script_rule_one119 = new BitSet(new long[]{0x0000000000040000L});
-    public static final BitSet FOLLOW_METHOD_in_eca_script_rule_one123 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_SYMBOL_in_eca_script_rule_one127 = new BitSet(new long[]{0x0000000000080000L});
-    public static final BitSet FOLLOW_LINE_in_eca_script_rule_one131 = new BitSet(new long[]{0x0000000000001000L});
-    public static final BitSet FOLLOW_NUMBER_in_eca_script_rule_one135 = new BitSet(new long[]{0x0000000000002000L});
-    public static final BitSet FOLLOW_BIND_in_eca_script_rule_one139 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_event_in_eca_script_rule_one143 = new BitSet(new long[]{0x0000000000004000L});
-    public static final BitSet FOLLOW_IF_in_eca_script_rule_one147 = new BitSet(new long[]{0x4000802004C01000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_condition_in_eca_script_rule_one151 = new BitSet(new long[]{0x0000000000008000L});
-    public static final BitSet FOLLOW_DO_in_eca_script_rule_one155 = new BitSet(new long[]{0x4000802007201000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_action_in_eca_script_rule_one159 = new BitSet(new long[]{0x0000000000100000L});
-    public static final BitSet FOLLOW_ENDRULE_in_eca_script_rule_one163 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_eca_in_eca_rule200 = new BitSet(new long[]{0x0000000000000000L});
-    public static final BitSet FOLLOW_EOF_in_eca_rule202 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_event_in_eca_event219 = new BitSet(new long[]{0x0000000000000000L});
-    public static final BitSet FOLLOW_EOF_in_eca_event221 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_condition_in_eca_condition237 = new BitSet(new long[]{0x0000000000000000L});
-    public static final BitSet FOLLOW_EOF_in_eca_condition239 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_action_in_eca_action255 = new BitSet(new long[]{0x0000000000000000L});
-    public static final BitSet FOLLOW_EOF_in_eca_action257 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_BIND_in_eca273 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_event_in_eca277 = new BitSet(new long[]{0x0000000000004000L});
-    public static final BitSet FOLLOW_IF_in_eca281 = new BitSet(new long[]{0x4000802004C01000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_condition_in_eca285 = new BitSet(new long[]{0x0000000000008000L});
-    public static final BitSet FOLLOW_DO_in_eca289 = new BitSet(new long[]{0x4000802007201000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_action_in_eca293 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_bindings_in_event320 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_binding_in_bindings332 = new BitSet(new long[]{0x0000000100000000L});
-    public static final BitSet FOLLOW_SEPR_in_bindings334 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_bindings_in_bindings336 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_binding_in_bindings351 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_bind_sym_in_binding361 = new BitSet(new long[]{0x0000000400000000L});
-    public static final BitSet FOLLOW_ASSIGN_in_binding363 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_expr_in_binding365 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_SYMBOL_in_bind_sym388 = new BitSet(new long[]{0x0040000000000000L});
-    public static final BitSet FOLLOW_COLON_in_bind_sym390 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_SYMBOL_in_bind_sym394 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_SYMBOL_in_bind_sym412 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_TRUE_in_condition426 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_FALSE_in_condition438 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_expr_in_condition450 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_NOTHING_in_action464 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_action_expr_list_in_action476 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_action_expr_in_action_expr_list487 = new BitSet(new long[]{0x0000000100000000L});
-    public static final BitSet FOLLOW_SEPR_in_action_expr_list489 = new BitSet(new long[]{0x4000802007001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_action_expr_list_in_action_expr_list491 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_action_expr_in_action_expr_list506 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_RETURN_in_action_expr516 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_RETURN_in_action_expr530 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_expr_in_action_expr532 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_THROW_in_action_expr548 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_SYMBOL_in_action_expr552 = new BitSet(new long[]{0x0000000004000000L});
-    public static final BitSet FOLLOW_LPAREN_in_action_expr554 = new BitSet(new long[]{0x0000000008000000L});
-    public static final BitSet FOLLOW_RPAREN_in_action_expr556 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_THROW_in_action_expr571 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_SYMBOL_in_action_expr575 = new BitSet(new long[]{0x0000000004000000L});
-    public static final BitSet FOLLOW_LPAREN_in_action_expr577 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_expr_list_in_action_expr581 = new BitSet(new long[]{0x0000000008000000L});
-    public static final BitSet FOLLOW_RPAREN_in_action_expr583 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_expr_in_action_expr600 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simple_expr_in_expr610 = new BitSet(new long[]{0x000F7FD800000000L});
-    public static final BitSet FOLLOW_infix_oper_in_expr612 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_expr_in_expr614 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simple_expr_in_expr632 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_unary_oper_in_expr637 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_expr_in_expr639 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simple_expr_in_expr658 = new BitSet(new long[]{0x0020000000000000L});
-    public static final BitSet FOLLOW_TERN_IF_in_expr660 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_expr_in_expr664 = new BitSet(new long[]{0x0040000000000000L});
-    public static final BitSet FOLLOW_COLON_in_expr666 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_expr_in_expr670 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_DOLLARSYM_in_simple_expr697 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_SYMBOL_in_simple_expr704 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_array_idx_in_simple_expr708 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_SYMBOL_in_simple_expr729 = new BitSet(new long[]{0x0000000004000000L});
-    public static final BitSet FOLLOW_LPAREN_in_simple_expr731 = new BitSet(new long[]{0x0000000008000000L});
-    public static final BitSet FOLLOW_RPAREN_in_simple_expr733 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_SYMBOL_in_simple_expr751 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_SYMBOL_in_simple_expr758 = new BitSet(new long[]{0x0000000004000000L});
-    public static final BitSet FOLLOW_LPAREN_in_simple_expr760 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_expr_list_in_simple_expr764 = new BitSet(new long[]{0x0000000008000000L});
-    public static final BitSet FOLLOW_RPAREN_in_simple_expr766 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_NUMBER_in_simple_expr785 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_STRING_in_simple_expr790 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_LPAREN_in_simple_expr795 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_expr_in_simple_expr797 = new BitSet(new long[]{0x0000000008000000L});
-    public static final BitSet FOLLOW_RPAREN_in_simple_expr799 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_expr_in_expr_list818 = new BitSet(new long[]{0x0000000100000000L});
-    public static final BitSet FOLLOW_SEPR_in_expr_list820 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_expr_list_in_expr_list822 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_expr_in_expr_list839 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_array_idx_in_array_idx_list850 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_array_idx_list_in_array_idx_list852 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_array_idx_in_array_idx_list869 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_LSQUARE_in_array_idx880 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_expr_in_array_idx882 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_RSQUARE_in_array_idx884 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_infix_bit_oper_in_infix_oper902 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_infix_arith_oper_in_infix_oper907 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_infix_bool_oper_in_infix_oper912 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_infix_cmp_oper_in_infix_oper917 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_eca_script_rule_one_in_eca_script_rule90 = new BitSet(new long[]{0x0000000000000000L});
+    public static final BitSet FOLLOW_EOF_in_eca_script_rule92 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_RULE_in_eca_script_rule_one109 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_SYMBOL_in_eca_script_rule_one113 = new BitSet(new long[]{0x0000000000020000L});
+    public static final BitSet FOLLOW_CLASS_in_eca_script_rule_one117 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_SYMBOL_in_eca_script_rule_one121 = new BitSet(new long[]{0x0000000000040000L});
+    public static final BitSet FOLLOW_METHOD_in_eca_script_rule_one125 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_SYMBOL_in_eca_script_rule_one129 = new BitSet(new long[]{0x0000000000080000L});
+    public static final BitSet FOLLOW_LINE_in_eca_script_rule_one133 = new BitSet(new long[]{0x0000000000001000L});
+    public static final BitSet FOLLOW_NUMBER_in_eca_script_rule_one137 = new BitSet(new long[]{0x0000000000002000L});
+    public static final BitSet FOLLOW_BIND_in_eca_script_rule_one141 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_event_in_eca_script_rule_one145 = new BitSet(new long[]{0x0000000000004000L});
+    public static final BitSet FOLLOW_IF_in_eca_script_rule_one149 = new BitSet(new long[]{0x4000802004C01000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_condition_in_eca_script_rule_one153 = new BitSet(new long[]{0x0000000000008000L});
+    public static final BitSet FOLLOW_DO_in_eca_script_rule_one157 = new BitSet(new long[]{0x4000802007201000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_action_in_eca_script_rule_one161 = new BitSet(new long[]{0x0000000000100000L});
+    public static final BitSet FOLLOW_ENDRULE_in_eca_script_rule_one165 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_eca_in_eca_rule202 = new BitSet(new long[]{0x0000000000000000L});
+    public static final BitSet FOLLOW_EOF_in_eca_rule204 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_event_in_eca_event221 = new BitSet(new long[]{0x0000000000000000L});
+    public static final BitSet FOLLOW_EOF_in_eca_event223 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_condition_in_eca_condition239 = new BitSet(new long[]{0x0000000000000000L});
+    public static final BitSet FOLLOW_EOF_in_eca_condition241 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_action_in_eca_action257 = new BitSet(new long[]{0x0000000000000000L});
+    public static final BitSet FOLLOW_EOF_in_eca_action259 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_BIND_in_eca275 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_event_in_eca279 = new BitSet(new long[]{0x0000000000004000L});
+    public static final BitSet FOLLOW_IF_in_eca283 = new BitSet(new long[]{0x4000802004C01000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_condition_in_eca287 = new BitSet(new long[]{0x0000000000008000L});
+    public static final BitSet FOLLOW_DO_in_eca291 = new BitSet(new long[]{0x4000802007201000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_action_in_eca295 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_bindings_in_event322 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_binding_in_bindings334 = new BitSet(new long[]{0x0000000100000000L});
+    public static final BitSet FOLLOW_SEPR_in_bindings336 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_bindings_in_bindings338 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_binding_in_bindings353 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_bind_sym_in_binding363 = new BitSet(new long[]{0x0000000400000000L});
+    public static final BitSet FOLLOW_ASSIGN_in_binding365 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_expr_in_binding367 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_SYMBOL_in_bind_sym390 = new BitSet(new long[]{0x0040000000000000L});
+    public static final BitSet FOLLOW_COLON_in_bind_sym392 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_SYMBOL_in_bind_sym396 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_SYMBOL_in_bind_sym414 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_TRUE_in_condition428 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_FALSE_in_condition440 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_expr_in_condition452 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_NOTHING_in_action466 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_action_expr_list_in_action478 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_action_expr_in_action_expr_list489 = new BitSet(new long[]{0x0000000100000000L});
+    public static final BitSet FOLLOW_SEPR_in_action_expr_list491 = new BitSet(new long[]{0x4000802007001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_action_expr_list_in_action_expr_list493 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_action_expr_in_action_expr_list508 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_RETURN_in_action_expr518 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_RETURN_in_action_expr532 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_expr_in_action_expr534 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_THROW_in_action_expr550 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_SYMBOL_in_action_expr554 = new BitSet(new long[]{0x0000000004000000L});
+    public static final BitSet FOLLOW_LPAREN_in_action_expr556 = new BitSet(new long[]{0x0000000008000000L});
+    public static final BitSet FOLLOW_RPAREN_in_action_expr558 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_THROW_in_action_expr573 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_SYMBOL_in_action_expr577 = new BitSet(new long[]{0x0000000004000000L});
+    public static final BitSet FOLLOW_LPAREN_in_action_expr579 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_expr_list_in_action_expr583 = new BitSet(new long[]{0x0000000008000000L});
+    public static final BitSet FOLLOW_RPAREN_in_action_expr585 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_expr_in_action_expr602 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simple_expr_in_expr612 = new BitSet(new long[]{0x000F7FD800000000L});
+    public static final BitSet FOLLOW_infix_oper_in_expr614 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_expr_in_expr616 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simple_expr_in_expr634 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_unary_oper_in_expr639 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_expr_in_expr641 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simple_expr_in_expr660 = new BitSet(new long[]{0x0020000000000000L});
+    public static final BitSet FOLLOW_TERN_IF_in_expr662 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_expr_in_expr666 = new BitSet(new long[]{0x0040000000000000L});
+    public static final BitSet FOLLOW_COLON_in_expr668 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_expr_in_expr672 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_DOLLARSYM_in_simple_expr699 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_SYMBOL_in_simple_expr706 = new BitSet(new long[]{0x0000000010000000L});
+    public static final BitSet FOLLOW_array_idx_in_simple_expr710 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_SYMBOL_in_simple_expr731 = new BitSet(new long[]{0x0000000004000000L});
+    public static final BitSet FOLLOW_LPAREN_in_simple_expr733 = new BitSet(new long[]{0x0000000008000000L});
+    public static final BitSet FOLLOW_RPAREN_in_simple_expr735 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_SYMBOL_in_simple_expr753 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_SYMBOL_in_simple_expr760 = new BitSet(new long[]{0x0000000004000000L});
+    public static final BitSet FOLLOW_LPAREN_in_simple_expr762 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_expr_list_in_simple_expr766 = new BitSet(new long[]{0x0000000008000000L});
+    public static final BitSet FOLLOW_RPAREN_in_simple_expr768 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_NUMBER_in_simple_expr787 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_STRING_in_simple_expr792 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_LPAREN_in_simple_expr797 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_expr_in_simple_expr799 = new BitSet(new long[]{0x0000000008000000L});
+    public static final BitSet FOLLOW_RPAREN_in_simple_expr801 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_expr_in_expr_list820 = new BitSet(new long[]{0x0000000100000000L});
+    public static final BitSet FOLLOW_SEPR_in_expr_list822 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_expr_list_in_expr_list824 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_expr_in_expr_list841 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_array_idx_in_array_idx_list852 = new BitSet(new long[]{0x0000000010000000L});
+    public static final BitSet FOLLOW_array_idx_list_in_array_idx_list854 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_array_idx_in_array_idx_list871 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_LSQUARE_in_array_idx882 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_expr_in_array_idx884 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_RSQUARE_in_array_idx886 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_infix_bit_oper_in_infix_oper904 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_infix_arith_oper_in_infix_oper909 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_infix_bool_oper_in_infix_oper914 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_infix_cmp_oper_in_infix_oper919 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_set_in_infix_bit_oper0 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_set_in_infix_arith_oper0 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_set_in_infix_bool_oper0 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_set_in_infix_cmp_oper0 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_set_in_unary_oper0 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_binding_in_synpred1332 = new BitSet(new long[]{0x0000000100000000L});
-    public static final BitSet FOLLOW_SEPR_in_synpred1334 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
-    public static final BitSet FOLLOW_bindings_in_synpred1336 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_action_expr_in_synpred6487 = new BitSet(new long[]{0x0000000100000000L});
-    public static final BitSet FOLLOW_SEPR_in_synpred6489 = new BitSet(new long[]{0x4000802007001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_action_expr_list_in_synpred6491 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simple_expr_in_synpred11610 = new BitSet(new long[]{0x000F7FD800000000L});
-    public static final BitSet FOLLOW_infix_oper_in_synpred11612 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_expr_in_synpred11614 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simple_expr_in_synpred12632 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_expr_in_synpred21818 = new BitSet(new long[]{0x0000000100000000L});
-    public static final BitSet FOLLOW_SEPR_in_synpred21820 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
-    public static final BitSet FOLLOW_expr_list_in_synpred21822 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_array_idx_in_synpred22850 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_array_idx_list_in_synpred22852 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_binding_in_synpred1334 = new BitSet(new long[]{0x0000000100000000L});
+    public static final BitSet FOLLOW_SEPR_in_synpred1336 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000004L});
+    public static final BitSet FOLLOW_bindings_in_synpred1338 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_action_expr_in_synpred6489 = new BitSet(new long[]{0x0000000100000000L});
+    public static final BitSet FOLLOW_SEPR_in_synpred6491 = new BitSet(new long[]{0x4000802007001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_action_expr_list_in_synpred6493 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simple_expr_in_synpred11612 = new BitSet(new long[]{0x000F7FD800000000L});
+    public static final BitSet FOLLOW_infix_oper_in_synpred11614 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_expr_in_synpred11616 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simple_expr_in_synpred12634 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_expr_in_synpred21820 = new BitSet(new long[]{0x0000000100000000L});
+    public static final BitSet FOLLOW_SEPR_in_synpred21822 = new BitSet(new long[]{0x4000802004001000L,0x0000000000000014L});
+    public static final BitSet FOLLOW_expr_list_in_synpred21824 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_array_idx_in_synpred22852 = new BitSet(new long[]{0x0000000010000000L});
+    public static final BitSet FOLLOW_array_idx_list_in_synpred22854 = new BitSet(new long[]{0x0000000000000002L});
 
 }

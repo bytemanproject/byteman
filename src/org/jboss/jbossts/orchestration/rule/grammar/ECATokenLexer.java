@@ -1,4 +1,4 @@
-// $ANTLR 3.0.1 dd/grammar/ECAToken.g 2008-09-30 13:45:22
+// $ANTLR 3.0.1 dd/grammar/ECAToken.g 2008-10-01 15:50:04
 
 package org.jboss.jbossts.orchestration.rule.grammar;
 
@@ -86,8 +86,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start DIGIT
     public final void mDIGIT() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:10:7: ( '0' .. '9' )
-            // dd/grammar/ECAToken.g:10:9: '0' .. '9'
+            // dd/grammar/ECAToken.g:33:7: ( '0' .. '9' )
+            // dd/grammar/ECAToken.g:33:9: '0' .. '9'
             {
             matchRange('0','9'); 
 
@@ -102,8 +102,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start POSDIGIT
     public final void mPOSDIGIT() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:14:10: ( '1' .. '9' )
-            // dd/grammar/ECAToken.g:14:12: '1' .. '9'
+            // dd/grammar/ECAToken.g:37:10: ( '1' .. '9' )
+            // dd/grammar/ECAToken.g:37:12: '1' .. '9'
             {
             matchRange('1','9'); 
 
@@ -118,7 +118,7 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start SIGN
     public final void mSIGN() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:18:6: ( '+' | '-' )
+            // dd/grammar/ECAToken.g:41:6: ( '+' | '-' )
             // dd/grammar/ECAToken.g:
             {
             if ( input.LA(1)=='+'||input.LA(1)=='-' ) {
@@ -143,7 +143,7 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start BAREINT
     public final void mBAREINT() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:22:9: ( '0' | ( POSDIGIT ( DIGIT )* ) )
+            // dd/grammar/ECAToken.g:45:9: ( '0' | ( POSDIGIT ( DIGIT )* ) )
             int alt2=2;
             int LA2_0 = input.LA(1);
 
@@ -155,26 +155,26 @@ public class ECATokenLexer extends Lexer {
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("21:1: fragment BAREINT : ( '0' | ( POSDIGIT ( DIGIT )* ) );", 2, 0, input);
+                    new NoViableAltException("44:1: fragment BAREINT : ( '0' | ( POSDIGIT ( DIGIT )* ) );", 2, 0, input);
 
                 throw nvae;
             }
             switch (alt2) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:22:11: '0'
+                    // dd/grammar/ECAToken.g:45:11: '0'
                     {
                     match('0'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:22:17: ( POSDIGIT ( DIGIT )* )
+                    // dd/grammar/ECAToken.g:45:17: ( POSDIGIT ( DIGIT )* )
                     {
-                    // dd/grammar/ECAToken.g:22:17: ( POSDIGIT ( DIGIT )* )
-                    // dd/grammar/ECAToken.g:22:18: POSDIGIT ( DIGIT )*
+                    // dd/grammar/ECAToken.g:45:17: ( POSDIGIT ( DIGIT )* )
+                    // dd/grammar/ECAToken.g:45:18: POSDIGIT ( DIGIT )*
                     {
                     mPOSDIGIT(); 
-                    // dd/grammar/ECAToken.g:22:27: ( DIGIT )*
+                    // dd/grammar/ECAToken.g:45:27: ( DIGIT )*
                     loop1:
                     do {
                         int alt1=2;
@@ -187,7 +187,7 @@ public class ECATokenLexer extends Lexer {
 
                         switch (alt1) {
                     	case 1 :
-                    	    // dd/grammar/ECAToken.g:22:28: DIGIT
+                    	    // dd/grammar/ECAToken.g:45:28: DIGIT
                     	    {
                     	    mDIGIT(); 
 
@@ -216,10 +216,10 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start INTEGER
     public final void mINTEGER() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:25:9: ( ( SIGN )? BAREINT )
-            // dd/grammar/ECAToken.g:25:11: ( SIGN )? BAREINT
+            // dd/grammar/ECAToken.g:48:9: ( ( SIGN )? BAREINT )
+            // dd/grammar/ECAToken.g:48:11: ( SIGN )? BAREINT
             {
-            // dd/grammar/ECAToken.g:25:11: ( SIGN )?
+            // dd/grammar/ECAToken.g:48:11: ( SIGN )?
             int alt3=2;
             int LA3_0 = input.LA(1);
 
@@ -228,7 +228,7 @@ public class ECATokenLexer extends Lexer {
             }
             switch (alt3) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:25:11: SIGN
+                    // dd/grammar/ECAToken.g:48:11: SIGN
                     {
                     mSIGN(); 
 
@@ -250,8 +250,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start POINT
     public final void mPOINT() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:29:7: ( '.' )
-            // dd/grammar/ECAToken.g:29:9: '.'
+            // dd/grammar/ECAToken.g:52:7: ( '.' )
+            // dd/grammar/ECAToken.g:52:9: '.'
             {
             match('.'); 
 
@@ -266,8 +266,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start EXPPART
     public final void mEXPPART() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:33:9: ( ( 'e' | 'E' ) INTEGER )
-            // dd/grammar/ECAToken.g:33:12: ( 'e' | 'E' ) INTEGER
+            // dd/grammar/ECAToken.g:56:9: ( ( 'e' | 'E' ) INTEGER )
+            // dd/grammar/ECAToken.g:56:12: ( 'e' | 'E' ) INTEGER
             {
             if ( input.LA(1)=='E'||input.LA(1)=='e' ) {
                 input.consume();
@@ -292,12 +292,12 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start FLOAT
     public final void mFLOAT() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:38:7: ( INTEGER POINT ( BAREINT )? ( EXPPART )? )
-            // dd/grammar/ECAToken.g:38:9: INTEGER POINT ( BAREINT )? ( EXPPART )?
+            // dd/grammar/ECAToken.g:61:7: ( INTEGER POINT ( BAREINT )? ( EXPPART )? )
+            // dd/grammar/ECAToken.g:61:9: INTEGER POINT ( BAREINT )? ( EXPPART )?
             {
             mINTEGER(); 
             mPOINT(); 
-            // dd/grammar/ECAToken.g:38:23: ( BAREINT )?
+            // dd/grammar/ECAToken.g:61:23: ( BAREINT )?
             int alt4=2;
             int LA4_0 = input.LA(1);
 
@@ -306,7 +306,7 @@ public class ECATokenLexer extends Lexer {
             }
             switch (alt4) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:38:23: BAREINT
+                    // dd/grammar/ECAToken.g:61:23: BAREINT
                     {
                     mBAREINT(); 
 
@@ -315,7 +315,7 @@ public class ECATokenLexer extends Lexer {
 
             }
 
-            // dd/grammar/ECAToken.g:38:32: ( EXPPART )?
+            // dd/grammar/ECAToken.g:61:32: ( EXPPART )?
             int alt5=2;
             int LA5_0 = input.LA(1);
 
@@ -324,7 +324,7 @@ public class ECATokenLexer extends Lexer {
             }
             switch (alt5) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:38:32: EXPPART
+                    // dd/grammar/ECAToken.g:61:32: EXPPART
                     {
                     mEXPPART(); 
 
@@ -346,19 +346,19 @@ public class ECATokenLexer extends Lexer {
     public final void mNUMBER() throws RecognitionException {
         try {
             int _type = NUMBER;
-            // dd/grammar/ECAToken.g:41:8: ( INTEGER | FLOAT )
+            // dd/grammar/ECAToken.g:64:8: ( INTEGER | FLOAT )
             int alt6=2;
             alt6 = dfa6.predict(input);
             switch (alt6) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:41:10: INTEGER
+                    // dd/grammar/ECAToken.g:64:10: INTEGER
                     {
                     mINTEGER(); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:41:20: FLOAT
+                    // dd/grammar/ECAToken.g:64:20: FLOAT
                     {
                     mFLOAT(); 
 
@@ -377,8 +377,8 @@ public class ECATokenLexer extends Lexer {
     public final void mBIND() throws RecognitionException {
         try {
             int _type = BIND;
-            // dd/grammar/ECAToken.g:46:6: ( 'BIND' )
-            // dd/grammar/ECAToken.g:46:8: 'BIND'
+            // dd/grammar/ECAToken.g:69:6: ( 'BIND' )
+            // dd/grammar/ECAToken.g:69:8: 'BIND'
             {
             match("BIND"); 
 
@@ -396,8 +396,8 @@ public class ECATokenLexer extends Lexer {
     public final void mIF() throws RecognitionException {
         try {
             int _type = IF;
-            // dd/grammar/ECAToken.g:49:4: ( 'IF' )
-            // dd/grammar/ECAToken.g:49:6: 'IF'
+            // dd/grammar/ECAToken.g:72:4: ( 'IF' )
+            // dd/grammar/ECAToken.g:72:6: 'IF'
             {
             match("IF"); 
 
@@ -415,8 +415,8 @@ public class ECATokenLexer extends Lexer {
     public final void mDO() throws RecognitionException {
         try {
             int _type = DO;
-            // dd/grammar/ECAToken.g:52:4: ( 'DO' )
-            // dd/grammar/ECAToken.g:52:6: 'DO'
+            // dd/grammar/ECAToken.g:75:4: ( 'DO' )
+            // dd/grammar/ECAToken.g:75:6: 'DO'
             {
             match("DO"); 
 
@@ -434,8 +434,8 @@ public class ECATokenLexer extends Lexer {
     public final void mRULE() throws RecognitionException {
         try {
             int _type = RULE;
-            // dd/grammar/ECAToken.g:55:6: ( 'RULE' )
-            // dd/grammar/ECAToken.g:55:8: 'RULE'
+            // dd/grammar/ECAToken.g:78:6: ( 'RULE' )
+            // dd/grammar/ECAToken.g:78:8: 'RULE'
             {
             match("RULE"); 
 
@@ -453,8 +453,8 @@ public class ECATokenLexer extends Lexer {
     public final void mCLASS() throws RecognitionException {
         try {
             int _type = CLASS;
-            // dd/grammar/ECAToken.g:58:7: ( 'CLASS' )
-            // dd/grammar/ECAToken.g:58:9: 'CLASS'
+            // dd/grammar/ECAToken.g:81:7: ( 'CLASS' )
+            // dd/grammar/ECAToken.g:81:9: 'CLASS'
             {
             match("CLASS"); 
 
@@ -472,8 +472,8 @@ public class ECATokenLexer extends Lexer {
     public final void mMETHOD() throws RecognitionException {
         try {
             int _type = METHOD;
-            // dd/grammar/ECAToken.g:61:8: ( 'METHOD' )
-            // dd/grammar/ECAToken.g:61:10: 'METHOD'
+            // dd/grammar/ECAToken.g:84:8: ( 'METHOD' )
+            // dd/grammar/ECAToken.g:84:10: 'METHOD'
             {
             match("METHOD"); 
 
@@ -491,8 +491,8 @@ public class ECATokenLexer extends Lexer {
     public final void mLINE() throws RecognitionException {
         try {
             int _type = LINE;
-            // dd/grammar/ECAToken.g:64:6: ( 'LINE' )
-            // dd/grammar/ECAToken.g:64:8: 'LINE'
+            // dd/grammar/ECAToken.g:87:6: ( 'LINE' )
+            // dd/grammar/ECAToken.g:87:8: 'LINE'
             {
             match("LINE"); 
 
@@ -510,8 +510,8 @@ public class ECATokenLexer extends Lexer {
     public final void mENDRULE() throws RecognitionException {
         try {
             int _type = ENDRULE;
-            // dd/grammar/ECAToken.g:67:9: ( 'ENDRULE' )
-            // dd/grammar/ECAToken.g:67:11: 'ENDRULE'
+            // dd/grammar/ECAToken.g:90:9: ( 'ENDRULE' )
+            // dd/grammar/ECAToken.g:90:11: 'ENDRULE'
             {
             match("ENDRULE"); 
 
@@ -529,8 +529,8 @@ public class ECATokenLexer extends Lexer {
     public final void mNOTHING() throws RecognitionException {
         try {
             int _type = NOTHING;
-            // dd/grammar/ECAToken.g:70:9: ( 'NOTHING' )
-            // dd/grammar/ECAToken.g:70:11: 'NOTHING'
+            // dd/grammar/ECAToken.g:93:9: ( 'NOTHING' )
+            // dd/grammar/ECAToken.g:93:11: 'NOTHING'
             {
             match("NOTHING"); 
 
@@ -548,7 +548,7 @@ public class ECATokenLexer extends Lexer {
     public final void mTRUE() throws RecognitionException {
         try {
             int _type = TRUE;
-            // dd/grammar/ECAToken.g:73:6: ( 'TRUE' | 'true' )
+            // dd/grammar/ECAToken.g:96:6: ( 'TRUE' | 'true' )
             int alt7=2;
             int LA7_0 = input.LA(1);
 
@@ -560,13 +560,13 @@ public class ECATokenLexer extends Lexer {
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("73:1: TRUE : ( 'TRUE' | 'true' );", 7, 0, input);
+                    new NoViableAltException("96:1: TRUE : ( 'TRUE' | 'true' );", 7, 0, input);
 
                 throw nvae;
             }
             switch (alt7) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:73:9: 'TRUE'
+                    // dd/grammar/ECAToken.g:96:9: 'TRUE'
                     {
                     match("TRUE"); 
 
@@ -574,7 +574,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:73:18: 'true'
+                    // dd/grammar/ECAToken.g:96:18: 'true'
                     {
                     match("true"); 
 
@@ -594,7 +594,7 @@ public class ECATokenLexer extends Lexer {
     public final void mFALSE() throws RecognitionException {
         try {
             int _type = FALSE;
-            // dd/grammar/ECAToken.g:76:7: ( 'FALSE' | 'false' )
+            // dd/grammar/ECAToken.g:99:7: ( 'FALSE' | 'false' )
             int alt8=2;
             int LA8_0 = input.LA(1);
 
@@ -606,13 +606,13 @@ public class ECATokenLexer extends Lexer {
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("76:1: FALSE : ( 'FALSE' | 'false' );", 8, 0, input);
+                    new NoViableAltException("99:1: FALSE : ( 'FALSE' | 'false' );", 8, 0, input);
 
                 throw nvae;
             }
             switch (alt8) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:76:9: 'FALSE'
+                    // dd/grammar/ECAToken.g:99:9: 'FALSE'
                     {
                     match("FALSE"); 
 
@@ -620,7 +620,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:76:17: 'false'
+                    // dd/grammar/ECAToken.g:99:17: 'false'
                     {
                     match("false"); 
 
@@ -640,7 +640,7 @@ public class ECATokenLexer extends Lexer {
     public final void mRETURN() throws RecognitionException {
         try {
             int _type = RETURN;
-            // dd/grammar/ECAToken.g:79:8: ( 'RETURN' | 'return' )
+            // dd/grammar/ECAToken.g:102:8: ( 'RETURN' | 'return' )
             int alt9=2;
             int LA9_0 = input.LA(1);
 
@@ -652,13 +652,13 @@ public class ECATokenLexer extends Lexer {
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("79:1: RETURN : ( 'RETURN' | 'return' );", 9, 0, input);
+                    new NoViableAltException("102:1: RETURN : ( 'RETURN' | 'return' );", 9, 0, input);
 
                 throw nvae;
             }
             switch (alt9) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:79:10: 'RETURN'
+                    // dd/grammar/ECAToken.g:102:10: 'RETURN'
                     {
                     match("RETURN"); 
 
@@ -666,7 +666,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:79:19: 'return'
+                    // dd/grammar/ECAToken.g:102:19: 'return'
                     {
                     match("return"); 
 
@@ -686,7 +686,7 @@ public class ECATokenLexer extends Lexer {
     public final void mTHROW() throws RecognitionException {
         try {
             int _type = THROW;
-            // dd/grammar/ECAToken.g:82:7: ( 'THROW' | 'throw' )
+            // dd/grammar/ECAToken.g:105:7: ( 'THROW' | 'throw' )
             int alt10=2;
             int LA10_0 = input.LA(1);
 
@@ -698,13 +698,13 @@ public class ECATokenLexer extends Lexer {
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("82:1: THROW : ( 'THROW' | 'throw' );", 10, 0, input);
+                    new NoViableAltException("105:1: THROW : ( 'THROW' | 'throw' );", 10, 0, input);
 
                 throw nvae;
             }
             switch (alt10) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:82:9: 'THROW'
+                    // dd/grammar/ECAToken.g:105:9: 'THROW'
                     {
                     match("THROW"); 
 
@@ -712,7 +712,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:82:17: 'throw'
+                    // dd/grammar/ECAToken.g:105:17: 'throw'
                     {
                     match("throw"); 
 
@@ -732,8 +732,8 @@ public class ECATokenLexer extends Lexer {
     public final void mLPAREN() throws RecognitionException {
         try {
             int _type = LPAREN;
-            // dd/grammar/ECAToken.g:87:8: ( '(' )
-            // dd/grammar/ECAToken.g:87:10: '('
+            // dd/grammar/ECAToken.g:110:8: ( '(' )
+            // dd/grammar/ECAToken.g:110:10: '('
             {
             match('('); 
 
@@ -750,8 +750,8 @@ public class ECATokenLexer extends Lexer {
     public final void mRPAREN() throws RecognitionException {
         try {
             int _type = RPAREN;
-            // dd/grammar/ECAToken.g:90:8: ( ')' )
-            // dd/grammar/ECAToken.g:90:10: ')'
+            // dd/grammar/ECAToken.g:113:8: ( ')' )
+            // dd/grammar/ECAToken.g:113:10: ')'
             {
             match(')'); 
 
@@ -768,8 +768,8 @@ public class ECATokenLexer extends Lexer {
     public final void mLSQUARE() throws RecognitionException {
         try {
             int _type = LSQUARE;
-            // dd/grammar/ECAToken.g:93:9: ( '\\[' )
-            // dd/grammar/ECAToken.g:93:11: '\\['
+            // dd/grammar/ECAToken.g:116:9: ( '\\[' )
+            // dd/grammar/ECAToken.g:116:11: '\\['
             {
             match('['); 
 
@@ -786,8 +786,8 @@ public class ECATokenLexer extends Lexer {
     public final void mRSQUARE() throws RecognitionException {
         try {
             int _type = RSQUARE;
-            // dd/grammar/ECAToken.g:96:9: ( '\\]' )
-            // dd/grammar/ECAToken.g:96:11: '\\]'
+            // dd/grammar/ECAToken.g:119:9: ( '\\]' )
+            // dd/grammar/ECAToken.g:119:11: '\\]'
             {
             match(']'); 
 
@@ -804,8 +804,8 @@ public class ECATokenLexer extends Lexer {
     public final void mLBRACE() throws RecognitionException {
         try {
             int _type = LBRACE;
-            // dd/grammar/ECAToken.g:99:8: ( '{' )
-            // dd/grammar/ECAToken.g:99:10: '{'
+            // dd/grammar/ECAToken.g:122:8: ( '{' )
+            // dd/grammar/ECAToken.g:122:10: '{'
             {
             match('{'); 
 
@@ -822,8 +822,8 @@ public class ECATokenLexer extends Lexer {
     public final void mRBRACE() throws RecognitionException {
         try {
             int _type = RBRACE;
-            // dd/grammar/ECAToken.g:102:8: ( '}' )
-            // dd/grammar/ECAToken.g:102:10: '}'
+            // dd/grammar/ECAToken.g:125:8: ( '}' )
+            // dd/grammar/ECAToken.g:125:10: '}'
             {
             match('}'); 
 
@@ -840,7 +840,7 @@ public class ECATokenLexer extends Lexer {
     public final void mSEPR() throws RecognitionException {
         try {
             int _type = SEPR;
-            // dd/grammar/ECAToken.g:107:6: ( ';' | ',' )
+            // dd/grammar/ECAToken.g:130:6: ( ';' | ',' )
             // dd/grammar/ECAToken.g:
             {
             if ( input.LA(1)==','||input.LA(1)==';' ) {
@@ -867,8 +867,8 @@ public class ECATokenLexer extends Lexer {
     public final void mDOT() throws RecognitionException {
         try {
             int _type = DOT;
-            // dd/grammar/ECAToken.g:113:5: ( '.' )
-            // dd/grammar/ECAToken.g:113:7: '.'
+            // dd/grammar/ECAToken.g:136:5: ( '.' )
+            // dd/grammar/ECAToken.g:136:7: '.'
             {
             match('.'); 
 
@@ -885,7 +885,7 @@ public class ECATokenLexer extends Lexer {
     public final void mASSIGN() throws RecognitionException {
         try {
             int _type = ASSIGN;
-            // dd/grammar/ECAToken.g:118:8: ( '=' | '<--' )
+            // dd/grammar/ECAToken.g:141:8: ( '=' | '<--' )
             int alt11=2;
             int LA11_0 = input.LA(1);
 
@@ -897,20 +897,20 @@ public class ECATokenLexer extends Lexer {
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("118:1: ASSIGN : ( '=' | '<--' );", 11, 0, input);
+                    new NoViableAltException("141:1: ASSIGN : ( '=' | '<--' );", 11, 0, input);
 
                 throw nvae;
             }
             switch (alt11) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:118:10: '='
+                    // dd/grammar/ECAToken.g:141:10: '='
                     {
                     match('='); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:119:4: '<--'
+                    // dd/grammar/ECAToken.g:142:4: '<--'
                     {
                     match("<--"); 
 
@@ -930,7 +930,7 @@ public class ECATokenLexer extends Lexer {
     public final void mOR() throws RecognitionException {
         try {
             int _type = OR;
-            // dd/grammar/ECAToken.g:124:4: ( '||' | 'OR' | 'or' )
+            // dd/grammar/ECAToken.g:147:4: ( '||' | 'OR' | 'or' )
             int alt12=3;
             switch ( input.LA(1) ) {
             case '|':
@@ -950,14 +950,14 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("124:1: OR : ( '||' | 'OR' | 'or' );", 12, 0, input);
+                    new NoViableAltException("147:1: OR : ( '||' | 'OR' | 'or' );", 12, 0, input);
 
                 throw nvae;
             }
 
             switch (alt12) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:124:6: '||'
+                    // dd/grammar/ECAToken.g:147:6: '||'
                     {
                     match("||"); 
 
@@ -965,7 +965,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:125:4: 'OR'
+                    // dd/grammar/ECAToken.g:148:4: 'OR'
                     {
                     match("OR"); 
 
@@ -973,7 +973,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:126:4: 'or'
+                    // dd/grammar/ECAToken.g:149:4: 'or'
                     {
                     match("or"); 
 
@@ -993,7 +993,7 @@ public class ECATokenLexer extends Lexer {
     public final void mAND() throws RecognitionException {
         try {
             int _type = AND;
-            // dd/grammar/ECAToken.g:129:5: ( '&&' | 'AND' | 'and' )
+            // dd/grammar/ECAToken.g:152:5: ( '&&' | 'AND' | 'and' )
             int alt13=3;
             switch ( input.LA(1) ) {
             case '&':
@@ -1013,14 +1013,14 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("129:1: AND : ( '&&' | 'AND' | 'and' );", 13, 0, input);
+                    new NoViableAltException("152:1: AND : ( '&&' | 'AND' | 'and' );", 13, 0, input);
 
                 throw nvae;
             }
 
             switch (alt13) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:129:7: '&&'
+                    // dd/grammar/ECAToken.g:152:7: '&&'
                     {
                     match("&&"); 
 
@@ -1028,7 +1028,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:130:4: 'AND'
+                    // dd/grammar/ECAToken.g:153:4: 'AND'
                     {
                     match("AND"); 
 
@@ -1036,7 +1036,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:131:4: 'and'
+                    // dd/grammar/ECAToken.g:154:4: 'and'
                     {
                     match("and"); 
 
@@ -1056,7 +1056,7 @@ public class ECATokenLexer extends Lexer {
     public final void mNOT() throws RecognitionException {
         try {
             int _type = NOT;
-            // dd/grammar/ECAToken.g:134:5: ( '!' | 'NOT' | 'not' )
+            // dd/grammar/ECAToken.g:157:5: ( '!' | 'NOT' | 'not' )
             int alt14=3;
             switch ( input.LA(1) ) {
             case '!':
@@ -1076,21 +1076,21 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("134:1: NOT : ( '!' | 'NOT' | 'not' );", 14, 0, input);
+                    new NoViableAltException("157:1: NOT : ( '!' | 'NOT' | 'not' );", 14, 0, input);
 
                 throw nvae;
             }
 
             switch (alt14) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:134:7: '!'
+                    // dd/grammar/ECAToken.g:157:7: '!'
                     {
                     match('!'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:135:4: 'NOT'
+                    // dd/grammar/ECAToken.g:158:4: 'NOT'
                     {
                     match("NOT"); 
 
@@ -1098,7 +1098,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:136:4: 'not'
+                    // dd/grammar/ECAToken.g:159:4: 'not'
                     {
                     match("not"); 
 
@@ -1118,7 +1118,7 @@ public class ECATokenLexer extends Lexer {
     public final void mEQ() throws RecognitionException {
         try {
             int _type = EQ;
-            // dd/grammar/ECAToken.g:141:4: ( '==' | 'EQ' | 'eq' )
+            // dd/grammar/ECAToken.g:164:4: ( '==' | 'EQ' | 'eq' )
             int alt15=3;
             switch ( input.LA(1) ) {
             case '=':
@@ -1138,14 +1138,14 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("141:1: EQ : ( '==' | 'EQ' | 'eq' );", 15, 0, input);
+                    new NoViableAltException("164:1: EQ : ( '==' | 'EQ' | 'eq' );", 15, 0, input);
 
                 throw nvae;
             }
 
             switch (alt15) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:141:6: '=='
+                    // dd/grammar/ECAToken.g:164:6: '=='
                     {
                     match("=="); 
 
@@ -1153,7 +1153,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:142:4: 'EQ'
+                    // dd/grammar/ECAToken.g:165:4: 'EQ'
                     {
                     match("EQ"); 
 
@@ -1161,7 +1161,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:143:4: 'eq'
+                    // dd/grammar/ECAToken.g:166:4: 'eq'
                     {
                     match("eq"); 
 
@@ -1181,7 +1181,7 @@ public class ECATokenLexer extends Lexer {
     public final void mNEQ() throws RecognitionException {
         try {
             int _type = NEQ;
-            // dd/grammar/ECAToken.g:146:5: ( '!=' | 'NEQ' | 'neq' )
+            // dd/grammar/ECAToken.g:169:5: ( '!=' | 'NEQ' | 'neq' )
             int alt16=3;
             switch ( input.LA(1) ) {
             case '!':
@@ -1201,14 +1201,14 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("146:1: NEQ : ( '!=' | 'NEQ' | 'neq' );", 16, 0, input);
+                    new NoViableAltException("169:1: NEQ : ( '!=' | 'NEQ' | 'neq' );", 16, 0, input);
 
                 throw nvae;
             }
 
             switch (alt16) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:146:7: '!='
+                    // dd/grammar/ECAToken.g:169:7: '!='
                     {
                     match("!="); 
 
@@ -1216,7 +1216,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:147:4: 'NEQ'
+                    // dd/grammar/ECAToken.g:170:4: 'NEQ'
                     {
                     match("NEQ"); 
 
@@ -1224,7 +1224,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:148:4: 'neq'
+                    // dd/grammar/ECAToken.g:171:4: 'neq'
                     {
                     match("neq"); 
 
@@ -1244,7 +1244,7 @@ public class ECATokenLexer extends Lexer {
     public final void mGT() throws RecognitionException {
         try {
             int _type = GT;
-            // dd/grammar/ECAToken.g:151:4: ( '>' | 'GT' | 'gt' )
+            // dd/grammar/ECAToken.g:174:4: ( '>' | 'GT' | 'gt' )
             int alt17=3;
             switch ( input.LA(1) ) {
             case '>':
@@ -1264,21 +1264,21 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("151:1: GT : ( '>' | 'GT' | 'gt' );", 17, 0, input);
+                    new NoViableAltException("174:1: GT : ( '>' | 'GT' | 'gt' );", 17, 0, input);
 
                 throw nvae;
             }
 
             switch (alt17) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:151:6: '>'
+                    // dd/grammar/ECAToken.g:174:6: '>'
                     {
                     match('>'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:152:4: 'GT'
+                    // dd/grammar/ECAToken.g:175:4: 'GT'
                     {
                     match("GT"); 
 
@@ -1286,7 +1286,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:153:4: 'gt'
+                    // dd/grammar/ECAToken.g:176:4: 'gt'
                     {
                     match("gt"); 
 
@@ -1306,7 +1306,7 @@ public class ECATokenLexer extends Lexer {
     public final void mLT() throws RecognitionException {
         try {
             int _type = LT;
-            // dd/grammar/ECAToken.g:156:4: ( '<' | 'LT' | 'lt' )
+            // dd/grammar/ECAToken.g:179:4: ( '<' | 'LT' | 'lt' )
             int alt18=3;
             switch ( input.LA(1) ) {
             case '<':
@@ -1326,21 +1326,21 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("156:1: LT : ( '<' | 'LT' | 'lt' );", 18, 0, input);
+                    new NoViableAltException("179:1: LT : ( '<' | 'LT' | 'lt' );", 18, 0, input);
 
                 throw nvae;
             }
 
             switch (alt18) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:156:6: '<'
+                    // dd/grammar/ECAToken.g:179:6: '<'
                     {
                     match('<'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:157:4: 'LT'
+                    // dd/grammar/ECAToken.g:180:4: 'LT'
                     {
                     match("LT"); 
 
@@ -1348,7 +1348,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:158:4: 'lt'
+                    // dd/grammar/ECAToken.g:181:4: 'lt'
                     {
                     match("lt"); 
 
@@ -1368,7 +1368,7 @@ public class ECATokenLexer extends Lexer {
     public final void mGEQ() throws RecognitionException {
         try {
             int _type = GEQ;
-            // dd/grammar/ECAToken.g:161:5: ( '>=' | 'EQ' | 'geq' )
+            // dd/grammar/ECAToken.g:184:5: ( '>=' | 'EQ' | 'geq' )
             int alt19=3;
             switch ( input.LA(1) ) {
             case '>':
@@ -1388,14 +1388,14 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("161:1: GEQ : ( '>=' | 'EQ' | 'geq' );", 19, 0, input);
+                    new NoViableAltException("184:1: GEQ : ( '>=' | 'EQ' | 'geq' );", 19, 0, input);
 
                 throw nvae;
             }
 
             switch (alt19) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:161:7: '>='
+                    // dd/grammar/ECAToken.g:184:7: '>='
                     {
                     match(">="); 
 
@@ -1403,7 +1403,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:162:4: 'EQ'
+                    // dd/grammar/ECAToken.g:185:4: 'EQ'
                     {
                     match("EQ"); 
 
@@ -1411,7 +1411,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:163:4: 'geq'
+                    // dd/grammar/ECAToken.g:186:4: 'geq'
                     {
                     match("geq"); 
 
@@ -1431,7 +1431,7 @@ public class ECATokenLexer extends Lexer {
     public final void mLEQ() throws RecognitionException {
         try {
             int _type = LEQ;
-            // dd/grammar/ECAToken.g:166:5: ( '<=' | 'LEQ' | 'leq' )
+            // dd/grammar/ECAToken.g:189:5: ( '<=' | 'LEQ' | 'leq' )
             int alt20=3;
             switch ( input.LA(1) ) {
             case '<':
@@ -1451,14 +1451,14 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("166:1: LEQ : ( '<=' | 'LEQ' | 'leq' );", 20, 0, input);
+                    new NoViableAltException("189:1: LEQ : ( '<=' | 'LEQ' | 'leq' );", 20, 0, input);
 
                 throw nvae;
             }
 
             switch (alt20) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:166:7: '<='
+                    // dd/grammar/ECAToken.g:189:7: '<='
                     {
                     match("<="); 
 
@@ -1466,7 +1466,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:167:4: 'LEQ'
+                    // dd/grammar/ECAToken.g:190:4: 'LEQ'
                     {
                     match("LEQ"); 
 
@@ -1474,7 +1474,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:168:4: 'leq'
+                    // dd/grammar/ECAToken.g:191:4: 'leq'
                     {
                     match("leq"); 
 
@@ -1494,8 +1494,8 @@ public class ECATokenLexer extends Lexer {
     public final void mBOR() throws RecognitionException {
         try {
             int _type = BOR;
-            // dd/grammar/ECAToken.g:173:5: ( '|' )
-            // dd/grammar/ECAToken.g:173:7: '|'
+            // dd/grammar/ECAToken.g:196:5: ( '|' )
+            // dd/grammar/ECAToken.g:196:7: '|'
             {
             match('|'); 
 
@@ -1512,8 +1512,8 @@ public class ECATokenLexer extends Lexer {
     public final void mBAND() throws RecognitionException {
         try {
             int _type = BAND;
-            // dd/grammar/ECAToken.g:176:6: ( '&' )
-            // dd/grammar/ECAToken.g:176:8: '&'
+            // dd/grammar/ECAToken.g:199:6: ( '&' )
+            // dd/grammar/ECAToken.g:199:8: '&'
             {
             match('&'); 
 
@@ -1530,8 +1530,8 @@ public class ECATokenLexer extends Lexer {
     public final void mBXOR() throws RecognitionException {
         try {
             int _type = BXOR;
-            // dd/grammar/ECAToken.g:179:6: ( '^' )
-            // dd/grammar/ECAToken.g:179:8: '^'
+            // dd/grammar/ECAToken.g:202:6: ( '^' )
+            // dd/grammar/ECAToken.g:202:8: '^'
             {
             match('^'); 
 
@@ -1548,8 +1548,8 @@ public class ECATokenLexer extends Lexer {
     public final void mTWIDDLE() throws RecognitionException {
         try {
             int _type = TWIDDLE;
-            // dd/grammar/ECAToken.g:182:9: ( '~' )
-            // dd/grammar/ECAToken.g:182:11: '~'
+            // dd/grammar/ECAToken.g:205:9: ( '~' )
+            // dd/grammar/ECAToken.g:205:11: '~'
             {
             match('~'); 
 
@@ -1566,7 +1566,7 @@ public class ECATokenLexer extends Lexer {
     public final void mMUL() throws RecognitionException {
         try {
             int _type = MUL;
-            // dd/grammar/ECAToken.g:187:5: ( '*' | 'TIMES' | 'times' )
+            // dd/grammar/ECAToken.g:210:5: ( '*' | 'TIMES' | 'times' )
             int alt21=3;
             switch ( input.LA(1) ) {
             case '*':
@@ -1586,21 +1586,21 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("187:1: MUL : ( '*' | 'TIMES' | 'times' );", 21, 0, input);
+                    new NoViableAltException("210:1: MUL : ( '*' | 'TIMES' | 'times' );", 21, 0, input);
 
                 throw nvae;
             }
 
             switch (alt21) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:187:7: '*'
+                    // dd/grammar/ECAToken.g:210:7: '*'
                     {
                     match('*'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:188:4: 'TIMES'
+                    // dd/grammar/ECAToken.g:211:4: 'TIMES'
                     {
                     match("TIMES"); 
 
@@ -1608,7 +1608,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:189:4: 'times'
+                    // dd/grammar/ECAToken.g:212:4: 'times'
                     {
                     match("times"); 
 
@@ -1628,7 +1628,7 @@ public class ECATokenLexer extends Lexer {
     public final void mDIV() throws RecognitionException {
         try {
             int _type = DIV;
-            // dd/grammar/ECAToken.g:192:5: ( '/' | 'DIVIDE' | 'divide' )
+            // dd/grammar/ECAToken.g:215:5: ( '/' | 'DIVIDE' | 'divide' )
             int alt22=3;
             switch ( input.LA(1) ) {
             case '/':
@@ -1648,21 +1648,21 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("192:1: DIV : ( '/' | 'DIVIDE' | 'divide' );", 22, 0, input);
+                    new NoViableAltException("215:1: DIV : ( '/' | 'DIVIDE' | 'divide' );", 22, 0, input);
 
                 throw nvae;
             }
 
             switch (alt22) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:192:7: '/'
+                    // dd/grammar/ECAToken.g:215:7: '/'
                     {
                     match('/'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:193:4: 'DIVIDE'
+                    // dd/grammar/ECAToken.g:216:4: 'DIVIDE'
                     {
                     match("DIVIDE"); 
 
@@ -1670,7 +1670,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:194:4: 'divide'
+                    // dd/grammar/ECAToken.g:217:4: 'divide'
                     {
                     match("divide"); 
 
@@ -1690,7 +1690,7 @@ public class ECATokenLexer extends Lexer {
     public final void mPLUS() throws RecognitionException {
         try {
             int _type = PLUS;
-            // dd/grammar/ECAToken.g:197:6: ( '+' | 'PLUS' | 'plus' )
+            // dd/grammar/ECAToken.g:220:6: ( '+' | 'PLUS' | 'plus' )
             int alt23=3;
             switch ( input.LA(1) ) {
             case '+':
@@ -1710,21 +1710,21 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("197:1: PLUS : ( '+' | 'PLUS' | 'plus' );", 23, 0, input);
+                    new NoViableAltException("220:1: PLUS : ( '+' | 'PLUS' | 'plus' );", 23, 0, input);
 
                 throw nvae;
             }
 
             switch (alt23) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:197:8: '+'
+                    // dd/grammar/ECAToken.g:220:8: '+'
                     {
                     match('+'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:198:4: 'PLUS'
+                    // dd/grammar/ECAToken.g:221:4: 'PLUS'
                     {
                     match("PLUS"); 
 
@@ -1732,7 +1732,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:199:4: 'plus'
+                    // dd/grammar/ECAToken.g:222:4: 'plus'
                     {
                     match("plus"); 
 
@@ -1752,7 +1752,7 @@ public class ECATokenLexer extends Lexer {
     public final void mMINUS() throws RecognitionException {
         try {
             int _type = MINUS;
-            // dd/grammar/ECAToken.g:202:7: ( '-' | 'MINUS' | 'minus' )
+            // dd/grammar/ECAToken.g:225:7: ( '-' | 'MINUS' | 'minus' )
             int alt24=3;
             switch ( input.LA(1) ) {
             case '-':
@@ -1772,21 +1772,21 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("202:1: MINUS : ( '-' | 'MINUS' | 'minus' );", 24, 0, input);
+                    new NoViableAltException("225:1: MINUS : ( '-' | 'MINUS' | 'minus' );", 24, 0, input);
 
                 throw nvae;
             }
 
             switch (alt24) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:202:9: '-'
+                    // dd/grammar/ECAToken.g:225:9: '-'
                     {
                     match('-'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:203:4: 'MINUS'
+                    // dd/grammar/ECAToken.g:226:4: 'MINUS'
                     {
                     match("MINUS"); 
 
@@ -1794,7 +1794,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:204:4: 'minus'
+                    // dd/grammar/ECAToken.g:227:4: 'minus'
                     {
                     match("minus"); 
 
@@ -1814,7 +1814,7 @@ public class ECATokenLexer extends Lexer {
     public final void mMOD() throws RecognitionException {
         try {
             int _type = MOD;
-            // dd/grammar/ECAToken.g:207:5: ( '%' | 'MOD' | 'mod' )
+            // dd/grammar/ECAToken.g:230:5: ( '%' | 'MOD' | 'mod' )
             int alt25=3;
             switch ( input.LA(1) ) {
             case '%':
@@ -1834,21 +1834,21 @@ public class ECATokenLexer extends Lexer {
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("207:1: MOD : ( '%' | 'MOD' | 'mod' );", 25, 0, input);
+                    new NoViableAltException("230:1: MOD : ( '%' | 'MOD' | 'mod' );", 25, 0, input);
 
                 throw nvae;
             }
 
             switch (alt25) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:207:7: '%'
+                    // dd/grammar/ECAToken.g:230:7: '%'
                     {
                     match('%'); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:208:4: 'MOD'
+                    // dd/grammar/ECAToken.g:231:4: 'MOD'
                     {
                     match("MOD"); 
 
@@ -1856,7 +1856,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 3 :
-                    // dd/grammar/ECAToken.g:209:4: 'mod'
+                    // dd/grammar/ECAToken.g:232:4: 'mod'
                     {
                     match("mod"); 
 
@@ -1876,8 +1876,8 @@ public class ECATokenLexer extends Lexer {
     public final void mTERN_IF() throws RecognitionException {
         try {
             int _type = TERN_IF;
-            // dd/grammar/ECAToken.g:214:9: ( '?' )
-            // dd/grammar/ECAToken.g:214:11: '?'
+            // dd/grammar/ECAToken.g:237:9: ( '?' )
+            // dd/grammar/ECAToken.g:237:11: '?'
             {
             match('?'); 
 
@@ -1894,8 +1894,8 @@ public class ECATokenLexer extends Lexer {
     public final void mCOLON() throws RecognitionException {
         try {
             int _type = COLON;
-            // dd/grammar/ECAToken.g:217:7: ( ':' )
-            // dd/grammar/ECAToken.g:217:9: ':'
+            // dd/grammar/ECAToken.g:240:7: ( ':' )
+            // dd/grammar/ECAToken.g:240:9: ':'
             {
             match(':'); 
 
@@ -1911,7 +1911,7 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start LETTER
     public final void mLETTER() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:223:8: ( 'a' .. 'z' | 'A' .. 'Z' )
+            // dd/grammar/ECAToken.g:246:8: ( 'a' .. 'z' | 'A' .. 'Z' )
             // dd/grammar/ECAToken.g:
             {
             if ( (input.LA(1)>='A' && input.LA(1)<='Z')||(input.LA(1)>='a' && input.LA(1)<='z') ) {
@@ -1936,8 +1936,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start UNDERSCORE
     public final void mUNDERSCORE() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:227:12: ( '_' )
-            // dd/grammar/ECAToken.g:227:14: '_'
+            // dd/grammar/ECAToken.g:250:12: ( '_' )
+            // dd/grammar/ECAToken.g:250:14: '_'
             {
             match('_'); 
 
@@ -1953,8 +1953,8 @@ public class ECATokenLexer extends Lexer {
     public final void mQUOTE() throws RecognitionException {
         try {
             int _type = QUOTE;
-            // dd/grammar/ECAToken.g:230:7: ( '\\'' )
-            // dd/grammar/ECAToken.g:230:9: '\\''
+            // dd/grammar/ECAToken.g:253:7: ( '\\'' )
+            // dd/grammar/ECAToken.g:253:9: '\\''
             {
             match('\''); 
 
@@ -1971,8 +1971,8 @@ public class ECATokenLexer extends Lexer {
     public final void mDQUOTE() throws RecognitionException {
         try {
             int _type = DQUOTE;
-            // dd/grammar/ECAToken.g:233:8: ( '\"' )
-            // dd/grammar/ECAToken.g:233:10: '\"'
+            // dd/grammar/ECAToken.g:256:8: ( '\"' )
+            // dd/grammar/ECAToken.g:256:10: '\"'
             {
             match('\"'); 
 
@@ -1988,7 +1988,7 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start SPACE
     public final void mSPACE() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:237:7: ( ' ' | '\\t' | '\\r' )
+            // dd/grammar/ECAToken.g:260:7: ( ' ' | '\\t' | '\\r' )
             // dd/grammar/ECAToken.g:
             {
             if ( input.LA(1)=='\t'||input.LA(1)=='\r'||input.LA(1)==' ' ) {
@@ -2013,8 +2013,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start NEWLINE
     public final void mNEWLINE() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:241:9: ( '\\n' )
-            // dd/grammar/ECAToken.g:241:11: '\\n'
+            // dd/grammar/ECAToken.g:264:9: ( '\\n' )
+            // dd/grammar/ECAToken.g:264:11: '\\n'
             {
             match('\n'); 
 
@@ -2029,7 +2029,7 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start PUNCT
     public final void mPUNCT() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:245:7: ( '!' | '$' | '%' | '^' | '&' | '*' | '(' | ')' | '-' | '+' | '=' | '{' | '}' | '[' | ']' | ':' | ';' | '@' | '~' | '#' | '|' | '\\\\' | '`' | ',' | '<' | '.' | '>' | '/' | '?' )
+            // dd/grammar/ECAToken.g:268:7: ( '!' | '$' | '%' | '^' | '&' | '*' | '(' | ')' | '-' | '+' | '=' | '{' | '}' | '[' | ']' | ':' | ';' | '@' | '~' | '#' | '|' | '\\\\' | '`' | ',' | '<' | '.' | '>' | '/' | '?' )
             // dd/grammar/ECAToken.g:
             {
             if ( input.LA(1)=='!'||(input.LA(1)>='#' && input.LA(1)<='&')||(input.LA(1)>='(' && input.LA(1)<='/')||(input.LA(1)>=':' && input.LA(1)<='@')||(input.LA(1)>='[' && input.LA(1)<='^')||input.LA(1)=='`'||(input.LA(1)>='{' && input.LA(1)<='~') ) {
@@ -2055,11 +2055,11 @@ public class ECATokenLexer extends Lexer {
     public final void mSTRING() throws RecognitionException {
         try {
             int _type = STRING;
-            // dd/grammar/ECAToken.g:248:8: ( DQUOTE ( SPACE | PUNCT | LETTER | UNDERSCORE | DIGIT | QUOTE )* DQUOTE )
-            // dd/grammar/ECAToken.g:248:10: DQUOTE ( SPACE | PUNCT | LETTER | UNDERSCORE | DIGIT | QUOTE )* DQUOTE
+            // dd/grammar/ECAToken.g:271:8: ( DQUOTE ( SPACE | PUNCT | LETTER | UNDERSCORE | DIGIT | QUOTE )* DQUOTE )
+            // dd/grammar/ECAToken.g:271:10: DQUOTE ( SPACE | PUNCT | LETTER | UNDERSCORE | DIGIT | QUOTE )* DQUOTE
             {
             mDQUOTE(); 
-            // dd/grammar/ECAToken.g:248:17: ( SPACE | PUNCT | LETTER | UNDERSCORE | DIGIT | QUOTE )*
+            // dd/grammar/ECAToken.g:271:17: ( SPACE | PUNCT | LETTER | UNDERSCORE | DIGIT | QUOTE )*
             loop26:
             do {
                 int alt26=2;
@@ -2107,8 +2107,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start BARESYM
     public final void mBARESYM() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:252:9: ( ( LETTER | UNDERSCORE ) ( LETTER | DIGIT | UNDERSCORE )* )
-            // dd/grammar/ECAToken.g:252:11: ( LETTER | UNDERSCORE ) ( LETTER | DIGIT | UNDERSCORE )*
+            // dd/grammar/ECAToken.g:275:9: ( ( LETTER | UNDERSCORE ) ( LETTER | DIGIT | UNDERSCORE )* )
+            // dd/grammar/ECAToken.g:275:11: ( LETTER | UNDERSCORE ) ( LETTER | DIGIT | UNDERSCORE )*
             {
             if ( (input.LA(1)>='A' && input.LA(1)<='Z')||input.LA(1)=='_'||(input.LA(1)>='a' && input.LA(1)<='z') ) {
                 input.consume();
@@ -2120,7 +2120,7 @@ public class ECATokenLexer extends Lexer {
                 recover(mse);    throw mse;
             }
 
-            // dd/grammar/ECAToken.g:252:33: ( LETTER | DIGIT | UNDERSCORE )*
+            // dd/grammar/ECAToken.g:275:33: ( LETTER | DIGIT | UNDERSCORE )*
             loop27:
             do {
                 int alt27=2;
@@ -2166,11 +2166,11 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start QUOTSYM
     public final void mQUOTSYM() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:255:9: ( QUOTE ( PUNCT | LETTER | UNDERSCORE | DIGIT | DQUOTE | SPACE )* QUOTE )
-            // dd/grammar/ECAToken.g:255:11: QUOTE ( PUNCT | LETTER | UNDERSCORE | DIGIT | DQUOTE | SPACE )* QUOTE
+            // dd/grammar/ECAToken.g:278:9: ( QUOTE ( PUNCT | LETTER | UNDERSCORE | DIGIT | DQUOTE | SPACE )* QUOTE )
+            // dd/grammar/ECAToken.g:278:11: QUOTE ( PUNCT | LETTER | UNDERSCORE | DIGIT | DQUOTE | SPACE )* QUOTE
             {
             mQUOTE(); 
-            // dd/grammar/ECAToken.g:255:17: ( PUNCT | LETTER | UNDERSCORE | DIGIT | DQUOTE | SPACE )*
+            // dd/grammar/ECAToken.g:278:17: ( PUNCT | LETTER | UNDERSCORE | DIGIT | DQUOTE | SPACE )*
             loop28:
             do {
                 int alt28=2;
@@ -2217,12 +2217,12 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start DOTSYM
     public final void mDOTSYM() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:260:8: ( BARESYM DOT DOTSYM | BARESYM )
+            // dd/grammar/ECAToken.g:283:8: ( BARESYM DOT DOTSYM | BARESYM )
             int alt29=2;
             alt29 = dfa29.predict(input);
             switch (alt29) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:260:10: BARESYM DOT DOTSYM
+                    // dd/grammar/ECAToken.g:283:10: BARESYM DOT DOTSYM
                     {
                     mBARESYM(); 
                     mDOT(); 
@@ -2231,7 +2231,7 @@ public class ECATokenLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:261:4: BARESYM
+                    // dd/grammar/ECAToken.g:284:4: BARESYM
                     {
                     mBARESYM(); 
 
@@ -2249,7 +2249,7 @@ public class ECATokenLexer extends Lexer {
     public final void mSYMBOL() throws RecognitionException {
         try {
             int _type = SYMBOL;
-            // dd/grammar/ECAToken.g:264:8: ( DOTSYM | QUOTSYM )
+            // dd/grammar/ECAToken.g:287:8: ( DOTSYM | QUOTSYM )
             int alt30=2;
             int LA30_0 = input.LA(1);
 
@@ -2261,20 +2261,20 @@ public class ECATokenLexer extends Lexer {
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("264:1: SYMBOL : ( DOTSYM | QUOTSYM );", 30, 0, input);
+                    new NoViableAltException("287:1: SYMBOL : ( DOTSYM | QUOTSYM );", 30, 0, input);
 
                 throw nvae;
             }
             switch (alt30) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:264:10: DOTSYM
+                    // dd/grammar/ECAToken.g:287:10: DOTSYM
                     {
                     mDOTSYM(); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:265:4: QUOTSYM
+                    // dd/grammar/ECAToken.g:288:4: QUOTSYM
                     {
                     mQUOTSYM(); 
 
@@ -2292,8 +2292,8 @@ public class ECATokenLexer extends Lexer {
     // $ANTLR start DOLLAR
     public final void mDOLLAR() throws RecognitionException {
         try {
-            // dd/grammar/ECAToken.g:270:8: ( '$' )
-            // dd/grammar/ECAToken.g:270:10: '$'
+            // dd/grammar/ECAToken.g:293:8: ( '$' )
+            // dd/grammar/ECAToken.g:293:10: '$'
             {
             match('$'); 
 
@@ -2309,11 +2309,11 @@ public class ECATokenLexer extends Lexer {
     public final void mDOLLARSYM() throws RecognitionException {
         try {
             int _type = DOLLARSYM;
-            // dd/grammar/ECAToken.g:275:11: ( DOLLAR ( BAREINT | BARESYM ) )
-            // dd/grammar/ECAToken.g:275:13: DOLLAR ( BAREINT | BARESYM )
+            // dd/grammar/ECAToken.g:298:11: ( DOLLAR ( BAREINT | BARESYM ) )
+            // dd/grammar/ECAToken.g:298:13: DOLLAR ( BAREINT | BARESYM )
             {
             mDOLLAR(); 
-            // dd/grammar/ECAToken.g:275:20: ( BAREINT | BARESYM )
+            // dd/grammar/ECAToken.g:298:20: ( BAREINT | BARESYM )
             int alt31=2;
             int LA31_0 = input.LA(1);
 
@@ -2325,20 +2325,20 @@ public class ECATokenLexer extends Lexer {
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("275:20: ( BAREINT | BARESYM )", 31, 0, input);
+                    new NoViableAltException("298:20: ( BAREINT | BARESYM )", 31, 0, input);
 
                 throw nvae;
             }
             switch (alt31) {
                 case 1 :
-                    // dd/grammar/ECAToken.g:275:21: BAREINT
+                    // dd/grammar/ECAToken.g:298:21: BAREINT
                     {
                     mBAREINT(); 
 
                     }
                     break;
                 case 2 :
-                    // dd/grammar/ECAToken.g:275:31: BARESYM
+                    // dd/grammar/ECAToken.g:298:31: BARESYM
                     {
                     mBARESYM(); 
 
@@ -2361,8 +2361,8 @@ public class ECATokenLexer extends Lexer {
     public final void mWS() throws RecognitionException {
         try {
             int _type = WS;
-            // dd/grammar/ECAToken.g:281:4: ( ( SPACE | NEWLINE ) )
-            // dd/grammar/ECAToken.g:281:6: ( SPACE | NEWLINE )
+            // dd/grammar/ECAToken.g:304:4: ( ( SPACE | NEWLINE ) )
+            // dd/grammar/ECAToken.g:304:6: ( SPACE | NEWLINE )
             {
             if ( (input.LA(1)>='\t' && input.LA(1)<='\n')||input.LA(1)=='\r'||input.LA(1)==' ' ) {
                 input.consume();
@@ -4264,7 +4264,7 @@ public class ECATokenLexer extends Lexer {
             this.transition = DFA6_transition;
         }
         public String getDescription() {
-            return "41:1: NUMBER : ( INTEGER | FLOAT );";
+            return "64:1: NUMBER : ( INTEGER | FLOAT );";
         }
     }
     static final String DFA29_eotS =
@@ -4317,7 +4317,7 @@ public class ECATokenLexer extends Lexer {
             this.transition = DFA29_transition;
         }
         public String getDescription() {
-            return "259:1: fragment DOTSYM : ( BARESYM DOT DOTSYM | BARESYM );";
+            return "282:1: fragment DOTSYM : ( BARESYM DOT DOTSYM | BARESYM );";
         }
     }
  
