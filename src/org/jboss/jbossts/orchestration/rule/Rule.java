@@ -745,12 +745,12 @@ public class Rule
          * this argument is used as a key to identify a synchronization object private to the rule
          * system.
          */
-        public boolean signal(Object identifier)
+        public boolean signalWake(Object identifier)
         {
             Waiter waiter = removeWaiter(identifier);
 
             if (waiter != null) {
-                return waiter.signal();
+                return waiter.signalWake();
             }
             
             return false;

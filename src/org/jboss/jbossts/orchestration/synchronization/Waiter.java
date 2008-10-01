@@ -56,7 +56,7 @@ public class Waiter
         }
     }
 
-    public boolean signal()
+    public boolean signalWake()
     {
         boolean result;
 
@@ -64,10 +64,8 @@ public class Waiter
             result = signalled;
             if (!signalled) {
                 signalled = true;
+                this.notifyAll();
             }
-        }
-        if (!result) {
-            this.notifyAll();
         }
 
         return result;
@@ -82,11 +80,8 @@ public class Waiter
             if (!signalled) {
                 signalled = true;
                 killed = true;
+                this.notifyAll();
             }
-        }
-
-        if (!result) {
-            this.notifyAll();
         }
 
         return result;
