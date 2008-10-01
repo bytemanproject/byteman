@@ -13,15 +13,15 @@ import org.antlr.runtime.Token;
  */
 public class ConditionalEvalExpression extends TernaryOperExpression
 {
-    public ConditionalEvalExpression(Type type, Token token, Expression cond, Expression if_expr, Expression else_expr)
+    public ConditionalEvalExpression(Rule rule, Type type, Token token, Expression cond, Expression if_expr, Expression else_expr)
     {
-        super(TERNARY, type, token, cond, if_expr, else_expr);
+        super(rule, TERNARY, type, token, cond, if_expr, else_expr);
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
-        Type condType = getOperand(0).typeCheck(bindings, typegroup,  Type.Z);
-        Type type1 = getOperand(1).typeCheck(bindings, typegroup, expected);
-        Type type2 = getOperand(2).typeCheck(bindings, typegroup, expected);
+    public Type typeCheck(Type expected) throws TypeException {
+        Type condType = getOperand(0).typeCheck(Type.Z);
+        Type type1 = getOperand(1).typeCheck(expected);
+        Type type2 = getOperand(2).typeCheck(expected);
         // type1 must be defined and type2 must be the same as type 1 or assignable
         // to/from it.
         if (type2 != type1) {

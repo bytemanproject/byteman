@@ -3,6 +3,7 @@ package org.jboss.jbossts.orchestration.rule.expression;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
+import org.jboss.jbossts.orchestration.rule.Rule;
 import org.antlr.runtime.Token;
 
 import java.io.StringWriter;
@@ -14,9 +15,9 @@ import java.io.StringWriter;
  */
 public abstract class UnaryOperExpression extends OperExpression
 {
-    public UnaryOperExpression(int oper, Type type, Token token, Expression operand)
+    public UnaryOperExpression(Rule rule, int oper, Type type, Token token, Expression operand)
     {
-        super(oper, type, token);
+        super(rule, oper, type, token);
         this.operand = operand;
     }
 
@@ -25,13 +26,12 @@ public abstract class UnaryOperExpression extends OperExpression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @param bindings the set of bindings in place at the point of evaluation of this expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind(Bindings bindings) {
+    public boolean bind() {
         // we just need to ensure that the operand can find its bindings
-        return operand.bind(bindings);
+        return operand.bind();
     }
 
     /**

@@ -14,14 +14,14 @@ import org.antlr.runtime.Token;
  */
 public class ArithmeticExpression extends BinaryOperExpression
 {
-    public ArithmeticExpression(int oper, Token token, Expression left, Expression right)
+    public ArithmeticExpression(Rule rule, int oper, Token token, Expression left, Expression right)
     {
-        super(oper, Type.promote(left.getType(), right.getType()), token, left, right);
+        super(rule, oper, Type.promote(left.getType(), right.getType()), token, left, right);
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
-        Type type1 = getOperand(0).typeCheck(bindings, typegroup, Type.N);
-        Type type2 = getOperand(1).typeCheck(bindings, typegroup, Type.N);
+    public Type typeCheck(Type expected) throws TypeException {
+        Type type1 = getOperand(0).typeCheck(Type.N);
+        Type type2 = getOperand(1).typeCheck(Type.N);
         type = Type.promote(type1, type2);
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type) ) {
             throw new TypeException("ArithmenticExpression.typeCheck : invalid expected result type " + expected.getName() + getPos());

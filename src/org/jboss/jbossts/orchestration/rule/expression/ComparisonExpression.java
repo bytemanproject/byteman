@@ -13,16 +13,16 @@ import org.antlr.runtime.Token;
  */
 public class ComparisonExpression extends BooleanExpression
 {
-    public ComparisonExpression(int oper, Token token, Expression left, Expression right)
+    public ComparisonExpression(Rule rule, int oper, Token token, Expression left, Expression right)
     {
-        super(oper, token, left, right);
+        super(rule, oper, token, left, right);
         comparisonType = Type.UNDEFINED;
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
         // TODO allow comparison of non-numeric values
-        Type type1 = getOperand(0).typeCheck(bindings, typegroup, Type.N);
-        Type type2 = getOperand(1).typeCheck(bindings, typegroup, Type.N);
+        Type type1 = getOperand(0).typeCheck(Type.N);
+        Type type2 = getOperand(1).typeCheck(Type.N);
         comparisonType = Type.promote(type1,  type2);
         type = Type.Z;
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {

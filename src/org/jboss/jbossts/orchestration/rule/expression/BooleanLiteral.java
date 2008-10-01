@@ -17,9 +17,9 @@ public class BooleanLiteral extends Expression
 {
     private boolean value;
     
-    public BooleanLiteral(Token token, Boolean value)
+    public BooleanLiteral(Rule rule, Token token, Boolean value)
     {
-        super(Type.Z, token);
+        super(rule, Type.Z, token);
         this.value = value;
     }
 
@@ -29,15 +29,14 @@ public class BooleanLiteral extends Expression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @param bindings the set of bindings in place at the point of evaluation of this expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind(Bindings bindings) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    public boolean bind() {
+        return false;
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
         type = Type.Z;
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
             throw new TypeException("BooleanLiteral.typeCheck : invalid expected result type " + expected.getName() + getPos());

@@ -12,14 +12,14 @@ import org.antlr.runtime.Token;
  */
 public class TwiddleExpression extends UnaryOperExpression
 {
-    public TwiddleExpression(Token token, Expression operand)
+    public TwiddleExpression(Rule rule, Token token, Expression operand)
     {
-        super(TWIDDLE, operand.getType(), token, operand);
+        super(rule, TWIDDLE, operand.getType(), token, operand);
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected)
+    public Type typeCheck(Type expected)
     throws TypeException {
-        type = getOperand(0).typeCheck(bindings, typegroup, Type.N);
+        type = getOperand(0).typeCheck(Type.N);
         if (type == Type.F || type == Type.D) {
             type = Type.J;
         }

@@ -13,16 +13,16 @@ import org.antlr.runtime.Token;
  */
 public class BitExpression extends BinaryOperExpression
 {
-    public BitExpression(int oper, Token token, Expression left, Expression right)
+    public BitExpression(Rule rule, int oper, Token token, Expression left, Expression right)
     {
         // n.b. left and right must be of integral type
 
-        super(oper, Type.promote(left.getType(), right.getType()), token, left, right);
+        super(rule, oper, Type.promote(left.getType(), right.getType()), token, left, right);
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
-        Type type1 = getOperand(0).typeCheck(bindings, typegroup, Type.N);
-        Type type2 = getOperand(1).typeCheck(bindings, typegroup, Type.N);
+    public Type typeCheck(Type expected) throws TypeException {
+        Type type1 = getOperand(0).typeCheck(Type.N);
+        Type type2 = getOperand(1).typeCheck(Type.N);
         type = Type.promote(type1, type2);
         // if either arg is float or double we will convert it to long and generate a long
         // result so correct the promotion here

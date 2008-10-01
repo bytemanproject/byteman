@@ -32,8 +32,8 @@ public class ThrowExpression extends Expression
     private List<Type> argumentTypes;
     private Constructor constructor;
 
-    public ThrowExpression(String typeName, Token token, List<Expression> arguments) {
-        super(Type.UNDEFINED, token);
+    public ThrowExpression(Rule rule, String typeName, Token token, List<Expression> arguments) {
+        super(rule, Type.UNDEFINED, token);
         this.typeName = typeName;
         this.arguments = arguments;
         this.argumentTypes = null;
@@ -44,18 +44,17 @@ public class ThrowExpression extends Expression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @param bindings the set of bindings in place at the point of evaluation of this expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind(Bindings bindings) {
+    public boolean bind() {
         // check that the recipient and argument expressions have valid bindings
 
         boolean valid = true;
         Iterator<Expression> iterator = arguments.iterator();
 
         while (valid && iterator.hasNext()) {
-            valid &= iterator.next().bind(bindings);
+            valid &= iterator.next().bind();
         }
 
         return valid;
@@ -66,19 +65,18 @@ public class ThrowExpression extends Expression
      * can be resolved, that the type of the expression is well-defined and that it is
      * compatible with the type expected in the context in which it occurs.
      *
-     * @param bindings  the bound variable in scope at the point where the expression is
-     *                  to be evaluate
-     * @param typegroup the set of types employed by the rule
      * @param expected  the type expected for the expression in the contxt in which it occurs. this
      *                  may be void but shoudl not be undefined at the point where type checking is performed.
      * @return
      * @throws org.jboss.jbossts.orchestration.rule.exception.TypeException
      *
      */
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
         // check the exception type is defined and then look for a relevant constructor
 
-        type = Type.dereference(typegroup.create(typeName));
+        TypeGroup typeGroup = getTypeGroup();
+
+        type = Type.dereference(typeGroup.create(typeName));
 
         if (type.isUndefined()) {
             throw new TypeException("ThrowExpression.typeCheck : unknown exception type " + typeName + getPos());
@@ -119,11 +117,11 @@ public class ThrowExpression extends Expression
             Class candidateClass = getCandidateArgClass(candidates, i);
             Type candidateType;
             if (candidateClass != null) {
-                candidateType = typegroup.ensureType(candidateClass);
+                candidateType = typeGroup.ensureType(candidateClass);
             } else {
                 candidateType = Type.UNDEFINED;
             }
-            Type argType = arguments.get(i).typeCheck(bindings, typegroup, candidateType);
+            Type argType = arguments.get(i).typeCheck(candidateType);
             argumentTypes.add(argType);
             if (candidateType == Type.UNDEFINED) {
                 // we had several constructors to choose from
@@ -148,7 +146,7 @@ public class ThrowExpression extends Expression
         if (RuntimeException.class.isAssignableFrom(type.getTargetClass())) {
             return type;
         } else {
-            Iterator<Type> iterator = typegroup.getExceptionTypes().iterator();
+            Iterator<Type> iterator = typeGroup.getExceptionTypes().iterator();
             while (iterator.hasNext()) {
                 Type exceptionType = iterator.next();
                 if (Type.dereference(exceptionType).isAssignableFrom(type)) {

@@ -15,24 +15,24 @@ import org.antlr.runtime.Token;
  */
 public class PlusExpression extends BinaryOperExpression
 {
-    public PlusExpression(Token token, Expression left, Expression right)
+    public PlusExpression(Rule rule, Token token, Expression left, Expression right)
     {
-        super(PLUS, Type.UNDEFINED, token, left, right);
+        super(rule, PLUS, Type.UNDEFINED, token, left, right);
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
         // if the expected type is numeric then we know this must be an arithmetic plus
         // if it is string then this could still be an arithmetic plus so we will
         // have to rely on the type of the first argument to guide us
 
-        Type type1 = getOperand(0).typeCheck(bindings, typegroup, (expected.isNumeric() ? expected : Type.UNDEFINED));
+        Type type1 = getOperand(0).typeCheck((expected.isNumeric() ? expected : Type.UNDEFINED));
         Type type2;
 
         if (type1.isNumeric()) {
-            type2 = getOperand(1).typeCheck(bindings, typegroup, Type.N);
+            type2 = getOperand(1).typeCheck(Type.N);
             type = Type.promote(type1, type2);
         } else if (type1.isString()) {
-            type2 = getOperand(1).typeCheck(bindings, typegroup, Type.STRING);
+            type2 = getOperand(1).typeCheck(Type.STRING);
         } else {
             throw new TypeException("PlusExpression.typeCheck : invalid argument type " + type1.getName() + getPos());
         }

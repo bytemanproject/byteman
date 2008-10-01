@@ -2,6 +2,7 @@ package org.jboss.jbossts.orchestration.rule;
 
 import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
+import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 
 import java.io.StringWriter;
@@ -28,7 +29,7 @@ public abstract class RuleElement {
         return rule.getBindings();
     }
 
-    public abstract void typeCheck() throws TypeException;
+    public abstract Type typeCheck(Type expected) throws TypeException;
 
     public String toString()
     {

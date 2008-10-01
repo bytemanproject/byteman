@@ -19,8 +19,8 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class MethodExpression extends Expression
 {
-    public MethodExpression(Type type, Token token, String name, Expression recipient, List<Expression> arguments) {
-        super(type, token);
+    public MethodExpression(Rule rule, Type type, Token token, String name, Expression recipient, List<Expression> arguments) {
+        super(rule, type, token);
         this.name = name;
         this.recipient = recipient;
         this.arguments = arguments;
@@ -32,39 +32,39 @@ public class MethodExpression extends Expression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @param bindings the set of bindings in place at the point of evaluation of this expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind(Bindings bindings) {
+    public boolean bind() {
         // check that the recipient and argument expressions have valid bindings
 
         boolean valid = true;
         if (recipient != null) {
-            valid &= recipient.bind(bindings);
+            valid &= recipient.bind();
         }
 
         Iterator<Expression> iterator = arguments.iterator();
 
         while (valid && iterator.hasNext()) {
-            valid &= iterator.next().bind(bindings);
+            valid &= iterator.next().bind();
         }
 
         return valid;
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
         // if we have no recipient then we use the rule's helper as a target via a binding
         // to $-1. this means  we can type check the call against methods of class Rule$Helper
         // without having to do any special case processing.
 
+        TypeGroup typeGroup =  getTypeGroup();
         if (recipient == null) {
-            Type ruleType = typegroup.create("org.jboss.jbossts.orchestration.rule.Rule$Helper");
-            recipient = new DollarExpression(ruleType, token, "$-1");
+            Type ruleType = typeGroup.create("org.jboss.jbossts.orchestration.rule.Rule$Helper");
+            recipient = new DollarExpression(rule, ruleType, token, "$-1");
         }
         // check the recipient type is defined and then look for a relevant method
 
-        Type recipientType = recipient.typeCheck(bindings, typegroup,  Type.UNDEFINED);
+        Type recipientType = recipient.typeCheck(Type.UNDEFINED);
         Class clazz = recipientType.getTargetClass();
         // if we can find a unique method then we can use it to type the parameters
         // otherwise we do it the hard way
@@ -97,11 +97,11 @@ public class MethodExpression extends Expression
             Class candidateClass = getCandidateArgClass(candidates, i);
             Type candidateType;
             if (candidateClass != null) {
-                candidateType = typegroup.ensureType(candidateClass);
+                candidateType = typeGroup.ensureType(candidateClass);
             } else {
                 candidateType = Type.UNDEFINED;
             }
-            Type argType = arguments.get(i).typeCheck(bindings, typegroup, candidateType);
+            Type argType = arguments.get(i).typeCheck(candidateType);
             argumentTypes.add(argType);
             if (candidateType == Type.UNDEFINED) {
                 // we had several methods to choose from
@@ -119,7 +119,7 @@ public class MethodExpression extends Expression
 
         method = candidates.get(0);
 
-        type = typegroup.ensureType(method.getReturnType());
+        type = typeGroup.ensureType(method.getReturnType());
 
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
             throw new TypeException("MethodExpression.typeCheck : invalid expected type " + expected.getName() + getPos());

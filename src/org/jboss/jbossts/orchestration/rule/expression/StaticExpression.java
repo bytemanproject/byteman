@@ -16,9 +16,9 @@ import java.lang.reflect.Field;
  */
 public class StaticExpression extends Expression
 {
-    public StaticExpression(Type type, Token token, String[] path) {
+    public StaticExpression(Rule rule, Type type, Token token, String[] path) {
         // type is the type of static field
-        super(type, token);
+        super(rule, type, token);
         this.path = path;
         this.fieldNames = null;
         this.ownerTypes = null;
@@ -29,19 +29,19 @@ public class StaticExpression extends Expression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @param bindings the set of bindings in place at the point of evaluation of this expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind(Bindings bindings) {
+    public boolean bind() {
         // nothing to verify
 
         return true;
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
         // look for a class whose name matches some initial segment of path
-        Type rootType = typegroup.match(path);
+        TypeGroup typeGroup = getTypeGroup();
+        Type rootType = typeGroup.match(path);
         if (rootType == null) {
             throw new TypeException("StaticExpression.typeCheck : invalid path to static field " + getPath(path.length) + getPos());
         }
@@ -84,7 +84,7 @@ public class StaticExpression extends Expression
                 throw new TypeException("StaticExpression.typeCheck : invalid field name " + fieldNames[idx] + getPos());
             }
             clazz = fields[idx].getType();
-            valueType = typegroup.ensureType(clazz);
+            valueType = typeGroup.ensureType(clazz);
         }
         type = valueType;
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {

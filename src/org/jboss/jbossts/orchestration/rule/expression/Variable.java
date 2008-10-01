@@ -18,13 +18,13 @@ import java.io.StringWriter;
  */
 public class Variable extends Expression
 {
-    public Variable(Type type, Token token) {
-        super(type, token);
+    public Variable(Rule rule, Type type, Token token) {
+        super(rule, type, token);
         this.name = token.getText();
     }
 
-    public Variable(Type type, Token token, String name) {
-        super(type, token);
+    public Variable(Rule rule, Type type, Token token, String name) {
+        super(rule, type, token);
         this.name = name;
     }
 
@@ -33,14 +33,13 @@ public class Variable extends Expression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @param bindings the set of bindings in place at the point of evaluation of this expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind(Bindings bindings) {
+    public boolean bind() {
         // ensure that there is a binding with this name
 
-        Binding binding = bindings.lookup(name);
+        Binding binding = getBindings().lookup(name);
 
         if (binding == null) {
             System.err.println("Variable.bind : unbound variable " + name + getPos());
@@ -53,10 +52,10 @@ public class Variable extends Expression
         return true;
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
         // type must be defined by now or we are in trouble
 
-        Binding binding = bindings.lookup(name);
+        Binding binding = getBindings().lookup(name);
 
         type = Type.dereference(binding.getType());
 

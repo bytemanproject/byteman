@@ -1,9 +1,10 @@
 package org.jboss.jbossts.orchestration.rule.binding;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.expression.Expression;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
+import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.RuleElement;
 
 import java.io.StringWriter;
 
@@ -11,20 +12,22 @@ import java.io.StringWriter;
  * Class used to store a binding of a named variable to a value of some given type
  */
 
-public class Binding {
+public class Binding extends RuleElement
+{
 
-    public Binding(String name)
+    public Binding(Rule rule, String name)
     {
-        this(name, Type.UNDEFINED, null);
+        this(rule, name, Type.UNDEFINED, null);
     }
 
-    public Binding(String name, Type type)
+    public Binding(Rule rule, String name, Type type)
     {
-        this(name, type, null);
+        this(rule, name, type, null);
     }
 
-    public Binding(String name, Type type, Expression value)
+    public Binding(Rule rule, String name, Type type, Expression value)
     {
+        super(rule);
         this.name = name;
         this.type = (type != null ? type : Type.UNDEFINED);
         this.value = value;
@@ -39,22 +42,23 @@ public class Binding {
         }
     }
 
-    public void typeCheck(Bindings bindings, TypeGroup typeGroup)
+    public Type typeCheck(Type expected)
             throws TypeException
     {
         // value can be null if this is a rule method parameter
         if (value != null) {
-            // type check the binding expression, using the bound variable's type if it is known
+            // type check the binding expression, using the bound variable's expected if it is known
 
-            Type valueType = value.typeCheck(bindings, typeGroup, type);
+            Type valueType = value.typeCheck(expected);
 
             if (type.isUndefined()) {
                 type = valueType;
             }
         } else if (type.isUndefined()) {
-            // can we have no type for a method parameter?
+            // can we have no expected for a method parameter?
             throw new TypeException("Binding.typecheck unknown type for binding " + name);
         }
+        return type;
     }
 
     public String getName()

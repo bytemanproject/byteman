@@ -339,9 +339,11 @@ public class Rule
     public void typeCheck()
             throws TypeException
     {
-        // ensure that the type group includes the exception types
-        typeGroup.addExceptionTypes(triggerExceptions);
-
+        if (triggerExceptions != null) {
+            // ensure that the type group includes the exception types
+            typeGroup.addExceptionTypes(triggerExceptions);
+        }
+        
         // try to resolve all types in the type group to classes
 
         typeGroup.resolveTypes();
@@ -350,9 +352,9 @@ public class Rule
         // in the bindings list
 
         installParameters((triggerAccess & Opcodes.ACC_STATIC) != 0, triggerClass, triggerDescriptor);
-        event.typeCheck();
-        condition.typeCheck();
-        action.typeCheck();
+        event.typeCheck(Type.VOID);
+        condition.typeCheck(Type.Z);
+        action.typeCheck(Type.VOID);
         checked = true;
     }
 
@@ -363,7 +365,7 @@ public class Rule
         Type type;
         // add a binding for the rule so we can call builting static methods
         type = typeGroup.create("org.jboss.jbossts.orchestration.rule.Rule$Helper");
-        Binding ruleBinding = new Binding("-1", type);
+        Binding ruleBinding = new Binding(this, "-1", type);
         parameterBindings.add(ruleBinding);
 
         if (!isStatic) {
@@ -371,7 +373,7 @@ public class Rule
             if (type.isUndefined()) {
                 throw new TypeException("Rule.installParameters : Rule " + name + " unable to load class " + className);
             }
-            Binding binding =  new Binding("0", type);
+            Binding binding =  new Binding(this, "0", type);
             parameterBindings.add(binding);
         }
         List<String> parameterTypenames = Type.parseDescriptor(descriptor, true);
@@ -391,9 +393,9 @@ public class Rule
                 }
                 if (paramIdx == last) {
                     // we also add a special binding to allow us to identify the return type
-                    binding = new Binding("$!", paramType);
+                    binding = new Binding(this, "$!", paramType);
                 } else {
-                    binding = new Binding(Integer.toString(paramIdx++), paramType);
+                    binding = new Binding(this, Integer.toString(paramIdx++), paramType);
                 }
                 parameterBindings.add(binding);
             }

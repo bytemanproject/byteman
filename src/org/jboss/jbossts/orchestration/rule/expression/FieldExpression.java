@@ -17,11 +17,11 @@ import java.lang.reflect.Field;
  */
 public class FieldExpression extends Expression
 {
-    public FieldExpression(Type type, Token token, String ref, String[] fieldNames) {
+    public FieldExpression(Rule rule, Type type, Token token, String ref, String[] fieldNames) {
         // type is the type of last field
         // ownerType[i] is the type of the owner of field[i]
         // so ownerType[0] is the type of ref;
-        super(type, token);
+        super(rule, type, token);
         this.ref = ref;
         this.fieldNames = fieldNames;
         int len = fieldNames.length;
@@ -36,14 +36,13 @@ public class FieldExpression extends Expression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @param bindings the set of bindings in place at the point of evaluation of this expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind(Bindings bindings) {
+    public boolean bind() {
         // ensure that there is a binding with this name
 
-        Binding binding = bindings.lookup(ref);
+        Binding binding = getBindings().lookup(ref);
 
         if (binding == null) {
             System.err.println("FieldExpresssion.bind : unbound instance " + ref + getPos());
@@ -53,11 +52,11 @@ public class FieldExpression extends Expression
         return true;
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
         // check the owner type is defined and then start searching for
         // the types of each field referenced from it
 
-        Binding binding = bindings.lookup(ref);
+        Binding binding = getBindings().lookup(ref);
         Type bindingType = binding.getType();
         ownerType[0] = Type.dereference(bindingType);
         
@@ -85,7 +84,7 @@ public class FieldExpression extends Expression
             }
 
             valueClass = fields[i].getType();
-            valueType = typegroup.ensureType(valueClass);
+            valueType = getTypeGroup().ensureType(valueClass);
         }
 
         type = valueType;

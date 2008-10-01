@@ -15,8 +15,8 @@ import java.io.StringWriter;
 public class NumericLiteral extends Expression
 {
 
-    public NumericLiteral(Token token) {
-        super(check(token.getText()), token);
+    public NumericLiteral(Rule rule, Token token) {
+        super(rule, check(token.getText()), token);
 
         this.text = token.getText();
     }
@@ -26,11 +26,10 @@ public class NumericLiteral extends Expression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @param bindings the set of bindings in place at the point of evaluation of this expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind(Bindings bindings) {
+    public boolean bind() {
         // no bindings to check but stash a valid value to help with type checking
         if (type == Type.FLOAT) {
             value = Float.valueOf(text);
@@ -49,7 +48,7 @@ public class NumericLiteral extends Expression
         return true;
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
         if (!expected.isNumeric()) {
             throw new TypeException("NumericLiteral.typeCheck : invalid expected type " + expected.getName() + getPos());            
         }

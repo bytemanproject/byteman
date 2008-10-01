@@ -53,7 +53,7 @@ public class Action extends RuleElement
         if (actionTree.getToken().getType() == ECAGrammarParser.NOTHING) {
             this.action = new ArrayList<Expression>();
         } else {
-            this.action = ExpressionHelper.createExpressionList(this.getBindings(), actionTree, Type.VOID);
+            this.action = ExpressionHelper.createExpressionList(rule, this.getBindings(), actionTree, Type.VOID);
         }
     }
 
@@ -63,12 +63,14 @@ public class Action extends RuleElement
         this.action = null;
     }
 
-    public void typeCheck() throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
+        // expected must be Type.VOID
         if (action != null) {
             for (Expression expr : action) {
-                expr.typeCheck(getBindings(), getTypeGroup(), Type.VOID);
+                expr.typeCheck(Type.VOID);
             }
         }
+        return Type.VOID;
     }
 
     public void interpret(Rule.BasicHelper helper)

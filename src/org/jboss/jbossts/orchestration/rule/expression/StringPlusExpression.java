@@ -13,16 +13,16 @@ import org.antlr.runtime.Token;
  */
 public class StringPlusExpression extends BinaryOperExpression
 {
-    public StringPlusExpression(Token token, Expression left, Expression right)
+    public StringPlusExpression(Rule rule, Token token, Expression left, Expression right)
     {
-        super(PLUS, Type.STRING, token, left, right);
+        super(rule, PLUS, Type.STRING, token, left, right);
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
         // first type must be a string -- second may be anything but expect
         // a string to indicate that it must be assignable evn if only by conversion
-        Type type1 = getOperand(0).typeCheck(bindings, typegroup,  Type.STRING);
-        Type type2 = getOperand(1).typeCheck(bindings, typegroup,  Type.STRING);
+        Type type1 = getOperand(0).typeCheck(Type.STRING);
+        Type type2 = getOperand(1).typeCheck(Type.STRING);
         // result will always be a String
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(Type.STRING)) {
             throw new TypeException("StringPlusExpression.typeCheck : invalid expected result type " + expected.getName() + getPos());

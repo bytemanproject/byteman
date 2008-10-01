@@ -76,19 +76,21 @@ public class Event extends RuleElement {
         return rule.getBindings();
     }
 
-    public void typeCheck() throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
+        // expected must be Type.VOID
         Iterator<Binding> iterator = getBindings().iterator();
         while (iterator.hasNext()) {
             Binding binding = iterator.next();
 
             typeCheck(binding);
         }
+        return Type.VOID;
     }
 
     private void typeCheck(Binding binding)
             throws TypeException
     {
-        binding.typeCheck(getBindings(), getTypeGroup());
+        binding.typeCheck(Type.UNDEFINED);
     }
 
     private void createBindings(CommonTree eventTree) throws TypeException
@@ -171,7 +173,7 @@ public class Event extends RuleElement {
 
         Expression expr;
 
-        expr = ExpressionHelper.createExpression(bindings, exprTree, binding.getType());
+        expr = ExpressionHelper.createExpression(rule, bindings, exprTree, binding.getType());
 
         if (bindings.lookup(binding.getName()) != null) {
             // oops rebinding not allowed
@@ -196,7 +198,7 @@ public class Event extends RuleElement {
         switch (tokenType) {
             case SYMBOL:
             {
-                return new Binding(token.getText());
+                return new Binding(rule, token.getText());
             }
             case COLON:
             {
@@ -212,7 +214,7 @@ public class Event extends RuleElement {
                 if (type == null) {
                     throw new TypeException("Event.createBindings : incompatible type in declaration of variable " + child1.getToken().getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
                 }
-                return new Binding(child0.getText(), type);
+                return new Binding(rule, child0.getText(), type);
             }
             default:
             {

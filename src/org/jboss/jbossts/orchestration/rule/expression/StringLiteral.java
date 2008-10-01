@@ -15,9 +15,9 @@ import java.io.StringWriter;
  */
 public class StringLiteral extends Expression
 {
-    public StringLiteral(Token token)
+    public StringLiteral(Rule rule, Token token)
     {
-        super(Type.STRING, token);
+        super(rule, Type.STRING, token);
 
         this.text = token.getText();
     }
@@ -27,15 +27,14 @@ public class StringLiteral extends Expression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @param bindings the set of bindings in place at the point of evaluation of this expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind(Bindings bindings) {
+    public boolean bind() {
         return true;
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
         return type;
     }
 

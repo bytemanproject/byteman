@@ -4,6 +4,7 @@ import org.antlr.runtime.Token;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
+import org.jboss.jbossts.orchestration.rule.Rule;
 
 import java.util.Iterator;
 import java.io.StringWriter;
@@ -13,9 +14,9 @@ import java.io.StringWriter;
  */
 public abstract class OperExpression extends Expression
 {
-    OperExpression(int oper, Type type, Token token)
+    OperExpression(Rule rule, int oper, Type type, Token token)
     {
-        super(type, token);
+        super(rule, type, token);
 
         this.oper = oper;
     }

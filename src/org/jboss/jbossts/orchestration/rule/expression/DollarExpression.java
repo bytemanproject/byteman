@@ -25,9 +25,9 @@ import java.io.StringWriter;
  */
 public class DollarExpression extends Expression
 {
-    public DollarExpression(Type type, Token token)
+    public DollarExpression(Rule rule, Type type, Token token)
     {
-        super(type, token);
+        super(rule, type, token);
         String text = token.getText();
         this.name = text.substring(1, text.length());
         char first = name.charAt(0);
@@ -41,9 +41,9 @@ public class DollarExpression extends Expression
         }
     }
 
-    public DollarExpression(Type type, Token token, String text)
+    public DollarExpression(Rule rule, Type type, Token token, String text)
     {
-        super(type, token);
+        super(rule, type, token);
         this.name = text.substring(1, text.length());
         try {
             index = Integer.decode(name);
@@ -58,12 +58,11 @@ public class DollarExpression extends Expression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
 
-     * @param bindings the set of bindings in place at the point of evaluation of this expression
      * @return true if all variables in this expression are bound and no type mismatches have
      * been detected during inference/validation.
      */
 
-    public boolean bind(Bindings bindings) {
+    public boolean bind() {
         if (index < 0) {
             System.err.println("DollarExpression.bind : invalid bound parameter $" + name + getPos());
             return false;
@@ -74,9 +73,9 @@ public class DollarExpression extends Expression
         }
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
         // ensure there is a parameter with the relevant name in the bindings
-        Binding binding = bindings.lookup(Integer.toString(index));
+        Binding binding = getBindings().lookup(Integer.toString(index));
         if (binding == null) {
             throw new TypeException("DollarExpression.typeCheck : invalid bound parameter $" + name + getPos());
         }

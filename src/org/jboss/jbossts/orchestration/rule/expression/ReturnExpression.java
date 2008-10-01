@@ -21,12 +21,12 @@ public class ReturnExpression extends Expression
 {
     private Expression returnValue;
 
-    public ReturnExpression(Token token, Expression returnValue)
+    public ReturnExpression(Rule rule, Token token, Expression returnValue)
     {
         // the trigger method may return any old tyep but the return expression can only occur
         // at the top level in a rule action seuqence so it is actually a VOID expression
 
-        super(Type.VOID, token);
+        super(rule, Type.VOID, token);
 
         this.returnValue = returnValue;
     }
@@ -35,14 +35,13 @@ public class ReturnExpression extends Expression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @param bindings the set of bindings in place at the point of evaluation of this expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind(Bindings bindings) {
+    public boolean bind() {
         if (returnValue != null) {
             // ensure the return value expression has all its bindings
-            return returnValue.bind(bindings);
+            return returnValue.bind();
         }
         return true;
     }
@@ -52,18 +51,15 @@ public class ReturnExpression extends Expression
      * can be resolved, that the type of the expression is well-defined and that it is
      * compatible with the type expected in the context in which it occurs.
      *
-     * @param bindings  the bound variable in scope at the point where the expression is
-     *                  to be evaluate
-     * @param typegroup the set of types employed by the rule
      * @param expected  the type expected for the expression in the contxt in which it occurs. this
      *                  may be void but shoudl not be undefined at the point where type checking is performed.
      * @return
      * @throws org.jboss.jbossts.orchestration.rule.exception.TypeException
      *
      */
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
         // we need to check the returnValue expression against the type of the trigger method
-        Binding returnBinding = bindings.lookup("$!");
+        Binding returnBinding = getBindings().lookup("$!");
         Type returnBindingType = (returnBinding != null ? returnBinding.getType() : Type.VOID);
         if (returnValue == null && !returnBindingType.isVoid()) {
             throw new TypeException("ReturnExpression.typeCheck : return expression must supply argument when triggered from method with return type " + returnBindingType.getName() + getPos());
@@ -71,7 +67,7 @@ public class ReturnExpression extends Expression
             if (returnBindingType.isVoid()) {
                 throw new TypeException("ReturnExpression.typeCheck : return expression must not supply argument when triggered from void method" + getPos());
             }
-            returnValue.typeCheck(bindings, typegroup,  returnBindingType);
+            returnValue.typeCheck(returnBindingType);
         }
         return type;
     }

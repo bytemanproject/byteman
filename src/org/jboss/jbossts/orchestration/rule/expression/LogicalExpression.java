@@ -13,14 +13,14 @@ import org.antlr.runtime.Token;
  */
 public class LogicalExpression extends BooleanExpression
 {
-    public LogicalExpression(int oper, Token token, Expression left, Expression right)
+    public LogicalExpression(Rule rule, int oper, Token token, Expression left, Expression right)
     {
-        super(oper, token, left, right);
+        super(rule, oper, token, left, right);
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
-        Type type1 = getOperand(0).typeCheck(bindings, typegroup, Type.Z);
-        Type type2 = getOperand(1).typeCheck(bindings, typegroup, Type.Z);
+    public Type typeCheck(Type expected) throws TypeException {
+        Type type1 = getOperand(0).typeCheck(Type.Z);
+        Type type2 = getOperand(1).typeCheck(Type.Z);
         type = Type.Z;
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
             throw new TypeException("LogicalExpression.typeCheck : invalid expected result type " + expected.getName() + getPos());

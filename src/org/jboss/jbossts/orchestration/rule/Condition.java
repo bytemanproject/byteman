@@ -55,11 +55,11 @@ public class Condition extends RuleElement
         super(rule);
         Token token = conditionTree.getToken();
         if (token.getType() == ECAGrammarParser.TRUE) {
-            this.condition = new BooleanLiteral(token, true);
+            this.condition = new BooleanLiteral(rule, token, true);
         } else if (token.getType() == ECAGrammarParser.FALSE) {
-            this.condition = new BooleanLiteral(token, false);
+            this.condition = new BooleanLiteral(rule, token, false);
         } else {
-            this.condition = ExpressionHelper.createExpression(rule.getBindings(), conditionTree, Type.BOOLEAN);
+            this.condition = ExpressionHelper.createExpression(rule, rule.getBindings(), conditionTree, Type.BOOLEAN);
         }
     }
     
@@ -69,10 +69,12 @@ public class Condition extends RuleElement
         this.condition = null;
     }
 
-    public void typeCheck() throws TypeException {
+    public Type typeCheck(Type expected) throws TypeException {
+        // expected must be Type.Z
         if (condition != null) {
-            condition.typeCheck(getBindings(), getTypeGroup(), Type.Z);
+            condition.typeCheck(Type.Z);
         }
+        return Type.Z;
     }
 
     public boolean interpret(Rule.BasicHelper helper)

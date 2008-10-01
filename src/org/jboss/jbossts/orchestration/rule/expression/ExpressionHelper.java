@@ -5,6 +5,7 @@ import org.jboss.jbossts.orchestration.rule.binding.Binding;
 import static org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.*;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
+import org.jboss.jbossts.orchestration.rule.Rule;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.Token;
 
@@ -16,13 +17,13 @@ import java.util.ArrayList;
  */
 public class ExpressionHelper
 {
-    public static Expression createExpression(Bindings bindings, CommonTree exprTree)
+    public static Expression createExpression(Rule rule, Bindings bindings, CommonTree exprTree)
             throws TypeException
     {
-        return createExpression(bindings, exprTree, Type.UNDEFINED);
+        return createExpression(rule, bindings, exprTree, Type.UNDEFINED);
     }
 
-    public static Expression createExpression(Bindings bindings, CommonTree exprTree, Type type)
+    public static Expression createExpression(Rule rule, Bindings bindings, CommonTree exprTree, Type type)
             throws TypeException
     {
         // we expect expr = simple_expr |
@@ -49,7 +50,7 @@ public class ExpressionHelper
         switch (tokenType) {
             case DOLLARSYM:
             {
-                expr = new DollarExpression(type, token);
+                expr = new DollarExpression(rule, type, token);
             }
             break;
             case SYMBOL:
@@ -65,7 +66,7 @@ public class ExpressionHelper
                 int dotIdx = text.lastIndexOf('.');
                 if (dotIdx < 0) {
                     // direct variable reference
-                    expr = new Variable(type, token);
+                    expr = new Variable(rule, type, token);
                 } else {
                     // field reference either to an instance named by a binding or or a static
 
@@ -83,9 +84,9 @@ public class ExpressionHelper
                             int l = parts.length - 1;
                             String[] fields = new String[l];
                             System.arraycopy(parts, 1, fields, 0, l);
-                            expr = new FieldExpression(type, token, prefix, fields);
+                            expr = new FieldExpression(rule, type, token, prefix, fields);
                         } else {
-                            expr = new StaticExpression(type, token, parts);
+                            expr = new StaticExpression(rule, type, token, parts);
                         }
                     }
                 }
@@ -106,7 +107,7 @@ public class ExpressionHelper
                 int dotIdx = text.lastIndexOf('.');
                 if (dotIdx < 0) {
                     // array name is direct variable reference
-                    arrayRef = new Variable(type, token);
+                    arrayRef = new Variable(rule, type, token);
                 } else {
                     // field reference either to an instance named by a binding or or a static
 
@@ -124,15 +125,15 @@ public class ExpressionHelper
                             int l = parts.length - 1;
                             String[] fields = new String[l];
                             System.arraycopy(parts, 1, fields, 0, l);
-                            arrayRef = new FieldExpression(type, token, prefix, fields);
+                            arrayRef = new FieldExpression(rule, type, token, prefix, fields);
                         } else {
-                            arrayRef = new StaticExpression(type, token, parts);
+                            arrayRef = new StaticExpression(rule, type, token, parts);
                         }
                     }
                 }
-                List<Expression> indices = createExpressionList(bindings, child1, Type.INTEGER);
+                List<Expression> indices = createExpressionList(rule, bindings, child1, Type.INTEGER);
                 if (indices != null) {
-                    expr = new ArrayExpression(type, token, arrayRef, indices);
+                    expr = new ArrayExpression(rule, type, token, arrayRef, indices);
                 } else {
                     throw new TypeException("ExpressionHelper.createExpression : invalid array index expression @ " + token.getLine() + "." + token.getCharPositionInLine());
                 }
@@ -151,7 +152,7 @@ public class ExpressionHelper
                 if (token.getType() != SYMBOL) {
                     throw new TypeException("ExpressionHelper.createExpression : unexpected token Type in method expression tree " + tokenType + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
                 } else {
-                    expr = createCallExpression(bindings, token, child1, type);
+                    expr = createCallExpression(rule, bindings, token, child1, type);
                 }
             }
             break;
@@ -168,18 +169,18 @@ public class ExpressionHelper
                 if (token.getType() != SYMBOL) {
                     throw new TypeException("ExpressionHelper.createExpression : unexpected token Type in throw expression tree " + tokenType + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
                 } else {
-                    expr = createThrowExpression(bindings, token, child1, type);
+                    expr = createThrowExpression(rule, bindings, token, child1, type);
                 }
             }
             break;
             case NUMBER:
             {
-                expr = new NumericLiteral(token);
+                expr = new NumericLiteral(rule, token);
             }
             break;
             case STRING:
             {
-                expr = new StringLiteral(token);
+                expr = new StringLiteral(rule, token);
             }
             break;
             case RETURN:
@@ -187,26 +188,26 @@ public class ExpressionHelper
                 Expression returnValue;
                 if (exprTree.getChildCount() > 0) {
                     CommonTree child0 = (CommonTree) exprTree.getChild(0);
-                    returnValue = createExpression(bindings,child0);
+                    returnValue = createExpression(rule, bindings,child0);
                 } else {
                     returnValue = null;
                 }
-                expr = new ReturnExpression(token, returnValue);
+                expr = new ReturnExpression(rule, token, returnValue);
             }
             break;
             case UNOP:
             {
-                expr = createUnaryExpression(bindings, exprTree, type);
+                expr = createUnaryExpression(rule, bindings, exprTree, type);
             }
             break;
             case BINOP:
             {
-                expr = createBinaryExpression(bindings, exprTree, type);
+                expr = createBinaryExpression(rule, bindings, exprTree, type);
             }
             break;
             case TERNOP:
             {
-                expr = createTernaryExpression(bindings, exprTree, type);
+                expr = createTernaryExpression(rule, bindings, exprTree, type);
             }
             break;
             default:
@@ -224,14 +225,14 @@ public class ExpressionHelper
             // we already know this is an invalid type so notify an error and return null
             throw new TypeException("ExpressionHelper.createExpression : invalid expression type " + exprType.getName() + " expecting " + targetType.getName() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
         }
-        if (!expr.bind(bindings)) {
+        if (!expr.bind()) {
             throw new TypeException("ExpressionHelper.createExpression : unknown reference in expression @ " + token.getLine() + "." + token.getCharPositionInLine());
         }
 
         return expr;
     }
 
-     public static Expression createCallExpression(Bindings bindings, Token token, CommonTree argTree, Type type)
+     public static Expression createCallExpression(Rule rule, Bindings bindings, Token token, CommonTree argTree, Type type)
              throws TypeException
      {
          Expression expr;
@@ -272,18 +273,18 @@ public class ExpressionHelper
                      // many extra path elenments there are
                      if (pathLength == 1) {
                          // method call on bound variable
-                         recipient = new Variable(binding.getType(), token, binding.getName());
+                         recipient = new Variable(rule, binding.getType(), token, binding.getName());
                      } else {
                          // method call on field of bound variable
                          String[] fields = new String[pathLength - 1];
                          System.arraycopy(path, 1, fields, 0, pathLength - 1);
-                         recipient = new FieldExpression(Type.UNDEFINED, token, prefix, fields);
+                         recipient = new FieldExpression(rule, Type.UNDEFINED, token, prefix, fields);
                      }
                  } else {
                      // ok, we need a version of the path without the method name on the end
                      String[] realPath = new String[pathLength];
                      System.arraycopy(path, 0, realPath, 0, pathLength);
-                     recipient = new StaticExpression(Type.UNDEFINED, token, realPath);
+                     recipient = new StaticExpression(rule, Type.UNDEFINED, token, realPath);
                  }
              }
          }
@@ -291,15 +292,15 @@ public class ExpressionHelper
          if (argTree == null) {
              args = new ArrayList<Expression>();
          } else {
-             args = createExpressionList(bindings, argTree);
+             args = createExpressionList(rule, bindings, argTree);
          }
 
-         expr = new MethodExpression(type, token, callName, recipient, args);
+         expr = new MethodExpression(rule, type, token, callName, recipient, args);
 
          return expr;
      }
 
-    public static Expression createThrowExpression(Bindings bindings, Token token, CommonTree argTree, Type type)
+    public static Expression createThrowExpression(Rule rule, Bindings bindings, Token token, CommonTree argTree, Type type)
             throws TypeException
     {
         Expression expr;
@@ -311,15 +312,15 @@ public class ExpressionHelper
         if (argTree == null) {
             args = new ArrayList<Expression>();
         } else {
-            args = createExpressionList(bindings, argTree);
+            args = createExpressionList(rule, bindings, argTree);
         }
 
-        expr = new ThrowExpression(typeName, token, args);
+        expr = new ThrowExpression(rule, typeName, token, args);
 
         return expr;
     }
 
-    public static Expression createUnaryExpression(Bindings bindings, CommonTree exprTree, Type type)
+    public static Expression createUnaryExpression(Rule rule, Bindings bindings, CommonTree exprTree, Type type)
             throws TypeException
     {
         // we expect ^(UNOP unary_oper expr)
@@ -337,8 +338,8 @@ public class ExpressionHelper
                 if (!type.isUndefined() && !type.isVoid() && !type.isNumeric()) {
                     throw new TypeException("ExpressionHelper.createUnaryExpression : invalid numeric expression @ " + token.getLine() + "." + token.getCharPositionInLine());
                 }
-                Expression operand = createExpression(bindings, child1, Type.NUMBER);
-                expr = new TwiddleExpression(token, operand);
+                Expression operand = createExpression(rule, bindings, child1, Type.NUMBER);
+                expr = new TwiddleExpression(rule, token, operand);
             }
             break;
             case NOT:
@@ -347,8 +348,8 @@ public class ExpressionHelper
                 if (!type.isUndefined() && !type.isVoid() && !type.isBoolean()) {
                     throw new TypeException("ExpressionHelper.createUnaryExpression : invalid boolean expression @ " + token.getLine() + "." + token.getCharPositionInLine());
                 }
-                Expression operand = createExpression(bindings, child1, Type.BOOLEAN);
-                expr = new NotExpression( token, operand);
+                Expression operand = createExpression(rule, bindings, child1, Type.BOOLEAN);
+                expr = new NotExpression(rule, token, operand);
             }
             break;
             default:
@@ -360,7 +361,7 @@ public class ExpressionHelper
         return expr;
     }
 
-    public static Expression createBinaryExpression(Bindings bindings, CommonTree exprTree, Type type)
+    public static Expression createBinaryExpression(Rule rule, Bindings bindings, CommonTree exprTree, Type type)
             throws TypeException
     {
         // we expect ^(BINOP infix_oper simple_expr expr)
@@ -381,30 +382,30 @@ public class ExpressionHelper
                 Expression operand2;
                 if (type == Type.STRING) {
                     // must be doing String concatenation
-                    operand1 = createExpression(bindings, child1, Type.STRING);
-                    operand2 = createExpression(bindings, child2, Type.UNDEFINED);
-                    expr = new StringPlusExpression(token, operand1,  operand2);
+                    operand1 = createExpression(rule, bindings, child1, Type.STRING);
+                    operand2 = createExpression(rule, bindings, child2, Type.UNDEFINED);
+                    expr = new StringPlusExpression(rule, token, operand1,  operand2);
                 } else if (type.isNumeric()) {
                     // must be doing arithmetic
-                    operand1 = createExpression(bindings, child1, Type.NUMBER);
-                    operand2 = createExpression(bindings, child2, Type.NUMBER);
+                    operand1 = createExpression(rule, bindings, child1, Type.NUMBER);
+                    operand2 = createExpression(rule, bindings, child2, Type.NUMBER);
                     int convertedOper = OperExpression.convertOper(oper);
-                    expr = new ArithmeticExpression(convertedOper, token, operand1,  operand2);
+                    expr = new ArithmeticExpression(rule, convertedOper, token, operand1,  operand2);
                 } else {
                     // see if the operand gives us any type info
-                    operand1 = createExpression(bindings, child1, Type.UNDEFINED);
+                    operand1 = createExpression(rule, bindings, child1, Type.UNDEFINED);
                     if (operand1.getType().isNumeric()) {
-                        operand2 = createExpression(bindings, child2, Type.NUMBER);
+                        operand2 = createExpression(rule, bindings, child2, Type.NUMBER);
                         int convertedOper = OperExpression.convertOper(oper);
-                        expr = new ArithmeticExpression(convertedOper, token, operand1, operand2);
+                        expr = new ArithmeticExpression(rule, convertedOper, token, operand1, operand2);
                     } else if (operand1.getType() == Type.STRING) {
-                        operand2 = createExpression(bindings, child2, Type.UNDEFINED);
-                        expr = new StringPlusExpression(token, operand1,  operand2);
+                        operand2 = createExpression(rule, bindings, child2, Type.UNDEFINED);
+                        expr = new StringPlusExpression(rule, token, operand1,  operand2);
                     } else {
-                        operand2 = createExpression(bindings, child2, Type.UNDEFINED);
+                        operand2 = createExpression(rule, bindings, child2, Type.UNDEFINED);
                         // create as generic plus expression which we will replace later during type
                         // checking
-                        expr = new PlusExpression(token, operand1,  operand2);
+                        expr = new PlusExpression(rule, token, operand1,  operand2);
                     }
                 }
             }
@@ -414,32 +415,32 @@ public class ExpressionHelper
             case DIV:
             case MOD:
             {
-                Expression operand1 = createExpression(bindings, child1, Type.NUMBER);
-                Expression operand2 = createExpression(bindings, child2, Type.NUMBER);
+                Expression operand1 = createExpression(rule, bindings, child1, Type.NUMBER);
+                Expression operand2 = createExpression(rule, bindings, child2, Type.NUMBER);
 
                 int convertedOper = OperExpression.convertOper(oper);
-                expr = new ArithmeticExpression(convertedOper, token, operand1, operand2);
+                expr = new ArithmeticExpression(rule, convertedOper, token, operand1, operand2);
             }
             break;
             case BAND:
             case BOR:
             case BXOR:
             {
-                Expression operand1 = createExpression(bindings, child1, Type.NUMBER);
-                Expression operand2 = createExpression(bindings, child2, Type.NUMBER);
+                Expression operand1 = createExpression(rule, bindings, child1, Type.NUMBER);
+                Expression operand2 = createExpression(rule, bindings, child2, Type.NUMBER);
 
                 int convertedOper = OperExpression.convertOper(oper);
-                expr = new BitExpression(convertedOper, token, operand1, operand2);
+                expr = new BitExpression(rule, convertedOper, token, operand1, operand2);
             }
             break;
             case AND:
             case OR:
             {
-                Expression operand1 = createExpression(bindings, child1, Type.BOOLEAN);
-                Expression operand2 = createExpression(bindings, child2, Type.BOOLEAN);
+                Expression operand1 = createExpression(rule, bindings, child1, Type.BOOLEAN);
+                Expression operand2 = createExpression(rule, bindings, child2, Type.BOOLEAN);
 
                 int convertedOper = OperExpression.convertOper(oper);
-                expr = new LogicalExpression(convertedOper, token, operand1, operand2);
+                expr = new LogicalExpression(rule, convertedOper, token, operand1, operand2);
             }
             break;
             case EQ:
@@ -449,11 +450,11 @@ public class ExpressionHelper
             case GEQ:
             case LEQ:
             {
-                Expression operand1 = createExpression(bindings, child1, Type.NUMBER);
-                Expression operand2 = createExpression(bindings, child2, Type.NUMBER);
+                Expression operand1 = createExpression(rule, bindings, child1, Type.NUMBER);
+                Expression operand2 = createExpression(rule, bindings, child2, Type.NUMBER);
 
                 int convertedOper = OperExpression.convertOper(oper);
-                expr = new ComparisonExpression(convertedOper, token, operand1, operand2);
+                expr = new ComparisonExpression(rule, convertedOper, token, operand1, operand2);
             }
             break;
             default:
@@ -465,7 +466,7 @@ public class ExpressionHelper
         return expr;
     }
 
-    public static Expression createTernaryExpression(Bindings bindings, CommonTree exprTree, Type type)
+    public static Expression createTernaryExpression(Rule rule, Bindings bindings, CommonTree exprTree, Type type)
             throws TypeException
     {
         // we expect ^(TERNOP ternary_oper simple_expr expr expr)
@@ -482,28 +483,28 @@ public class ExpressionHelper
             case TERN_IF:
             {
                 // the argument must be a numeric expression
-                Expression operand1 = createExpression(bindings, child1, Type.BOOLEAN);
-                Expression operand2 = createExpression(bindings, child2, type);
-                Expression operand3 = createExpression(bindings, child3, type);
+                Expression operand1 = createExpression(rule, bindings, child1, Type.BOOLEAN);
+                Expression operand2 = createExpression(rule, bindings, child2, type);
+                Expression operand3 = createExpression(rule, bindings, child3, type);
                 Type type2 = Type.dereference(operand2.getType());
                 Type type3 = Type.dereference(operand3.getType());
                 if (type2.isNumeric() || type3.isNumeric()) {
                     if (!type.isUndefined() && !type.isVoid() && !type.isNumeric()) {
                         throw new TypeException("ExpressionHelper.createUnaryExpression : invalid numeric expression @ " + token.getLine() + "." + token.getCharPositionInLine());
                     }
-                    expr = new ConditionalEvalExpression(Type.promote(type2, type3),  token, operand1,  operand2, operand3);
+                    expr = new ConditionalEvalExpression(rule, Type.promote(type2, type3),  token, operand1,  operand2, operand3);
                 } else if (type2.isDefined() && type3.isDefined()) {
                     // since they are not numeric we have to have the same type
                     if (type2 == type3) {
                         // use this type
-                        expr = new ConditionalEvalExpression(type2,  token, operand1,  operand2, operand3);
+                        expr = new ConditionalEvalExpression(rule, type2,  token, operand1,  operand2, operand3);
                     } else {
                         // mismatched types so don't generate a result
                         throw new TypeException("ExpressionHelper.createTernaryExpression : mismatched types " + type2.getName() + " and " + type3.getName()  + " in conditional expression " + token.getType() + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
                     }
                 } else {
                     // have to wait for type check to resolve types
-                    expr = new ConditionalEvalExpression(Type.UNDEFINED,  token, operand1,  operand2, operand3);
+                    expr = new ConditionalEvalExpression(rule, Type.UNDEFINED,  token, operand1,  operand2, operand3);
                 }
             }
             break;
@@ -516,13 +517,13 @@ public class ExpressionHelper
         return expr;
     }
 
-    public static List<Expression> createExpressionList(Bindings bindings, CommonTree exprTree)
+    public static List<Expression> createExpressionList(Rule rule, Bindings bindings, CommonTree exprTree)
             throws TypeException
     {
-        return createExpressionList(bindings, exprTree, Type.UNDEFINED);
+        return createExpressionList(rule, bindings, exprTree, Type.UNDEFINED);
 
     }
-    public static List<Expression> createExpressionList(Bindings bindings, CommonTree exprTree, Type type)
+    public static List<Expression> createExpressionList(Rule rule, Bindings bindings, CommonTree exprTree, Type type)
             throws TypeException
     {
         // we expect expr_list = ^(EXPR) |
@@ -541,7 +542,7 @@ public class ExpressionHelper
                         CommonTree child0 = (CommonTree) exprTree.getChild(0);
                         // assign tree before we risk an exception
                         exprTree = (CommonTree) exprTree.getChild(1);
-                        Expression expr = createExpression(bindings, child0, type);
+                        Expression expr = createExpression(rule, bindings, child0, type);
                         exprList.add(expr);
                     }
                     break;
@@ -550,7 +551,7 @@ public class ExpressionHelper
                         // assign tree before we risk an exception
                         CommonTree saveTree = exprTree;
                         exprTree = null;
-                        Expression expr = createExpression(bindings, saveTree, type);
+                        Expression expr = createExpression(rule, bindings, saveTree, type);
                         exprList.add(expr);
                     }
                     break;

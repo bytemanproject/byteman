@@ -10,6 +10,7 @@ import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.RuleElement;
 
 import java.io.StringWriter;
 
@@ -19,14 +20,16 @@ import java.io.StringWriter;
  * as the condition expression of an ECA rule condition;and as an element of the actions list in an
  * ECA rule action.
  */
-public abstract class Expression
+public abstract class Expression extends RuleElement
 {
     /**
      * Create a new expression.
      * @param type the current type for this expression.
      */
-    protected Expression(Type type, Token token)
+    protected Expression(Rule rule, Type type, Token token)
     {
+        super(rule);
+        this.rule = rule;
         this.type = type;
         this.token = token;
         if (token != null) {
@@ -39,15 +42,12 @@ public abstract class Expression
     }
 
     /**
-     * verify that variables mentioned in this expression are actually available in the supplied
-     * bindings list and infer/validate the type of this expression or its subexpressions
-     * where possible
-     *
-     * @param bindings the set of bindings in place at the point of evaluation of this expression
+     * verify that variables mentioned in this expression are actually available in the rule
+     * bindings list
      * @return true if all variables in this expression are bound and no type mismatches have
-     * been detected during inference/validation.
+     * been detected during validation.
      */
-    public abstract boolean bind(Bindings bindings);
+    public abstract boolean bind();
 
     public String getPos()
     {
@@ -63,15 +63,12 @@ public abstract class Expression
      * ensure that all type references in the expression and its component expressions
      * can be resolved, that the type of the expression is well-defined and that it is
      * compatible with the type expected in the context in which it occurs.
-     * @param bindings the bound variable in scope at the point where the expression is
-     * to be evaluate
-     * @param typegroup the set of types employed by the rule
      * @param expected the type expected for the expression in the contxt in which it occurs. this
      * may be void but shoudl not be undefined at the point where type checking is performed.
      * @return
      * @throws TypeException
      */
-    public abstract Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected)
+    public abstract Type typeCheck(Type expected)
             throws TypeException;
 
     /**
@@ -88,6 +85,7 @@ public abstract class Expression
 
     public abstract void writeTo(StringWriter stringWriter);
 
+    protected Rule  rule;
     protected Type type;
     protected int charPos;
     protected int line;

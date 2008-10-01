@@ -21,9 +21,9 @@ import java.lang.reflect.Array;
 public class ArrayExpression extends Expression
 {
 
-    public ArrayExpression(Type type, Token token, Expression arrayRef, List<Expression> idxList)
+    public ArrayExpression(Rule rule, Type type, Token token, Expression arrayRef, List<Expression> idxList)
     {
-        super(type, token);
+        super(rule, type, token);
         this.arrayRef = arrayRef;
         this.idxList = idxList;
     }
@@ -33,35 +33,34 @@ public class ArrayExpression extends Expression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @param bindings the set of bindings in place at the point of evaluation of this expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind(Bindings bindings) {
+    public boolean bind() {
         // we  have to make sure that any names occuring in the array reference are bound
         // and that the index expressions contain valid bindings
         boolean valid = true;
 
-        valid = arrayRef.bind(bindings);
+        valid = arrayRef.bind();
 
         Iterator<Expression> iterator = idxList.iterator();
 
         while (iterator.hasNext()) {
-            valid &= iterator.next().bind(bindings);
+            valid &= iterator.next().bind();
         }
 
         return valid;
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected) throws TypeException {
-        Type arrayType = arrayRef.typeCheck(bindings, typegroup, Type.UNDEFINED);
+    public Type typeCheck(Type expected) throws TypeException {
+        Type arrayType = arrayRef.typeCheck(Type.UNDEFINED);
         Type nextType = arrayType;
         for (Expression expr : idxList) {
             if (!nextType.isArray()) {
                 throw new TypeException("ArrayExpression.typeCheck : invalid type for array dereference " + nextType.getName() + getPos());
             }
             nextType = nextType.getBaseType();
-            expr.typeCheck(bindings, typegroup, Type.N);
+            expr.typeCheck(Type.N);
         }
         type = nextType;
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {

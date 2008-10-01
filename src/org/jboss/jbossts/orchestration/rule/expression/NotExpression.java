@@ -12,14 +12,14 @@ import org.antlr.runtime.Token;
  */
 public class NotExpression extends UnaryOperExpression
 {
-    public NotExpression(Token token, Expression operand)
+    public NotExpression(Rule rule, Token token, Expression operand)
     {
-        super(NOT, Type.BOOLEAN, token, operand);
+        super(rule, NOT, Type.BOOLEAN, token, operand);
     }
 
-    public Type typeCheck(Bindings bindings, TypeGroup typegroup, Type expected)
+    public Type typeCheck(Type expected)
     throws TypeException {
-        type = getOperand(0).typeCheck(bindings, typegroup, Type.Z);
+        type = getOperand(0).typeCheck(Type.Z);
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
             throw new TypeException("NotExpression.typeCheck() : invalid result type : " + expected.getName() + getPos());
         }
