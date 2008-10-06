@@ -1,0 +1,181 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2008, Red Hat Middleware LLC, and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+# Participant Recovery with Remote Coordinator
+#
+# This script automates testing of a specific recovery scenario for the
+# JBossTS XTS implementation of the WS-AT 1.1 protocol using orchestration
+# rules. The scenario is as follows:
+#
+# AS1 boots
+# AS2 boots
+# AS1 Client starts a WS-AT transaction talking to coordinator in AS2
+# AS1 Client invokes web service 1
+# AS1 Web service 1 registers as participant P1
+# AS1 Client invokes web service 2
+# AS1 Web service 2 registers as participant P2
+# AS1 Client commits WS-AT transaction
+#
+# AS2 Coordinator initiates commit of participant P1
+# AS2 Coordinator sends commit to P1
+#
+# AS1 P1 receives commit
+# ** AS1 Rule system intercepts commit and crashes JVM
+#
+# AS2 Coordinator attempts to resend message
+# ** AS2 Rule system suspends coordinator waiting on incoming prepared
+#    message from P1
+#    (commit messages continue to be resent in the meantime)
+#
+# AS1 reboots
+# AS1 Recovery system starts after 2 minutes
+# AS1 Recovery system recreates PREPARED WS-AT participant P1
+# ** AS1 Rule system traces recreate
+# AS1 Participant P1 resends prepared
+# AS1 Participant P1 receives commit for P1
+# AS1 Participant P1 sends committed
+#
+# AS2 Participant stub receives committed message for P1
+# ** AS2 Rule system signals coordinator clearing wait
+# ** AS2 rule system traces receipt of committed message for P1
+#
+# AS2 Coordinator detects committed from P1
+# AS2 Coordinator sends commit for P2
+# AS2 Coordinator receives committed from P2
+# AS2 Coordinator completes transaction
+# ** AS2 Rule system traces successful completion
+#
+# One way of exercising the test is to start the ASes and run the XTS
+# demo in one AS using a remote coordinator in the othher AS. It should
+# crash at the point of commit. At reboot the rest of the test should
+# run automatically and the server should be killed after a the
+# transaction is successfuly terminated. The console (or server)
+# log should contain messages indicating replays of the prepared and
+# then the heuristic transactions and then a message indicating that the
+# heuristic transacton has committed.that the participant server (AS1)
+# has crashed and then restarted.
+
+#
+# !!! N.B. this test currently fails because JBossWS Native fails to cope
+# !!! with requests for services while they are bootstrapping
+#
+
+######################################################################
+# AS1 Rule set
+#######################################################################
+# This rule is triggered in the AS1 when a non-recovered WS-AT
+# participant receives a commit message. It causes the JVM to crash.
+# The line number is -1 so that this gets called on entry to the
+# methd
+
+RULE crash unrecovered participant at commit
+CLASS com.arjuna.wst11.messaging.engines.ParticipantEngine
+METHOD commit
+LINE -1
+BIND engine:ParticipantEngine = $0,
+     recovered:boolean = engine.isRecovered(),
+     identifier:String = engine.getId()
+IF (NOT recovered)
+   AND
+   debug("commit on non-recovered participant engine " + identifier)
+DO debug("!!!killing JVM!!!"),
+   killJVM()
+ENDRULE
+
+#######################################################################
+# This rule is triggered in the AS1 when a recovered WS-AT participant
+# is recreated from the log. It traces the call to allow success of the
+# test to be detected.
+# The line number is the end of the constructor so that this gets called
+# after all the fields ahev been filled in
+
+RULE trace recovered participant recreate
+CLASS com.arjuna.wst11.messaging.engines.ParticipantEngine
+METHOD <init>(Participant, id, State, W3CEndpointReference, boolean)
+LINE -1
+BIND engine:ParticipantEngine = $0,
+     recovered:boolean = engine.isRecovered(),
+     identifier:String = engine.getId()
+IF recovered
+DO debug("recreated recovered participant engine " + identifier)
+ENDRULE
+
+
+######################################################################
+# AS2 Rule set
+######################################################################
+# This rule is triggered in AS2 when a participant stub
+# (CoordinatorEngine) first posts a commit message to the participant.
+# The coordinator thread suspends until a committed message is received
+# from the participant. This ensures that it waits until AS1
+# has restarted allowing the transaction to then complete. The
+# condition tests whether a flag with key "firstCommit" has been set.
+# By default this is clear so the condition is true first time the
+# rule is called. The action sets te flag causing the condition to
+# evaluate to false on subsequent commit calls.
+# The line number identifies the line immediately following the call
+# to sendCommit. Note that sendCommit schedules a background thread
+# to keep resending commit messages so it is ok to stall the thread
+# which triggers this rule.
+
+RULE suspend coordinator after sending first commit
+CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
+METHOD commit
+LINE 330
+BIND engine:CoordinatorEngine = $0,
+     identifier:String = engine.getId()
+IF (NOT flagged("firstCommit"))
+DO debug("coordinator waiting for participant to resend prepare" + identifier),
+   flag("firstCommit"),
+   waitFor(identifier)
+ENDRULE
+
+#######################################################################
+
+# This rule is triggered when a committed message is received from P1.
+# This indicates that the participant has been recreated and
+# successfully responded to a commit message after reboot of AS1. The
+# rule uses a call to signal to wake up the coordinator which was
+# suspended when the first commit was sent. This call only returns true
+# if the identifier is for P1 and the coordinator has not already been
+# signalled. Note that the call to signal is made in the condition to
+# avoid a race between threads handling successive committed messages.
+# If instead the condition called waiting() and the action called
+# signal() then, depending upon scheduling, both threads might find the
+# condition to be true before one of them could execute signal().
+# Although this would be harmless in this case it could be significant
+# when using other rules.
+# The line number is -1 so that this rule runs as soon as the
+# comitted method is entered.
+
+RULE signal waiting coordinator
+CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
+METHOD committed
+LINE -1
+BIND engine : CoordinatorEngine = $0,
+     identifier:String = engine.getId()
+IF debug("received committed for participant " + identifier)
+   AND
+   signal(identifier)
+DO debug("signalled coordinator waiting on " + identifier)
+ENDRULE

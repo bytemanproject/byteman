@@ -24,7 +24,7 @@
 # Heuristic Recovery After Delayed Commit in Single JVM
 #
 # This script automates testing of a specific recovery scenario for the
-# JBossTS XTS implementation of the WS-AT 1.1 protocol using orchestration
+# JBossTS XTS implementation of the WS-AT 1.0 protocol using orchestration
 # rules. The scenario is as follows:
 #
 # AS boots
@@ -103,9 +103,9 @@
 # to do this just yet
 
 RULE add coordinator engine countdown
-CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
-METHOD <init>(String, boolean, W3CEndpointReference, boolean, State)
-LINE 96
+CLASS com.arjuna.wst.messaging.engines.CoordinatorEngine
+METHOD <init>(String, boolean, EndpointReferenceType, boolean, State)
+LINE 118
 BIND engine:CoordinatorEngine = $0,
      recovered:boolean = engine.isRecovered(),
      identifier:String = engine.getId()
@@ -122,9 +122,9 @@ ENDRULE
 # could be specified as -1)
 
 RULE kill JVM
-CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
+CLASS com.arjuna.wst.messaging.engines.CoordinatorEngine
 METHOD commit
-LINE 316
+LINE 369
 BIND engine:CoordinatorEngine = $0,
      recovered:boolean = engine.isRecovered(), 
      identifier:String = engine.getId()
@@ -145,9 +145,9 @@ ENDRULE
 # could be specified as -1)
 
 RULE countdown at commit
-CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
+CLASS com.arjuna.wst.messaging.engines.CoordinatorEngine
 METHOD commit
-LINE 316
+LINE 369
 BIND engine:CoordinatorEngine = $0,
      recovered:boolean = engine.isRecovered(),
      identifier:String = engine.getId()
@@ -171,8 +171,8 @@ ENDRULE
 # rule code gets run as soon as the method is entered.
 
 RULE kill committed thread
-CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
-METHOD committed(Notification, AddressingProperties, ArjunaContext)
+CLASS com.arjuna.wst.messaging.engines.CoordinatorEngine
+METHOD committed(NotificationType, AddressingContext, ArjunaContext)
 LINE -1
 BIND engine:CoordinatorEngine = $0,
      recovered:boolean = engine.isRecovered(),
