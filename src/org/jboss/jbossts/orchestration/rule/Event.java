@@ -23,14 +23,10 @@
 */
 package org.jboss.jbossts.orchestration.rule;
 
-import org.antlr.runtime.tree.CommonTree;
-import org.antlr.runtime.Token;
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
 import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.binding.Binding;
-import static org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.*;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import static org.jboss.jbossts.orchestration.rule.grammar.ParseNode.*;
 import org.jboss.jbossts.orchestration.rule.grammar.ECATokenLexer;
 import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
 import org.jboss.jbossts.orchestration.rule.expression.Expression;
@@ -44,6 +40,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.io.StringWriter;
+import java.io.StringReader;
+
+import java_cup.runtime.Symbol;
 
 /**
  * class which represents a rule event comprising of a set of abstract bindings of event variables to
@@ -51,7 +50,7 @@ import java.io.StringWriter;
  */
 public class Event extends RuleElement {
 
-    public static Event create(Rule rule, CommonTree eventTree)
+    public static Event create(Rule rule, ParseNode eventTree)
             throws TypeException
     {
         Event event = new Event(rule, eventTree);
@@ -65,20 +64,20 @@ public class Event extends RuleElement {
             return new Event(rule);
         }
 
+        String fullText = "BIND\n" + text + "\nIF TRUE DO NOTHING";
         try {
-            ECATokenLexer lexer = new ECATokenLexer(new ANTLRStringStream(text));
-            CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-            ECAGrammarParser parser = new ECAGrammarParser(tokenStream);
-            ECAGrammarParser.eca_event_return event_parse = parser.eca_event();
-            CommonTree eventTree = (CommonTree) event_parse.getTree();
+            ECATokenLexer lexer = new ECATokenLexer(new StringReader(fullText));
+            ECAGrammarParser parser = new ECAGrammarParser(lexer);
+            Symbol event_parse = parser.parse();
+            ParseNode eventTree = (ParseNode)event_parse.value;
             Event event = new Event(rule, eventTree);
             return event;
-        } catch (RecognitionException e) {
+        } catch (Exception e) {
             throw new ParseException("org.jboss.jbossts.orchestration.rule.Event : error parsing event " + text, e);
         }
     }
 
-    protected Event(Rule rule, CommonTree eventTree) throws TypeException
+    protected Event(Rule rule, ParseNode eventTree) throws TypeException
     {
         super(rule);
         createBindings(eventTree);
@@ -116,7 +115,7 @@ public class Event extends RuleElement {
         binding.typeCheck(Type.UNDEFINED);
     }
 
-    private void createBindings(CommonTree eventTree) throws TypeException
+    private void createBindings(ParseNode eventTree) throws TypeException
     {
         Bindings bindings = getBindings();
 
@@ -124,34 +123,37 @@ public class Event extends RuleElement {
 
         List<TypeException> exceptions = new ArrayList<TypeException>();
 
-        // we expect BINDINGS = (SEPR BINDING BINDINGS) | BINDING
+        // we expect BINDINGS = NOTHING | BINDING | (COMMA BINDING BINDINGS)
         // where BINDING = (BIND BINDSYM EXPR)
 
+        if (eventTree.getTag() == NOTHING) {
+            return;
+        }
+        
         while (eventTree != null) {
             try {
-                Token token = eventTree.getToken();
-                int tokenType = token.getType();
-                switch (tokenType) {
-                    case SEPR:
+                int tag = eventTree.getTag();
+                switch (tag) {
+                    case COMMA:
                     {
                         // update before we risk an exception
-                        CommonTree child0 = (CommonTree)eventTree.getChild(0);
-                        eventTree = (CommonTree)eventTree.getChild(1);
+                        ParseNode child0 = (ParseNode)eventTree.getChild(0);
+                        eventTree = (ParseNode)eventTree.getChild(1);
                         addBinding(bindings, child0);
                     }
                     break;
                     case ASSIGN:
                     {
                         // update before we risk an exception
-                        CommonTree saveTree = eventTree;
+                        ParseNode saveTree = eventTree;
                         eventTree = null;
                         addBinding(bindings, saveTree);
                     }
                     break;
                     default:
                     {
+                        String message = "Event.createBindings : unexpected token Type in binding list " + tag + " for token " + eventTree.getText() + eventTree.getPos();
                         eventTree = null;
-                        String message = "Event.createBindings : unexpected token Type in binding list " + tokenType + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine();
                         throw new TypeException(message);
                     }
                 }
@@ -175,18 +177,17 @@ public class Event extends RuleElement {
         }
     }
 
-    private void addBinding(Bindings bindings, CommonTree bindingTree) throws TypeException
+    private void addBinding(Bindings bindings, ParseNode bindingTree) throws TypeException
     {
-        Token token = bindingTree.getToken();
-        int tokenType = token.getType();
+        int tag = bindingTree.getTag();
 
-        if (tokenType != ASSIGN) {
-            String message = "Event.createBindings : unexpected token Type in binding " + tokenType + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine();
+        if (tag != ASSIGN) {
+            String message = "Event.createBindings : unexpected token Type in binding " + tag + " for token " + bindingTree.getText() + bindingTree.getPos();
             throw new TypeException(message);
         }
 
-        CommonTree varTree = (CommonTree)bindingTree.getChild(0);
-        CommonTree exprTree = (CommonTree)bindingTree.getChild(1);
+        ParseNode varTree = (ParseNode)bindingTree.getChild(0);
+        ParseNode exprTree = (ParseNode)bindingTree.getChild(1);
         Binding binding;
 
         binding = createBinding(varTree);
@@ -197,10 +198,11 @@ public class Event extends RuleElement {
         Expression expr;
 
         expr = ExpressionHelper.createExpression(rule, bindings, exprTree, binding.getType());
+        String name = binding.getName();
 
-        if (bindings.lookup(binding.getName()) != null) {
+        if (bindings.lookup(name) != null) {
             // oops rebinding not allowed
-            String message = "Event.createBindings : rebinding disallowed for variable " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine();
+            String message = "Event.createBindings : rebinding disallowed for variable " + name + varTree.getPos();
             throw new TypeException(message);
         }
         // if the binding type is undefined and the expression type is defined propagate the
@@ -212,36 +214,35 @@ public class Event extends RuleElement {
         bindings.append(binding);
     }
 
-    public Binding createBinding(CommonTree varTree) throws TypeException
+    public Binding createBinding(ParseNode varTree) throws TypeException
     {
-        Token token = varTree.getToken();
-        int tokenType = token.getType();
+        int tag = varTree.getTag();
 
-        // we expect either (COLON SYMBOL SYMBOL) or SYMBOL
-        switch (tokenType) {
-            case SYMBOL:
+        // we expect either (COLON IDENTIFIER IDENTIFIER) or IDENTIFIER
+        switch (tag) {
+            case IDENTIFIER:
             {
-                return new Binding(rule, token.getText());
+                return new Binding(rule, varTree.getText());
             }
             case COLON:
             {
-                CommonTree child0 = (CommonTree)varTree.getChild(0);
-                CommonTree child1 = (CommonTree)varTree.getChild(1);
-                if (child0.getToken().getType() != SYMBOL) {
-                    throw new TypeException("Event.createBindings : unexpected token Type in variable declaration" + child0.getToken().getType() + " for token " + child0.getToken().getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
-                } else if (child1.getToken().getType() != SYMBOL) {
-                    throw new TypeException("Event.createBindings : unexpected token Type in variable type declaration" + child1.getToken().getType()  + " for token " + child1.getToken().getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
+                ParseNode child0 = (ParseNode)varTree.getChild(0);
+                ParseNode child1 = (ParseNode)varTree.getChild(1);
+                if (child0.getTag() != IDENTIFIER) {
+                    throw new TypeException("Event.createBindings : unexpected token type in variable declaration" + child0.getTag() + " for token " + child0.getText() + child0.getPos());
+                } else if (child1.getTag() != IDENTIFIER) {
+                    throw new TypeException("Event.createBindings : unexpected token Type in variable type declaration" + child1.getTag()  + " for token " + child1.getText() + child1.getPos());
                 }
                 String typeName = child1.getText();
                 Type type = getTypeGroup().create(typeName);
                 if (type == null) {
-                    throw new TypeException("Event.createBindings : incompatible type in declaration of variable " + child1.getToken().getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
+                    throw new TypeException("Event.createBindings : incompatible type in declaration of variable " + child1.getText() + child1.getPos());
                 }
                 return new Binding(rule, child0.getText(), type);
             }
             default:
             {
-                throw new TypeException("Event.createBindings : unexpected token Type in binding variable declaration" + tokenType + " for token " + token.getText() + " @ " + token.getLine() + "." + token.getCharPositionInLine());
+                throw new TypeException("Event.createBindings : unexpected token type in binding variable declaration" + tag + " for token " + varTree.getText() + varTree.getPos());
             }
         }
     }
@@ -264,13 +265,17 @@ public class Event extends RuleElement {
 
     public void writeTo(StringWriter stringWriter)
     {
-        String prefix = "BIND ";
         Iterator<Binding> iter = getBindings().iterator();
-        while (iter.hasNext()) {
-            Binding binding = iter.next();
-            stringWriter.write(prefix);
-            binding.writeTo(stringWriter);
-            prefix = ",\n     ";
+        if (!iter.hasNext()) {
+            stringWriter.write("BIND NOTHING");
+        } else {
+            String prefix = "BIND ";
+            while (iter.hasNext()) {
+                Binding binding = iter.next();
+                stringWriter.write(prefix);
+                binding.writeTo(stringWriter);
+                prefix = ",\n     ";
+            }
         }
         stringWriter.write("\n");
     }

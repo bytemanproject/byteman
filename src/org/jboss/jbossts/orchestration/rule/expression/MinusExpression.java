@@ -30,33 +30,46 @@ import org.jboss.jbossts.orchestration.rule.Rule;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 /**
- * A binary logical operator expression
  */
-public class LogicalExpression extends BooleanExpression
+public class MinusExpression extends UnaryOperExpression
 {
-    public LogicalExpression(Rule rule, int oper, ParseNode token, Expression left, Expression right)
+    public MinusExpression(Rule rule, ParseNode token, Expression operand)
     {
-        super(rule, oper, token, left, right);
+        super(rule, UMINUS, operand.getType(), token, operand);
     }
 
-    public Type typeCheck(Type expected) throws TypeException {
-        Type type1 = getOperand(0).typeCheck(Type.Z);
-        Type type2 = getOperand(1).typeCheck(Type.Z);
-        type = Type.Z;
+    public Type typeCheck(Type expected)
+    throws TypeException {
+        type = getOperand(0).typeCheck(Type.N);
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
-            throw new TypeException("LogicalExpression.typeCheck : invalid expected result type " + expected.getName() + getPos());
+            throw new TypeException("MinusExpression.typeCheck() : invalid result type : " + expected.getName() + getPos());
         }
-
         return type;
     }
 
     public Object interpret(Rule.BasicHelper helper) throws ExecuteException {
-        Boolean value = (Boolean)getOperand(0).interpret(helper);
+        try {
+            Number value = (Number)getOperand(0).interpret(helper);
 
-        if (oper == AND) {
-            return (value && (Boolean)getOperand(1).interpret(helper));
-        } else { // oper == OR
-            return (value || (Boolean)getOperand(1).interpret(helper));
+            if (type == Type.B) {
+                return (byte)-value.intValue();
+            } else if (type == Type.S) {
+                return (short)-value.intValue();
+            } else if (type == Type.I) {
+                return -value.intValue();
+            } else if (type == Type.J) {
+                return -value.longValue();
+            } else if (type == Type.F) {
+                return -value.longValue();
+            } else if (type == Type.D) {
+                return -value.longValue();
+            } else { // (type == Type.C)
+                return -value.intValue();
+            }
+        } catch (ExecuteException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ExecuteException("MinusExpression.typeCheck() : unexpected exception : " + token.getText() + getPos(), e);
         }
     }
 }

@@ -24,7 +24,6 @@
 package org.jboss.jbossts.orchestration.agent;
 
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.type.TypeHelper;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -79,7 +78,11 @@ public class RuleAdapter extends ClassAdapter
         if (targetMethod.equals(name)) {
             if (targetDescriptor.equals("") || TypeHelper.equalDescriptors(targetDescriptor, desc))
             {
-                return new RuleMethodAdapter(mv, access, name, desc, signature, exceptions);
+                if (name == "<init>") {
+                    return new RuleConstructorAdapter(mv, access, name, desc, signature, exceptions);
+                } else {
+                    return new RuleMethodAdapter(mv, access, name, desc, signature, exceptions);
+                }
             }
         }
 
@@ -116,7 +119,7 @@ public class RuleAdapter extends ClassAdapter
         // super.catchException(startLabel, endLabel, new Type("org.jboss.jbossts.orchestration.rule.exception.ExecuteException")));
 
         public void visitLineNumber(final int line, final Label start) {
-            if (!visitedLine && (targetLine < 0 || targetLine == line)) {
+            if (!visitedLine && (targetLine < line)) {
                 rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
                 String key = rule.getKey();
                 Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.Rule"));
@@ -203,6 +206,40 @@ public class RuleAdapter extends ClassAdapter
             super.visitMaxs(maxStack, maxLocals);
         }
 
+    }
+
+    /**
+     * a method visitor used to add a rule event trigger call to a constructor -- this has to make sure
+     * the super constructor has been called before allowing a trigger call to be compiled
+     */
+
+    private class RuleConstructorAdapter extends RuleMethodAdapter
+    {
+        private boolean superCalled;
+
+        RuleConstructorAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        {
+            super(mv, access, name, descriptor, signature, exceptions);
+            this.superCalled = false;
+        }
+
+        // don't pass on line visits until we have seen an INVOKESPECIAL
+        public void visitLineNumber(final int line, final Label start) {
+            if (superCalled) {
+                super.visitLineNumber(line, start);
+            }
+        }
+
+        public void visitMethodInsn(
+            final int opcode,
+            final String owner,
+            final String name,
+            final String desc)
+        {
+            super.visitMethodInsn(opcode, owner, name, desc);
+            // hmm, this probably means the super constructor has been invoked :-)
+            superCalled &= (opcode == Opcodes.INVOKESPECIAL);
+        }
     }
 
     private Rule rule;

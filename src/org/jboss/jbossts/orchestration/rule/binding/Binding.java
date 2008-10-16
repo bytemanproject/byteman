@@ -54,7 +54,7 @@ public class Binding extends RuleElement
         this.name = name;
         this.type = (type != null ? type : Type.UNDEFINED);
         this.value = value;
-        if (name.equals("-1")) {
+        if (name.equals("$")) {
             index = -1;
         } else if (name.matches("[0-9].*")) {
             index = Integer.valueOf(name);
@@ -145,7 +145,7 @@ public class Binding extends RuleElement
     {
         if (isHelper()) {
             stringWriter.write("$$");
-        } else if (isParam()) {
+        } else if (isParam() || isRecipient()) {
             stringWriter.write("$" + name);
             if (type != null && (type.isDefined() || type.isObject())) {
                 stringWriter.write(" : ");

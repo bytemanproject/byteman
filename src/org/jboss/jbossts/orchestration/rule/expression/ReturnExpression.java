@@ -23,15 +23,13 @@
 */
 package org.jboss.jbossts.orchestration.rule.expression;
 
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.binding.Binding;
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.exception.EarlyReturnException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 import java.io.StringWriter;
 
@@ -44,7 +42,7 @@ public class ReturnExpression extends Expression
 {
     private Expression returnValue;
 
-    public ReturnExpression(Rule rule, Token token, Expression returnValue)
+    public ReturnExpression(Rule rule, ParseNode token, Expression returnValue)
     {
         // the trigger method may return any old tyep but the return expression can only occur
         // at the top level in a rule action seuqence so it is actually a VOID expression

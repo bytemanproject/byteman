@@ -24,18 +24,16 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 /**
  */
 public class TwiddleExpression extends UnaryOperExpression
 {
-    public TwiddleExpression(Rule rule, Token token, Expression operand)
+    public TwiddleExpression(Rule rule, ParseNode token, Expression operand)
     {
         super(rule, TWIDDLE, operand.getType(), token, operand);
     }

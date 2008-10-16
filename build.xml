@@ -52,7 +52,9 @@ The XTS installation directory must be specified with the XTS_HOME environment v
     <property name="build.classes.dir" value="${build.dir}/classes"/>
     <property name="build.lib.dir"     value="${build.dir}/lib"/>
 
-    <property name="ext.antlr.jars" value="antlr-3.0.1.jar antlr-2.7.7.jar antlr-runtime-3.0.1.jar stringtemplate-3.1b1.jar"/>
+    <property name="ext.jflex.jars" value="JFlex.jar"/>
+    <property name="ext.javacup.jars" value="javacup.jar"/>
+    <property name="ext.javacup.rt.jars" value="javacuprt.jar"/>
 
     <!-- we need to add the XTS, TS and various jboss jars to the test code path so we can
     load XTS code -->
@@ -83,45 +85,70 @@ The XTS installation directory must be specified with the XTS_HOME environment v
         <mkdir dir="${build.classes.dir}/META-INF"/>
     </target>
 
-    <!-- ??? parser is not automatically remade ??? -->
+    <!-- parser is not automatically remade -->
     <target name="parser" depends="init">
-        <java classname="org.antlr.Tool">
+        <java classname="JFlex.Main">
             <classpath>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.jflex.jars}"/>
             </classpath>
-            <arg value="${dd.grammar.dir}/ECAToken.g"/>
+            <arg value="-q"/>
+            <arg value="${dd.grammar.dir}/flex/ECAToken.flex"/>
         </java>
         
-        <java classname="org.antlr.Tool">
+<!--
+        <java classname="java_cup.Main">
             <classpath>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.jars}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
             </classpath>
-            <arg value="-lib" />
-            <arg value="${dd.grammar.dir}"/>
-            <arg value="${dd.grammar.dir}/ECAGrammar.g"/>
+            <arg value="-parser" />
+            <arg value="ECAGrammarParser" />
+            <arg value="-nonterms"/>
+            <arg value="-dump_grammar"/>
+            <arg value="-dump_states"/>
+            <arg value="-dump_tables"/>
+            <arg value="-dump"/>
+            <arg value="${dd.grammar.dir}/cup/ECAGrammar.cup"/>
         </java>
-        <copy file="${dd.grammar.dir}/ECATokenLexer.java"
+-->
+        <java classname="java_cup.Main">
+            <classpath>
+                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.jars}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
+            </classpath>
+	    <arg value="-package"/>
+	    <arg value="org.jboss.jbossts.orchestration.rule.grammar"/>
+            <arg value="-parser" />
+            <arg value="ECAGrammarParser" />
+            <arg value="-nonterms"/>
+            <arg value="${dd.grammar.dir}/cup/ECAGrammar.cup"/>
+        </java>
+	<delete file="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/ECATokenLexer.java"/>
+	<delete file="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/ECAGrammarParser.java"/>
+	<delete file="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/sym.java"/>
+        <move file="${dd.grammar.dir}/flex/ECATokenLexer.java"
             tofile="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/ECATokenLexer.java"/>
-        <copy file="${dd.grammar.dir}/ECAGrammarParser.java"
+        <move file="ECAGrammarParser.java"
             tofile="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/ECAGrammarParser.java"/>
+        <move file="sym.java"
+            tofile="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/sym.java"/>
     </target>
-    <!-- ?? we should maybe always remake the parser and not include the generate code in SVN ??? -->
+
     <target name="compile" depends="init">
         <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}">
             <classpath>
                 <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.jars}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
             </classpath>
         </javac>
     </target>
 
      <target name="jar" depends="compile">
-         <!-- until we know better include all the antlr runtime in our deployed jar -->
-         <unjar src="${ext.lib.dir}/antlr-3.0.1.jar" dest="${build.classes.dir}"/>
-         <unjar src="${ext.lib.dir}/antlr-runtime-3.0.1.jar" dest="${build.classes.dir}"/>
-         <unjar src="${ext.lib.dir}/antlr-2.7.7.jar" dest="${build.classes.dir}"/>
-         <unjar src="${ext.lib.dir}/stringtemplate-3.1b1.jar" dest="${build.classes.dir}"/>
+       <!--
          <unjar src="${ext.lib.dir}/junit.jar" dest="${build.classes.dir}"/>
+	 -->
+         <unjar src="${ext.lib.dir}/javacuprt.jar" dest="${build.classes.dir}"/>
          <unjar src="${ext.lib.dir}/asm-all-3.0.jar" dest="${build.classes.dir}"/>
          <jar jarfile="${build.lib.dir}/orchestration.jar" manifest="${dd.dir}/META-INF/MANIFEST.MF">
              <fileset dir="${build.classes.dir}" includes="**/*"/>
@@ -131,233 +158,6 @@ The XTS installation directory must be specified with the XTS_HOME environment v
    <target name="clean">
        <delete dir="${build.dir}"/>
        <delete dir="${dd.grammar.dir}" includes="*.java *.tokens"/>
-    </target>
-
-    <target name="TestParse.compile">
-        <!-- build the TestParse class and then run it to check parsing of rule elements -->
-        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}" includes="TestParse.java">
-            <classpath>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
-            </classpath>
-        </javac>
-    </target>
-
-    <target name="TestParse" depends="TestParse.compile">
-        <java classname="TestParse">
-            <classpath>
-                <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
-            </classpath>
-            <arg value='WHEN coordinator:Coordinator = $1, recovered : boolean = coordinator.recovered, identifier : String = coordinator.getInstanceIdentifier()'/>
-            <arg value='IF recovered AND getCounter(identifier)'/>
-            <arg value='DO debug("killing prepare"),  killThread()'/>
-        </java>
-    </target>
-
-    <target name="TestRule.compile">
-        <!-- build the TestRule class and then run it to check parsing of rule elements -->
-        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}" includes="TestRule.java">
-            <classpath>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
-            </classpath>
-        </javac>
-    </target>
-
-    <target name="TestRule" depends="TestRule.compile">
-        <java classname="TestRule" fork="true">
-            <classpath>
-                <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
-                <!-- xts, jta and jboss as jars-->
-                <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
-                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
-                <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
-                <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
-                <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
-                <fileset dir="${jboss.server.deploy.dir}" includes="${jboss.server.deploy.jars}"/>
-            </classpath>
-            <arg value='-event'/>
-            <arg value='coordinator:Coordinator = $1, recovered : boolean = coordinator.recovered, identifier : String = coordinator.getInstanceIdentifier()'/>
-            <arg value='-condition'/>
-            <arg value='recovered AND getCounter(identifier)'/>
-            <arg value='-action'/>
-            <arg value='debug("killing prepare"),  killThread()'/>
-	    <arg value = "-rule"/>
-	    <arg value='WHEN coordinator:Coordinator = $1, recovered : boolean = coordinator.recovered, identifier : String = coordinator.getInstanceIdentifier() IF recovered AND getCounter(identifier) DO debug("killing prepare"), killThread()'/>
-        </java>
-    </target>
-
-    <target name="TestRuleDebug" depends="TestRule.compile">
-        <java classname="TestRule" fork="true">
-            <classpath>
-                <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
-                <!-- xts, jta and jboss as jars-->
-                <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
-                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
-                <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
-                <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
-                <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
-                <fileset dir="${jboss.server.deploy.dir}" includes="${jboss.server.deploy.jars}"/>
-            </classpath>
-            <jvmarg value="-Xdebug"/>
-            <jvmarg value="-Xrunjdwp:transport=dt_socket,server=n,address=5005,suspend=y"/>
-            <arg value='-event'/>
-            <arg value='coordinator:Coordinator = $1, recovered : boolean = coordinator.recovered, identifier : String = coordinator.getInstanceIdentifier()'/>
-            <arg value='-condition'/>
-            <arg value='recovered AND getCounter(identifier)'/>
-            <arg value='-action'/>
-            <arg value='debug("killing prepare"),  killThread()'/>
-	    <arg value = "-rule"/>
-	    <arg value='WHEN coordinator:Coordinator = $1, recovered : boolean = coordinator.recovered, identifier : String = coordinator.getInstanceIdentifier() IF recovered AND getCounter(identifier) DO debug("killing prepare"), killThread()'/>
-        </java>
-    </target>
-
-    <target name="TestRuleFile" depends="TestRule.compile">
-        <java classname="TestRule" fork="true">
-            <classpath>
-                <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
-                <!-- xts, jta and jboss as jars-->
-                <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
-                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
-                <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
-                <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
-                <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
-                <fileset dir="${jboss.server.deploy.dir}" includes="${jboss.server.deploy.jars}"/>
-            </classpath>
-            <arg value='-class'/>
-            <arg value='com.arjuna.wst11.messaging.engines.CoordinatorEngine'/>
-            <arg value='-method'/>
-            <arg value='commit'/>
-            <arg value='-file'/>
-            <arg value='testrule.txt'/>
-        </java>
-    </target>
-
-    <target name="TestRuleFileDebug" depends="TestRule.compile">
-        <java classname="TestRule" fork="true">
-            <classpath>
-                <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
-                <!-- xts, jta and jboss as jars-->
-                <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
-                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
-                <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
-                <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
-                <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
-                <fileset dir="${jboss.server.deploy.dir}" includes="${jboss.server.deploy.jars}"/>
-            </classpath>
-            <jvmarg value="-Xdebug"/>
-            <jvmarg value="-Xrunjdwp:transport=dt_socket,server=n,address=5005,suspend=y"/>
-            <arg value='-class'/>
-            <arg value='com.arjuna.wst11.messaging.engines.CoordinatorEngine'/>
-            <arg value='-method'/>
-            <arg value='commit'/>
-            <arg value='-file'/>
-            <arg value='testrule.txt'/>
-        </java>
-    </target>
-    <target name="TestRuleFile2" depends="TestRule.compile">
-        <java classname="TestRule" fork="true">
-            <classpath>
-                <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
-                <!-- xts, jta and jboss as jars-->
-                <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
-                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
-                <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
-                <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
-                <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
-                <fileset dir="${jboss.server.deploy.dir}" includes="${jboss.server.deploy.jars}"/>
-            </classpath>
-            <arg value='-class'/>
-            <arg value='com.arjuna.wst11.messaging.CoordinatorProcessorImpl'/>
-            <arg value='-method'/>
-            <arg value='committed(Notification, AddressingProperties, ArjunaContext)'/>
-            <arg value='-file'/>
-            <arg value='testrule2.txt'/>
-        </java>
-    </target>
-    <target name="TestRuleFileDebug2" depends="TestRule.compile">
-        <java classname="TestRule" fork="true">
-            <classpath>
-                <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
-                <!-- xts, jta and jboss as jars-->
-                <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
-                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
-                <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
-                <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
-                <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
-                <fileset dir="${jboss.server.deploy.dir}" includes="${jboss.server.deploy.jars}"/>
-            </classpath>
-            <jvmarg value="-Xdebug"/>
-            <jvmarg value="-Xrunjdwp:transport=dt_socket,server=n,address=5005,suspend=y"/>
-            <arg value='-class'/>
-            <arg value='com.arjuna.wst11.messaging.CoordinatorProcessorImpl'/>
-            <arg value='-method'/>
-            <arg value='committed(Notification, AddressingProperties, ArjunaContext)'/>
-            <arg value='-file'/>
-            <arg value='testrule2.txt'/>
-        </java>
-    </target>
-
-    <target name="TestJar.compile">
-        <!-- build the TestJar class and then run it to check parsing of rule elements -->
-        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}" includes="TestJar.java">
-            <classpath>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
-            </classpath>
-        </javac>
-    </target>
-
-    <target name="TestJar" depends="TestJar.compile">
-        <java classname="TestJar" fork="true">
-            <classpath>
-                <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
-                <!-- xts, jta and jboss as jars-->
-                <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
-                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
-                <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
-                <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
-                <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
-                <fileset dir="${jboss.server.deploy.dir}" includes="${jboss.server.deploy.jars}"/>
-            </classpath>
-	    <arg value="${build.lib.dir}/orchestration.jar"/>
-        </java>
-    </target>
-
-    <target name="TestJarDebug" depends="TestJar.compile">
-        <java classname="TestJar" fork="true">
-            <classpath>
-                <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
-                <!-- xts, jta and jboss as jars-->
-                <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
-                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
-                <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
-                <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
-                <fileset dir="${jboss.server.lib.dir}" includes="${jboss.server.lib.jars}"/>
-                <fileset dir="${jboss.server.deploy.dir}" includes="${jboss.server.deploy.jars}"/>
-            </classpath>
-            <jvmarg value="-Xdebug"/>
-            <jvmarg value="-Xrunjdwp:transport=dt_socket,server=n,address=5005,suspend=y"/>
-	    <arg value="${build.lib.dir}/orchestration.jar"/>
-        </java>
     </target>
 
     <target name="TestScript.compile">

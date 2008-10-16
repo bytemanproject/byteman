@@ -24,17 +24,15 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
-import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 /**
  * binary operators includes arithmetic and comparison operators
  */
 public abstract class BinaryOperExpression extends OperExpression
 {
-    public BinaryOperExpression(Rule rule, int oper, Type type, Token token, Expression operand1, Expression operand2)
+    public BinaryOperExpression(Rule rule, int oper, Type type, ParseNode token, Expression operand1, Expression operand2)
     {
         super(rule, oper, type, token);
         this.operand1 = operand1;

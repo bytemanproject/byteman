@@ -24,13 +24,10 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
-import org.antlr.runtime.tree.CommonTree;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 import java.util.List;
 import java.util.Iterator;
@@ -44,7 +41,7 @@ import java.lang.reflect.Array;
 public class ArrayExpression extends Expression
 {
 
-    public ArrayExpression(Rule rule, Type type, Token token, Expression arrayRef, List<Expression> idxList)
+    public ArrayExpression(Rule rule, Type type, ParseNode token, Expression arrayRef, List<Expression> idxList)
     {
         super(rule, type, token);
         this.arrayRef = arrayRef;

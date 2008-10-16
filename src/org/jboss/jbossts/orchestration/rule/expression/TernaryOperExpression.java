@@ -24,17 +24,15 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
-import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 /**
  * ternary operators includes conditional evaluation operator 'cond ? if_expr : else_expr'
  */
 public abstract class TernaryOperExpression extends OperExpression
 {
-    public TernaryOperExpression(Rule rule, int oper, Type type, Token token, Expression operand1,
+    public TernaryOperExpression(Rule rule, int oper, Type type, ParseNode token, Expression operand1,
                                  Expression operand2, Expression operand3)
     {
         super(rule, oper, type, token);

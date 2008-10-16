@@ -23,13 +23,10 @@
 */
 package org.jboss.jbossts.orchestration.rule.expression;
 
-import org.antlr.runtime.Token;
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.exception.TypeException;
-import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
-import java.util.Iterator;
 import java.io.StringWriter;
 
 /**
@@ -37,7 +34,7 @@ import java.io.StringWriter;
  */
 public abstract class OperExpression extends Expression
 {
-    OperExpression(Rule rule, int oper, Type type, Token token)
+    OperExpression(Rule rule, int oper, Type type, ParseNode token)
     {
         super(rule, type, token);
 
@@ -67,7 +64,7 @@ public abstract class OperExpression extends Expression
             stringWriter.write(" ");
             getOperand(1).writeTo(stringWriter);
             stringWriter.write(")");
-        } else if (oper == IF) {
+        } else if (oper == COND) {
             // we only have one ternary operator
             stringWriter.write("(");
             getOperand(0).writeTo(stringWriter);
@@ -115,15 +112,17 @@ public abstract class OperExpression extends Expression
     final public static int AND         = 0x0041 | BINARY;
 
     final public static int EQ          = 0x0080 | BINARY;
-    final public static int NEQ         = 0x0081 | BINARY;
+    final public static int NE          = 0x0081 | BINARY;
     final public static int GT          = 0x0082 | BINARY;
     final public static int LT          = 0x0083 | BINARY;
-    final public static int GEQ         = 0x0084 | BINARY;
-    final public static int LEQ         = 0x0085 | BINARY;
+    final public static int GE          = 0x0084 | BINARY;
+    final public static int LE          = 0x0085 | BINARY;
 
     final public static int BOR         = 0x0100 | BINARY;
     final public static int BAND        = 0x0101 | BINARY;
     final public static int BXOR        = 0x0102 | BINARY;
+
+    final public static int UMINUS      = 0x0200 | UNARY;
 
     final public static int MUL         = 0x0201 | BINARY;
     final public static int DIV         = 0x0202 | BINARY;
@@ -131,7 +130,7 @@ public abstract class OperExpression extends Expression
     final public static int MINUS       = 0x0204 | BINARY;
     final public static int MOD         = 0x0205 | BINARY;
 
-    final public static int IF          = 0x0400 | TERNARY;
+    final public static int COND        = 0x0400 | TERNARY;
 
     final private static int[] operands = {
             NOT,
@@ -139,44 +138,46 @@ public abstract class OperExpression extends Expression
             OR,
             AND,
             EQ,
-            NEQ,
+            NE,
             GT,
             LT,
-            GEQ,
-            LEQ,
+            GE,
+            LE,
             BOR,
             BAND,
             BXOR,
+            UMINUS,
             MUL,
             DIV,
             PLUS,
             MINUS,
             MOD,
-            IF
+            COND
     };
 
-    /* parser operands ar enot allocated rationally so we convert usingthis table */
+    /* parser operands are not allocated rationally so we convert using this table */
 
     final private static int[] parserOperands = {
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.NOT,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.TWIDDLE,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.OR,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.AND,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.EQ,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.NEQ,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.GT,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.LT,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.GEQ,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.LEQ,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.BOR,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.BAND,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.BXOR,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.MUL,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.DIV,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.PLUS,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.MINUS,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.MOD,
-            org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.IF
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.NOT,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.TWIDDLE,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.OR,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.AND,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.EQ,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.NE,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.GT,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.LT,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.GE,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.LE,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.BOR,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.BAND,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.BXOR,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.UMINUS,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.MUL,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.DIV,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.PLUS,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.MINUS,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.MOD,
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.COND
     };
 
     final private static String[] operandNames = {
@@ -193,6 +194,7 @@ public abstract class OperExpression extends Expression
             "|",
             "&",
             "^",
+            "-",
             "*",
             "/",
             "+",

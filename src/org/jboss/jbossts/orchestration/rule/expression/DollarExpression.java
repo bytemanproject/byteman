@@ -23,14 +23,12 @@
 */
 package org.jboss.jbossts.orchestration.rule.expression;
 
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.binding.Binding;
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 import java.io.StringWriter;
 
@@ -48,32 +46,24 @@ import java.io.StringWriter;
  */
 public class DollarExpression extends Expression
 {
-    public DollarExpression(Rule rule, Type type, Token token)
+    public DollarExpression(Rule rule, Type type, ParseNode token, int index)
     {
         super(rule, type, token);
         String text = token.getText();
-        this.name = text.substring(1, text.length());
-        char first = name.charAt(0);
-        if ('0' <= first && first <= '9') {
-            try {
-                index = Integer.decode(name);
-            } catch (NumberFormatException nfe) {
-                // oops should not be possible according to tokenizer rules
-                index = -1;
-            }
+        if (index < 0) {
+            name = "$";
+        } else {
+            name = Integer.toString(index);
         }
+        this.index = index;
     }
 
-    public DollarExpression(Rule rule, Type type, Token token, String text)
+    public DollarExpression(Rule rule, Type type, ParseNode token, String name)
     {
         super(rule, type, token);
-        this.name = text.substring(1, text.length());
-        try {
-            index = Integer.decode(name);
-        } catch (NumberFormatException nfe) {
-            // oops should not be possible according to tokenizer rules
-            index = -1;
-        }
+        String text = token.getText();
+        this.index = -2;
+        this.name = name;
     }
 
     /**
@@ -98,7 +88,12 @@ public class DollarExpression extends Expression
 
     public Type typeCheck(Type expected) throws TypeException {
         // ensure there is a parameter with the relevant name in the bindings
-        Binding binding = getBindings().lookup(Integer.toString(index));
+        Binding binding;
+        if (index >= 0) {
+            binding = getBindings().lookup(Integer.toString(index));
+        } else {
+            binding = getBindings().lookup(name);
+        }
         if (binding == null) {
             throw new TypeException("DollarExpression.typeCheck : invalid bound parameter $" + name + getPos());
         }
@@ -115,11 +110,7 @@ public class DollarExpression extends Expression
     }
 
     public void writeTo(StringWriter stringWriter) {
-        if (name.equals("-1")) {
-            stringWriter.write("$$");
-        } else {
-            stringWriter.write("$" + name);
-        }
+        stringWriter.write("$" + name);
     }
 
     private String name;

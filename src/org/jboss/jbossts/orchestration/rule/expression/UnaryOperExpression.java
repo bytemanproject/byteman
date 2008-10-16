@@ -24,12 +24,8 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
-import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
-
-import java.io.StringWriter;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 /**
  * unary operators includes boolean NOT and arithmetic TWIDDLE
@@ -38,7 +34,7 @@ import java.io.StringWriter;
  */
 public abstract class UnaryOperExpression extends OperExpression
 {
-    public UnaryOperExpression(Rule rule, int oper, Type type, Token token, Expression operand)
+    public UnaryOperExpression(Rule rule, int oper, Type type, ParseNode token, Expression operand)
     {
         super(rule, oper, type, token);
         this.operand = operand;

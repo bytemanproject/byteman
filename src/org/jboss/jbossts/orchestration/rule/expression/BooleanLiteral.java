@@ -24,12 +24,10 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 import java.io.StringWriter;
 
@@ -40,10 +38,10 @@ public class BooleanLiteral extends Expression
 {
     private boolean value;
     
-    public BooleanLiteral(Rule rule, Token token, Boolean value)
+    public BooleanLiteral(Rule rule, ParseNode token)
     {
         super(rule, Type.Z, token);
-        this.value = value;
+        this.value = (Boolean)token.getChild(0) ;
     }
 
 
@@ -56,7 +54,7 @@ public class BooleanLiteral extends Expression
      *         been detected during inference/validation.
      */
     public boolean bind() {
-        return false;
+        return true;
     }
 
     public Type typeCheck(Type expected) throws TypeException {

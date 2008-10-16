@@ -33,18 +33,16 @@ import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.binding.Binding;
 import org.jboss.jbossts.orchestration.rule.grammar.ECATokenLexer;
 import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 import org.jboss.jbossts.orchestration.synchronization.CountDown;
 import org.jboss.jbossts.orchestration.synchronization.Waiter;
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
-import org.antlr.runtime.tree.CommonTree;
 import org.objectweb.asm.Opcodes;
 
-import static org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.*;
-
 import java.io.StringWriter;
+import java.io.StringReader;
 import java.util.*;
+
+import java_cup.runtime.Symbol;
 
 /**
  * A rule ties together an event, condition and action. It also maintains a TypeGroup
@@ -139,52 +137,25 @@ public class Rule
     private Rule(String script, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
-        CommonTree ruleTree;
-
+        ParseNode ruleTree;
+        // TODO -- need to parse off the class, method and line number!
         typeGroup = new TypeGroup(loader);
         bindings = new Bindings();
         try {
-            ECATokenLexer lexer = new ECATokenLexer(new ANTLRStringStream(script));
-            CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-            ECAGrammarParser parser = new ECAGrammarParser(tokenStream);
-            ECAGrammarParser.eca_script_rule_return eca_script_rule = parser.eca_script_rule();
-            ruleTree = (CommonTree) eca_script_rule.getTree();
-        } catch (RecognitionException e) {
+            // ensure line numbers start at 1
+            String fullScript = "\n" + script;
+            ECATokenLexer lexer = new ECATokenLexer(new StringReader(fullScript));
+            ECAGrammarParser parser = new ECAGrammarParser(lexer);
+            Symbol parse = parser.parse();
+            ruleTree = (ParseNode) parse.value;
+        } catch (Exception e) {
             throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : error parsing rule " + script, e);
         }
-        // format is ^(RULE name class method line event condition action)
+        // format is ^(BIND event condition action)
 
-        CommonTree nameTree = (CommonTree)ruleTree.getChild(0);
-        CommonTree classTree = (CommonTree)ruleTree.getChild(1);
-        CommonTree methodTree = (CommonTree)ruleTree.getChild(2);
-        CommonTree lineTree = (CommonTree)ruleTree.getChild(3);
-        CommonTree eventTree = (CommonTree)ruleTree.getChild(4);
-        CommonTree conditionTree = (CommonTree)ruleTree.getChild(5);
-        CommonTree actionTree = (CommonTree)ruleTree.getChild(6);
-        if (nameTree.getToken().getType() != SYMBOL) {
-            throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : invalid rule name " + script);
-        } else {
-            name = nameTree.getToken().getText();
-        }
-        if (classTree.getToken().getType() != SYMBOL) {
-            throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : invalid class name " + script);
-        } else {
-            targetClass = classTree.getToken().getText();
-        }
-        if (methodTree.getToken().getType() != SYMBOL) {
-            throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : invalid method name " + script);
-        } else {
-            targetMethod = methodTree.getToken().getText();
-        }
-        if (lineTree.getToken().getType() != NUMBER) {
-            throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : invalid line number" + script);
-        } else {
-            try {
-                targetLine = Integer.valueOf(lineTree.getToken().getText());
-            } catch (NumberFormatException ne) {
-                throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : invalid format for line number" + script);
-            }
-        }
+        ParseNode eventTree = (ParseNode)ruleTree.getChild(0);
+        ParseNode conditionTree = (ParseNode)ruleTree.getChild(1);
+        ParseNode actionTree = (ParseNode)ruleTree.getChild(2);
         event = Event.create(this, eventTree);
         condition = Condition.create(this, conditionTree);
         action = Action.create(this, actionTree);
@@ -218,24 +189,25 @@ public class Rule
     private Rule(String name, String targetClass, String targetMethod, int targetLine, String ruleSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
-        CommonTree ruleTree;
+        ParseNode ruleTree;
 
         this.name = name;
         typeGroup = new TypeGroup(loader);
         bindings = new Bindings();
         if (ruleSpec != null) {
+            // ensure line numbers start at 1
+            String fullSpec = "\n" + ruleSpec;
             try {
-                ECATokenLexer lexer = new ECATokenLexer(new ANTLRStringStream(ruleSpec));
-                CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-                ECAGrammarParser parser = new ECAGrammarParser(tokenStream);
-                ECAGrammarParser.eca_rule_return rule_parse = parser.eca_rule();
-                ruleTree = (CommonTree) rule_parse.getTree();
-            } catch (RecognitionException e) {
+                ECATokenLexer lexer = new ECATokenLexer(new StringReader(fullSpec));
+                ECAGrammarParser parser = new ECAGrammarParser(lexer);
+                Symbol parse = parser.parse();
+                ruleTree = (ParseNode) parse.value;
+            } catch (Exception e) {
                 throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : error parsing rule " + ruleSpec, e);
             }
-            CommonTree eventTree = (CommonTree)ruleTree.getChild(0);
-            CommonTree conditionTree = (CommonTree)ruleTree.getChild(1);
-            CommonTree actionTree = (CommonTree)ruleTree.getChild(2);
+            ParseNode eventTree = (ParseNode)ruleTree.getChild(0);
+            ParseNode conditionTree = (ParseNode)ruleTree.getChild(1);
+            ParseNode actionTree = (ParseNode)ruleTree.getChild(2);
             event = Event.create(this, eventTree);
             condition = Condition.create(this, conditionTree);
             action = Action.create(this, actionTree);
@@ -388,7 +360,7 @@ public class Rule
         Type type;
         // add a binding for the rule so we can call builting static methods
         type = typeGroup.create("org.jboss.jbossts.orchestration.rule.Rule$Helper");
-        Binding ruleBinding = new Binding(this, "-1", type);
+        Binding ruleBinding = new Binding(this, "$", type);
         parameterBindings.add(ruleBinding);
 
         if (!isStatic) {
@@ -537,12 +509,12 @@ public class Rule
         if (event != null) {
             event.writeTo(stringWriter);
         } else {
-            stringWriter.write("BIND NONE\n");
+            stringWriter.write("BIND NOTHING\n");
         }
         if (condition != null) {
             condition.writeTo(stringWriter);
         } else {
-            stringWriter.write("IF   TRUE\n");
+            stringWriter.write("COND   TRUE\n");
         }
         if (action != null) {
             action.writeTo(stringWriter);

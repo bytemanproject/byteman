@@ -23,13 +23,8 @@
 */
 package org.jboss.jbossts.orchestration.rule.expression;
 
-import org.antlr.runtime.tree.CommonTree;
-import org.antlr.runtime.Token;
-import static org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser.*;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
-import org.jboss.jbossts.orchestration.rule.expression.*;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
@@ -49,14 +44,14 @@ public abstract class Expression extends RuleElement
      * Create a new expression.
      * @param type the current type for this expression.
      */
-    protected Expression(Rule rule, Type type, Token token)
+    protected Expression(Rule rule, Type type, ParseNode token)
     {
         super(rule);
         this.rule = rule;
         this.type = type;
         this.token = token;
         if (token != null) {
-            this.charPos = token.getCharPositionInLine();
+            this.charPos = token.getColumn();
             this.line = token.getLine();
         } else {
             this.charPos = 0;
@@ -112,5 +107,5 @@ public abstract class Expression extends RuleElement
     protected Type type;
     protected int charPos;
     protected int line;
-    protected Token token;
+    protected ParseNode token;
 }

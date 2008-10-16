@@ -23,14 +23,13 @@
 */
 package org.jboss.jbossts.orchestration.rule.expression;
 
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.binding.Binding;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 import java.io.StringWriter;
 import java.lang.reflect.Field;
@@ -40,18 +39,14 @@ import java.lang.reflect.Field;
  */
 public class FieldExpression extends Expression
 {
-    public FieldExpression(Rule rule, Type type, Token token, String ref, String[] fieldNames) {
-        // type is the type of last field
-        // ownerType[i] is the type of the owner of field[i]
-        // so ownerType[0] is the type of ref;
-        super(rule, type, token);
-        this.ref = ref;
-        this.fieldNames = fieldNames;
-        int len = fieldNames.length;
-        this.ownerType = new Type[len];
-        for (int i = 0; i < len; i++) {
-            ownerType[i] = Type.UNDEFINED;
-        }
+    public FieldExpression(Rule rule, Type type, ParseNode fieldTree, String fieldName, Expression owner, String[] pathList) {
+        // we cannot process the pathlist until typecheck time
+        super(rule, type, fieldTree);
+        this.fieldName = fieldName;
+        this.owner = owner;
+        this.pathList = pathList;
+        this.ownerType = null;
+        this.indirectStatic = true;
     }
 
     /**
@@ -63,96 +58,175 @@ public class FieldExpression extends Expression
      *         been detected during inference/validation.
      */
     public boolean bind() {
-        // ensure that there is a binding with this name
 
-        Binding binding = getBindings().lookup(ref);
+        if (owner != null) {
+            // ensure the owner is bound
+            owner.bind();
+        } else {
+            // see if the path starts with a bound variable and, if so, treat the path as a series
+            // of field references and construct a owner expression from it. if not we will have to
+            // wait until runtime in order to resolve this as a static field reference
+            String leading = pathList[0];
+            Binding binding = getBindings().lookup(leading);
+            if (binding != null) {
+                // create a sequence of field expressions and make it the owner
 
-        if (binding == null) {
-            System.err.println("FieldExpresssion.bind : unbound instance " + ref + getPos());
-            return false;
+                int l = pathList.length;
+                Expression owner =  new Variable(rule, binding.getType(), token, binding.getName());
+                for (int idx = 1; idx < l; idx++) {
+                    owner = new FieldExpression(rule, Type.UNDEFINED, token, pathList[idx], owner, null);
+                }
+                this.owner = owner;
+                this.pathList = null;
+                // not strictly necessary?
+                this.owner.bind();
+            }
         }
 
         return true;
     }
 
     public Type typeCheck(Type expected) throws TypeException {
-        // check the owner type is defined and then start searching for
-        // the types of each field referenced from it
+        if (owner == null && pathList != null) {
+            // factor off a typename from the path
+            TypeGroup typeGroup = getTypeGroup();
+            Type rootType = typeGroup.match(pathList);
+            if (rootType == null) {
+                throw new TypeException("FieldExpression.typeCheck : invalid path " + getPath(pathList.length) + " to static field " + fieldName + getPos());
+            }
 
-        Binding binding = getBindings().lookup(ref);
-        Type bindingType = binding.getType();
-        ownerType[0] = Type.dereference(bindingType);
-        
-        if (ownerType[0].isUndefined()) {
-            throw new TypeException("FieldExpresssion.typeCheck : unbound instance " + ref + getPos());
+            // find out how many of the path elements are included in the type name
+
+            String rootTypeName = rootType.getName();
+
+            int idx = getPathCount(rootTypeName);
+
+            if (idx < pathList.length) {
+                // create a static field reference using the type name and the first field name and wrap it with
+                // enough field references to use up all the path
+                String fieldName = pathList[idx++];
+                Expression owner = new StaticExpression(rule, Type.UNDEFINED, token, fieldName, rootTypeName);
+                while (idx < pathList.length) {
+                    owner = new FieldExpression(rule, Type.UNDEFINED, token, pathList[idx++], owner, null);
+                }
+                this.owner = owner;
+            } else {
+                // ok this field reference is actually a static reference -- install the one we just created as
+                // owner and mark this one so it sidesteps any further requests to the owner
+                this.owner = new StaticExpression(rule, Type.UNDEFINED, token, this.fieldName, rootTypeName);
+                this.indirectStatic = true;
+            }
+            // get rid of the path list now
+            this.pathList = null;
+            // not strictly necessary?
+            this.owner.bind();
         }
 
-        Class ownerClazz = ownerType[0].getTargetClass();
-        Class valueClass = null;
-        Type valueType = null;
-        int fieldCount = fieldNames.length;
+        if (indirectStatic) {
+            // this is really a static field reference pointed to by owner so get it to type check
+            type = ownerType = Type.dereference(owner.typeCheck(expected));
+            return type;
+        } else {
 
-        fields = new Field[fieldCount];
+            // ok, type check the owner and then use it to derive the field type
 
-        for (int i = 0; i < fieldCount; i++) {
-            if (i != 0) {
-                ownerType[i] = valueType;
-                ownerClazz = valueType.getTargetClass();
+            ownerType = Type.dereference(owner.typeCheck(Type.UNDEFINED));
+            
+            if (ownerType.isUndefined()) {
+                throw new TypeException("FieldExpresssion.typeCheck : unbound owner type for field " + fieldName + getPos());
             }
-            String fieldName = fieldNames[i];
+
+            Class ownerClazz = ownerType.getTargetClass();
+            Class valueClass = null;
+
             try {
-                fields[i]  = ownerClazz.getField(fieldName);
+                field  = ownerClazz.getField(fieldName);
             } catch (NoSuchFieldException e) {
                 throw new TypeException("FieldExpresssion.typeCheck : invalid field reference " + fieldName + getPos());
             }
 
-            valueClass = fields[i].getType();
-            valueType = getTypeGroup().ensureType(valueClass);
+            valueClass = field.getType();
+            type = getTypeGroup().ensureType(valueClass);
+
+            if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
+                throw new TypeException("FieldExpresssion.typeCheck : invalid expected type " + expected.getName() + getPos());
+            }
+
+            return type;
         }
-
-        type = valueType;
-
-        if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
-            throw new TypeException("FieldExpresssion.typeCheck : invalid expected type " + expected.getName() + getPos());
-        }
-
-        return type;
     }
 
     public Object interpret(Rule.BasicHelper helper) throws ExecuteException
     {
-        try {
-            // TODO the reference should really be an expression?
-            Object value = helper.getBinding(ref);
+        if (indirectStatic) {
+            return owner.interpret(helper);
+        } else {
+            try {
+                // TODO the reference should really be an expression?
+                Object value = owner.interpret(helper);
 
-            int fieldCount = fields.length;
-            for (int i = 0; i < fieldCount; i++) {
                 if (value == null) {
                     throw new ExecuteException("FieldExpression.interpret : attempted field indirection through null value " + token.getText() + getPos());
                 }
-                value = fields[i].get(value);
-            }
 
-            return value;
-        } catch (ExecuteException e) {
-            throw e;
-        } catch (IllegalAccessException e) {
-            throw new ExecuteException("FieldExpression.interpret : error accessing field " + token.getText() + getPos(), e);
-        } catch (Exception e) {
-            throw new ExecuteException("FieldExpression.interpret : unexpected exception accessing field " + token.getText() + getPos(), e);
+                return field.get(value);
+            } catch (ExecuteException e) {
+                throw e;
+            } catch (IllegalAccessException e) {
+                throw new ExecuteException("FieldExpression.interpret : error accessing field " + fieldName + getPos(), e);
+            } catch (Exception e) {
+                throw new ExecuteException("FieldExpression.interpret : unexpected exception accessing field " + fieldName + getPos(), e);
+            }
         }
+    }
+
+    public String getPath(int len)
+    {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(pathList[0]);
+
+        for (int i = 1; i < len; i++) {
+            buffer.append(".");
+            buffer.append(pathList[i]);
+        }
+        return buffer.toString();
+    }
+
+    public int getPathCount(String name)
+    {
+        int charMax = name.length();
+        int charCount = 0;
+        int dotExtra = 0;
+        int idx;
+        for (idx = 0; idx < pathList.length; idx++) {
+            charCount += (dotExtra + pathList[idx].length());
+            if (charCount > charMax) {
+                break;
+            }
+        }
+        return idx;
     }
 
     public void writeTo(StringWriter stringWriter) {
-        stringWriter.write(ref);
-        for (String field : fieldNames) {
-            stringWriter.write(".");
-            stringWriter.write(field);
+        // we normally have a owner expression but before binding we have a path
+        if (owner != null) {
+            owner.writeTo(stringWriter);
+        } else {
+            String sepr = "";
+            for (String field : pathList) {
+                stringWriter.write(sepr);
+                stringWriter.write(field);
+                sepr =".";
+            }
         }
+        stringWriter.write(".");
+        stringWriter.write(fieldName);
     }
 
-    private String ref;
-    private String[] fieldNames;
-    private Type[] ownerType;
-    private Field[] fields;
+    private Expression owner;
+    private String[] pathList;
+    private String fieldName;
+    private Type ownerType;
+    private Field field;
+    private boolean indirectStatic;
 }

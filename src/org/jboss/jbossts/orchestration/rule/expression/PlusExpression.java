@@ -24,12 +24,10 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 /**
  * A plus operator expression which handles the case where we do not know the type of the first
@@ -38,7 +36,7 @@ import org.antlr.runtime.Token;
  */
 public class PlusExpression extends BinaryOperExpression
 {
-    public PlusExpression(Rule rule, Token token, Expression left, Expression right)
+    public PlusExpression(Rule rule, ParseNode token, Expression left, Expression right)
     {
         super(rule, PLUS, Type.UNDEFINED, token, left, right);
     }

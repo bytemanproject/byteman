@@ -24,19 +24,17 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 /**
  * A binary arithmetic operator expression
  */
 public class BitExpression extends BinaryOperExpression
 {
-    public BitExpression(Rule rule, int oper, Token token, Expression left, Expression right)
+    public BitExpression(Rule rule, int oper, ParseNode token, Expression left, Expression right)
     {
         // n.b. left and right must be of integral type
 

@@ -24,19 +24,17 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 /**
  * expression representing a ternary conditional evaluation (cond ? if_expr : else_expr)
  */
 public class ConditionalEvalExpression extends TernaryOperExpression
 {
-    public ConditionalEvalExpression(Rule rule, Type type, Token token, Expression cond, Expression if_expr, Expression else_expr)
+    public ConditionalEvalExpression(Rule rule, Type type, ParseNode token, Expression cond, Expression if_expr, Expression else_expr)
     {
         super(rule, TERNARY, type, token, cond, if_expr, else_expr);
     }

@@ -24,19 +24,17 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 /**
  * A binary string concatenation operator expression
  */
 public class StringPlusExpression extends BinaryOperExpression
 {
-    public StringPlusExpression(Rule rule, Token token, Expression left, Expression right)
+    public StringPlusExpression(Rule rule, ParseNode token, Expression left, Expression right)
     {
         super(rule, PLUS, Type.STRING, token, left, right);
     }

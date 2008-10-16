@@ -23,11 +23,6 @@
 */
 package org.jboss.jbossts.orchestration.rule;
 
-import org.antlr.runtime.tree.CommonTree;
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
-import org.antlr.runtime.Token;
 import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.binding.Bindings;
@@ -37,18 +32,22 @@ import org.jboss.jbossts.orchestration.rule.expression.BooleanExpression;
 import org.jboss.jbossts.orchestration.rule.expression.BooleanLiteral;
 import org.jboss.jbossts.orchestration.rule.grammar.ECATokenLexer;
 import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 
 import java.io.StringWriter;
+import java.io.StringReader;
+
+import java_cup.runtime.Symbol;
 
 /**
  * class which represents a rule condition comprising a boolean expression
  */
 public class Condition extends RuleElement
 {
-    public static Condition create(Rule rule, CommonTree conditionTree) throws TypeException
+    public static Condition create(Rule rule, ParseNode conditionTree) throws TypeException
     {
         Condition condition = new Condition(rule, conditionTree);
         return condition;
@@ -59,31 +58,25 @@ public class Condition extends RuleElement
         if ("".equals(text)) {
             return new Condition(rule);
         }
+        String fulltext = "BIND NOTHING IF \n" + text + "\n DO NOTHING";
         try {
-            ECATokenLexer lexer = new ECATokenLexer(new ANTLRStringStream(text));
-            CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-            ECAGrammarParser parser = new ECAGrammarParser(tokenStream);
-            ECAGrammarParser.eca_condition_return parse = parser.eca_condition();
-            CommonTree conditionTree = (CommonTree) parse.getTree();
+            ECATokenLexer lexer = new ECATokenLexer(new StringReader(text));
+            ECAGrammarParser parser = new ECAGrammarParser(lexer);
+            Symbol condition_parse = parser.parse();
+            ParseNode conditionTree = (ParseNode) condition_parse.value;
             Condition condition = new Condition(rule, conditionTree);
             return condition;
-        } catch (RecognitionException e) {
+        } catch (Exception e) {
             throw new ParseException("org.jboss.jbossts.orchestration.rule.Condition : error parsing condition " + text, e);
         }
     }
 
-    protected Condition(Rule rule, CommonTree conditionTree)
+    protected Condition(Rule rule, ParseNode conditionTree)
             throws TypeException
     {
         super(rule);
-        Token token = conditionTree.getToken();
-        if (token.getType() == ECAGrammarParser.TRUE) {
-            this.condition = new BooleanLiteral(rule, token, true);
-        } else if (token.getType() == ECAGrammarParser.FALSE) {
-            this.condition = new BooleanLiteral(rule, token, false);
-        } else {
-            this.condition = ExpressionHelper.createExpression(rule, rule.getBindings(), conditionTree, Type.BOOLEAN);
-        }
+        int tag = conditionTree.getTag();
+        this.condition = ExpressionHelper.createExpression(rule, rule.getBindings(), conditionTree, Type.BOOLEAN);
     }
     
     protected Condition(Rule rule)

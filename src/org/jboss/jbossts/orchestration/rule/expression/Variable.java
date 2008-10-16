@@ -23,14 +23,12 @@
 */
 package org.jboss.jbossts.orchestration.rule.expression;
 
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.binding.Binding;
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 import java.io.StringWriter;
 
@@ -41,12 +39,12 @@ import java.io.StringWriter;
  */
 public class Variable extends Expression
 {
-    public Variable(Rule rule, Type type, Token token) {
+    public Variable(Rule rule, Type type, ParseNode token) {
         super(rule, type, token);
         this.name = token.getText();
     }
 
-    public Variable(Rule rule, Type type, Token token, String name) {
+    public Variable(Rule rule, Type type, ParseNode token, String name) {
         super(rule, type, token);
         this.name = name;
     }

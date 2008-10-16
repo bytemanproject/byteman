@@ -53,7 +53,7 @@ sub-expressions using the usual set of operators. Note that
 assignment, new operations and throw operations are not allowed in
 expressions.
 
-Rule definitiosn specify a target class, a target method and a target
+Rule definitions specify a target class, a target method and a target
 line number (default is -1) in the method source code. The agent code
 identifies classes and methods at load time which match the target
 class and name and inserts a trigger call at the specified line which

@@ -24,12 +24,10 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 import java.io.StringWriter;
 
@@ -38,7 +36,7 @@ import java.io.StringWriter;
  */
 public class StringLiteral extends Expression
 {
-    public StringLiteral(Rule rule, Token token)
+    public StringLiteral(Rule rule, ParseNode token)
     {
         super(rule, Type.STRING, token);
 

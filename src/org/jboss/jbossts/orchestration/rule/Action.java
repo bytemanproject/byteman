@@ -23,15 +23,13 @@
 */
 package org.jboss.jbossts.orchestration.rule;
 
-import org.antlr.runtime.tree.CommonTree;
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.expression.ExpressionHelper;
 import org.jboss.jbossts.orchestration.rule.expression.Expression;
 import org.jboss.jbossts.orchestration.rule.grammar.ECATokenLexer;
 import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import static org.jboss.jbossts.orchestration.rule.grammar.ParseNode.*;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
@@ -39,13 +37,16 @@ import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import java.util.List;
 import java.util.ArrayList;
 import java.io.StringWriter;
+import java.io.StringReader;
+
+import java_cup.runtime.Symbol;
 
 /**
  * class which represents a rule action comprising a void expression
  */
 public class Action extends RuleElement
 {
-    public static Action create(Rule rule, CommonTree actionTree)
+    public static Action create(Rule rule, ParseNode actionTree)
             throws TypeException
     {
         Action action = new Action(rule, actionTree);
@@ -58,22 +59,23 @@ public class Action extends RuleElement
         if ("".equals(text)) {
             return new Action(rule);
         }
+        String fullText = "BIND NOTHING IF TRUE DO \n" + text;
         try {
-            ECATokenLexer lexer = new ECATokenLexer(new ANTLRStringStream(text));
-            CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-            ECAGrammarParser parser = new ECAGrammarParser(tokenStream);
-            ECAGrammarParser.eca_action_return parse = parser.eca_action();
-            CommonTree actionTree = (CommonTree) parse.getTree();
+            ECATokenLexer lexer = new ECATokenLexer(new StringReader(text));
+            ECAGrammarParser parser = new ECAGrammarParser(lexer);
+            Symbol parse = parser.parse();
+            ParseNode parseTree = (ParseNode)parse.value;
+            ParseNode actionTree = (ParseNode)parseTree.getChild(3);
             Action action = new Action(rule, actionTree);
             return action;
-        } catch (RecognitionException e) {
+        } catch (Exception e) {
             throw new ParseException("org.jboss.jbossts.orchestration.rule.Action : error parsing action " + text);
         }
     }
-    protected Action(Rule rule, CommonTree actionTree) throws TypeException
+    protected Action(Rule rule, ParseNode actionTree) throws TypeException
     {
         super(rule);
-        if (actionTree.getToken().getType() == ECAGrammarParser.NOTHING) {
+        if (actionTree.getTag() == NOTHING) {
             this.action = new ArrayList<Expression>();
         } else {
             this.action = ExpressionHelper.createExpressionList(rule, this.getBindings(), actionTree, Type.VOID);
@@ -108,14 +110,14 @@ public class Action extends RuleElement
 
     public void writeTo(StringWriter stringWriter)
     {
-        if (action == null) {
+        if (action == null || action.size()  == 0) {
             stringWriter.write("DO   NOTHING");
         } else {
             String prefix = "DO   ";
             for (Expression expr : action) {
                 stringWriter.write(prefix);
                 expr.writeTo(stringWriter);
-                prefix = ",\n     ";
+                prefix = ";\n     ";
             }
         }
         stringWriter.write("\n");

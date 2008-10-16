@@ -23,30 +23,24 @@
 */
 package org.jboss.jbossts.orchestration.rule.expression;
 
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.exception.ThrowException;
 import org.jboss.jbossts.orchestration.rule.Rule;
-import org.antlr.runtime.Token;
+import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Iterator;
 import java.util.ArrayList;
-import java.util.ListIterator;
-import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 /**
- * Created by IntelliJ IDEA.
- * User: adinn
- * Date: 30-Sep-2008
- * Time: 11:12:41
- * To change this template use File | Settings | File Templates.
+ * Expression which implements a throw from a rule action but only where the thrown exception is
+ * declared by the trigger method or is a runtime exception which does nto need ot be declared
  */
 public class ThrowExpression extends Expression
 {
@@ -55,9 +49,9 @@ public class ThrowExpression extends Expression
     private List<Type> argumentTypes;
     private Constructor constructor;
 
-    public ThrowExpression(Rule rule, String typeName, Token token, List<Expression> arguments) {
+    public ThrowExpression(Rule rule, ParseNode token, List<Expression> arguments) {
         super(rule, Type.UNDEFINED, token);
-        this.typeName = typeName;
+        this.typeName = token.getText();
         this.arguments = arguments;
         this.argumentTypes = null;
         this.constructor = null;
