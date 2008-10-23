@@ -112,7 +112,7 @@ ENDRULE
 RULE trace recovered participant recreate
 CLASS com.arjuna.wst11.messaging.engines.ParticipantEngine
 METHOD <init>(Participant, id, State, W3CEndpointReference, boolean)
-LINE -1
+LINE -89
 BIND engine:ParticipantEngine = $0,
      recovered:boolean = engine.isRecovered(),
      identifier:String = engine.getId()

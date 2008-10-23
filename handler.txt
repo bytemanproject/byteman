@@ -173,9 +173,9 @@ ENDRULE
 # line = -1 since the condition selects the correct case.
 
 RULE trace prepared replay
-CLASS org.jboss.jbossts.xts.recovery.RecoverACCoordinator
+CLASS org.jboss.jbossts.xts.recovery.coordinator.at.RecoverACCoordinator
 METHOD replayPhase2
-LINE 76
+LINE 74
 BIND coordinator = $0,
      uid : Uid = coordinator.identifier(),
      status : int = coordinator.status()
@@ -194,9 +194,9 @@ ENDRULE
 # line = -1 since the condition selects the correct case.
 
 RULE trace heuristic committed replay
-CLASS org.jboss.jbossts.xts.recovery.RecoverACCoordinator
+CLASS org.jboss.jbossts.xts.recovery.coordinator.at.RecoverACCoordinator
 METHOD replayPhase2
-LINE 76
+LINE 74
 BIND coordinator = $0,
      uid : Uid = coordinator.identifier(),
      status : int = coordinator.status()
@@ -215,7 +215,7 @@ ENDRULE
 RULE trace remove committed state
 CLASS com.arjuna.ats.arjuna.coordinator.BasicAction
 METHOD updateState
-LINE 3513
+LINE 3529
 BIND action : BasicAction = $0,
      uid  = action.get_uid()
 IF TRUE
