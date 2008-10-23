@@ -46,6 +46,7 @@ import java.util.Iterator;
 import java.io.PrintWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.File;
 
 /**
  * byte code transformer used to introduce orchestration events into JBoss code
@@ -94,7 +95,7 @@ public class Transformer implements ClassFileTransformer {
                         name = line.substring(5).trim();
                     } else if (!inRule) {
                         if (!line.trim().equals("")) {
-                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: invalid text outside of RULE/ENDRULE " + "at line " + lineNumber + " in script " + scriptPaths.get(scriptIdx));
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : invalid text outside of RULE/ENDRULE " + "at line " + lineNumber + " in script " + scriptPaths.get(scriptIdx));
                         }
                     } else if (line.startsWith("CLASS ")) {
                         targetClass = line.substring(6).trim();
@@ -105,17 +106,17 @@ public class Transformer implements ClassFileTransformer {
                         try {
                             targetLine = Integer.valueOf(lineSpec);
                         } catch (NumberFormatException e) {
-                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: invalid LINE specification " + lineSpec + "for RULE " + name + " in script " + scriptPaths.get(scriptIdx));
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : invalid LINE specification " + lineSpec + "for RULE " + name + " in script " + scriptPaths.get(scriptIdx));
                         }
                     } else if (line.startsWith("ENDRULE")) {
                         if (name == null) {
-                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: no matching RULE for ENDRULE at line " + lineNumber + " in script " + scriptPaths.get(scriptIdx));
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : no matching RULE for ENDRULE at line " + lineNumber + " in script " + scriptPaths.get(scriptIdx));
                         } else if (targetClass == null) {
-                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: no CLASS for RULE  " + name + " in script " + scriptPaths.get(scriptIdx));
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : no CLASS for RULE  " + name + " in script " + scriptPaths.get(scriptIdx));
                         } else if (targetMethod == null) {
-                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: no METHOD for RULE  " + name + " in script " + scriptPaths.get(scriptIdx));
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : no METHOD for RULE  " + name + " in script " + scriptPaths.get(scriptIdx));
                         } else if (targetMethod.startsWith("<init>") && targetLine < 0) {
-                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: rule for constructor METHOD " + targetMethod + " must specify source LINE in RULE " + name + " in script " + scriptPaths.get(scriptIdx));
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : rule for constructor METHOD " + targetMethod + " must specify source LINE in RULE " + name + " in script " + scriptPaths.get(scriptIdx));
                         } else {
                             List<Script> scripts = targetToScriptMap.get(targetClass);
                             if (scripts == null) {
@@ -138,7 +139,7 @@ public class Transformer implements ClassFileTransformer {
                         sepr = "";
                         inRule = false;
                     } else if (lineNumber == maxLines && !nextRule.trim().equals("")) {
-                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer: no matching ENDRULE for RULE " + name + " in script " + scriptPaths.get(scriptIdx));
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : no matching ENDRULE for RULE " + name + " in script " + scriptPaths.get(scriptIdx));
                     } else {
                         nextRule += sepr + line;
                         sepr = "\n";
@@ -258,19 +259,9 @@ public class Transformer implements ClassFileTransformer {
         }
 
         if (newBuffer != classfileBuffer) {
-            // switch on to dump transformed bytecode for checking
-            if (true) {
-                String name = (dotIdx < 0 ? internalClassName : internalClassName.substring(dotIdx + 1));
-                name += ".class";
-                System.out.println("Saving transformed bytes to " + name);
-                try {
-                    FileOutputStream fio = new FileOutputStream(name);
-                    fio.write(newBuffer);
-                    fio.close();
-                } catch (IOException ioe) {
-                    System.out.println("Error saving transformed bytes to" + name);
-                    ioe.printStackTrace(System.out);
-                }
+            // see if we need to dump the transformed bytecode for checking
+            if (dumpGeneratedClasses) {
+                dumpClass(internalClassName, newBuffer);
             }
             return newBuffer;
         } else {
@@ -278,13 +269,41 @@ public class Transformer implements ClassFileTransformer {
         }
     }
 
+    /* switches controlling behaviour of transformer */
+
+    /**
+     * prefix for orchestration package
+     */
+    private static final String ORCHESTRATION_PACKAGE_PREFIX = "org.jboss.jbossts.orchestration.";
+
+    /**
+     * prefix for com.arjuna package
+     */
+    private static final String COM_ARJUNA_PACKAGE_PREFIX = "com.arjuna.";
+
+    /**
+     * prefix for org.jboss package
+     */
+    private static final String ORG_JBOSS_PACKAGE_PREFIX = "org.jboss.";
+
+    /**
+     * system property set (to any value) in order to switch on dumping of generated bytecode to .class files
+     */
+    public static final String DUMP_GENERATED_CLASSES = ORCHESTRATION_PACKAGE_PREFIX + "dump.generated.classes";
+
+    /* implementation */
+
+    /**
+     * system property identifying directory in which to dump generated bytecode .class files
+     */
+    public static final String DUMP_GENERATED_CLASSES_DIR = ORCHESTRATION_PACKAGE_PREFIX + "dump.generated.classes.directory";
 
     private byte[] transform(Script script, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
     {
         final String handlerClass = script.getTargetClass();
         final String handlerMethod = script.getTargetMethod();
         final int handlerLine = script.getTargetLine();
-        System.out.println("org.jboss.jbossts.orchestration.agent.Transformer: Inserting trigger event");
+        System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : Inserting trigger event");
         System.out.println("  class " + handlerClass);
         System.out.println("  method " + handlerMethod);
         System.out.println("  line " + handlerLine);
@@ -293,13 +312,13 @@ public class Transformer implements ClassFileTransformer {
         try {
             rule = Rule.create(ruleName, handlerClass, handlerMethod, handlerLine, script.getRuleText(), loader);
         } catch (ParseException pe) {
-            System.out.println("Transformer : error parsing rule : " + pe);
+            System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error parsing rule : " + pe);
             return targetClassBytes;
         } catch (TypeException te) {
-            System.out.println("Transformer : error checking rule : " + te);
+            System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error checking rule : " + te);
             return targetClassBytes;
         } catch (Throwable th) {
-            System.out.println("Transformer : error processing rule : " + th);
+            System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error processing rule : " + th);
             return targetClassBytes;
         }
         System.out.println(rule);
@@ -318,7 +337,7 @@ public class Transformer implements ClassFileTransformer {
         try {
             cr.accept(checkAdapter, 0);
         } catch (Throwable th) {
-            System.out.println("Transformer : error applying rule " + rule.getName() + " to class " + className + th);
+            System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error applying rule " + rule.getName() + " to class " + className + th);
             th.printStackTrace(System.out);
             return targetClassBytes;
         }
@@ -333,7 +352,7 @@ public class Transformer implements ClassFileTransformer {
             try {
                 cr.accept(adapter, 0);
             } catch (Throwable th) {
-                System.out.println("Transformer : error compiling rule " + rule.getName() + " for class " + className + th);
+                System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error compiling rule " + rule.getName() + " for class " + className + th);
                 th.printStackTrace(System.out);
                 return targetClassBytes;
             }
@@ -351,7 +370,7 @@ public class Transformer implements ClassFileTransformer {
      */
     private boolean isOrchestrationClass(String className)
     {
-        return className.startsWith("org.jboss.jbossts.orchestration.");
+        return className.startsWith(ORCHESTRATION_PACKAGE_PREFIX);
     }
 
     /**
@@ -361,7 +380,7 @@ public class Transformer implements ClassFileTransformer {
      */
     private boolean isTransformable(String className)
     {
-        return (className.startsWith("com.arjuna.") || className.startsWith("org.jboss."));
+        return (className.startsWith(COM_ARJUNA_PACKAGE_PREFIX) || className.startsWith(ORG_JBOSS_PACKAGE_PREFIX));
     }
     /**
      * the instrumentation interface to the JVM
@@ -414,6 +433,62 @@ public class Transformer implements ClassFileTransformer {
 
         public String getRuleText() {
             return ruleText;
+        }
+    }
+    /**
+     *  switch to control dumping of generated bytecode to .class files
+     */
+    private final static boolean dumpGeneratedClasses = (System.getProperty(DUMP_GENERATED_CLASSES) != null);
+
+    /**
+     *  directory in which to dump generated bytecode .class files (defaults to "."
+     */
+    private final static String dumpGeneratedClassesDir;
+
+    static {
+        String userDir = System.getProperty(DUMP_GENERATED_CLASSES_DIR);
+        if (userDir != null) {
+            File userFile = new File(userDir);
+            if (userFile.exists() && userFile.isDirectory() && userFile.canWrite()) {
+                dumpGeneratedClassesDir = userDir;
+            } else {
+                dumpGeneratedClassesDir = ".";
+            }
+        } else {
+            dumpGeneratedClassesDir =  ".";
+        }
+    }
+
+    private void dumpClass(String fullName, byte[] bytes)
+    {
+        int dotIdx = fullName.lastIndexOf('.');
+
+        String name = (dotIdx < 0 ? fullName : fullName.substring(dotIdx + 1));
+        String prefix = (dotIdx > 0 ? fullName.substring(0, dotIdx) : "");
+        String dir = dumpGeneratedClassesDir + File.separator + prefix.replaceAll("\\.", File.separator);
+        if (!ensureDumpDirectory(dir)) {
+            System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : Cannot dump transformed bytes to directory " + dir + File.separator + prefix);
+            return;
+        }
+        name = dir + File.separator + name + ".class";
+        System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : Saving transformed bytes to " + name);
+        try {
+            FileOutputStream fio = new FileOutputStream(name);
+            fio.write(bytes);
+            fio.close();
+        } catch (IOException ioe) {
+            System.out.println("Error saving transformed bytes to" + name);
+            ioe.printStackTrace(System.out);
+        }
+    }
+
+    private boolean ensureDumpDirectory(String fileName)
+    {
+        File file = new File(fileName);
+        if (file.exists()) {
+            return (file.isDirectory() && file.canWrite());
+        } else {
+            return file.mkdirs();
         }
     }
 }

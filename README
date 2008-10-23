@@ -23,7 +23,7 @@ the orchestration jar as a java agent. This jar implements
 The agent is passed to the JVM using the -javaagent option of the java
 command by setting JAVA_OPTS as follows:
 
-export JAVA_OPTS="-javaagent:${HOME}/jboss/workspace/adinn/orchestration/build/lib/orchestration.jar=script:${HOME}/jboss/workspace/adinn/orchestration/handler.txt"
+export JAVA_OPTS="-javaagent:${HOME}/jboss/workspace/adinn/orchestration/build/lib/orchestration.jar=script:${HOME}/jboss/workspace/adinn/orchestration/handler.txt -Dorg.jboss.jbossts.orchestration.dump.generated.classes=yes -Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=$HOME/jboss/workspace/adinn/orchestration/dump"
 
 The =script:<scriptFile> option to the -javaagent argument tells the
 agent premain to search <scriptFile> for rules. Multiple scripts may
@@ -34,6 +34,21 @@ classes. File handler.txt contains an example script which defines
 rules used for testing a specific scenario in XTS coordinator crash
 recovery. See these (or the code :-) to get a taste of what the rule
 language offers (that's all foax, for now at least -- sorry).
+
+The agent can be configured to dump transformed byte code by setting
+several Java system properties as shown in the example above:
+
+  org.jboss.jbossts.orchestration.dump.generated.classes
+
+this can be set to any value to enable dumping of generated
+code. Files will be written in a directory tree correspnding to the
+package hierarchy for the associated class.
+
+  org.jboss.jbossts.orchestration.dump.generated.classes.directory
+
+this can be set to a directory below which files will be written. if
+unset files are written to the current working directory of the JVM
+thread executing the transformer code.
 
 Rule Definition
 ---------------
