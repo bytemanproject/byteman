@@ -119,7 +119,7 @@ public class RuleAdapter extends ClassAdapter
         // super.catchException(startLabel, endLabel, new Type("org.jboss.jbossts.orchestration.rule.exception.ExecuteException")));
 
         public void visitLineNumber(final int line, final Label start) {
-            if (!visitedLine && (targetLine < line)) {
+            if (!visitedLine && (targetLine <= line)) {
                 rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
                 String key = rule.getKey();
                 Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.Rule"));

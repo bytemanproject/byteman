@@ -91,7 +91,7 @@ public class RuleCheckAdapter extends ClassAdapter
         }
 
         public void visitLineNumber(final int line, final Label start) {
-            if (!visited && (targetLine < line)) {
+            if (!visited && (targetLine <= line)) {
                 // the relevant line occurs in the called method
                 visited = true;
                 visitOk = true;
