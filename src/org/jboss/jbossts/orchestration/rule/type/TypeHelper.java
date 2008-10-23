@@ -23,8 +23,6 @@
 */
 package org.jboss.jbossts.orchestration.rule.type;
 
-import org.jboss.jbossts.orchestration.annotation.EventHandler;
-
 /**
  * Helpoer class providing static methods for manipulating type and class names,
  * field and method descriptor names etc
@@ -296,43 +294,5 @@ public class TypeHelper {
         } else {
             return "";
         }
-    }
-
-    /**
-     * split off the signature following the method name and return it
-     * @param targetName the unqualified method name, not including signature
-     * @param targetSignature the method signature including brackets types and return type
-     * @return
-     */
-    public static String generateFieldName(String targetName, String targetSignature) {
-        String result = targetName;
-        int startIdx = targetSignature.indexOf("(");
-        int endIdx = targetSignature.indexOf(")");
-        if (startIdx < 0) {
-            startIdx = 0;
-        }
-        if (endIdx < 0) {
-            endIdx = targetSignature.length() - 1;
-        }
-
-        String args = targetSignature.substring(startIdx, endIdx + 1);
-
-        result = result.replaceAll("<", "\\$_");
-        result = result.replaceAll(">", "_\\$");
-
-        // remove any brackets, semi-colons and '[' characters
-        args = args.replaceAll("\\(", "\\$_");
-        args = args.replaceAll("\\)", "_\\$");
-        args = args.replaceAll(";", "__");
-        args = args.replaceAll("\\[", "\\$\\$_");
-        args = args.replaceAll("/", "_\\$_");
-
-        return result + args;
-    }
-
-    private static Class generateHandlerClass(EventHandler handler, ClassLoader loader, String targetClassName, Class targetClass)
-    {
-        // TODO -- write this but use Object for now
-        return Object.class;
     }
 }

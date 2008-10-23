@@ -160,22 +160,11 @@ The XTS installation directory must be specified with the XTS_HOME environment v
        <delete dir="${dd.grammar.dir}" includes="*.java *.tokens"/>
     </target>
 
-    <target name="TestScript.compile">
-        <!-- build the TestScript class and then run it to check parsing of rule elements -->
-        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}" includes="TestScript.java">
-            <classpath>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
-            </classpath>
-        </javac>
-    </target>
-
-    <target name="TestScript" depends="TestScript.compile">
-        <java classname="TestScript" fork="true">
+    <target name="TestScript" depends="jar">
+        <java classname="org.jboss.jbossts.orchestration.test.TestScript" fork="true">
             <classpath>
                 <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
                 <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
                 <!-- xts, jta and jboss as jars-->
                 <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
                 <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
@@ -188,12 +177,11 @@ The XTS installation directory must be specified with the XTS_HOME environment v
         </java>
     </target>
 
-    <target name="TestScriptDebug" depends="TestScript.compile">
-        <java classname="TestScript" fork="true">
+    <target name="TestScriptDebug" depends="jar">
+        <java classname="org.jboss.jbossts.orchestration.test.TestScript" fork="true">
             <classpath>
                 <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
                 <pathelement location="${asm.home}/${asm.jar}"/>
-                <fileset dir="${ext.lib.dir}" includes="${ext.antlr.jars}"/>
                 <!-- xts, jta and jboss as jars-->
                 <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
                 <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>

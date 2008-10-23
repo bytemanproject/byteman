@@ -23,27 +23,21 @@
 */
 package org.jboss.jbossts.orchestration.agent;
 
-import org.jboss.jbossts.orchestration.annotation.EventHandler;
-import org.jboss.jbossts.orchestration.annotation.EventHandlerClass;
 import org.jboss.jbossts.orchestration.rule.Rule;
 import org.jboss.jbossts.orchestration.rule.type.TypeHelper;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.EmptyVisitor;
-import org.objectweb.asm.util.TraceClassVisitor;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Method;
-import java.lang.annotation.Annotation;
 import java.security.ProtectionDomain;
 import java.util.List;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.io.PrintWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.File;

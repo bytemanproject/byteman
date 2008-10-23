@@ -21,36 +21,41 @@
 *
 * @authors Andrew Dinn
 */
-import org.jboss.jbossts.orchestration.annotation.EventHandlerClass;
-import org.jboss.jbossts.orchestration.annotation.EventHandler;
+package org.jboss.jbossts.orchestration.test;
+
 import org.jboss.jbossts.orchestration.rule.type.TypeHelper;
-import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.Rule;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.objectweb.asm.Opcodes;
 
-import java.util.jar.JarFile;
-import java.util.jar.JarEntry;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.ArrayList;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
-import java.net.URLClassLoader;
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Constructor;
 
+/**
+ * utility which parses and typechecks all rules in a rule script.
+ *
+ * usage : java org.jboss.jbossts.orchestration.TestScript [scriptfile]
+ *
+ * n.b. the orchestration jar and any classes mentioned in the script rules need to be in the classpath
+ */
 public class TestScript
 {
     public static void main(String[] args)
     {
+        if (args.length == 0 || args[0].equals("-h")) {
+            System.out.println("usage : java org.jboss.jbossts.orchestration.TestScript [scriptfile1 ...]");
+            System.out.println("        n.b. place the orchestration jar and classes mentioned in the ");
+            System.out.println("        scripts in the classpath");
+            return;
+        }
         TestScript testScript = new TestScript();
         testScript.testScript(args);
     }
