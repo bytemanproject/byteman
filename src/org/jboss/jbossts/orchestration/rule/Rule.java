@@ -134,58 +134,6 @@ public class Rule
      */
     private boolean checkFailed;
 
-    private Rule(String script, ClassLoader loader)
-            throws ParseException, TypeException, CompileException
-    {
-        ParseNode ruleTree;
-        // TODO -- need to parse off the class, method and line number!
-        typeGroup = new TypeGroup(loader);
-        bindings = new Bindings();
-        try {
-            // ensure line numbers start at 1
-            String fullScript = "\n" + script;
-            ECATokenLexer lexer = new ECATokenLexer(new StringReader(fullScript));
-            ECAGrammarParser parser = new ECAGrammarParser(lexer);
-            Symbol parse = parser.parse();
-            ruleTree = (ParseNode) parse.value;
-        } catch (Exception e) {
-            throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : error parsing rule " + script, e);
-        }
-        // format is ^(BIND event condition action)
-
-        ParseNode eventTree = (ParseNode)ruleTree.getChild(0);
-        ParseNode conditionTree = (ParseNode)ruleTree.getChild(1);
-        ParseNode actionTree = (ParseNode)ruleTree.getChild(2);
-        event = Event.create(this, eventTree);
-        condition = Condition.create(this, conditionTree);
-        action = Action.create(this, actionTree);
-        checked = false;
-        triggerClass = null;
-        triggerMethod = null;
-        triggerDescriptor = null;
-        triggerAccess = 0;
-    }
-
-    private Rule(String name, String targetClass, String targetMethod, int targetLine, String eventSpec, String conditionSpec, String actionSpec, ClassLoader loader)
-            throws ParseException, TypeException, CompileException
-    {
-        this.name = name;
-        typeGroup = new TypeGroup(loader);
-        bindings = new Bindings();
-        event = null;
-        event = Event.create(this, eventSpec);
-        condition = Condition.create(this, conditionSpec);
-        action = Action.create(this, actionSpec);
-        checked = false;
-        this.targetClass = targetClass;
-        this.targetMethod = targetMethod;
-        this.targetLine = targetLine;
-        triggerClass = null;
-        triggerMethod = null;
-        triggerDescriptor = null;
-        triggerAccess = 0;
-    }
-
     private Rule(String name, String targetClass, String targetMethod, int targetLine, String ruleSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
@@ -261,22 +209,10 @@ public class Rule
         return action;
     }
 
-    public static Rule create(String name, String targetClass, String targetMethod, int targetLine, String eventSpec, String conditionSpec, String actionSpec, ClassLoader loader)
-            throws ParseException, TypeException, CompileException
-    {
-            return new Rule(name, targetClass, targetMethod,  targetLine,  eventSpec, conditionSpec, actionSpec, loader);
-    }
-
     public static Rule create(String name, String targetClass, String targetMethod, int targetLine, String ruleSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
             return new Rule(name, targetClass, targetMethod,  targetLine, ruleSpec, loader);
-    }
-
-    public static Rule create(String ruleScript, ClassLoader loader)
-            throws ParseException, TypeException, CompileException
-    {
-            return new Rule(ruleScript, loader);
     }
 
     public void setEvent(String eventSpec) throws ParseException, TypeException
