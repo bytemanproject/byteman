@@ -21,26 +21,21 @@
 *
 * @authors Andrew Dinn
 */
-package org.jboss.jbossts.orchestration.agent;
+package org.jboss.jbossts.orchestration.agent.adapter;
 
-import org.jboss.jbossts.orchestration.rule.Rule;
-import org.jboss.jbossts.orchestration.rule.exception.TypeException;
-import org.jboss.jbossts.orchestration.rule.type.TypeHelper;
 import org.objectweb.asm.*;
+import org.jboss.jbossts.orchestration.rule.type.TypeHelper;
 
 /**
  * asm Adapter class used to check that the target method for a rule exists in a class
  */
-public class RuleCheckAdapter extends ClassAdapter
+public class SynchronizeCheckAdapter extends RuleCheckAdapter
 {
-    RuleCheckAdapter(ClassVisitor cv, String targetClass, String handlerMethod, int handlerLine)
+     public SynchronizeCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod, int count)
     {
-        super(cv);
-        this.targetClass = targetClass;
-        this.targetMethod = TypeHelper.parseMethodName(handlerMethod);
-        this.targetDescriptor = TypeHelper.parseMethodDescriptor(handlerMethod);
-        this.targetLine = handlerLine;
-        this.visitOk = false;
+        super(cv, targetClass, targetMethod);
+        this.count = count;
+        this.visitedCount = 0;
     }
 
     public MethodVisitor visitMethod(
@@ -51,26 +46,18 @@ public class RuleCheckAdapter extends ClassAdapter
         final String[] exceptions)
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if (targetMethod.equals(name)) {
-            if (targetDescriptor.equals("") || TypeHelper.equalDescriptors(targetDescriptor, desc))
-            {
-                return new RuleCheckMethodAdapter(mv, access, name, desc, signature, exceptions);
-            }
+        if (matchTargetMethod(name, desc)) {
+            return new SynchronizeCheckMethodAdapter(mv, access, name, desc, signature, exceptions);
         }
 
         return mv;
-    }
-
-    public boolean isVisitOk()
-    {
-        return visitOk;
     }
 
     /**
      * a method visitor used to add a rule event trigger call to a method
      */
 
-    private class RuleCheckMethodAdapter extends MethodAdapter
+    private class SynchronizeCheckMethodAdapter extends MethodAdapter
     {
         private int access;
         private String name;
@@ -79,7 +66,7 @@ public class RuleCheckAdapter extends ClassAdapter
         private String[] exceptions;
         private boolean visited;
 
-        RuleCheckMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        SynchronizeCheckMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
         {
             super(mv);
             this.access = access;
@@ -87,28 +74,23 @@ public class RuleCheckAdapter extends ClassAdapter
             this.descriptor = descriptor;
             this.signature = signature;
             this.exceptions = exceptions;
-            this.visited = false;
+            visitedCount = 0;
         }
 
-        public void visitLineNumber(final int line, final Label start) {
-            if (!visited && (targetLine <= line)) {
-                // the relevant line occurs in the called method
-                visited = true;
-                visitOk = true;
-                String name = targetClass + "." + targetMethod + targetDescriptor;
-                if (targetLine >= 0) {
-                    name += targetLine;
+        @Override
+        public void visitInsn(int opcode) {
+            if (opcode == Opcodes.MONITORENTER && visitedCount < count) {
+                // a synchronized block occurs in the called method
+                visitedCount++;
+                if (visitedCount == count) {
+                    // and we have enough occurences to match the count
+                    setVisitOk();
                 }
             }
-            mv.visitLineNumber(line, start);
+            super.visitInsn(opcode);
         }
+   }
 
-    }
-
-    private Rule rule;
-    private String targetClass;
-    private String targetMethod;
-    private String targetDescriptor;
-    private int targetLine;
-    private boolean visitOk;
+    private int count;
+    private int visitedCount;
 }

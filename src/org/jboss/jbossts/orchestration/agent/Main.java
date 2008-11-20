@@ -23,21 +23,14 @@
 */
 package org.jboss.jbossts.orchestration.agent;
 
-import org.jboss.jbossts.orchestration.annotation.EventHandlerClass;
 
 import java.lang.instrument.Instrumentation;
-import java.lang.annotation.Annotation;
 import java.util.jar.JarFile;
-import java.util.jar.JarEntry;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Enumeration;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
-import java.net.URLClassLoader;
-import java.net.URL;
-import java.net.MalformedURLException;
 
 /**
  * agent class supplied at JVM startup to install orchestration package bytecode transformer

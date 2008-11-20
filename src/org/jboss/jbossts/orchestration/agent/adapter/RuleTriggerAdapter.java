@@ -21,18 +21,21 @@
 *
 * @authors Andrew Dinn
 */
-package org.jboss.jbossts.orchestration.annotation;
+package org.jboss.jbossts.orchestration.agent.adapter;
 
-import java.lang.annotation.Target;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import org.jboss.jbossts.orchestration.rule.Rule;
+import org.objectweb.asm.*;
 
 /**
- * Annotation used to tag classes which implement event handler code
+ * asm Adapter class used to add a rule event trigger call to a method of some given class
  */
+public class RuleTriggerAdapter extends RuleAdapter
+{
+    protected RuleTriggerAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod)
+    {
+        super(cv, targetClass, targetMethod);
+        this.rule = rule;
+    }
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface EventHandlerClass {
+    protected Rule rule;
 }

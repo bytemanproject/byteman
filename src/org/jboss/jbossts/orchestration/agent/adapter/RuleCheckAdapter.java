@@ -21,24 +21,30 @@
 *
 * @authors Andrew Dinn
 */
-package org.jboss.jbossts.orchestration.annotation;
+package org.jboss.jbossts.orchestration.agent.adapter;
 
-import java.lang.annotation.Target;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import org.objectweb.asm.*;
 
 /**
- * Annotation used to tag classes which implement event handler code
+ * asm Adapter class used to check that the target method for a rule exists in a class
  */
+public class RuleCheckAdapter extends RuleAdapter
+{
+    protected RuleCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod)
+    {
+        super(cv, targetClass, targetMethod);
+        this.visitOk = false;
+    }
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface EventHandler {
-    String targetClass();
-    String targetMethod() default "";
-    int targetLine() default -1;
-    String event() default "";
-    String condition() default "";
-    String action() default "";
+    public boolean isVisitOk()
+    {
+        return visitOk;
+    }
+
+    protected void setVisitOk()
+    {
+        visitOk = true;
+    }
+
+    private boolean visitOk;
 }

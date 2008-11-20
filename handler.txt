@@ -83,7 +83,7 @@
 RULE add coordinator engine countdown
 CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
 METHOD <init>(String, boolean, W3CEndpointReference, boolean, State)
-LINE 96
+AFTER WRITE recovered
 BIND engine:CoordinatorEngine = $0,
      recovered:boolean = engine.isRecovered(),
      identifier:String = engine.getId()
@@ -102,7 +102,7 @@ ENDRULE
 RULE kill JVM
 CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
 METHOD commit
-LINE 316
+AT SYNCHRONIZE
 BIND engine:CoordinatorEngine = $0,
      recovered:boolean = engine.isRecovered(), 
      identifier:String = engine.getId()
@@ -125,7 +125,7 @@ ENDRULE
 RULE countdown at commit
 CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
 METHOD commit
-LINE 316
+AFTER SYNCHRONIZE
 BIND engine:CoordinatorEngine = $0,
      recovered:boolean = engine.isRecovered(),
      identifier:String = engine.getId()
@@ -151,7 +151,7 @@ ENDRULE
 RULE kill committed thread
 CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
 METHOD committed(Notification, AddressingProperties, ArjunaContext)
-LINE -1
+AT ENTRY
 BIND engine:CoordinatorEngine = $0,
      recovered:boolean = engine.isRecovered(),
      identifier:String = engine.getId()
@@ -175,7 +175,7 @@ ENDRULE
 RULE trace prepared replay
 CLASS org.jboss.jbossts.xts.recovery.coordinator.at.RecoverACCoordinator
 METHOD replayPhase2
-LINE 74
+AT INVOKE phase2Commit
 BIND coordinator = $0,
      uid : Uid = coordinator.identifier(),
      status : int = coordinator.status()
@@ -196,7 +196,7 @@ ENDRULE
 RULE trace heuristic committed replay
 CLASS org.jboss.jbossts.xts.recovery.coordinator.at.RecoverACCoordinator
 METHOD replayPhase2
-LINE 74
+AT INVOKE phase2Commit
 BIND coordinator = $0,
      uid : Uid = coordinator.identifier(),
      status : int = coordinator.status()
@@ -215,7 +215,7 @@ ENDRULE
 RULE trace remove committed state
 CLASS com.arjuna.ats.arjuna.coordinator.BasicAction
 METHOD updateState
-LINE 3529
+AFTER CALL remove_committed
 BIND action : BasicAction = $0,
      uid  = action.get_uid()
 IF TRUE

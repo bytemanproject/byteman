@@ -21,10 +21,11 @@
 *
 * @authors Andrew Dinn
 */
-package org.jboss.jbossts.orchestration.agent;
+package org.jboss.jbossts.orchestration.agent.adapter;
 
 import org.jboss.jbossts.orchestration.rule.Rule;
 import org.jboss.jbossts.orchestration.rule.type.TypeHelper;
+import org.jboss.jbossts.orchestration.agent.Location;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
@@ -32,39 +33,18 @@ import org.objectweb.asm.commons.Method;
 /**
  * asm Adapter class used to add a rule event trigger call to a method of som egiven class
  */
-public class RuleAdapter extends ClassAdapter
+public class AccessTriggerAdapter extends RuleTriggerAdapter
 {
-    RuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String handlerMethod, int handlerLine)
+    public AccessTriggerAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod, String ownerClass,
+                       String fieldName, int flags, int count, boolean whenComplete)
     {
-        super(cv);
-        this.rule = rule;
-        this.targetClass = targetClass;
-        this.targetMethod = TypeHelper.parseMethodName(handlerMethod);
-        this.targetDescriptor = TypeHelper.parseMethodDescriptor(handlerMethod);
-        this.targetLine = handlerLine;
-        this.visitedLine = false;
-    }
-
-    void visitClass(
-            final int version,
-            final int access,
-            final String name,
-            final String signature,
-            final String superName,
-            final String[] interfaces)
-    {
-        super.visit(version, access, name, signature, superName, interfaces);
-    }
-
-    public FieldVisitor visitField(
-        final int access,
-        final String name,
-        final String desc,
-        final String signature,
-        final Object value)
-    {
-        FieldVisitor fv = super.visitField(access, name, desc, signature, value);
-        return fv;
+        super(cv, rule, targetClass, targetMethod);
+        this.ownerClass = ownerClass;
+        this.fieldName = fieldName;
+        this.flags = flags;
+        this.count = count;
+        this.whenComplete = whenComplete;
+        this.visitedCount = 0;
     }
 
     public MethodVisitor visitMethod(
@@ -75,17 +55,13 @@ public class RuleAdapter extends ClassAdapter
         final String[] exceptions)
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if (targetMethod.equals(name)) {
-            if (targetDescriptor.equals("") || TypeHelper.equalDescriptors(targetDescriptor, desc))
-            {
-                if (name == "<init>") {
-                    return new RuleConstructorAdapter(mv, access, name, desc, signature, exceptions);
-                } else {
-                    return new RuleMethodAdapter(mv, access, name, desc, signature, exceptions);
-                }
+        if (matchTargetMethod(name, desc)) {
+            if (name == "<init>") {
+                return new AccessTriggerConstructorAdapter(mv, access, name, desc, signature, exceptions);
+            } else {
+                return new AccessTriggerMethodAdapter(mv, access, name, desc, signature, exceptions);
             }
         }
-
         return mv;
     }
 
@@ -93,8 +69,12 @@ public class RuleAdapter extends ClassAdapter
      * a method visitor used to add a rule event trigger call to a method
      */
 
-    private class RuleMethodAdapter extends GeneratorAdapter
+    private class AccessTriggerMethodAdapter extends GeneratorAdapter
     {
+        /**
+         * flag used by subclass to avoid inserting trigger until after super constructor has been called
+         */
+        protected boolean latched;
         private int access;
         private String name;
         private String descriptor;
@@ -103,7 +83,7 @@ public class RuleAdapter extends ClassAdapter
         private Label startLabel;
         private Label endLabel;
 
-        RuleMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        AccessTriggerMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
         {
             super(mv, access, name, descriptor);
             this.access = access;
@@ -113,34 +93,51 @@ public class RuleAdapter extends ClassAdapter
             this.exceptions = exceptions;
             startLabel = null;
             endLabel = null;
+            visitedCount = 0;
+            latched = false;
         }
 
         // somewhere we need to add a catch exception block
         // super.catchException(startLabel, endLabel, new Type("org.jboss.jbossts.orchestration.rule.exception.ExecuteException")));
 
-        public void visitLineNumber(final int line, final Label start) {
-            if (!visitedLine && (targetLine <= line)) {
-                rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
-                String key = rule.getKey();
-                Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.Rule"));
-                Method method = Method.getMethod("void execute(String, Object, Object[])");
-                // we are at the relevant line in the method -- so add a trigger call here
-                System.out.println("RuleMethodAdapter.visitLineNumber : inserting trigger for " + rule.getName());
-                startLabel = super.newLabel();
-                endLabel = super.newLabel();
-                super.visitLabel(startLabel);
-                super.push(key);
-                if ((access & Opcodes.ACC_STATIC) == 0) {
-                    super.loadThis();
-                } else {
-                    super.push((Type)null);
-                }
-                super.loadArgArray();
-                super.invokeStatic(ruleType, method);
-                super.visitLabel(endLabel);
-                visitedLine = true;
+        public void visitFieldInsn(
+            final int opcode,
+            final String owner,
+            final String name,
+            final String desc)
+        {
+            if (whenComplete) {
+                // access the field before generating the trigger call
+                super.visitFieldInsn(opcode, owner, name, desc);
             }
-            super.visitLineNumber(line, start);
+            if (visitedCount < count && matchCall(opcode, owner, name, desc)) {
+                // a relevant invocation occurs in the called method
+                visitedCount++;
+                if (!latched && visitedCount == count) {
+                    rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
+                    String key = rule.getKey();
+                    Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.Rule"));
+                    Method method = Method.getMethod("void execute(String, Object, Object[])");
+                    // we are at the relevant line in the method -- so add a trigger call here
+                    System.out.println("AccessTriggerMethodAdapter.visitFieldInsn : inserting trigger for " + rule.getName());
+                    startLabel = super.newLabel();
+                    endLabel = super.newLabel();
+                    super.visitLabel(startLabel);
+                    super.push(key);
+                    if ((access & Opcodes.ACC_STATIC) == 0) {
+                        super.loadThis();
+                    } else {
+                        super.push((Type)null);
+                    }
+                    super.loadArgArray();
+                    super.invokeStatic(ruleType, method);
+                    super.visitLabel(endLabel);
+                }
+            }
+            if (!whenComplete) {
+                // access the field after generating the trigger call
+                super.visitFieldInsn(opcode, owner, name, desc);
+            }
         }
 
         public void visitEnd()
@@ -206,6 +203,39 @@ public class RuleAdapter extends ClassAdapter
             super.visitMaxs(maxStack, maxLocals);
         }
 
+        private boolean matchCall(int opcode, String owner, String name, String desc)
+        {
+            if (!fieldName.equals(name)) {
+                return false;
+            }
+
+            switch (opcode) {
+                case Opcodes.GETSTATIC:
+                case Opcodes.GETFIELD:
+                {
+                    if ((flags & Location.ACCESS_READ) == 0) {
+                        return false;
+                    }
+                }
+                break;
+                case Opcodes.PUTSTATIC:
+                case Opcodes.PUTFIELD:
+                {
+                    if ((flags & Location.ACCESS_WRITE) == 0) {
+                        return false;
+                    }
+                }
+                break;
+            }
+            if (ownerClass != null) {
+                if (!ownerClass.equals(owner)) {
+                    // TODO check for unqualified names
+                    return false;
+                }
+            }
+            // TODO work out how to use desc???
+            return true;
+        }
     }
 
     /**
@@ -213,21 +243,13 @@ public class RuleAdapter extends ClassAdapter
      * the super constructor has been called before allowing a trigger call to be compiled
      */
 
-    private class RuleConstructorAdapter extends RuleMethodAdapter
+    private class AccessTriggerConstructorAdapter extends AccessTriggerMethodAdapter
     {
-        private boolean superCalled;
-
-        RuleConstructorAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        AccessTriggerConstructorAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
         {
             super(mv, access, name, descriptor, signature, exceptions);
-            this.superCalled = false;
-        }
-
-        // don't pass on line visits until we have seen an INVOKESPECIAL
-        public void visitLineNumber(final int line, final Label start) {
-            if (superCalled) {
-                super.visitLineNumber(line, start);
-            }
+            // ensure we don't transform calls before the super constructor is called
+            latched = true;
         }
 
         public void visitMethodInsn(
@@ -238,15 +260,17 @@ public class RuleAdapter extends ClassAdapter
         {
             super.visitMethodInsn(opcode, owner, name, desc);
             // hmm, this probably means the super constructor has been invoked :-)
-            superCalled &= (opcode == Opcodes.INVOKESPECIAL);
+            if (latched && opcode == Opcodes.INVOKESPECIAL) {
+                latched = false;
+            }
+
         }
     }
 
-    private Rule rule;
-    private String targetClass;
-    private String targetMethod;
-    private String targetDescriptor;
-    private int targetLine;
+    private String ownerClass;
     private String fieldName;
-    private boolean visitedLine;
+    private int flags;
+    private int count;
+    private boolean whenComplete;
+    private int visitedCount;
 }

@@ -268,6 +268,95 @@ public class TypeHelper {
     }
 
     /**
+     * convert a method descriptor from the form used to represent it externally to canonical form
+     *
+     * @param desc the method descriptor which must be trimmed of any surrounding white space
+     * @return an internalised form for the descriptor
+     */
+    public static String internalizeDescriptor(String desc)
+    {
+        StringBuffer buffer = new StringBuffer();
+        String sepr = "";
+        buffer.append("(");
+        int max = desc.length();
+        int arrayCount = 0;
+
+        for (int idx = 0; idx < max;) {
+            buffer.append(sepr);
+            char next = desc.charAt(idx);
+            switch(next) {
+                case 'B':
+                {
+                    buffer.append("byte");
+                }
+                break;
+                case 'C':
+                {
+                    buffer.append("char");
+                }
+                break;
+                case 'S':
+                {
+                    buffer.append("short");
+                }
+                break;
+                case 'I':
+                {
+                    buffer.append("int");
+                }
+                break;
+                case 'J':
+                {
+                    buffer.append("long");
+                }
+                break;
+                case 'Z':
+                {
+                    buffer.append("boolean");
+                }
+                break;
+                case 'F':
+                {
+                    buffer.append("float");
+                }
+                break;
+                case 'D':
+                {
+                    buffer.append("double");
+                }
+                break;
+                case 'L':
+                {
+                    int tailIdx = idx+1;
+                    while (tailIdx < max && desc.charAt(tailIdx) != ';') {
+                        tailIdx++;
+                    }
+                    if (tailIdx < max) {
+                        buffer.append(desc.substring(idx + 1, tailIdx));
+                    }
+                    idx = tailIdx;
+                }
+                break;
+                case '[':
+                {
+                    arrayCount++;
+                }
+                break;
+            }
+            if (next != '[') {
+                while (arrayCount > 0) {
+                    buffer.append("[]");
+                    arrayCount--;
+                }
+            }
+            idx++;
+            sepr = ",";
+        }
+        
+        return buffer.toString();
+    }
+
+    /**
      * split off the method name preceding the signature and return it
      * @param targetMethod - the unqualified method name, possibly including signature
      * @return

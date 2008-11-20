@@ -28,6 +28,8 @@ import org.jboss.jbossts.orchestration.rule.Rule;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.CompileException;
+import org.jboss.jbossts.orchestration.agent.LocationType;
+import org.jboss.jbossts.orchestration.agent.Location;
 import org.objectweb.asm.Opcodes;
 
 import java.util.List;
@@ -114,7 +116,8 @@ public class TestScript
                 String[] lines = script.split("\n");
                 String targetClassName;
                 String targetMethodName;
-                int targetLine = -1;
+                LocationType locationType = null;
+                Location targetLocation = null;
                 String text = "";
                 String sepr = "";
                 int idx = 0;
@@ -150,9 +153,13 @@ public class TestScript
                 while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
                     idx++;
                 }
-                if (lines[idx].startsWith("LINE ")) {
-                    String targetLineString = lines[idx].substring(5).trim();
-                    targetLine = Integer.valueOf(targetLineString);
+                locationType = LocationType.type(lines[idx]);
+                if (locationType != null) {
+                    String parameters = LocationType.parameterText(lines[idx]);
+                    targetLocation = Location.create(locationType, parameters);
+                    if (targetLocation == null) {
+                        throw new ParseException("Invalid parameters for location specifier " + locationType.specifierText() + " in rule " + ruleName);
+                    }
                     idx++;
                 }
                 for (;idx < len; idx++) {
@@ -165,10 +172,7 @@ public class TestScript
                     text += sepr + lines[idx];
                     sepr = "\n";
                 }
-                if (targetMethodName.startsWith("<init>") && (targetLine < 0)) {
-                    throw new ParseException("constructor method " + targetMethodName + " must specify target line in rule " + ruleName);
-                }
-                Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetLine, text, loader);
+                Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetLocation, text, loader);
                 System.err.println("TestScript: parsed rule " + rule.getName());
                 System.err.println(rule);
                 

@@ -36,6 +36,7 @@ import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 import org.jboss.jbossts.orchestration.synchronization.CountDown;
 import org.jboss.jbossts.orchestration.synchronization.Waiter;
+import org.jboss.jbossts.orchestration.agent.Location;
 import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
@@ -64,10 +65,9 @@ public class Rule
      */
     private String targetMethod;
     /**
-     * the line number at which to insert the trigger call in the target method for this rule
-     * supplied in the rule script
+     * the location at which the rule trigger point is attached
      */
-    private int targetLine;
+    private Location targetLocation;
     /**
      * the parsed event derived from the script for this rule
      */
@@ -134,7 +134,7 @@ public class Rule
      */
     private boolean checkFailed;
 
-    private Rule(String name, String targetClass, String targetMethod, int targetLine, String ruleSpec, ClassLoader loader)
+    private Rule(String name, String targetClass, String targetMethod, Location targetLocation, String ruleSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
         ParseNode ruleTree;
@@ -163,7 +163,7 @@ public class Rule
         checked = false;
         this.targetClass = targetClass;
         this.targetMethod = targetMethod;
-        this.targetLine = targetLine;
+        this.targetLocation = targetLocation;
         triggerClass = null;
         triggerMethod = null;
         triggerDescriptor = null;
@@ -192,8 +192,8 @@ public class Rule
         return targetMethod;
     }
 
-    public int getTargetLine() {
-        return targetLine;
+    public Location getTargetLocation() {
+        return targetLocation;
     }
 
     public Event getEvent()
@@ -209,10 +209,10 @@ public class Rule
         return action;
     }
 
-    public static Rule create(String name, String targetClass, String targetMethod, int targetLine, String ruleSpec, ClassLoader loader)
+    public static Rule create(String name, String targetClass, String targetMethod, Location targetLocation, String ruleSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
-            return new Rule(name, targetClass, targetMethod,  targetLine, ruleSpec, loader);
+            return new Rule(name, targetClass, targetMethod, targetLocation, ruleSpec, loader);
     }
 
     public void setEvent(String eventSpec) throws ParseException, TypeException
@@ -442,6 +442,14 @@ public class Rule
         stringWriter.write("RULE ");
         stringWriter.write(name);
         stringWriter.write("\n");
+        stringWriter.write("CLASS ");
+        stringWriter.write(targetClass);
+        stringWriter.write('\n');
+        stringWriter.write("METHOD ");
+        stringWriter.write(targetMethod);
+        stringWriter.write('\n');
+        stringWriter.write(targetLocation.toString());
+        stringWriter.write('\n');
         if (event != null) {
             event.writeTo(stringWriter);
         } else {

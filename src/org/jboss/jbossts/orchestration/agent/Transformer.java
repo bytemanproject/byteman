@@ -27,6 +27,8 @@ import org.jboss.jbossts.orchestration.rule.Rule;
 import org.jboss.jbossts.orchestration.rule.type.TypeHelper;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
+import org.jboss.jbossts.orchestration.agent.adapter.RuleTriggerAdapter;
+import org.jboss.jbossts.orchestration.agent.adapter.RuleCheckAdapter;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.EmptyVisitor;
 
@@ -71,12 +73,13 @@ public class Transformer implements ClassFileTransformer {
                 String name = null;
                 String targetClass = null;
                 String targetMethod = null;
-                int targetLine = -1;
+                LocationType locationType = null;
+                Location targetLocation = null;
                 int lineNumber = 0;
                 int maxLines = lines.length;
                 boolean inRule = false;
                 for (String line : lines) {
-                   lineNumber++;
+                    lineNumber++;
                     if (line.trim().startsWith("#")) {
                         if (inRule) {
                             // add a blank line in place of the comment so the line numbers
@@ -95,12 +98,11 @@ public class Transformer implements ClassFileTransformer {
                         targetClass = line.substring(6).trim();
                     } else if (line.startsWith("METHOD ")) {
                         targetMethod = line.substring(7).trim();
-                    } else if (line.startsWith("LINE ")) {
-                        String lineSpec = line.substring(5).trim();
-                        try {
-                            targetLine = Integer.valueOf(lineSpec);
-                        } catch (NumberFormatException e) {
-                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : invalid LINE specification " + lineSpec + "for RULE " + name + " in script " + scriptPaths.get(scriptIdx));
+                    } else if ((locationType = LocationType.type(line)) != null) {
+                        String parameters = LocationType.parameterText(line);
+                        targetLocation = Location.create(locationType, parameters);
+                        if (targetLocation == null) {
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : invalid target location at line " + lineNumber + " in script " + scriptPaths.get(scriptIdx));
                         }
                     } else if (line.startsWith("ENDRULE")) {
                         if (name == null) {
@@ -109,26 +111,29 @@ public class Transformer implements ClassFileTransformer {
                             throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : no CLASS for RULE  " + name + " in script " + scriptPaths.get(scriptIdx));
                         } else if (targetMethod == null) {
                             throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : no METHOD for RULE  " + name + " in script " + scriptPaths.get(scriptIdx));
-                        } else if (targetMethod.startsWith("<init>") && targetLine < 0) {
-                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : rule for constructor METHOD " + targetMethod + " must specify source LINE in RULE " + name + " in script " + scriptPaths.get(scriptIdx));
                         } else {
                             List<Script> scripts = targetToScriptMap.get(targetClass);
                             if (scripts == null) {
                                 scripts = new ArrayList<Script>();
                                 targetToScriptMap.put(targetClass, scripts);
                             }
-                            Script script = new Script(name, targetClass, targetMethod, targetLine, nextRule);
+                            Script script = new Script(name, targetClass, targetMethod, targetLocation, nextRule);
                             scripts.add(script);
                             System.out.println("RULE " + script.getName());
                             System.out.println("CLASS " + script.getTargetClass());
                             System.out.println("METHOD " + script.getTargetMethod());
-                            System.out.println("LINE " + script.getTargetLine());
+                            if (targetLocation != null) {
+                                System.out.println(targetLocation);
+                            } else {
+                                System.out.println("AT ENTRY");
+                            }
                             System.out.println(script.getRuleText());
                             System.out.println("ENDRULE");
                         }
                         name = null;
                         targetClass = null;
                         targetMethod = null;
+                        targetLocation = null;
                         nextRule = "";
                         sepr = "";
                         inRule = false;
@@ -296,15 +301,15 @@ public class Transformer implements ClassFileTransformer {
     {
         final String handlerClass = script.getTargetClass();
         final String handlerMethod = script.getTargetMethod();
-        final int handlerLine = script.getTargetLine();
+        final Location handlerLocation = script.getTargetLocation();
         System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : Inserting trigger event");
         System.out.println("  class " + handlerClass);
         System.out.println("  method " + handlerMethod);
-        System.out.println("  line " + handlerLine);
+        System.out.println("  " + handlerLocation);
         final Rule rule;
         String ruleName = script.getName();
         try {
-            rule = Rule.create(ruleName, handlerClass, handlerMethod, handlerLine, script.getRuleText(), loader);
+            rule = Rule.create(ruleName, handlerClass, handlerMethod, handlerLocation, script.getRuleText(), loader);
         } catch (ParseException pe) {
             System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error parsing rule : " + pe);
             return targetClassBytes;
@@ -317,17 +322,17 @@ public class Transformer implements ClassFileTransformer {
         }
         System.out.println(rule);
 
-        // ok, we have a rule with a matchingclass and a candidiate method and line number
+        // ok, we have a rule with a matchingclass and a candidiate method and location
         // we need to see if the class has a matching method and, if so, add a call to
         // execute the rule when we hit the relevant line
 
         ClassReader cr = new ClassReader(targetClassBytes);
         // ClassWriter cw = new ClassWriter(0);
         ClassVisitor empty = new EmptyVisitor();
-        RuleCheckAdapter checkAdapter = new RuleCheckAdapter(empty, className, handlerMethod, handlerLine);
+        RuleCheckAdapter checkAdapter = handlerLocation.getRuleCheckAdapter(empty, className, handlerMethod);
         // PrintWriter pw = new PrintWriter(System.out);
         // ClassVisitor traceAdapter = new TraceClassVisitor(cw, pw);
-        // RuleCheckAdapter adapter = new RuleAdapter(traceAdapter, rule, className, handlerMethod, handlerLine, loader);
+        // RuleCheckAdapter adapter = handlerLocation.getRuleCheckAdapter(traceAdapter, rule, className, handlerMethod);
         try {
             cr.accept(checkAdapter, 0);
         } catch (Throwable th) {
@@ -335,14 +340,14 @@ public class Transformer implements ClassFileTransformer {
             th.printStackTrace(System.out);
             return targetClassBytes;
         }
-        // only insert the rule trigger call if there is a suitable line in the target method
+        // only insert the rule trigger call if there is a suitable location in the target method
         if (checkAdapter.isVisitOk()) {
             cr = new ClassReader(targetClassBytes);
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             // PrintWriter pw = new PrintWriter(System.out);
             // ClassVisitor traceAdapter = new TraceClassVisitor(cw, pw);
-            // RuleAdapter adapter = new RuleAdapter(traceAdapter, rule, className, handlerMethod, handlerLine);
-            RuleAdapter adapter = new RuleAdapter(cw, rule, className, handlerMethod, handlerLine);
+            // RuleTriggerAdapter adapter = handlerLocation.getRuleAdapter(traceAdapter, rule, className, handlerMethod);
+            RuleTriggerAdapter adapter = handlerLocation.getRuleAdapter(cw, rule, className, handlerMethod);
             try {
                 cr.accept(adapter, 0);
             } catch (Throwable th) {
@@ -388,47 +393,6 @@ public class Transformer implements ClassFileTransformer {
 
     private final HashMap<String, List<Script>> targetToScriptMap;
 
-    /**
-     * information about a single rule derived from a rule script
-     */
-    
-    private static class Script
-    {
-        private String name;
-        private String targetClass;
-        private String targetMethod;
-        private int targetLine;
-        private String ruleText;
-
-        Script (String name, String targetClass, String targetMethod, int targetLine, String ruleText)
-        {
-            this.name = name;
-            this.targetClass = targetClass;
-            this.targetMethod = targetMethod;
-            this.targetLine = targetLine;
-            this.ruleText = ruleText;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getTargetClass() {
-            return targetClass;
-        }
-
-        public String getTargetMethod() {
-            return targetMethod;
-        }
-
-        public int getTargetLine() {
-            return targetLine;
-        }
-
-        public String getRuleText() {
-            return ruleText;
-        }
-    }
     /**
      *  switch to control dumping of generated bytecode to .class files
      */
