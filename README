@@ -1,13 +1,12 @@
-Type 'ant jar' to create the orchestration package library which
-supports definition of Event Condition Action rules for orchestrating
-JBossTS test scenarios via insertion of event triggers into com.arjuna
-or org.jboss methods, either at start of method code or at specific
-line numbers.
+Type 'ant jar' to create the orchestration package library. This
+package supports definition of Event Condition Action rules for
+orchestrating test scenarios. Rules are executed from selected points
+in application.
 
 Set up
 ------
-In order to use this library inside JBOSS you need to supply JVM with
-the orchestration jar as a java agent. This jar implements
+In order to use this library you need to supply JVM with the
+orchestration jar as a java agent. This jar implements
 
   an agent class which monitors bytecode load operations and selects
   classes which match the compiled rule set as candidates for
@@ -29,11 +28,11 @@ The =script:<scriptFile> option to the -javaagent argument tells the
 agent premain to search <scriptFile> for rules. Multiple scripts may
 be supplied by repeating the =script:<scriptFile> argument separated
 by a ','. The agent will parse each script file to identify rules to
-be triggered from methods occurring in com.arjuna.* and org.jboss.*
-classes. File handler.txt contains an example script which defines
-rules used for testing a specific scenario in XTS coordinator crash
-recovery. See these (or the code :-) to get a taste of what the rule
-language offers (that's all foax, for now at least -- sorry).
+be triggered from methods occurring in application classes. File
+handler.txt contains an example script which defines rules used for
+testing a specific scenario in JBossTS XTS coordinator crash recovery.
+Several other example scritps are available in the dd/scripts
+directory.
 
 The agent can be configured to dump transformed byte code by setting
 several Java system properties as shown in the example above:
@@ -53,20 +52,19 @@ thread executing the transformer code.
 Rule Definition
 ---------------
 
-The orchestration package employs Event Condition Action rules
-although, strictly, the event component is limited to matching an
-invocation of a specific method when execution reaches a particular
-soure code line number in the method body. The event automatically
-binds the arguments of the trigger method at the point where the rule
-is triggered. It may also compute bindings for an optional set of
-local variables by evaluating a Java expression. The condition is an
-expression with boolean type. The action is a sequence of expressions
-of arbitrary type which are only evaluated if the condition is
-true. Expressions are composed from builtin operations, references to
-static or bound values, method invocations and combinations of
-sub-expressions using the usual set of operators. Note that
-assignment, new operations and throw operations are not allowed in
-expressions.
+The orchestration package employs Event Condition Action rules. The
+event component is limited to matching an invocation of a specific
+method when execution reaches a particular location in the method
+body. The event automatically binds the arguments of the trigger
+method at the point where the rule is triggered. It may also compute
+bindings for an optional set of local variables by evaluating a Java
+expression. The condition is an expression with boolean type. The
+action is a sequence of expressions of arbitrary type which are only
+evaluated if the condition is true. Expressions are composed from
+builtin operations, references to static or bound values, method
+invocations and combinations of sub-expressions using the usual set of
+operators. Note that assignment, new operations and throw operations
+are not allowed in expressions.
 
 Rule definitions specify a target class, a target method and a target
 location in the method source code. Locations can be identified by
@@ -151,7 +149,7 @@ Location specifications also include a further qualifier identifying
 where in the target method the trigger point for the rul should be
 located. The simplest location specification is AT ENTRY which locates
 the triggerpoint at the first executable instruction in a the atrget
-metho's bytecode (or the first instrction following the superclass
+method's bytecode (or the first instrction following the superclass
 constructor if the target method is a constructor). Other qualifiers
 include
 
