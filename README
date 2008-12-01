@@ -1,7 +1,6 @@
 Type 'ant jar' to create the orchestration package library. This
 package supports definition of Event Condition Action rules for
-orchestrating test scenarios. Rules are executed from selected points
-in application.
+orchestrating test scenarios.
 
 Set up
 ------
