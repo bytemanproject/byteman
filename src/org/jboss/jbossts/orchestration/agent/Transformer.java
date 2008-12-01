@@ -283,6 +283,11 @@ public class Transformer implements ClassFileTransformer {
     /**
      * prefix for org.jboss package
      */
+    private static final String JAVA_LANG_PACKAGE_PREFIX = "java.lang.";
+
+    /**
+     * prefix for org.jboss package
+     */
     private static final String ORG_JBOSS_PACKAGE_PREFIX = "org.jboss.";
 
     /**
@@ -379,7 +384,15 @@ public class Transformer implements ClassFileTransformer {
      */
     private boolean isTransformable(String className)
     {
+        /*
+         * ok, we are now going to allow any code to be transformed so long as it is not in the java.lang package
         return (className.startsWith(COM_ARJUNA_PACKAGE_PREFIX) || className.startsWith(ORG_JBOSS_PACKAGE_PREFIX));
+        */
+        if (className.startsWith(JAVA_LANG_PACKAGE_PREFIX)) {
+            return false;
+        }
+
+        return true;
     }
     /**
      * the instrumentation interface to the JVM
