@@ -69,14 +69,16 @@ assignment, new operations and throw operations are not allowed in
 expressions.
 
 Rule definitions specify a target class, a target method and a target
-line number (default is -1) in the method source code. The agent code
-identifies classes and methods at load time which match the target
-class and name and inserts a trigger call at the specified line which
-invokes the rule (or at the method start if the line number is
--1). When execution reaches a trigger point the associated rule is
-executed and can performs any delay, synchronization, trace or other
-operation appropriate to the test. Normally, control returns to the
-trigger method and execution continues by executing the target line.
+location in the method source code. Locations can be identified by
+various means, includign entry to the method, a specific line number,
+or points where field reads/writes or subordinate method invocations
+occur. The agent code identifies classes and methods at load time
+which match the target class and name and inserts a trigger call at
+the specified location which invokes the rule. When execution reaches
+a trigger point the associated rule is executed and can performs any
+delay, synchronization, trace or other operation appropriate to the
+test. Normally, control returns to the trigger method and execution
+continues by executing the target line.
 
 It is possible for a rule to alter the flow of control. A rule action
 may employ the return builtin to force a return from the triggering
@@ -134,17 +136,43 @@ rebuild the test code base.
 
 Rule Events
 -----------
-An event specification is a list of bindings for variables which can
-be referenced during evaluaton of the rule condition and execution of
-the rule actions. Bindings are established in the context of the
-target method. By default, the target method arguments are pre-bound
-using the special syntax $0 (for this, when the target method is not
-static) and $1...$N for arguments 1..N of the target method. Further
-bindings, using symbolic names for the bound variables, can be
-established by assigning a symbolic constant to an expression which
-may refer to previously bound variables or static data. For example,
+An event specification comprises a location specification and a set of
+bindings. All location specification declare a target class and target method using the syntax
 
-  'coordinator:Coordinator = $0,
+CLASS <classname>
+METHOD <methodname>
+
+Class names may omit the package qualifier in which case the rule will
+apply to any class whose unqualified name matches. The method name may
+also specify or omit a brackted list of comma-separated argument
+types.
+
+Location specifications also include a further qualifier identifying
+where in the target method the trigger point for the rul should be
+located. The simplest location specification is AT ENTRY which locates
+the triggerpoint at the first executable instruction in a the atrget
+metho's bytecode (or the first instrction following the superclass
+constructor if the target method is a constructor). Other qualifiers
+include
+
+AT LINE <number>
+AT READ <fieldname> [<count>]
+AT WRITE <fieldname> [<count>]
+AT INVOKE <methodname>[[signature>] [<count>]
+AT SYNCHRONIZE [<count>]
+
+An event specification also includes a list of bindings for variables
+which can be referenced during evaluaton of the rule condition and
+execution of the rule actions. Bindings are established in the context
+of the target method. By default, the target method arguments are
+pre-bound using the special syntax $0 (for this, when the target
+method is not static) and $1...$N for arguments 1..N of the target
+method. Further bindings, using symbolic names for the bound
+variables, can be established by assigning a symbolic constant to an
+expression which may refer to previously bound variables or static
+data. For example,
+
+  'BIND coordinator:Coordinator = $0,
    recovered:boolean = coordinator.recovered,
    identifier:String = coordinator.getInstanceIdentifier()'
 
@@ -233,3 +261,19 @@ Type Checking Scripts
 Rule scripts may be checked offline by running the TestScript program.
 See build.xml for an example of how to use it to check the example
 test scenario defined in file handler.txt.
+
+Documentation
+-------------
+For full details of ruel syntaxthe operation of the orchestration
+package see the manual in the docs directory. See also the dd/scripts
+directory for some example rule scripts used to test JBossTS recovery.
+
+Copyright
+---------
+See the copyright file in the docs directory for details of the open
+source license under which this code is released. Note that this code
+employs the ObjectWeb ASM package to do bytecode manipulation and the
+JFlex and JavaCUP tokeniser and parser genereators to generate and
+provide runtime support for the rule parser which are also released
+under open source licenses.
+
