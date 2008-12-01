@@ -85,13 +85,12 @@
 #######################################################################
 # This rule is triggered in the AS1 when a non-recovered WS-AT
 # participant receives a commit message. It causes the JVM to crash.
-# The line number is -1 so that this gets called on entry to the
-# methd
+# The trigger point is the start of the method.
 
 RULE crash unrecovered participant at commit
 CLASS com.arjuna.wst11.messaging.engines.ParticipantEngine
 METHOD commit
-LINE -1
+AT ENTRY
 BIND engine:ParticipantEngine = $0,
      recovered:boolean = engine.isRecovered(),
      identifier:String = engine.getId()
@@ -106,13 +105,13 @@ ENDRULE
 # This rule is triggered in the AS1 when a recovered WS-AT participant
 # is recreated from the log. It traces the call to allow success of the
 # test to be detected.
-# The line number is the end of the constructor so that this gets called
-# after all the fields ahev been filled in
+# The trigger point is the end of the constructor so that the rule can
+# safely read all the fields.
 
 RULE trace recovered participant recreate
 CLASS com.arjuna.wst11.messaging.engines.ParticipantEngine
 METHOD <init>(Participant, id, State, W3CEndpointReference, boolean)
-LINE -89
+AFTER WRITE persisted
 BIND engine:ParticipantEngine = $0,
      recovered:boolean = engine.isRecovered(),
      identifier:String = engine.getId()
@@ -133,10 +132,7 @@ ENDRULE
 # By default this is clear so the condition is true first time the
 # rule is called. The action sets te flag causing the condition to
 # evaluate to false on subsequent commit calls.
-# The line number identifies the line immediately following the call
-# to sendCommit. Note that sendCommit schedules a background thread
-# to keep resending commit messages so it is ok to stall the thread
-# which triggers this rule.
+# The trigger point is just before calling waitForState.
 
 RULE suspend coordinator after sending first commit
 CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
@@ -165,13 +161,12 @@ ENDRULE
 # condition to be true before one of them could execute signal().
 # Although this would be harmless in this case it could be significant
 # when using other rules.
-# The line number is -1 so that this rule runs as soon as the
-# comitted method is entered.
+# The triogger point is at the sttart of the method.
 
 RULE signal waiting coordinator
 CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
 METHOD committed
-LINE -1
+AT ENTRY
 BIND engine : CoordinatorEngine = $0,
      identifier:String = engine.getId()
 IF debug("received committed for participant " + identifier)
