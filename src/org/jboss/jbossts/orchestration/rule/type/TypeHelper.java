@@ -257,11 +257,16 @@ public class TypeHelper {
             return "";
         }
         String retType = (closeIdx < length ? desc.substring(closeIdx + 1).trim() : "");
-        String[] args = desc.substring(1, closeIdx).trim().split(",");
         String externalRetType = externalizeType(retType);
+        String argString = desc.substring(1, closeIdx).trim();
         String externalArgs = "";
-        for (int i = 0; i < args.length ; i++) {
-            externalArgs += externalizeType(args[i]);
+        if (argString.equals("")) {
+            externalArgs = argString;
+        } else {
+            String[] args = desc.substring(1, closeIdx).trim().split(",");
+            for (int i = 0; i < args.length ; i++) {
+                externalArgs += externalizeType(args[i]);
+            }
         }
 
         return "(" + externalArgs + ")" + externalRetType;

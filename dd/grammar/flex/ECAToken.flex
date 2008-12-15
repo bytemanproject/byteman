@@ -25,6 +25,7 @@
 package org.jboss.jbossts.orchestration.rule.grammar;
 
 import java_cup.runtime.*;
+import org.jboss.jbossts.orchestration.rule.grammar.PrintableSymbol;
 
 %%
 
@@ -40,10 +41,10 @@ import java_cup.runtime.*;
   StringBuffer string = new StringBuffer();
 
   private Symbol symbol(int type) {
-    return new Symbol(type, yyline, yycolumn);
+    return new PrintableSymbol(type, yyline, yycolumn);
   }
   private Symbol symbol(int type, Object value) {
-    return new Symbol(type, yyline, yycolumn, value);
+    return new PrintableSymbol(type, yyline, yycolumn, value);
   }
 %}
 
@@ -200,9 +201,11 @@ Float = {Sign}? {PosFloat}
 
 ":"			{ return symbol(sym.COLON); }
 
-/* dollar prefix operator */
+/* dollar prefixed symbols */
 
-"$"			{ return symbol(sym.DOLLAR); }
+"$" {Integer} { return symbol(sym.DOLLAR, yytext()); }
+
+"$" {Identifier} { return symbol(sym.DOLLAR, yytext()); }
 
 /* identifiers */
 

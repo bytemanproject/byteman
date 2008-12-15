@@ -169,6 +169,18 @@ public class ExpressionHelper
                 expr = new ReturnExpression(rule, exprTree, returnValue);
             }
             break;
+            case DOLLAR:
+            {
+                String text = (String)exprTree.getChild(0);
+                char leading = text.charAt(1);
+                if (Character.isDigit(leading)) {
+                    int index = Integer.valueOf(text.substring(1));
+                    expr = new DollarExpression(rule, type, exprTree, index);
+                } else {
+                    expr = new DollarExpression(rule, type, exprTree, text.substring(1));                    
+                }
+            }
+            break;
             case UNOP:
             {
                 expr = createUnaryExpression(rule, bindings, exprTree, type);

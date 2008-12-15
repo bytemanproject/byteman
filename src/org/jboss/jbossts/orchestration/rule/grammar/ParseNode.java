@@ -309,6 +309,8 @@ public abstract class ParseNode
                     return "RETURN";
                 case STRING_LITERAL:
                     return child0.toString();
+                case DOLLAR:
+                    return ((String)child0);
                 default:
                     System.out.println("UnaryNode.getText() : Unexpected tag " + tag);
                     return "???";

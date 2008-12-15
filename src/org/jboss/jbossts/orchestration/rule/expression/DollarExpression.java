@@ -49,7 +49,6 @@ public class DollarExpression extends Expression
     public DollarExpression(Rule rule, Type type, ParseNode token, int index)
     {
         super(rule, type, token);
-        String text = token.getText();
         if (index < 0) {
             name = "$";
         } else {
@@ -61,7 +60,6 @@ public class DollarExpression extends Expression
     public DollarExpression(Rule rule, Type type, ParseNode token, String name)
     {
         super(rule, type, token);
-        String text = token.getText();
         this.index = -2;
         this.name = name;
     }

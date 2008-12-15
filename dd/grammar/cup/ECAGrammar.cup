@@ -66,6 +66,35 @@ action code {:
     */
 :}
 
+parser code {:
+
+  /*. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .*/
+
+  /** Do debug output for a reduce.
+   *
+   * @param prod_num  the production we are reducing with.
+   * @param nt_num    the index of the LHS non terminal.
+   * @param rhs_size  the size of the RHS.
+   */
+  public void debug_reduce(int prod_num, int nt_num, int rhs_size)
+    {
+      debug_message("# Reduce with prod #" + prod_num + " [NT=" + nt_num +
+	            ", " + "SZ=" + rhs_size + "]");
+    }
+
+  /*. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .*/
+
+  /** Do debug output for shift.
+   *
+   * @param shift_tkn the Symbol being shifted onto the stack.
+   */
+  public void debug_shift(Symbol shift_tkn)
+    {
+      debug_message("# Shift under term " + shift_tkn +
+		    " to state #" + shift_tkn.parse_state);
+    }
+:}
+
 /* Preliminaries to set up and use the scanner.  */
 /* not needed
 init with {: scanner.init(); :}
@@ -133,7 +162,7 @@ terminal	TWIDDLE;
 /* pseudo operator for minus as prefix */
 terminal	UMINUS;
 
-/* dollar prefix operator for dereferencing rule params */
+/* dollar prefixed integer or identifier for referencing paams */
 terminal	DOLLAR;
 
 /* literals. strings and identifiers */
@@ -202,7 +231,6 @@ precedence left BOR, BAND, BXOR;
 precedence left TWIDDLE;
 precedence left UMINUS;
 precedence left DOT;
-precedence left DOLLAR;
 
 
 eca_rule
@@ -392,10 +420,8 @@ simple_expr
 		{: RESULT =  node(ParseNode.BOOLEAN_LITERAL, bleft, bright, b); :}
 	|	STRING_LITERAL:s
 		{: RESULT = node(ParseNode.STRING_LITERAL, sleft, sright, s); :}
-	|	DOLLAR:o simple_name:sn
-	    {: RESULT = node(ParseNode.UNOP, snleft, snright, node(ParseNode.DOLLAR, oleft, oright), sn); :}
-	|	DOLLAR:o INTEGER_LITERAL:i
-	    {: RESULT = node(ParseNode.UNOP, ileft, iright, node(ParseNode.DOLLAR, oleft, oright), node(ParseNode.INTEGER_LITERAL, ileft, iright, i)); :}
+	|	DOLLAR:s
+	    {: RESULT = node(ParseNode.DOLLAR, sleft, sright, s); :}
 	|	LPAREN expr:e RPAREN
 		{: RESULT = e; :}
 	;

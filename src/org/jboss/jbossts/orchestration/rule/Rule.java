@@ -37,6 +37,7 @@ import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 import org.jboss.jbossts.orchestration.synchronization.CountDown;
 import org.jboss.jbossts.orchestration.synchronization.Waiter;
 import org.jboss.jbossts.orchestration.agent.Location;
+import org.jboss.jbossts.orchestration.agent.LocationType;
 import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
@@ -148,7 +149,7 @@ public class Rule
             try {
                 ECATokenLexer lexer = new ECATokenLexer(new StringReader(fullSpec));
                 ECAGrammarParser parser = new ECAGrammarParser(lexer);
-                Symbol parse = parser.parse();
+                Symbol parse = (debugParse ? parser.debug_parse() : parser.parse());
                 ruleTree = (ParseNode) parse.value;
             } catch (Exception e) {
                 throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : error parsing rule " + ruleSpec, e);
@@ -163,7 +164,7 @@ public class Rule
         checked = false;
         this.targetClass = targetClass;
         this.targetMethod = targetMethod;
-        this.targetLocation = targetLocation;
+        this.targetLocation = (targetLocation != null ? targetLocation : Location.create(LocationType.ENTRY, ""));
         triggerClass = null;
         triggerMethod = null;
         triggerDescriptor = null;
@@ -895,4 +896,6 @@ public class Rule
      * a hash map used to identify waiters from their identifying objects
      */
     private static HashMap<Object, Waiter> waitMap = new HashMap<Object, Waiter>();
+
+    private static boolean debugParse = (System.getProperty("org.jboss.jbossts.orchestration.rule.debug") != null ? true : false);
 }
