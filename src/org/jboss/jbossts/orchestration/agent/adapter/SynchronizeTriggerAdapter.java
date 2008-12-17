@@ -25,6 +25,7 @@ package org.jboss.jbossts.orchestration.agent.adapter;
 
 import org.jboss.jbossts.orchestration.rule.Rule;
 import org.jboss.jbossts.orchestration.rule.type.TypeHelper;
+import org.jboss.jbossts.orchestration.agent.Transformer;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
@@ -104,7 +105,9 @@ public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
                     Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.Rule"));
                     Method method = Method.getMethod("void execute(String, Object, Object[])");
                     // we are at the relevant line in the method -- so add a trigger call here
-                    System.out.println("SynchronizeTriggerMethodAdapter.visitMethodInsn : inserting trigger for " + rule.getName());
+                    if (Transformer.isVerbose()) {
+                        System.out.println("SynchronizeTriggerMethodAdapter.visitMethodInsn : inserting trigger for " + rule.getName());
+                    }
                     startLabel = super.newLabel();
                     endLabel = super.newLabel();
                     super.visitLabel(startLabel);

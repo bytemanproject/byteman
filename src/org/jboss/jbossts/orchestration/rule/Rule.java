@@ -38,6 +38,7 @@ import org.jboss.jbossts.orchestration.synchronization.CountDown;
 import org.jboss.jbossts.orchestration.synchronization.Waiter;
 import org.jboss.jbossts.orchestration.agent.Location;
 import org.jboss.jbossts.orchestration.agent.LocationType;
+import org.jboss.jbossts.orchestration.agent.Transformer;
 import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
@@ -347,7 +348,9 @@ public class Rule
     public static void execute(String key, Object recipient, Object[] args) throws ExecuteException
     {
         Rule rule = ruleKeyMap.get(key);
-        System.out.println("Rule.execute called for " + key);
+        if (Transformer.isVerbose()) {
+            System.out.println("Rule.execute called for " + key);
+        }
 
         if (rule == null) {
             throw new ExecuteException("Rule.execute : unable to find rule with key " + key);
@@ -805,7 +808,9 @@ public class Rule
         public void execute(Bindings bindings, Object recipient, Object[] args)
                 throws ExecuteException
         {
-            System.out.println(rule.getName() + " execute");
+            if (Transformer.isVerbose()) {
+                System.out.println(rule.getName() + " execute");
+            }
             Iterator<Binding> iterator = bindings.iterator();
             while (iterator.hasNext()) {
                 Binding binding = iterator.next();

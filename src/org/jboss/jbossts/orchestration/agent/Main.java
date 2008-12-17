@@ -73,7 +73,9 @@ public class Main {
 
         for (String scriptPath : scriptPaths) {
             try {
-                System.out.println("processing script file " + scriptPath);
+                if (Transformer.isVerbose()) {
+                    System.out.println("processing script file " + scriptPath);
+                }
 
                 FileInputStream fis = new FileInputStream(scriptPath);
                 byte[] bytes = new byte[fis.available()];

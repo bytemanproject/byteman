@@ -25,6 +25,7 @@ package org.jboss.jbossts.orchestration.agent.adapter;
 
 import org.jboss.jbossts.orchestration.rule.Rule;
 import org.jboss.jbossts.orchestration.rule.type.TypeHelper;
+import org.jboss.jbossts.orchestration.agent.Transformer;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
@@ -50,7 +51,7 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
-            if (name == "<init>") {
+            if (name.equals("<init>")) {
                 return new LineTriggerConstructorAdapter(mv, access, name, desc, signature, exceptions);
             } else {
                 return new LineTriggerMethodAdapter(mv, access, name, desc, signature, exceptions);
@@ -72,6 +73,7 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
         private String[] exceptions;
         private Label startLabel;
         private Label endLabel;
+        protected boolean unlatched;
 
         LineTriggerMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
         {
@@ -81,6 +83,7 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
             this.descriptor = descriptor;
             this.signature = signature;
             this.exceptions = exceptions;
+            this.unlatched = true;  // subclass can manipulate this to postponne visit
             startLabel = null;
             endLabel = null;
         }
@@ -89,13 +92,15 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
         // super.catchException(startLabel, endLabel, new Type("org.jboss.jbossts.orchestration.rule.exception.ExecuteException")));
 
         public void visitLineNumber(final int line, final Label start) {
-            if (!visitedLine && (targetLine <= line)) {
+            if (unlatched && !visitedLine && (targetLine <= line)) {
                 rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
                 String key = rule.getKey();
                 Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.Rule"));
                 Method method = Method.getMethod("void execute(String, Object, Object[])");
                 // we are at the relevant line in the method -- so add a trigger call here
-                System.out.println("AccessTriggerMethodAdapter.visitLineNumber : inserting trigger for " + rule.getName());
+                if (Transformer.isVerbose()) {
+                    System.out.println("AccessTriggerMethodAdapter.visitLineNumber : inserting trigger for " + rule.getName());
+                }
                 startLabel = super.newLabel();
                 endLabel = super.newLabel();
                 super.visitLabel(startLabel);
@@ -185,19 +190,10 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
 
     private class LineTriggerConstructorAdapter extends LineTriggerMethodAdapter
     {
-        private boolean superCalled;
-
         LineTriggerConstructorAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
         {
             super(mv, access, name, descriptor, signature, exceptions);
-            this.superCalled = false;
-        }
-
-        // don't pass on line visits until we have seen an INVOKESPECIAL
-        public void visitLineNumber(final int line, final Label start) {
-            if (superCalled) {
-                super.visitLineNumber(line, start);
-            }
+            this.unlatched = false;
         }
 
         public void visitMethodInsn(
@@ -208,7 +204,7 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
         {
             super.visitMethodInsn(opcode, owner, name, desc);
             // hmm, this probably means the super constructor has been invoked :-)
-            superCalled &= (opcode == Opcodes.INVOKESPECIAL);
+            unlatched |= (opcode == Opcodes.INVOKESPECIAL);
         }
     }
 
