@@ -36,6 +36,7 @@ import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 import org.jboss.jbossts.orchestration.synchronization.CountDown;
 import org.jboss.jbossts.orchestration.synchronization.Waiter;
+import org.jboss.jbossts.orchestration.synchronization.Counter;
 import org.jboss.jbossts.orchestration.agent.Location;
 import org.jboss.jbossts.orchestration.agent.LocationType;
 import org.jboss.jbossts.orchestration.agent.Transformer;
@@ -699,6 +700,121 @@ public class Rule
         }
 
         /**
+         * delay execution of the current thread for a specified number of milliseconds
+         * @param millisecs how many milliseconds to delay for
+         */
+
+        public void delay(long millisecs)
+        {
+            try {
+                Thread.sleep(millisecs);
+            } catch (InterruptedException e) {
+                // ignore this
+            }
+        }
+
+        /**
+         * create a counter identified by the given object with count 0 as its initial count
+         * @param o an identifier used to refer to the counter in future
+         * @return true if a new counter was created and false if one already existed under the given identifier
+         */
+        public boolean createCounter(Object o)
+        {
+            return createCounter(o, 0);
+        }
+
+        /**
+         * create a counter identified by the given object with the supplied value as its iniital count
+         * @param o an identifier used to refer to the counter in future
+         * @param value the initial value for the counter
+         * @return true if a new counter was created and false if one already existed under the given identifier
+         */
+        public boolean createCounter(Object o, int value)
+        {
+            synchronized (counterMap) {
+                Counter counter = counterMap.get(o);
+                if  (counter != null) {
+                    return false;
+                } else {
+                    counterMap.put(o, new Counter(value));
+                    return true;
+                }
+            }
+        }
+
+        /**
+         * delete a counter identified by the given object with count 0 as its initial count
+         * @param o the identifier for the coounter
+         * @return true if a counter was deleted and false if no counter existed under the given identifier
+         */
+        public boolean deleteCounter(Object o)
+        {
+            synchronized (counterMap) {
+                Counter counter = counterMap.get(o);
+                if  (counter != null) {
+                    counterMap.put(o, null);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+
+        /**
+         * read the value of the counter associated with given identifier, creating a new one with count zero
+         * if none exists
+         * @param o the identifier for the coounter
+         * @return the value of the counter
+         */
+        public int readCounter(Object o)
+        {
+            synchronized (counterMap) {
+                Counter counter = counterMap.get(o);
+                if (counter == null) {
+                    counter = new Counter();
+                    counterMap.put(o, counter);
+                }
+                return counter.count();
+            }
+        }
+
+        /**
+         * increment the value of the counter associated with given identifier, creating a new one with count zero
+         * if none exists
+         * @param o the identifier for the coounter
+         * @return the value of the counter after the increment
+         */
+        public int incrementCounter(Object o)
+        {
+            synchronized (counterMap) {
+                Counter counter = counterMap.get(o);
+                if (counter == null) {
+                    counter = new Counter();
+                    counterMap.put(o, counter);
+                }
+                return counter.increment();
+            }
+        }
+
+        /**
+         * decrement the value of the counter associated with given identifier, creating a new one with count zero
+         * if none exists
+         * @param o the identifier for the coounter
+         * @return the value of the counter after the decrement
+         */
+        public int decrementCounter(Object o)
+        {
+            synchronized (counterMap) {
+                Counter counter = counterMap.get(o);
+                if (counter == null) {
+                    counter = new Counter();
+                    counterMap.put(o, counter);
+                }
+                return counter.decrement();
+            }
+        }
+
+        /**
          * cause the current thread to throw a runtime exception which will normally cause it to exit.
          * The exception may not kill the thread if the trigger method or calling code contains a
          * catch-all handler so care must be employed to ensure that a call to this builtin has the
@@ -896,6 +1012,11 @@ public class Rule
      * a hash map used to identify countdowns from their identifying objects
      */
     private static HashMap<Object, CountDown> countDownMap = new HashMap<Object, CountDown>();
+
+    /**
+     * a hash map used to identify counters from their identifying objects
+     */
+    private static HashMap<Object, Counter> counterMap = new HashMap<Object, Counter>();
 
     /**
      * a hash map used to identify waiters from their identifying objects

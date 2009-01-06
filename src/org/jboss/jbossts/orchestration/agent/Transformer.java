@@ -333,13 +333,13 @@ public class Transformer implements ClassFileTransformer {
         try {
             rule = Rule.create(ruleName, handlerClass, handlerMethod, handlerLocation, script.getRuleText(), loader);
         } catch (ParseException pe) {
-            System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error parsing rule : " + pe);
+            System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error parsing rule " + ruleName + " : " + pe);
             return targetClassBytes;
         } catch (TypeException te) {
-            System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error checking rule : " + te);
+            System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error checking rule " + ruleName + " : " + te);
             return targetClassBytes;
         } catch (Throwable th) {
-            System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error processing rule : " + th);
+            System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error processing rule " + ruleName + " : " + th);
             return targetClassBytes;
         }
         System.out.println(rule);
