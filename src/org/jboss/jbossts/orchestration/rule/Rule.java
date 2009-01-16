@@ -42,8 +42,7 @@ import org.jboss.jbossts.orchestration.agent.LocationType;
 import org.jboss.jbossts.orchestration.agent.Transformer;
 import org.objectweb.asm.Opcodes;
 
-import java.io.StringWriter;
-import java.io.StringReader;
+import java.io.*;
 import java.util.*;
 
 import java_cup.runtime.Symbol;
@@ -512,6 +511,158 @@ public class Rule
             return true;
         }
 
+        // file based trace support
+        /**
+         * open a trace output stream identified by identifier to a file located in the current working
+         * directory using a unique generated name
+         * @param identifier an identifier used subsequently to identify the trace output stream
+         * @return true if new file and stream was created, false if a stream identified by identifier
+         * already existed or the identifer is null, "out" or "err"
+         */
+        public boolean openTrace(Object identifier)
+        {
+            return openTrace(identifier, null);
+        }
+
+        /**
+         * open a trace output stream identified by identifier to a file located in the current working
+         * directory using the given file name or a generated name if the supplied name is null
+         * @param identifier an identifier used subsequently to identify the trace output stream
+         * @return true if new file and stream was created, false if a stream identified by identifier
+         * already existed or if a file of the same name already exists or the identifer is null, "out"
+         * or "err"
+         */
+        public boolean openTrace(Object identifier, String fileName)
+        {
+            if (identifier == null) {
+                return false;
+            }
+
+            synchronized(traceMap) {
+                PrintStream stream = traceMap.get(identifier);
+                String name = fileName;
+                if (stream != null) {
+                    return false;
+                }
+                if (fileName == null) {
+                    name = nextFileName();
+                }
+                File file = new File(name);
+
+                if (file.exists() && !file.canWrite()) {
+                    if (fileName == null) {
+                        // keep trying new names until we hit an unused one
+                        do {
+                            name = nextFileName();
+                            file = new File(name);
+                        } while (file.exists() && !file.canWrite());
+                    } else {
+                        // can't open file as requested
+                        return false;
+                    }
+                }
+                
+                FileOutputStream fos;
+
+                try {
+                    if (file.exists()) {
+                         fos = new FileOutputStream(file, true);
+                    } else {
+                        fos = new FileOutputStream(file, true);
+                    }
+                } catch (FileNotFoundException e) {
+                    // oops, just return false
+                    return false;
+                }
+
+                PrintStream ps = new PrintStream(fos, true);
+
+                traceMap.put(identifier, ps);
+
+                return true;
+            }
+        }
+
+        /**
+         * close the trace output stream identified by identifier flushing any pending output
+         * @param identifier an identifier used subsequently to identify the trace output stream
+         * @return true if the stream was flushed and closed, false if no stream is identified by identifier
+         * or the identifer is null, "out" or "err"
+         */
+        public boolean closeTrace(Object identifier)
+        {
+            if (identifier == null ||
+                identifier.equals("out") ||
+                    identifier.equals("err")) {
+                return false;
+            }
+
+            synchronized(traceMap) {
+                PrintStream ps = traceMap.get(identifier);
+                if (ps != null) {
+                    // need to do the close while synchornized so we ensure an open cannot
+                    // proceed until we have flushed all changes to disk
+                    ps.close();
+                    traceMap.put(identifier, null);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /**
+         * write the supplied message to the trace stream identified by identifier, creating a new stream
+         * if none exists
+         * @param identifier an identifier used subsequently to identify the trace output stream
+         * @param message
+         * @return true
+         * @caveat if identifier is the string "out" or null the message will be written to System.out.
+         * if identifier is the string "err" the message will be written to System.err. 
+         */
+        public boolean trace(Object identifier, String message)
+        {
+            synchronized(traceMap) {
+                PrintStream ps = traceMap.get(identifier);
+                if (ps == null) {
+                    if (openTrace(identifier)) {
+                        ps = traceMap.get(identifier);
+                    } else {
+                        ps = System.out;
+                    }
+                }
+                ps.print(message);
+                ps.flush();
+            }
+            return true;
+        }
+
+        /**
+         * write the supplied message to the trace stream identified by identifier, creating a new stream
+         * if none exists, and append a new line
+         * @param identifier an identifier used subsequently to identify the trace output stream
+         * @param message
+         * @return true
+         * @caveat if identifier is the string "out" or null the message will be written to System.out.
+         * if identifier is the string "err" the message will be written to System.err.
+         */
+        public boolean traceln(Object identifier, String message)
+        {
+            synchronized(traceMap) {
+                PrintStream ps = traceMap.get(identifier);
+                if (ps == null) {
+                    if (openTrace(identifier)) {
+                        ps = traceMap.get(identifier);
+                    } else {
+                        ps = System.out;
+                    }
+                }
+                ps.println(message);
+                ps.flush();
+            }
+            return true;
+        }
+
         // flag support
         /**
          * set a flag keyed by the supplied object if it is not already set
@@ -890,6 +1041,32 @@ public class Rule
         {
             return waitMap.remove(object);
         }
+
+        private static int nextFileIndex = 0;
+
+        private static synchronized int nextFileIndex()
+        {
+            return nextFileIndex++;
+        }
+
+        private String nextFileName()
+        {
+            StringWriter writer = new StringWriter();
+            String digits = Integer.toString(nextFileIndex());
+            int numDigits = digits.length();
+            int idx;
+
+            writer.write("trace");
+
+            // this pads up to 9 digits but we may get more if we open enough files!
+            for (idx = 9; idx > numDigits; idx--) {
+                writer.write('0');
+            }
+
+            writer.write(digits);
+
+            return writer.toString();
+        }
     }
 
     /**
@@ -1000,6 +1177,11 @@ public class Rule
             return rule.getName();
         }
     }
+
+    /**
+     * a hash map used to identify trace streams from their identifying objects
+     */
+    private static HashMap<Object, PrintStream> traceMap = new HashMap<Object, PrintStream>();
 
     /**
      * a set used to identify settings for boolean flags associated with arbitrary objects. if
