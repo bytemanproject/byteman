@@ -5,7 +5,6 @@
 # usage: toastcheck -cp classpath script1 . . . scriptN
 #
 BASE=${0%*/bin/toastcheck.sh}
-echo "BASE = $BASE"
 CP=${BASE}/build/lib/orchestration.jar
 CP=${CP}:${BASE}}/ext/asm-all-3.0.jar
 if [ $1 == "-cp" ] ; then
