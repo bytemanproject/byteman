@@ -290,7 +290,7 @@ public class TestScript
         if (errorCount != 0) {
             System.err.println("TestScript: " + errorCount + " total errors");
             System.err.println("            " + parseErrorCount + " parse errors");
-            System.err.println("            " + typeErrorCount + "type errors");
+            System.err.println("            " + typeErrorCount + " type errors");
 
         } else {
             System.err.println("TestScript: no errors");
