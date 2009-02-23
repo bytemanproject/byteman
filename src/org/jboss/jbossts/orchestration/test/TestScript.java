@@ -67,7 +67,7 @@ public class TestScript
         for (String script : scriptFiles) {
             try {
                 FileInputStream fis = new FileInputStream(new File(script));
-                System.out.println("checking classes in " + script);
+                System.out.println("checking rules in " + script);
                 List<String> rules = processRules(fis);
                 checkRules(rules);
             } catch (IOException ioe) {
@@ -86,21 +86,19 @@ public class TestScript
         byte[] bytes = new byte[stream.available()];
         stream.read(bytes);
         String text = new String(bytes);
-        int length = text.length();
-        while (length > 0) {
-            int end = text.indexOf("ENDRULE");
-            if (end >= 0) {
-                end += "ENDRULE".length();
-                if (end < length && text.charAt(end) == '\n') {
-                    end++;
-                }
-                rules.add(text.substring(0, end));
-                text = text.substring(end).trim();
-            } else {
-                rules.add(text);
-                text = "";
+        String[] lines = text.split("\n");
+        int length = lines.length;
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < length; i++) {
+            buffer.append(lines[i]);
+            buffer.append("\n");
+            if (lines[i].trim().equals("ENDRULE")) {
+                rules.add(buffer.toString());
+                buffer = new StringBuffer();
             }
-            length = text.length();
+        }
+        if (buffer.length() > 0) {
+            rules.add(buffer.toString());
         }
 
         return rules;
@@ -109,7 +107,11 @@ public class TestScript
     private void checkRules(List<String> ruleScripts)
     {
         ClassLoader loader = getClass().getClassLoader();
-        
+        int errorCount = 0;
+        int parseErrorCount = 0;
+        int typeErrorCount = 0;
+        int compileErrorCount = 0;
+
         for (String script : ruleScripts) {
             String ruleName = "";
             try {
@@ -125,6 +127,9 @@ public class TestScript
 
                 while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
                     idx++;
+                    if (idx == len) {
+                        throw new ParseException("Rule contains no text : " + script);
+                    }
                 }
                 if (lines[idx].startsWith("RULE ")) {
                     ruleName = lines[idx].substring(5).trim();
@@ -134,6 +139,9 @@ public class TestScript
                 }
                 while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
                     idx++;
+                    if (idx == len) {
+                        throw new ParseException("Rule does not specify CLASS : " + script);
+                    }
                 }
                 if (lines[idx].startsWith("CLASS ")) {
                     targetClassName = lines[idx].substring(6).trim();
@@ -143,6 +151,9 @@ public class TestScript
                 }
                 while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
                     idx++;
+                    if (idx == len) {
+                        throw new ParseException("Rule does not specify METHOD : " + script);
+                    }
                 }
                 if (lines[idx].startsWith("METHOD ")) {
                     targetMethodName = lines[idx].substring(7).trim();
@@ -152,6 +163,9 @@ public class TestScript
                 }
                 while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
                     idx++;
+                    if (idx == len) {
+                        throw new ParseException("Rule is incomplete : " + script);
+                    }
                 }
                 locationType = LocationType.type(lines[idx]);
                 if (locationType != null) {
@@ -172,6 +186,10 @@ public class TestScript
                     text += sepr + lines[idx];
                     sepr = "\n";
                 }
+                if (idx == len) {
+                    throw new ParseException("Missing ENDRULE : " + script);
+                }
+
                 Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetLocation, text, loader);
                 System.err.println("TestScript: parsed rule " + rule.getName());
                 System.err.println(rule);
@@ -189,7 +207,7 @@ public class TestScript
                             String candidateDesc = makeDescriptor(candidate);
                             if (targetName.equals(candidateName)) {
                                 if (targetDesc.equals("") || TypeHelper.equalDescriptors(targetDesc, candidateDesc)) {
-                                    System.err.println("TestJar: checking rule " + ruleName);
+                                    System.err.println("TestScript: checking rule " + ruleName);
                                     if (found) {
                                         multiple = true;
                                         break;
@@ -207,7 +225,7 @@ public class TestScript
                                     }
                                     rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
                                     rule.typeCheck();
-                                    System.err.println("TestJar: type checked rule " + ruleName);
+                                    System.err.println("TestScript: type checked rule " + ruleName);
                                 }
                             }
                         }
@@ -218,7 +236,7 @@ public class TestScript
                             String candidateDesc = makeDescriptor(constructor);
                             if (targetName.equals("<init>")) {
                                 if (targetDesc.equals("") || TypeHelper.equalDescriptors(targetDesc, candidateDesc)) {
-                                    System.err.println("TestJar: checking rule " + ruleName);
+                                    System.err.println("TestScript: checking rule " + ruleName);
                                     if (found) {
                                         multiple = true;
                                         break;
@@ -236,29 +254,46 @@ public class TestScript
                                     }
                                     rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
                                     rule.typeCheck();
-                                    System.err.println("TestJar: type checked rule " + ruleName);
+                                    System.err.println("TestScript: type checked rule " + ruleName);
                                 }
                             }
                         }
                     }
                 } catch(ClassNotFoundException cfe) {
+                    errorCount++;
                     System.err.println("TestScript: unable to load class " + targetClassName);
                 }
                 if (!found) {
-                    System.err.println("TestJar: no matching method for rule " + ruleName);
+                    errorCount++;
+                    System.err.println("TestScript: no matching method for rule " + ruleName);
                 } else if (multiple) {
-                    System.err.println("TestJar: multiple matching methods for rule " + ruleName);
+                    errorCount++;
+                    System.err.println("TestScript: multiple matching methods for rule " + ruleName);
                 }
             } catch (ParseException e) {
+                errorCount++;
+                parseErrorCount++;
                 System.err.println("TestScript: parse exception for rule " + ruleName + " : " + e);
                 e.printStackTrace(System.err);
             } catch (TypeException e) {
+                typeErrorCount++;
+                errorCount++;
                 System.err.println("TestScript: type exception for rule " + ruleName + " : " + e);
                 e.printStackTrace(System.err);
             } catch (CompileException e) {
+                compileErrorCount++;
+                errorCount++;
                 System.err.println("TestScript: compile exception for rule " + " : " + ruleName + e);
                 e.printStackTrace(System.err);
             }
+        }
+        if (errorCount != 0) {
+            System.err.println("TestScript: " + errorCount + " total errors");
+            System.err.println("            " + parseErrorCount + " parse errors");
+            System.err.println("            " + typeErrorCount + "type errors");
+
+        } else {
+            System.err.println("TestScript: no errors");
         }
     }
 
