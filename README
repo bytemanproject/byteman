@@ -145,10 +145,10 @@ also specify or omit a brackted list of comma-separated argument
 types.
 
 Location specifications also include a further qualifier identifying
-where in the target method the trigger point for the rul should be
+where in the target method the trigger point for the rule should be
 located. The simplest location specification is AT ENTRY which locates
 the triggerpoint at the first executable instruction in a the atrget
-method's bytecode (or the first instrction following the superclass
+method's bytecode (or the first instruction following the superclass
 constructor if the target method is a constructor). Other qualifiers
 include
 
@@ -157,6 +157,7 @@ AT READ <fieldname> [<count>]
 AT WRITE <fieldname> [<count>]
 AT INVOKE <methodname>[[signature>] [<count>]
 AT SYNCHRONIZE [<count>]
+AT THROW [<typename>] [<count>]
 
 An event specification also includes a list of bindings for variables
 which can be referenced during evaluaton of the rule condition and

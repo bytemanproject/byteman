@@ -40,6 +40,8 @@ public abstract class Location
                 return SynchronizeLocation.create(parameters, false);
             case SYNCHRONIZE_COMPLETED:
                 return SynchronizeLocation.create(parameters, true);
+            case THROW:
+                return ThrowLocation.create(parameters);
         }
 
         return null;
@@ -544,6 +546,104 @@ public abstract class Location
             } else {
                 text= "AT SYNCHRONIZE";
             }
+
+            if (count != 1) {
+                text += " " + count;
+            }
+
+            return text;
+        }
+    }
+    /**
+     * location identifying a throw trigger point
+     */
+    private static class ThrowLocation extends Location
+    {
+        /**
+         * count identifying which throw operation should be taken as the trigger point. if not specified
+         * as a parameter this defaults to the first throw.
+         */
+        private int count;
+
+        /**
+         * the name of the exception type to which the method belongs or null if any type will do
+         */
+        private String typeName;
+
+        /**
+         * construct a location identifying a throw trigger point
+         * @param count count identifying which throw should be taken as the trigger point
+         * @param typeName the name of the exception type associated with the throw operation
+         */
+        private ThrowLocation(int count, String typeName)
+        {
+            this.count = count;
+            this.typeName = typeName;
+        }
+
+        /**
+         * create a location identifying a throw trigger point
+         * @param parameters the text of the parameters appended to the location specifier
+         * @return a throw location or null if the parameters does not contain a valid type name
+         */
+        protected static Location create(String parameters)
+        {
+            String text = parameters.trim();
+            String typeName;
+            String signature;
+            int count;
+
+            // check for trailing count
+            if (text.contains(" ")) {
+                int tailIdx = text.lastIndexOf(" ");
+                String countText = text.substring(tailIdx + 1).trim();
+                try {
+                    count = Integer.valueOf(countText);
+                } catch (NumberFormatException nfe) {
+                    return null;
+                }
+                text = text.substring(0, tailIdx).trim();
+            } else {
+                count = 1;
+            }
+
+            // text may be either a count or a type name
+            if (text.equals("") || !Character.isDigit(text.charAt(0))) {
+                typeName = text;
+            } else {
+                try {
+                    count = Integer.valueOf(text);
+                } catch (NumberFormatException nfe) {
+                    return null;
+                }
+                typeName="";
+            }
+
+            // TODO sanity check type name
+
+            return new ThrowLocation(count, typeName);
+        }
+
+        /**
+         * return an adapter which can be used to check whether a method contains a trigger point whose position
+         * matches this location
+         * @return the required adapter
+         */
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod) {
+            return new ThrowCheckAdapter(cv, targetClass, targetMethod, typeName, count);
+        }
+
+        /**
+         * return an adapter which can be used to insert a trigger call in a method containing a trigger point whose
+         * position matches this location
+         * @return the required adapter
+         */
+        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
+            return new ThrowTriggerAdapter(cv, rule, targetClass, targetMethod, typeName, count);
+        }
+
+        public String toString() {
+            String text = "AT THROW";
 
             if (count != 1) {
                 text += " " + count;
