@@ -39,4 +39,6 @@ if [ $error -ne 0 ] ; then
   exit
 fi
 
-java -classpath ${CP} org.jboss.jbossts.orchestration.test.TestScript $FILES
+# allow for extra java opts via setting TOAST_JAVA_OPTS
+
+java ${TOAST_JAVA_OPTS} -classpath ${CP} org.jboss.jbossts.orchestration.test.TestScript $FILES
