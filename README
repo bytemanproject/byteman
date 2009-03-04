@@ -149,9 +149,11 @@ where in the target method the trigger point for the rule should be
 located. The simplest location specification is AT ENTRY which locates
 the triggerpoint at the first executable instruction in a the atrget
 method's bytecode (or the first instruction following the superclass
-constructor if the target method is a constructor). Other qualifiers
-include
+constructor if the target method is a constructor). The full list of
+qualifiers is
 
+AT ENTRY
+AT EXIT
 AT LINE <number>
 AT READ <fieldname> [<count>]
 AT WRITE <fieldname> [<count>]

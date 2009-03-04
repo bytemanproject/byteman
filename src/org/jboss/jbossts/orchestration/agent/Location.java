@@ -42,6 +42,8 @@ public abstract class Location
                 return SynchronizeLocation.create(parameters, true);
             case THROW:
                 return ThrowLocation.create(parameters);
+            case EXIT:
+                return ExitLocation.create(parameters);
         }
 
         return null;
@@ -652,4 +654,49 @@ public abstract class Location
             return text;
         }
     }
+    /**
+     * location identifying a method exit trigger point
+     */
+    private static class ExitLocation extends Location
+    {
+        /**
+         * create a location identifying a method entry trigger point
+         * @param parameters the text of the parameters appended to the location specifier
+         * @return a method entry location or null if the parameters is not a blank String
+         */
+        protected static Location create(String parameters) {
+            if (!parameters.trim().equals("")) {
+                // hmm, not expecting any parameters here
+                return null;
+            }
+            return new ExitLocation();
+        }
+
+        /**
+         * return an adapter which can be used to check whether a method contains a trigger point whose position
+         * matches this location
+         * @return the required adapter
+         */
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod) {
+            // a line check adapter with line -1 will do the job
+
+            return new ExitCheckAdapter(cv, targetClass, targetMethod);
+        }
+
+        /**
+         * return an adapter which can be used to insert a trigger call in a method containing a trigger point whose
+         * position matches this location
+         * @return the required adapter
+         */
+        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
+            // a line adapter with line -1 will do the job
+
+            return new ExitTriggerAdapter(cv, rule, targetClass, targetMethod);
+        }
+
+        public String toString() {
+            return "AT EXIT";
+        }
+    }
+
 }

@@ -61,8 +61,6 @@ public enum LocationType
      * script syntax : 'AFTER' 'INVOKE' [<typename> '.' ] <methodname> ['(' <argtypes> ')' [ <count> ]
      */
     INVOKE_COMPLETED,
-    // this is tricky so we exclude it for now
-    // EXIT,
     /**
      * specifies a location for trigger insertion by identifying a synchronize operation or the nth such
      * operation if a count is supplied.
@@ -84,7 +82,13 @@ public enum LocationType
      * script syntax : 'AT' 'THROW' [<typename>] [ <count> ]
      * n.b. exception typename parsed but not yet implemented
      */
-    THROW;
+    THROW,
+
+    /**
+     * specifies a location for trigger insertion at return from the trigger method
+     * script syntax : 'AT' 'RETURN'
+     */
+    EXIT;
 
     public String specifierText()
     {
@@ -136,9 +140,11 @@ public enum LocationType
             "AT SYNCHRONIZE",
             "AFTER SYNCHRONIZE",
             "AT THROW",
+            "AT EXIT",
             "LINE", // for compatibility
             "AT CALL", // for ambiguity :-)
-            "AFTER CALL" // for ambiguity :-)
+            "AFTER CALL", // for ambiguity :-)
+            "AT RETURN" // for ambiguity :-)
     };
 
     private static LocationType[] types = {
@@ -153,8 +159,10 @@ public enum LocationType
             SYNCHRONIZE,
             SYNCHRONIZE_COMPLETED,
             THROW,
+            EXIT,
             LINE,
             INVOKE,
-            INVOKE_COMPLETED
+            INVOKE_COMPLETED,
+            EXIT
     };
 }
