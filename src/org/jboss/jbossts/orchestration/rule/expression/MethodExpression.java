@@ -29,6 +29,7 @@ import org.jboss.jbossts.orchestration.rule.binding.Binding;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 import java.util.List;
 import java.util.Iterator;
@@ -98,7 +99,7 @@ public class MethodExpression extends Expression
 
     public Type typeCheck(Type expected) throws TypeException {
         // if we have no recipient then we use the rule's helper as a target via a binding
-        // to $-1. this means  we can type check the call against methods of class Rule$Helper
+        // to $-1. this means  we can type check the call against methods of class Helper
         // without having to do any special case processing.
 
         TypeGroup typeGroup =  getTypeGroup();
@@ -147,7 +148,8 @@ public class MethodExpression extends Expression
         
         if (recipient == null) {
             if (rootType == null) {
-                Type ruleType = typeGroup.create("org.jboss.jbossts.orchestration.rule.Rule$Helper");
+                //Type ruleType = typeGroup.create("org.jboss.jbossts.orchestration.rule.helper.Helper");
+                Type ruleType = typeGroup.create(rule.getHelperClass().getCanonicalName());
                 recipient = new DollarExpression(rule, ruleType, token, -1);
 
                 rootType = recipient.typeCheck(Type.UNDEFINED);
@@ -228,7 +230,7 @@ public class MethodExpression extends Expression
         return type;
     }
 
-    public Object interpret(Rule.BasicHelper helper) throws ExecuteException {
+    public Object interpret(HelperAdapter helper) throws ExecuteException {
         Object recipientValue = null;
         try {
             if (recipient != null) {

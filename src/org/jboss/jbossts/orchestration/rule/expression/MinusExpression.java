@@ -27,6 +27,7 @@ import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 /**
@@ -47,7 +48,7 @@ public class MinusExpression extends UnaryOperExpression
         return type;
     }
 
-    public Object interpret(Rule.BasicHelper helper) throws ExecuteException {
+    public Object interpret(HelperAdapter helper) throws ExecuteException {
         try {
             Number value = (Number)getOperand(0).interpret(helper);
 

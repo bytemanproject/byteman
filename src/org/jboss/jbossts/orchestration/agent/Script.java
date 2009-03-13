@@ -9,14 +9,16 @@ public class Script
     private String name;
     private String targetClass;
     private String targetMethod;
+    private String targetHelper;
     private Location targetLocation;
     private String ruleText;
 
-    Script (String name, String targetClass, String targetMethod, Location targetLocation, String ruleText)
+    Script (String name, String targetClass, String targetMethod, String targetHelper, Location targetLocation, String ruleText)
     {
         this.name = name;
         this.targetClass = targetClass;
         this.targetMethod = targetMethod;
+        this.targetHelper = targetHelper;
         this.targetLocation = targetLocation;
         this.ruleText = ruleText;
     }
@@ -27,6 +29,10 @@ public class Script
 
     public String getTargetClass() {
         return targetClass;
+    }
+
+    public String getTargetHelper() {
+        return targetHelper;
     }
 
     public String getTargetMethod() {

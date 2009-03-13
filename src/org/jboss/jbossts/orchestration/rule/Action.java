@@ -33,6 +33,8 @@ import static org.jboss.jbossts.orchestration.rule.grammar.ParseNode.*;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.helper.InterpretedHelper;
+import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -98,7 +100,7 @@ public class Action extends RuleElement
         return Type.VOID;
     }
 
-    public void interpret(Rule.BasicHelper helper)
+    public void interpret(HelperAdapter helper)
             throws ExecuteException
     {
         if (action != null) {

@@ -34,16 +34,20 @@ import org.jboss.jbossts.orchestration.rule.binding.Binding;
 import org.jboss.jbossts.orchestration.rule.grammar.ECATokenLexer;
 import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
-import org.jboss.jbossts.orchestration.synchronization.CountDown;
-import org.jboss.jbossts.orchestration.synchronization.Waiter;
-import org.jboss.jbossts.orchestration.synchronization.Counter;
+import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
+import org.jboss.jbossts.orchestration.rule.helper.Helper;
+import org.jboss.jbossts.orchestration.rule.helper.InterpretedHelper;
 import org.jboss.jbossts.orchestration.agent.Location;
 import org.jboss.jbossts.orchestration.agent.LocationType;
 import org.jboss.jbossts.orchestration.agent.Transformer;
 import org.objectweb.asm.Opcodes;
 
+import org.jboss.jbossts.orchestration.rule.compiler.Compiler;
+
 import java.io.*;
 import java.util.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 import java_cup.runtime.Symbol;
 
@@ -136,7 +140,7 @@ public class Rule
      */
     private boolean checkFailed;
 
-    private Rule(String name, String targetClass, String targetMethod, Location targetLocation, String ruleSpec, ClassLoader loader)
+    private Rule(String name, String targetClass, String targetMethod,Class<?> helperClass, Location targetLocation, String ruleSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
         ParseNode ruleTree;
@@ -165,6 +169,7 @@ public class Rule
         checked = false;
         this.targetClass = targetClass;
         this.targetMethod = targetMethod;
+        this.helperClass = (helperClass != null ? helperClass : Helper.class);
         this.targetLocation = (targetLocation != null ? targetLocation : Location.create(LocationType.ENTRY, ""));
         triggerClass = null;
         triggerMethod = null;
@@ -211,10 +216,10 @@ public class Rule
         return action;
     }
 
-    public static Rule create(String name, String targetClass, String targetMethod, Location targetLocation, String ruleSpec, ClassLoader loader)
+    public static Rule create(String name, String targetClass, String targetMethod, Class<?> helperClass, Location targetLocation, String ruleSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
-            return new Rule(name, targetClass, targetMethod, targetLocation, ruleSpec, loader);
+            return new Rule(name, targetClass, targetMethod, helperClass, targetLocation, ruleSpec, loader);
     }
 
     public void setEvent(String eventSpec) throws ParseException, TypeException
@@ -256,10 +261,15 @@ public class Rule
         if (!checked) {
             try {
                 typeCheck();
-                helperClass = BasicHelper.class;
+                compile();
             } catch (TypeException te) {
-                System.out.println("Rule.typecheck : error typechecking rule " + getName());
+                System.out.println("Rule.ensureTypeCheckedCompiled : error typechecking rule " + getName());
                 te.printStackTrace(System.out);
+                checkFailed = true;
+                return false;
+            } catch (CompileException ce) {
+                System.out.println("Rule.ensureTypeCheckedCompiled : error compiling rule " + getName());
+                ce.printStackTrace(System.out);
                 checkFailed = true;
                 return false;
             }
@@ -291,13 +301,38 @@ public class Rule
         checked = true;
     }
 
+    public void compile()
+            throws CompileException
+    {
+        boolean compileToBytecode = isCompileToBytecode();
+
+        if (helperClass == Helper.class && !compileToBytecode) {
+            // we can use the builtin interpreted helper adapter for class Helper
+           helperImplementationClass = InterpretedHelper.class;
+        } else {
+            // we need to generate a helper adapter class which either interprets or compiles
+
+            helperImplementationClass = Compiler.getHelperAdapter(helperClass, compileToBytecode);
+        }
+    }
+
+    /**
+     * should rules be compiled to bytecode
+     * @return true if rules should be compiled to bytecode otherwise false
+     */
+    private boolean isCompileToBytecode()
+    {
+        return Transformer.isCompileToBytecode();
+    }
+
     private void installParameters(boolean isStatic, String className, String descriptor)
             throws TypeException
     {
         List<Binding> parameterBindings = new ArrayList<Binding>();
         Type type;
-        // add a binding for the rule so we can call builting static methods
-        type = typeGroup.create("org.jboss.jbossts.orchestration.rule.Rule$Helper");
+        // add a binding for the rule so we can call builtin static methods
+        type = typeGroup.create(helperClass.getCanonicalName());
+        // type = typeGroup.create("org.jboss.jbossts.orchestration.rule.helper.Helper");
         Binding ruleBinding = new Binding(this, "$", type);
         parameterBindings.add(ruleBinding);
 
@@ -369,35 +404,44 @@ public class Rule
 
     private void execute(Object recipient, Object[] args) throws ExecuteException
     {
-        // type check and compile the rule now if it has not already been done
+        // type check and createHelperAdapter the rule now if it has not already been done
 
         if (ensureTypeCheckedCompiled()) {
 
             // create a helper and get it to execute the rule
-            // eventually we will create a subclass of helper for each rule and compile
+            // eventually we will create a subclass of helper for each rule and createHelperAdapter
             // an implementation of execute from the rule source. for now we create a generic
             // helper and call the generic execute method which interprets the rule
-            BasicHelper helper;
+            HelperAdapter helper;
             try {
-                helper = (BasicHelper)helperClass.newInstance();
-                helper.setRule(this);
+                Constructor constructor = helperImplementationClass.getConstructor(Rule.class);
+                helper = (HelperAdapter)constructor.newInstance(this);
+                //helper = (RuleHelper)helperClass.newInstance();
+                //helper.setRule(this);
+                helper.execute(bindings, recipient, args);
+            } catch (NoSuchMethodException e) {
+                // should not happen!!!
+                System.out.println("cannot find constructor " + helperImplementationClass.getCanonicalName() + "(Rule) for helper class");
+                e.printStackTrace(System.out);
+                return;
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             } catch (InstantiationException e) {
                 // should not happen
-                System.out.println("cannot create instance of " + helperClass.getCanonicalName());
+                System.out.println("cannot create instance of " + helperImplementationClass.getCanonicalName());
                 e.printStackTrace(System.out);
                 return;
             } catch (IllegalAccessException e) {
                 // should not happen
-                System.out.println("cannot access " + helperClass.getCanonicalName());
+                System.out.println("cannot access " + helperImplementationClass.getCanonicalName());
                 e.printStackTrace(System.out);
                 return;
             } catch (ClassCastException e) {
                 // should not happen
-                System.out.println("cast exception " + helperClass.getCanonicalName());
+                System.out.println("cast exception " + helperImplementationClass.getCanonicalName());
                 e.printStackTrace(System.out);
                 return;
             }
-            helper.execute(bindings, recipient, args);
         }
     }
 
@@ -432,6 +476,11 @@ public class Rule
     private synchronized static int nextId()
     {
         return nextId++;
+    }
+
+    private static boolean compileRules()
+    {
+        return Transformer.isCompileToBytecode();
     }
 
     /**
@@ -474,736 +523,27 @@ public class Rule
     }
 
     /**
-     * a helper class instantiated when the rule is triggered which provides an
-     * implementation of execute for the rule and enables the execution context
-     * to be accessed from the executed code
+     * a helper class which defines the builtin methods available to this rule -- by default Helper
      */
-
     private Class helperClass;
 
     /**
-     * Methods provided on this class are automatically made available as builtin operations in
-     * expressions appearing in rule event bindings, conditions and actions. Although Helper
-     * methods are all instance methods the message recipient for the method call is implicit
-     * and does not appear in the builtin call. It does, however, appear in the runtime
-     * invocation, giving the builtin operation access to the rule being fired (the Helper
-     * instance has implicit access to the enclosing rule object since class Helper is
-     * not static).
+     * an extension of the helper class which implements the methods of interface RuleHelper -- by default
+     * InterpretedHelper. This is the class which is instantiated and used as the target for an execute
+     * operation.
      */
-    public static class Helper
+
+    private Class helperImplementationClass;
+
+    /**
+     * a getter allowing the helper class for the rule to be identified
+     * 
+     * @return
+     */
+    public Class getHelperClass()
     {
-        protected Rule rule;
-
-        protected Helper(Rule rule)
-        {
-            this.rule = rule;
-        }
-        // tracing support
-        /**
-         * builtin to print a message during rule execution. n.b. this always returns true which
-         * means it can be invoked during condition execution
-         * @param text the message to be printed as trace output
-         * @return true
-         */
-        public boolean debug(String text)
-        {
-            System.out.println("rule.debug{" + rule.getName() + "} : " + text);
-            return true;
-        }
-
-        // file based trace support
-        /**
-         * open a trace output stream identified by identifier to a file located in the current working
-         * directory using a unique generated name
-         * @param identifier an identifier used subsequently to identify the trace output stream
-         * @return true if new file and stream was created, false if a stream identified by identifier
-         * already existed or the identifer is null, "out" or "err"
-         */
-        public boolean openTrace(Object identifier)
-        {
-            return openTrace(identifier, null);
-        }
-
-        /**
-         * open a trace output stream identified by identifier to a file located in the current working
-         * directory using the given file name or a generated name if the supplied name is null
-         * @param identifier an identifier used subsequently to identify the trace output stream
-         * @return true if new file and stream was created, false if a stream identified by identifier
-         * already existed or if a file of the same name already exists or the identifer is null, "out"
-         * or "err"
-         */
-        public boolean openTrace(Object identifier, String fileName)
-        {
-            if (identifier == null) {
-                return false;
-            }
-
-            synchronized(traceMap) {
-                PrintStream stream = traceMap.get(identifier);
-                String name = fileName;
-                if (stream != null) {
-                    return false;
-                }
-                if (fileName == null) {
-                    name = nextFileName();
-                }
-                File file = new File(name);
-
-                if (file.exists() && !file.canWrite()) {
-                    if (fileName == null) {
-                        // keep trying new names until we hit an unused one
-                        do {
-                            name = nextFileName();
-                            file = new File(name);
-                        } while (file.exists() && !file.canWrite());
-                    } else {
-                        // can't open file as requested
-                        return false;
-                    }
-                }
-                
-                FileOutputStream fos;
-
-                try {
-                    if (file.exists()) {
-                         fos = new FileOutputStream(file, true);
-                    } else {
-                        fos = new FileOutputStream(file, true);
-                    }
-                } catch (FileNotFoundException e) {
-                    // oops, just return false
-                    return false;
-                }
-
-                PrintStream ps = new PrintStream(fos, true);
-
-                traceMap.put(identifier, ps);
-
-                return true;
-            }
-        }
-
-        /**
-         * close the trace output stream identified by identifier flushing any pending output
-         * @param identifier an identifier used subsequently to identify the trace output stream
-         * @return true if the stream was flushed and closed, false if no stream is identified by identifier
-         * or the identifer is null, "out" or "err"
-         */
-        public boolean closeTrace(Object identifier)
-        {
-            if (identifier == null ||
-                identifier.equals("out") ||
-                    identifier.equals("err")) {
-                return false;
-            }
-
-            synchronized(traceMap) {
-                PrintStream ps = traceMap.get(identifier);
-                if (ps != null) {
-                    // need to do the close while synchornized so we ensure an open cannot
-                    // proceed until we have flushed all changes to disk
-                    ps.close();
-                    traceMap.put(identifier, null);
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        /**
-         * write the supplied message to the trace stream identified by identifier, creating a new stream
-         * if none exists
-         * @param identifier an identifier used subsequently to identify the trace output stream
-         * @param message
-         * @return true
-         * @caveat if identifier is the string "out" or null the message will be written to System.out.
-         * if identifier is the string "err" the message will be written to System.err. 
-         */
-        public boolean trace(Object identifier, String message)
-        {
-            synchronized(traceMap) {
-                PrintStream ps = traceMap.get(identifier);
-                if (ps == null) {
-                    if (openTrace(identifier)) {
-                        ps = traceMap.get(identifier);
-                    } else {
-                        ps = System.out;
-                    }
-                }
-                ps.print(message);
-                ps.flush();
-            }
-            return true;
-        }
-
-        /**
-         * write the supplied message to the trace stream identified by identifier, creating a new stream
-         * if none exists, and append a new line
-         * @param identifier an identifier used subsequently to identify the trace output stream
-         * @param message
-         * @return true
-         * @caveat if identifier is the string "out" or null the message will be written to System.out.
-         * if identifier is the string "err" the message will be written to System.err.
-         */
-        public boolean traceln(Object identifier, String message)
-        {
-            synchronized(traceMap) {
-                PrintStream ps = traceMap.get(identifier);
-                if (ps == null) {
-                    if (openTrace(identifier)) {
-                        ps = traceMap.get(identifier);
-                    } else {
-                        ps = System.out;
-                    }
-                }
-                ps.println(message);
-                ps.flush();
-            }
-            return true;
-        }
-
-        // flag support
-        /**
-         * set a flag keyed by the supplied object if it is not already set
-         * @param identifier the object identifying the relevant flag
-         * @return true if the flag was clear before this call otherwise false
-         */
-        public boolean flag(Object identifier)
-        {
-            synchronized (flagSet) {
-                return flagSet.add(identifier);
-            }
-        }
-
-        /**
-         * test the state of the flag keyed by the supplied object
-         * @param identifier the object identifying the relevant flag
-         * @return true if the flag is set otherwise false
-         */
-        public boolean flagged(Object identifier)
-        {
-            synchronized (flagSet) {
-                return flagSet.contains(identifier);
-            }
-        }
-
-        /**
-         * clear the flag keyed by the supplied object if it is not already clear
-         * @param identifier the object identifying the relevant flag
-         * @return true if the flag was clear before this call otherwise false
-         */
-        public boolean clear(Object identifier)
-        {
-            synchronized (flagSet) {
-                return flagSet.remove(identifier);
-            }
-        }
-
-        // countdown support
-        /**
-         * builtin to test test if a countdown has been installed
-         * @param identifier an object which uniquely identifies the countdown in question
-         * @return true if the countdown is currently installed
-         */
-        public boolean getCountDown(Object identifier)
-        {
-            synchronized (countDownMap) {
-                return (countDownMap.get(identifier) != null);
-            }
-        }
-
-        /**
-         * builtin to test add a countdown identified by a specific object and with the specified
-         * count. n.b. this builtin checks if a countdown identified by the supplied object is
-         * currently installed, returning false if so, otherwise atomically adds the countdown
-         * and returns true. This allows the builtin to be used safely in conditions where concurrent
-         * rule firings (including firings of multiple rules) might otherwise lead to a race condition.
-         * @param identifier an object which uniquely identifies the countdown in question
-         * @param count the number of times the countdown needs to be counted down before the
-         * countdown operation returns true. e.g. if count is supplied as 2 then the first two
-         * calls to @link{#countdown(Object)} will return false and the third call will return true.
-         * @return true if a new countdown is installed, false if one already exists.
-         */
-        public boolean addCountDown(Object identifier, int count)
-        {
-            synchronized (countDownMap) {
-                if (countDownMap.get(identifier) == null) {
-                    countDownMap.put(identifier, new CountDown(count));
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        /**
-         * builtin to decrement the countdown identified by a specific object, uninstalling it and
-         * returning true only when the count is zero.
-         * @param identifier an object which uniquely identifies the countdown in question
-         * @return true if the countdown is installed and its count is zero, otherwise false
-         */
-        public boolean countDown(Object identifier)
-        {
-            synchronized (countDownMap) {
-                CountDown countDown = countDownMap.get(identifier);
-
-                if (countDown != null) {
-                    boolean result = countDown.decrement();
-                    if (result) {
-                        countDownMap.remove(identifier);
-                    }
-                    return result;
-                }
-            }
-
-            // we must only fire a decrement event once for a given counter
-
-            return false;
-        }
-
-        // wait/notify support
-        /**
-         * test if there are threads waiting for an event identified by the supplied object to
-         * be signalled
-         * @param identifier an object identifying the event to be signalled
-         * @return true if threads are waiting for the associated event to be signalled
-         */
-        public boolean waiting(Object identifier)
-        {
-            return (getWaiter(identifier, false) != null);
-        }
-        /**
-         * wait for another thread to signal an event with no timeout. see
-         * @link{#waitFor(Object, long)} for details and caveats regarding calling this builtin.
-         * @param identifier an object used to identify the signal that is to be waited on.
-         */
-        public void waitFor(Object identifier)
-        {
-            waitFor(identifier, 0);
-        }
-
-        /**
-         * wait for another thread to signal an event with a specific timeout or no timeout if zero
-         * is supplied as the second argument. this may be called in a rule event, condition or action.
-         * it will suspend the current thread pending signalling of the event at which point rule
-         * processing will either continue or abort depending upon the type of signal. if an exception
-         * is thrown it will be an instance of runtime exception which, in normal circumstances, will
-         * cause the thread to exit. The exception may not kill the thread f the trigger method or
-         * calling code contains a catch-all handler so care must be used to ensure that an abort of
-         * waiting threads has the desired effect. n.b. care must also be employed if the current
-         * thread is inside a synchronized block since there is a potential for the waitFor call to
-         * cause deadlock.
-         * @param identifier an object used to identify the signal that is to be waited on. n.b. the
-         * wait operation is not performed using synchronization on the supplied object as the rule
-         * system cannot safely release and reobtain locks on application data. this argument is used
-         * as a key to identify a synchronization object private to the rule system.
-         */
-        public void waitFor(Object identifier, long millisecs)
-        {
-            Waiter waiter = getWaiter(identifier, true);
-
-            waiter.waitFor(millisecs);
-        }
-
-        /**
-         * signal an event identified by the supplied object, causing all waiting threads to resume
-         * rule processing and clearing the event. if there are no threads waiting either because
-         * there has been no call to @link{#waitFor} or because some other thread has sent the signal
-         * then this call returns false, otherwise it returns true. This operation is atomic,
-         * allowing the builtin to be used in rule conditions.
-         * @param identifier an object used to identify the which waiting threads the signal should
-         * be delivered to. n.b. the operation is not performed using a notify on the supplied object.
-         * this argument is used as a key to identify a synchronization object private to the rule
-         * system.
-         */
-        public boolean signalWake(Object identifier)
-        {
-            Waiter waiter = removeWaiter(identifier);
-
-            if (waiter != null) {
-                return waiter.signalWake();
-            }
-            
-            return false;
-        }
-
-        /**
-         * signal an event identified by the suppied object, causing all waiting threads to throw an
-         * exception and clearing the event. if there are no objects waiting, either because there has been
-         * no call to @link{#waitFor} or because some other thread has already sent the signal, then this
-         * call returns false, otherwise it returns true. This operation is atomic, allowing the builtin
-         * to be used safely in rule conditions.
-         * @param identifier an object used to identify the which waiting threads the signal should
-         * be delivered to. n.b. the operation is not performed using a notify on the supplied object.
-         * this argument is used as a key to identify a synchronization object private to the rule
-         * system.
-         */
-        public boolean signalKill(Object identifier)
-        {
-            Waiter waiter = removeWaiter(identifier);
-
-            if (waiter != null) {
-                return waiter.signalKill();
-            }
-
-            return false;
-        }
-
-        /**
-         * delay execution of the current thread for a specified number of milliseconds
-         * @param millisecs how many milliseconds to delay for
-         */
-
-        public void delay(long millisecs)
-        {
-            try {
-                Thread.sleep(millisecs);
-            } catch (InterruptedException e) {
-                // ignore this
-            }
-        }
-
-        /**
-         * create a counter identified by the given object with count 0 as its initial count
-         * @param o an identifier used to refer to the counter in future
-         * @return true if a new counter was created and false if one already existed under the given identifier
-         */
-        public boolean createCounter(Object o)
-        {
-            return createCounter(o, 0);
-        }
-
-        /**
-         * create a counter identified by the given object with the supplied value as its iniital count
-         * @param o an identifier used to refer to the counter in future
-         * @param value the initial value for the counter
-         * @return true if a new counter was created and false if one already existed under the given identifier
-         */
-        public boolean createCounter(Object o, int value)
-        {
-            synchronized (counterMap) {
-                Counter counter = counterMap.get(o);
-                if  (counter != null) {
-                    return false;
-                } else {
-                    counterMap.put(o, new Counter(value));
-                    return true;
-                }
-            }
-        }
-
-        /**
-         * delete a counter identified by the given object with count 0 as its initial count
-         * @param o the identifier for the coounter
-         * @return true if a counter was deleted and false if no counter existed under the given identifier
-         */
-        public boolean deleteCounter(Object o)
-        {
-            synchronized (counterMap) {
-                Counter counter = counterMap.get(o);
-                if  (counter != null) {
-                    counterMap.put(o, null);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        }
-
-        /**
-         * read the value of the counter associated with given identifier, creating a new one with count zero
-         * if none exists
-         * @param o the identifier for the coounter
-         * @return the value of the counter
-         */
-        public int readCounter(Object o)
-        {
-            synchronized (counterMap) {
-                Counter counter = counterMap.get(o);
-                if (counter == null) {
-                    counter = new Counter();
-                    counterMap.put(o, counter);
-                }
-                return counter.count();
-            }
-        }
-
-        /**
-         * increment the value of the counter associated with given identifier, creating a new one with count zero
-         * if none exists
-         * @param o the identifier for the coounter
-         * @return the value of the counter after the increment
-         */
-        public int incrementCounter(Object o)
-        {
-            synchronized (counterMap) {
-                Counter counter = counterMap.get(o);
-                if (counter == null) {
-                    counter = new Counter();
-                    counterMap.put(o, counter);
-                }
-                return counter.increment();
-            }
-        }
-
-        /**
-         * decrement the value of the counter associated with given identifier, creating a new one with count zero
-         * if none exists
-         * @param o the identifier for the coounter
-         * @return the value of the counter after the decrement
-         */
-        public int decrementCounter(Object o)
-        {
-            synchronized (counterMap) {
-                Counter counter = counterMap.get(o);
-                if (counter == null) {
-                    counter = new Counter();
-                    counterMap.put(o, counter);
-                }
-                return counter.decrement();
-            }
-        }
-
-        /**
-         * cause the current thread to throw a runtime exception which will normally cause it to exit.
-         * The exception may not kill the thread if the trigger method or calling code contains a
-         * catch-all handler so care must be employed to ensure that a call to this builtin has the
-         * desired effect.
-         */
-        public void killThread()
-        {
-            throw new ExecuteException("rule " + rule.getName() + " : killing thread " + Thread.currentThread().getName());
-        }
-
-        /**
-         * cause the current JVM to halt immediately, simulating a crash as near as possible. exit code -1
-         * is returned
-         */
-
-        public void killJVM()
-        {
-            killJVM(-1);
-        }
-
-        /**
-         * cause the current JVM to halt immediately, simulating a crash as near as possible. exit code -1
-         * is returned
-         */
-
-        public void killJVM(int exitCode)
-        {
-            java.lang.Runtime.getRuntime().halt(-1);
-        }
-
-        /**
-         * return a unique name for the trigger point associated with this rule. n.b. a single rule may
-         * give rise to more than one trigger point if the rule applies to several methods with the same
-         * name or to several classes with the same (package unqualified) name, or even to several
-         * versions of the same compiled class loaded into distinct class loaders.
-         *
-         * @return a unique name for the trigger point from which this rule was invoked
-         */
-        public String toString()
-        {
-            return rule.getName();
-        }
-
-        /**
-         * lookup the waiter object used to target wait and signal requests associated with a
-         * specific identifying object
-         * @param object the identifer for the waiter
-         * @param createIfAbsent true if the waiter should be (atomically) inserted if it is not present
-         * @return the waiter if it was found or inserted or null if it was not found and createIfAbsent was false
-         */
-        private Waiter getWaiter(Object object, boolean createIfAbsent)
-        {
-            Waiter waiter;
-
-            synchronized(waitMap) {
-                waiter = waitMap.get(object);
-                if (waiter == null && createIfAbsent) {
-                    waiter = new Waiter(object);
-                    waitMap.put(object, waiter);
-                }
-            }
-
-            return waiter;
-        }
-
-        /**
-         * remove the waiter object used to target wait and signal requests associated with a
-         * specific identifying object
-         * @param object the identifer for the waiter
-         * @return the waiter if it was found or inserted or null if it was not found and createIfAbsent was false
-         */
-        private Waiter removeWaiter(Object object)
-        {
-            return waitMap.remove(object);
-        }
-
-        private static int nextFileIndex = 0;
-
-        private static synchronized int nextFileIndex()
-        {
-            return nextFileIndex++;
-        }
-
-        private String nextFileName()
-        {
-            StringWriter writer = new StringWriter();
-            String digits = Integer.toString(nextFileIndex());
-            int numDigits = digits.length();
-            int idx;
-
-            writer.write("trace");
-
-            // this pads up to 9 digits but we may get more if we open enough files!
-            for (idx = 9; idx > numDigits; idx--) {
-                writer.write('0');
-            }
-
-            writer.write(digits);
-
-            return writer.toString();
-        }
+        return helperClass;
     }
-
-    /**
-     * implementation of helper class which executes a compiled rule. it
-     * can be overridden by a generated subclass in order to enable compiled
-     * rule execution. this version inerprets the rule
-     */
-    public static class BasicHelper extends Helper
-    {
-        protected HashMap<String, Object> bindingMap;
-        private HashMap<String, Type> bindingTypeMap;
-
-        public BasicHelper()
-        {
-            super(null);
-            bindingMap = new HashMap<String, Object>();
-            bindingTypeMap = new HashMap<String, Type>();
-        }
-
-        public void setRule(Rule rule)
-        {
-            this.rule = rule;
-        }
-
-        /**
-         * install values into the bindings map and then call the execute0 method
-         * to actually execute the rule
-         * @param bindings
-         * @param recipient
-         * @param args
-         */
-        public void execute(Bindings bindings, Object recipient, Object[] args)
-                throws ExecuteException
-        {
-            if (Transformer.isVerbose()) {
-                System.out.println(rule.getName() + " execute");
-            }
-            Iterator<Binding> iterator = bindings.iterator();
-            while (iterator.hasNext()) {
-                Binding binding = iterator.next();
-                String name = binding.getName();
-                Type type = binding.getType();
-                if (binding.isHelper()) {
-                    bindingMap.put(name, this);
-                    bindingTypeMap.put(name, type);
-                } else if (binding.isRecipient()) {
-                    bindingMap.put(name, recipient);
-                    bindingTypeMap.put(name, type);
-                } else if (binding.isParam()) {
-                    bindingMap.put(name, args[binding.getIndex() - 1]);
-                    bindingTypeMap.put(name, type);
-                }
-            }
-
-            // now do the actual execution
-
-            execute0();
-        }
-
-        /**
-         * basic implementation of rule execution
-         *
-         * @throws ExecuteException
-         */
-        
-        protected void execute0()
-                throws ExecuteException
-        {
-            // System.out.println(rule.getName() + " execute0");
-            bind();
-            if (test()) {
-                fire();
-            }
-        }
-
-        public void bindVariable(String name, Object value)
-        {
-            bindingMap.put(name, value);
-        }
-
-        public Object getBinding(String name)
-        {
-            return bindingMap.get(name);
-        }
-
-        private void bind()
-                throws ExecuteException
-        {
-            // System.out.println(rule.getName() + " bind");
-            rule.getEvent().interpret(this);
-        }
-
-        private boolean test()
-                throws ExecuteException
-        {
-            // System.out.println(rule.getName() + " test");
-            return rule.getCondition().interpret(this);
-        }
-        
-        private void fire()
-                throws ExecuteException
-        {
-            // System.out.println(rule.getName() + " fire");
-            rule.getAction().interpret(this);
-        }
-
-        public String getName() {
-            return rule.getName();
-        }
-    }
-
-    /**
-     * a hash map used to identify trace streams from their identifying objects
-     */
-    private static HashMap<Object, PrintStream> traceMap = new HashMap<Object, PrintStream>();
-
-    /**
-     * a set used to identify settings for boolean flags associated with arbitrary objects. if
-     * an object is in the set then the flag associated with the object is set (true) otherwise
-     * it is clear (false).
-     */
-    private static Set<Object> flagSet = new HashSet<Object>();
-
-    /**
-     * a hash map used to identify countdowns from their identifying objects
-     */
-    private static HashMap<Object, CountDown> countDownMap = new HashMap<Object, CountDown>();
-
-    /**
-     * a hash map used to identify counters from their identifying objects
-     */
-    private static HashMap<Object, Counter> counterMap = new HashMap<Object, Counter>();
-
-    /**
-     * a hash map used to identify waiters from their identifying objects
-     */
-    private static HashMap<Object, Waiter> waitMap = new HashMap<Object, Waiter>();
-
+    
     private static boolean debugParse = (System.getProperty("org.jboss.jbossts.orchestration.rule.debug") != null ? true : false);
 }

@@ -35,6 +35,8 @@ import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.helper.InterpretedHelper;
+import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -247,7 +249,7 @@ public class Event extends RuleElement {
         }
     }
 
-    public void interpret(Rule.BasicHelper helper)
+    public void interpret(HelperAdapter helper)
             throws ExecuteException
     {
         Iterator<Binding> iterator = getBindings().iterator();

@@ -29,6 +29,7 @@ import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.exception.ThrowException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 import java.io.StringWriter;
@@ -218,7 +219,7 @@ public class ThrowExpression extends Expression
      * @throws org.jboss.jbossts.orchestration.rule.exception.ExecuteException
      *
      */
-    public Object interpret(Rule.BasicHelper helper) throws ExecuteException {
+    public Object interpret(HelperAdapter helper) throws ExecuteException {
         int l = arguments.size();
         int i;
         Object[] callArgs = new Object[l];

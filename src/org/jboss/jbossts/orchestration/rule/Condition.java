@@ -23,19 +23,17 @@
 */
 package org.jboss.jbossts.orchestration.rule;
 
-import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.expression.ExpressionHelper;
 import org.jboss.jbossts.orchestration.rule.expression.Expression;
-import org.jboss.jbossts.orchestration.rule.expression.BooleanExpression;
-import org.jboss.jbossts.orchestration.rule.expression.BooleanLiteral;
 import org.jboss.jbossts.orchestration.rule.grammar.ECATokenLexer;
 import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.helper.InterpretedHelper;
+import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 
 import java.io.StringWriter;
 import java.io.StringReader;
@@ -93,7 +91,7 @@ public class Condition extends RuleElement
         return Type.Z;
     }
 
-    public boolean interpret(Rule.BasicHelper helper)
+    public boolean interpret(HelperAdapter helper)
             throws ExecuteException
     {
         Boolean result = (Boolean)condition.interpret(helper);

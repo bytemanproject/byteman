@@ -29,6 +29,7 @@ import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.exception.EarlyReturnException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 import java.io.StringWriter;
@@ -105,7 +106,7 @@ public class ReturnExpression extends Expression
      * @throws org.jboss.jbossts.orchestration.rule.exception.ExecuteException
      *
      */
-    public Object interpret(Rule.BasicHelper helper) throws ExecuteException
+    public Object interpret(HelperAdapter helper) throws ExecuteException
     {
         // time to take an early bath -- the code compield into the trigger method should
         // catch this and return as appropriate

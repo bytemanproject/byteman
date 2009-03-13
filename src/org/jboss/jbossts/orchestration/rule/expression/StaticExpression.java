@@ -28,6 +28,7 @@ import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 import java.io.StringWriter;
@@ -85,7 +86,7 @@ public class StaticExpression extends Expression
         return type;
     }
 
-    public Object interpret(Rule.BasicHelper helper) throws ExecuteException {
+    public Object interpret(HelperAdapter helper) throws ExecuteException {
         try {
             return field.get(null);
         } catch (ExecuteException e) {

@@ -118,6 +118,7 @@ public class TestScript
                 String[] lines = script.split("\n");
                 String targetClassName;
                 String targetMethodName;
+                String targetHelperName = null;
                 LocationType locationType = null;
                 Location targetLocation = null;
                 String text = "";
@@ -167,6 +168,16 @@ public class TestScript
                         throw new ParseException("Rule is incomplete : " + script);
                     }
                 }
+                if (lines[idx].startsWith("HELPER ")) {
+                    targetHelperName = lines[idx].substring(7).trim();
+                    idx++;
+                    while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
+                        idx++;
+                        if (idx == len) {
+                            throw new ParseException("Rule is incomplete : " + script);
+                        }
+                    }
+                }
                 locationType = LocationType.type(lines[idx]);
                 if (locationType != null) {
                     String parameters = LocationType.parameterText(lines[idx]);
@@ -190,7 +201,15 @@ public class TestScript
                     throw new ParseException("Missing ENDRULE : " + script);
                 }
 
-                Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetLocation, text, loader);
+                Class targetHelperClass = null;
+                if (targetHelperName != null) {
+                    try {
+                        targetHelperClass = loader.loadClass(targetHelperName);
+                    } catch (ClassNotFoundException e) {
+                        System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : unknown helper class " + targetHelperName + " for rule " + ruleName);
+                    }
+                }
+                Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetHelperClass, targetLocation, text, loader);
                 System.err.println("TestScript: parsed rule " + rule.getName());
                 System.err.println(rule);
                 
@@ -283,7 +302,7 @@ public class TestScript
             } catch (CompileException e) {
                 compileErrorCount++;
                 errorCount++;
-                System.err.println("TestScript: compile exception for rule " + " : " + ruleName + e);
+                System.err.println("TestScript: createHelperAdapter exception for rule " + " : " + ruleName + e);
                 e.printStackTrace(System.err);
             }
         }

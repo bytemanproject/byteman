@@ -29,6 +29,7 @@ import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
 import org.jboss.jbossts.orchestration.rule.RuleElement;
+import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 
 import java.io.StringWriter;
 
@@ -99,7 +100,7 @@ public abstract class Expression extends RuleElement
      * @return  the result of evaluation as an Object
      * @throws org.jboss.jbossts.orchestration.rule.exception.ExecuteException
      */
-    public abstract Object interpret(Rule.BasicHelper helper) throws ExecuteException;
+    public abstract Object interpret(HelperAdapter helper) throws ExecuteException;
 
     public abstract void writeTo(StringWriter stringWriter);
 

@@ -48,6 +48,14 @@ import java.io.File;
  * byte code transformer used to introduce orchestration events into JBoss code
  */
 public class Transformer implements ClassFileTransformer {
+
+    private static Transformer theTransformer = null;
+
+    public static Transformer getTheTransformer()
+    {
+        return theTransformer;
+    }
+
     /**
      * constructor allowing this transformer to be provided with access to the JVM's instrumentation
      * implementation
@@ -57,6 +65,7 @@ public class Transformer implements ClassFileTransformer {
     public Transformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts)
             throws Exception
     {
+        theTransformer = this;
         this.inst = inst;
         targetToScriptMap = new HashMap<String, List<Script>>();
 
@@ -73,6 +82,7 @@ public class Transformer implements ClassFileTransformer {
                 String name = null;
                 String targetClass = null;
                 String targetMethod = null;
+                String targetHelper = null;
                 LocationType locationType = null;
                 Location targetLocation = null;
                 int lineNumber = 0;
@@ -98,6 +108,8 @@ public class Transformer implements ClassFileTransformer {
                         targetClass = line.substring(6).trim();
                     } else if (line.startsWith("METHOD ")) {
                         targetMethod = line.substring(7).trim();
+                    } else if (line.startsWith("HELPER ")) {
+                        targetHelper = line.substring(7).trim();
                     } else if ((locationType = LocationType.type(line)) != null) {
                         String parameters = LocationType.parameterText(line);
                         targetLocation = Location.create(locationType, parameters);
@@ -120,12 +132,15 @@ public class Transformer implements ClassFileTransformer {
                             if (targetLocation == null) {
                                 targetLocation = Location.create(LocationType.ENTRY, "");
                             }
-                            Script script = new Script(name, targetClass, targetMethod, targetLocation, nextRule);
+                            Script script = new Script(name, targetClass, targetMethod, targetHelper, targetLocation, nextRule);
                             scripts.add(script);
                             if (isVerbose()) {
                                 System.out.println("RULE " + script.getName());
                                 System.out.println("CLASS " + script.getTargetClass());
                                 System.out.println("METHOD " + script.getTargetMethod());
+                                if (script.getTargetHelper() != null) {
+                                    System.out.println("HELPER " + script.getTargetHelper());
+                                }
                                 if (targetLocation != null) {
                                     System.out.println(targetLocation);
                                 } else {
@@ -273,6 +288,48 @@ public class Transformer implements ClassFileTransformer {
         }
     }
 
+    /**
+     * this is a classloader used to define classes from bytecode
+     *
+     * TODO -- we probably need to use the protection domain of the trigger class somewhere here
+     */
+    private static class ClassbyteClassLoader extends ClassLoader
+    {
+        ClassbyteClassLoader(ClassLoader cl)
+        {
+            super(cl);
+        }
+        
+        public Class addClass(String name, byte[] bytes)
+                throws ClassFormatError
+        {
+            Class cl = defineClass(name, bytes, 0, bytes.length);
+            resolveClass(cl);
+
+            return cl;
+        }
+    }
+
+    /**
+     * a singleton instance of the classloader used to define classes from bytecode
+     */
+    private static ClassbyteClassLoader theLoader = new ClassbyteClassLoader(Transformer.class.getClassLoader());
+
+    /**
+     * a helper method which allows dynamic creation of generated helper adapter classes
+     * @param helperAdapterName
+     * @param classBytes
+     * @return
+     */
+    public Class<?> loadHelperAdapter(Class<?> helperClass, String helperAdapterName, byte[] classBytes)
+    {
+         //return theLoader.addClass(helperAdapterName, classBytes);
+
+        ClassbyteClassLoader loader = new ClassbyteClassLoader(helperClass.getClassLoader());
+
+        return loader.addClass(helperAdapterName, classBytes);
+    }
+
     /* switches controlling behaviour of transformer */
 
     /**
@@ -306,6 +363,12 @@ public class Transformer implements ClassFileTransformer {
     public static final String VERBOSE = ORCHESTRATION_PACKAGE_PREFIX + "verbose";
 
     /**
+     * system property set (to any value) in order to switch on compilation of rules and left unset
+     * if rules are to be interpreted.
+     */
+    public static final String COMPILE_TO_BYTECODE = ORCHESTRATION_PACKAGE_PREFIX + "compileToBytecode";
+
+    /**
      * system property set (to any value) in order to switch on dumping of generated bytecode to .class files
      */
     public static final String DUMP_GENERATED_CLASSES = ORCHESTRATION_PACKAGE_PREFIX + "dump.generated.classes";
@@ -321,7 +384,16 @@ public class Transformer implements ClassFileTransformer {
     {
         final String handlerClass = script.getTargetClass();
         final String handlerMethod = script.getTargetMethod();
+        final String helperName = script.getTargetHelper();
         final Location handlerLocation = script.getTargetLocation();
+        Class helperClass = null;
+        if (helperName != null) {
+            try {
+                helperClass = loader.loadClass(helperName);
+            } catch (ClassNotFoundException e) {
+                System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : unknown helper class " + helperName + " for rule " + script.getName());
+            }
+        }
         if (isVerbose()) {
             System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : Inserting trigger event");
             System.out.println("  class " + handlerClass);
@@ -331,7 +403,7 @@ public class Transformer implements ClassFileTransformer {
         final Rule rule;
         String ruleName = script.getName();
         try {
-            rule = Rule.create(ruleName, handlerClass, handlerMethod, handlerLocation, script.getRuleText(), loader);
+            rule = Rule.create(ruleName, handlerClass, handlerMethod, helperClass, handlerLocation, script.getRuleText(), loader);
         } catch (ParseException pe) {
             System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error parsing rule " + ruleName + " : " + pe);
             return targetClassBytes;
@@ -395,12 +467,21 @@ public class Transformer implements ClassFileTransformer {
     }
 
     /**
-     * check whether verbose mode for rule processing is enabled or disable
+     * check whether verbose mode for rule processing is enabled or disabled
      * @return true if verbose mode is enabled etherwise false
      */
     public static boolean isVerbose()
     {
         return verbose;
+    }
+
+    /**
+     * check whether compilation of rules is enabled or disabled
+     * @return true if compilation of rules is enabled etherwise false
+     */
+    public static boolean isCompileToBytecode()
+    {
+        return compileToBytecode;
     }
 
     /**
@@ -438,6 +519,11 @@ public class Transformer implements ClassFileTransformer {
     private final static boolean verbose = (System.getProperty(VERBOSE) != null);
 
     /**
+     *  switch to control verbose output during rule processing
+     */
+    private final static boolean compileToBytecode = (System.getProperty(COMPILE_TO_BYTECODE) != null);
+
+    /**
      *  switch to control dumping of generated bytecode to .class files
      */
     private final static boolean dumpGeneratedClasses = (System.getProperty(DUMP_GENERATED_CLASSES) != null);
@@ -458,6 +544,13 @@ public class Transformer implements ClassFileTransformer {
             }
         } else {
             dumpGeneratedClassesDir =  ".";
+        }
+    }
+
+    public void maybeDumpClass(String fullName, byte[] bytes)
+    {
+        if (dumpGeneratedClasses) {
+            dumpClass(fullName, bytes);
         }
     }
 

@@ -27,6 +27,7 @@ import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 
 import java.util.List;
@@ -90,7 +91,7 @@ public class ArrayExpression extends Expression
         return type;
     }
 
-    public Object interpret(Rule.BasicHelper helper) throws ExecuteException {
+    public Object interpret(HelperAdapter helper) throws ExecuteException {
         // evaluate the array expression then evaluate each index expression in turn and
         // dereference to access the array element
 
