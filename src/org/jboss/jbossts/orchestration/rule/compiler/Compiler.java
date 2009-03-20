@@ -40,62 +40,61 @@ import java.util.HashMap;
  */
 public class Compiler implements Opcodes
 {
-    public static Class getHelperAdapter(Class helperClass, boolean compileToBytecode) throws CompileException
+    public static Class getHelperAdapter(Rule rule, Class helperClass, boolean compileToBytecode) throws CompileException
     {
-        // for now we cannot compile to bytecode
-
-        compileToBytecode = false;
-
         Class adapterClass;
-        if (compileToBytecode) {
-            adapterClass = compiledAdapterMap.get(helperClass);
-        } else {
+        // for each rule with the same helper we can use the same interpreted adapter
+        // we have to use a different compiled helper per rule since it encodes the
+        // details of the rule event, condition and action into its execute method
+
+        if (!compileToBytecode) {
+            // try to reuse any existing adaoter
             adapterClass = interpretedAdapterMap.get(helperClass);
-        }
-
-        if (adapterClass != null) {
-            return adapterClass;
-        }
-        // ok we have to create the adapter class
-
-        // n.b. we don't bother synchronizing here -- if another rule is racing to create an adapter
-        // in parallel we don't really care about generating two of them -- we can use whichever
-        // one gets intalled last
-
-        try {
-            String helperName = Type.getInternalName(helperClass);
-            String compiledHelperName;
-
-            if (compileToBytecode) {
-                compiledHelperName = helperName + "_HelperAdapter_Compiled";
-            } else {
-                compiledHelperName = helperName + "_HelperAdapter_Interpreted";
-            }
-
-            byte[] classBytes = compileBytes(helperClass, helperName, compiledHelperName, compileToBytecode);
-            String externalName = compiledHelperName.replaceAll("/", ".");
-            // dump the compiled class bytes if required
-            Transformer.getTheTransformer().maybeDumpClass(externalName, classBytes);
-            // ensure the class is loaded
-            adapterClass = Transformer.getTheTransformer().loadHelperAdapter(helperClass, externalName, classBytes);
-        } catch(CompileException ce) {
-            throw ce;
-        } catch (Throwable th) {
-            if (compileToBytecode) {
-                throw new CompileException("Compiler.createHelperAdapter : exception creating compiled helper adapter for " + helperClass.getName(), th);
-            } else {
-                throw new CompileException("Compiler.createHelperAdapter : exception creating interpreted helper adapter for " + helperClass.getName(), th);
-            }
-        }
-
-        // stash for later reuse
-
-        if(compileToBytecode) {
-            compiledAdapterMap.put(helperClass, adapterClass);
         } else {
-            interpretedAdapterMap.put(helperClass, adapterClass);
+            adapterClass = null;
         }
 
+        if (adapterClass == null) {
+            // ok we have to create the adapter class
+
+            // n.b. we don't bother synchronizing here -- if another rule is racing to create an adapter
+            // in parallel we don't really care about generating two of them -- we can use whichever
+            // one gets intalled last
+
+            try {
+                String helperName = Type.getInternalName(helperClass);
+                String compiledHelperName;
+
+                // we put the helper in the 
+                if (compileToBytecode) {
+                    compiledHelperName = helperName + "_HelperAdapter_Compiled_" + nextId();
+                } else {
+                    compiledHelperName = helperName + "_HelperAdapter_Interpreted";
+                }
+
+                byte[] classBytes = compileBytes(rule, helperClass, helperName, compiledHelperName, compileToBytecode);
+                String externalName = compiledHelperName.replaceAll("/", ".");
+                // dump the compiled class bytes if required
+                Transformer.getTheTransformer().maybeDumpClass(externalName, classBytes);
+                // ensure the class is loaded
+                adapterClass = Transformer.getTheTransformer().loadHelperAdapter(helperClass, externalName, classBytes);
+            } catch(CompileException ce) {
+                throw ce;
+            } catch (Throwable th) {
+                if (compileToBytecode) {
+                    throw new CompileException("Compiler.createHelperAdapter : exception creating compiled helper adapter for " + helperClass.getName(), th);
+                } else {
+                    throw new CompileException("Compiler.createHelperAdapter : exception creating interpreted helper adapter for " + helperClass.getName(), th);
+                }
+            }
+
+            // if this is an interpreted adapter then stash it for later reuse
+
+            if(!compileToBytecode) {
+                interpretedAdapterMap.put(helperClass, adapterClass);
+            }
+        }
+        
         return adapterClass;
     }
 
@@ -108,16 +107,7 @@ public class Compiler implements Opcodes
      */
     private static HashMap<Class<?>, Class<?>> interpretedAdapterMap = new HashMap<Class<?>, Class<?>>();
 
-    /**
-     * hashmap used to retrieve previously generated compiled adapters
-     *
-     * TODO strictly this should be a weak hash map so we don't hang on to adapters after the helper
-     * has been dropped. but to make that work we probably need to worry about dropping references to
-     * rules too.
-     */
-    private static HashMap<Class<?>, Class<?>> compiledAdapterMap = new HashMap<Class<?>, Class<?>>();
-
-    private static byte[] compileBytes(Class helperClass, String helperName, String compiledHelperName, boolean compileToBytecode) throws Exception
+    private static byte[] compileBytes(Rule rule, Class helperClass, String helperName, String compiledHelperName, boolean compileToBytecode) throws Exception
     {
         ClassWriter cw = new ClassWriter(0);
         FieldVisitor fv;
@@ -401,24 +391,28 @@ public class Compiler implements Opcodes
         if (compileToBytecode) {
             // we generate a single execute0 method if we want to run compiled and get
             // the event, condiiton and action to insert the relevant bytecode to implement
-            // bind(), test() anf fire()
+            // bind(), test() and fire()
 
-            /*
             StackHeights maxStackHeights = new StackHeights();
+            StackHeights currentStackHeights;
             {
             // create the execute0() method
             //
             // private void execute0()
             mv = cw.visitMethod(ACC_PRIVATE, "execute0", "()V", null, new String[] { "org/jboss/jbossts/orchestration/rule/exception/ExecuteException" });
             mv.visitCode();
+            maxStackHeights.addLocalCount(3); // for this and 2 object args
             // bind();
-            rule.getEvent().createHelperAdapter(mv, compiledHelperName, helperName, maxStackHeights);
+            currentStackHeights = new StackHeights();
+            rule.getEvent().compile(mv, currentStackHeights, maxStackHeights);
             // if (test())
-            rule.getCondition().createHelperAdapter(mv, compiledHelperName, helperName, maxStackHeights);
+            currentStackHeights = new StackHeights();
+            rule.getCondition().compile(mv, currentStackHeights, maxStackHeights);
             Label l0 = new Label();
             mv.visitJumpInsn(IFEQ, l0);
             // then
-            rule.getAction().createHelperAdapter(mv, compiledHelperName, helperName, maxStackHeights);
+            currentStackHeights = new StackHeights();
+            rule.getAction().compile(mv, currentStackHeights, maxStackHeights);
             // fire();
             // end if
             mv.visitLabel(l0);
@@ -428,7 +422,6 @@ public class Compiler implements Opcodes
             mv.visitMaxs(maxStackHeights.stackCount, maxStackHeights.localCount);
             mv.visitEnd();
             }
-            */
         } else {
             // we generate the following methods if we want to run interpreted
             {
@@ -467,7 +460,7 @@ public class Compiler implements Opcodes
             mv.visitFieldInsn(GETFIELD, compiledHelperName, "rule", "Lorg/jboss/jbossts/orchestration/rule/Rule;");
             mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/jbossts/orchestration/rule/Rule", "getEvent", "()Lorg/jboss/jbossts/orchestration/rule/Event;");
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/jbossts/orchestration/rule/Event", "interpret", "(Lorg/jboss/jbossts/orchestration/rule/helper/HelperAdapter;)V");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/jbossts/orchestration/rule/Event", "interpret", "(Lorg/jboss/jbossts/orchestration/rule/helper/HelperAdapter;)Ljava/lang/Object;");
             mv.visitInsn(RETURN);
             mv.visitMaxs(2, 1);
             mv.visitEnd();
@@ -483,7 +476,10 @@ public class Compiler implements Opcodes
             mv.visitFieldInsn(GETFIELD, compiledHelperName, "rule", "Lorg/jboss/jbossts/orchestration/rule/Rule;");
             mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/jbossts/orchestration/rule/Rule", "getCondition", "()Lorg/jboss/jbossts/orchestration/rule/Condition;");
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/jbossts/orchestration/rule/Condition", "interpret", "(Lorg/jboss/jbossts/orchestration/rule/helper/HelperAdapter;)Z");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/jbossts/orchestration/rule/Condition", "interpret", "(Lorg/jboss/jbossts/orchestration/rule/helper/HelperAdapter;)Ljava/lang/Object;");
+            mv.visitTypeInsn(Opcodes.CHECKCAST, "java/lang/Boolean");
+            // unbox the returned Boolean
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z");
             // return {TOS}
             mv.visitInsn(IRETURN);
             mv.visitMaxs(2, 1);
@@ -500,7 +496,7 @@ public class Compiler implements Opcodes
             mv.visitFieldInsn(GETFIELD, compiledHelperName, "rule", "Lorg/jboss/jbossts/orchestration/rule/Rule;");
             mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/jbossts/orchestration/rule/Rule", "getAction", "()Lorg/jboss/jbossts/orchestration/rule/Action;");
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/jbossts/orchestration/rule/Action", "interpret", "(Lorg/jboss/jbossts/orchestration/rule/helper/HelperAdapter;)V");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/jbossts/orchestration/rule/Action", "interpret", "(Lorg/jboss/jbossts/orchestration/rule/helper/HelperAdapter;)Ljava/lang/Object;");
             // return
             mv.visitInsn(RETURN);
             mv.visitMaxs(2, 1);
@@ -511,5 +507,12 @@ public class Compiler implements Opcodes
         cw.visitEnd();
 
         return cw.toByteArray();
+    }
+
+    private static int nextId = 0;
+
+    private static synchronized int nextId()
+    {
+        return ++nextId;
     }
 }

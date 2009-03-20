@@ -216,6 +216,10 @@ public class Rule
         return action;
     }
 
+    public String getTriggerClass() {
+        return triggerClass;
+    }
+
     public static Rule create(String name, String targetClass, String targetMethod, Class<?> helperClass, Location targetLocation, String ruleSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
@@ -312,7 +316,7 @@ public class Rule
         } else {
             // we need to generate a helper adapter class which either interprets or compiles
 
-            helperImplementationClass = Compiler.getHelperAdapter(helperClass, compileToBytecode);
+            helperImplementationClass = Compiler.getHelperAdapter(this, helperClass, compileToBytecode);
         }
     }
 

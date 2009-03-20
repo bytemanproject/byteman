@@ -28,9 +28,13 @@ import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.exception.EarlyReturnException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
 
@@ -45,7 +49,7 @@ public class ReturnExpression extends Expression
 
     public ReturnExpression(Rule rule, ParseNode token, Expression returnValue)
     {
-        // the trigger method may return any old tyep but the return expression can only occur
+        // the trigger method may return any old type but the return expression can only occur
         // at the top level in a rule action seuqence so it is actually a VOID expression
 
         super(rule, Type.VOID, token);
@@ -115,6 +119,54 @@ public class ReturnExpression extends Expression
             throw new EarlyReturnException("return from " + helper.getName(), value);
         } else {
             throw new EarlyReturnException("return from " + helper.getName());
+        }
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        Type returnType = returnValue.getType();
+        int currentStack = currentStackHeights.stackCount;
+        int expected = 1;
+        int extraSlots = 3;
+
+        // ok, we need to create the EarlyReturnException instance and then
+        // initialise it using the appropriate return value or null if no
+        // return value is needed. strictly we should maybe delay the
+        // new until after computing the return expression so we avoid a new
+        // if the expression throws an error. but that means we end up doing
+        // stack manipulations so lets do it the easy way.
+
+        // create am EarlyReturnException -- adds 1 to stack
+        String exceptionClassName = Type.internalName(EarlyReturnException.class);
+        mv.visitTypeInsn(Opcodes.NEW, exceptionClassName);
+        // stack a string constant to initialise the exception with -- adds 1 to stack
+        mv.visitLdcInsn("return from " + rule.getName());
+        // stack any required return value or null -- adds 1 to stack but may use 2 slots
+        if (returnValue != null) {
+            returnValue.compile(mv, currentStackHeights, maxStackHeights);
+            if (returnType.isPrimitive()) {
+                // we need an object not a primitive
+                compileBox(returnType, mv, currentStackHeights, maxStackHeights);
+                // if the intermediate value used 2 words then at the peak we needed an extra stack slot
+                if (returnType.getNBytes() > 4) {
+                    extraSlots++;
+                }
+            }
+        } else {
+            // just push null
+            mv.visitInsn(Opcodes.ACONST_NULL);
+        }
+        // construct the exception
+        mv.visitMethodInsn(Opcodes.INVOKESPECIAL, exceptionClassName, "<init>", "(Ljava/lang/String;Ljava/lang/Object;)V");
+
+        // check current stack and increment max stack if necessary
+        if (currentStackHeights.stackCount != currentStack + expected) {
+            throw new CompileException("ReturnExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+        }
+
+        int overflow = ((currentStack + extraSlots) - maxStackHeights.stackCount);
+        if (overflow > 0) {
+            maxStackHeights.addStackCount(overflow);
         }
     }
 

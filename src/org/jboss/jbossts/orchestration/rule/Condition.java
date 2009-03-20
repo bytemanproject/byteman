@@ -32,8 +32,11 @@ import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.helper.InterpretedHelper;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
+import org.objectweb.asm.MethodVisitor;
 
 import java.io.StringWriter;
 import java.io.StringReader;
@@ -91,7 +94,30 @@ public class Condition extends RuleElement
         return Type.Z;
     }
 
-    public boolean interpret(HelperAdapter helper)
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException {
+        int currentStack = currentStackHeights.stackCount;
+        // get the condition to compile itself -- it adds 1 to stack height
+        condition.compile(mv, currentStackHeights, maxStackHeights);
+        // unbox if necessary
+        if (condition.getType() == Type.BOOLEAN) {
+            compileUnbox(Type.BOOLEAN, Type.Z, mv, currentStackHeights, maxStackHeights);
+        }
+
+        // check stack heights
+        if (currentStackHeights.stackCount != currentStack + 1) {
+            throw new CompileException("Condition.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack);
+        }
+
+        // we needed room for 1 more values on the stack -- make sure we got it
+        int maxStack = maxStackHeights.stackCount;
+        int overflow = (currentStack + 1) - maxStack;
+
+        if (overflow > 0) {
+            maxStackHeights.addStackCount(overflow);
+        }
+    }
+
+    public Object interpret(HelperAdapter helper)
             throws ExecuteException
     {
         Boolean result = (Boolean)condition.interpret(helper);

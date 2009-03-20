@@ -28,9 +28,14 @@ import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.binding.Binding;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+
 import java.util.List;
 import java.util.Iterator;
 import java.util.ArrayList;
@@ -49,6 +54,7 @@ public class MethodExpression extends Expression
         this.recipient = recipient;
         this.arguments = arguments;
         this.argumentTypes = null;
+        this.paramTypes = null;
         this.rootType = null;
         this.pathList = pathList;
     }
@@ -148,7 +154,6 @@ public class MethodExpression extends Expression
         
         if (recipient == null) {
             if (rootType == null) {
-                //Type ruleType = typeGroup.create("org.jboss.jbossts.orchestration.rule.helper.Helper");
                 Type ruleType = typeGroup.create(rule.getHelperClass().getCanonicalName());
                 recipient = new DollarExpression(rule, ruleType, token, -1);
 
@@ -183,7 +188,7 @@ public class MethodExpression extends Expression
         }
 
         argumentTypes = new ArrayList<Type>();
-        
+
         // check each argument in turn -- if all candidates have the same argument type then
         // use that as the type to check against
         for (int i = 0; i < arguments.size() ; i++) {
@@ -221,6 +226,16 @@ public class MethodExpression extends Expression
 
         method = candidates.get(0);
 
+        // now go back and identify the parameter types
+
+        this. paramTypes = new ArrayList<Type>();
+        Class<?>[] paramClasses = method.getParameterTypes();
+
+        for (int i = 0; i < arguments.size(); i++) {
+            Class<?> paramClass = paramClasses[i];
+            paramTypes.add(typeGroup.ensureType(paramClass));
+        }
+
         type = typeGroup.ensureType(method.getReturnType());
 
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
@@ -254,6 +269,73 @@ public class MethodExpression extends Expression
         }
     }
 
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        int currentStack = currentStackHeights.stackCount;
+        int extraParams = 0; // space used by stacked args after conversion
+        int expected = 0;
+        if (recipient != null) {
+            // compile code for recipient
+            recipient.compile(mv, currentStackHeights, maxStackHeights);
+
+            extraParams += 1;
+        }
+
+        int argCount = arguments.size();
+
+        for (int i = 0; i < argCount; i++) {
+            Expression argument = arguments.get(i);
+            Type argType = argumentTypes.get(i);
+            Type paramType = paramTypes.get(i);
+            // compile code to stack argument and type convert if necessary
+            argument.compile(mv, currentStackHeights, maxStackHeights);
+            compileTypeConversion(argType, paramType, mv, currentStackHeights, maxStackHeights);
+            // allow for stacked paramType value
+            extraParams += (paramType.getNBytes() > 4 ? 2 : 1);
+        }
+
+        String ownerName = Type.internalName(method.getDeclaringClass());
+
+        // ok, now just call the method -- removes extraParams words
+        if (recipient == null) {
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, ownerName, method.getName(), getDescriptor());
+        } else if (recipient.getClass().isInterface()) {
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, ownerName, method.getName(), getDescriptor());
+        } else {
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, ownerName, method.getName(), getDescriptor());
+        }
+        // no need for type conversion as return type was derived from method
+        if (type.getNBytes() > 4) {
+            expected = 2;
+        } else {
+            expected = 1;
+        }
+
+        // decrement the stack height to account for stacked param values (removed) and return value (added)
+        currentStackHeights.addStackCount(expected - extraParams);
+
+        // ensure we have only increased the stack by the return value size
+        if (currentStackHeights.stackCount != currentStack + expected) {
+            throw new CompileException("MethodExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
+        }
+
+        // no need to update max stack since compiling the  recipient or arguments will
+        // have done so (and there will be no change if there was no such compile call)
+    }
+
+    private String getDescriptor()
+    {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("(");
+        int nParams = paramTypes.size();
+        for (int i = 0; i < nParams; i++) {
+            buffer.append(paramTypes.get(i).getInternalName(true));
+        }
+        buffer.append(")");
+        buffer.append(type.getInternalName(true));
+        return buffer.toString();
+    }
+    
     public Class getCandidateArgClass(List<Method> candidates, int argIdx)
     {
         Class argClazz = null;
@@ -330,6 +412,7 @@ public class MethodExpression extends Expression
     private String name;
     private List<Expression> arguments;
     private List<Type> argumentTypes;
+    private List<Type> paramTypes;
     private Expression recipient;
     private Type rootType;
     private Method method;

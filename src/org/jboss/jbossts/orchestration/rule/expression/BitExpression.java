@@ -26,9 +26,13 @@ package org.jboss.jbossts.orchestration.rule.expression;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * A binary arithmetic operator expression
@@ -174,6 +178,102 @@ public class BitExpression extends BinaryOperExpression
             throw e;
         } catch (Exception e) {
             throw new ExecuteException("BitExpression.interpret : unexpected exception for operation " + token + getPos() + " in rule " + helper.getName(), e);
+        }
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        int currentStack = currentStackHeights.stackCount;
+        int expected = 0;
+        Expression oper0 = getOperand(0);
+        Expression oper1 = getOperand(1);
+        // compile the operands and make sure the result is our target type
+        oper0.compile(mv, currentStackHeights, maxStackHeights);
+        compileTypeConversion(oper0.getType(), type, mv, currentStackHeights, maxStackHeights);
+        oper1.compile(mv, currentStackHeights, maxStackHeights);
+        compileTypeConversion(oper1.getType(), type, mv, currentStackHeights, maxStackHeights);
+
+        if (type == Type.B || type == Type.S || type == Type.C || type == Type.I) {
+            switch (oper)
+            {
+                case BOR:
+                    mv.visitInsn(Opcodes.IOR);
+                    break;
+                case BAND:
+                    mv.visitInsn(Opcodes.IAND);
+                    break;
+                case BXOR:
+                    mv.visitInsn(Opcodes.IXOR);
+                    break;
+            }
+            if (type ==  Type.B) {
+                mv.visitInsn(Opcodes.I2B);
+            } else if (type == Type.S) {
+                mv.visitInsn(Opcodes.I2S);
+            } else if (type == Type.C) {
+                mv.visitInsn(Opcodes.I2C);
+            }
+            expected =  1;
+        } else if (type == Type.J) {
+            switch (oper)
+            {
+                case BOR:
+                    mv.visitInsn(Opcodes.LOR);
+                    break;
+                case BAND:
+                    mv.visitInsn(Opcodes.LAND);
+                    break;
+                case BXOR:
+                    mv.visitInsn(Opcodes.LXOR);
+                    break;
+            }
+            expected =  2;
+        } else if (type == Type.F) {
+            mv.visitInsn(Opcodes.F2L);
+            switch (oper)
+            {
+                case BOR:
+                    mv.visitInsn(Opcodes.LOR);
+                    break;
+                case BAND:
+                    mv.visitInsn(Opcodes.LAND);
+                    break;
+                case BXOR:
+                    mv.visitInsn(Opcodes.LXOR);
+                    break;
+            }
+            expected =  2;
+        } else if (type == Type.D) {
+            mv.visitInsn(Opcodes.D2L);
+            switch (oper)
+            {
+                case BOR:
+                    mv.visitInsn(Opcodes.LOR);
+                    break;
+                case BAND:
+                    mv.visitInsn(Opcodes.LAND);
+                    break;
+                case BXOR:
+                    mv.visitInsn(Opcodes.LXOR);
+                    break;
+            }
+            expected =  2;
+        }
+        // we have either a 1 byte or a 2 byte result
+        // check that the stack height is what we expect
+
+        currentStackHeights.addStackCount(expected);
+        
+        if (currentStackHeights.stackCount != currentStack + expected) {
+            throw new CompileException("BitExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+        }
+
+        // we needed room for 2 * expected stack values at the highest point
+        int maxStack = maxStackHeights.stackCount;
+        int overflow = (currentStack + (2 * expected)) - maxStack;
+
+        if (overflow > 0) {
+            maxStackHeights.addStackCount(overflow);
         }
     }
 }

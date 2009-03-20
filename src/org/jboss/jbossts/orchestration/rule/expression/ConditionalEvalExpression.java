@@ -26,9 +26,14 @@ package org.jboss.jbossts.orchestration.rule.expression;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.Opcodes;
 
 /**
  * expression representing a ternary conditional evaluation (cond ? if_expr : else_expr)
@@ -74,5 +79,47 @@ public class ConditionalEvalExpression extends TernaryOperExpression
         } else {
             return getOperand(2).interpret(helper);
         }
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        Expression oper0 = getOperand(0);
+        Expression oper1 = getOperand(1);
+        Expression oper2 = getOperand(2);
+
+        int currentStack = currentStackHeights.stackCount;
+        int expected = (type.getNBytes() > 4 ? 2 : 1);
+
+        // compile the first operand to a boolean and ensure it is primitive -- adds 1 to stack
+        oper0.compile(mv, currentStackHeights, maxStackHeights);
+        if (oper0.getType() == Type.BOOLEAN) {
+            compileBooleanConversion(Type.BOOLEAN, Type.Z, mv, currentStackHeights, maxStackHeights);
+        }
+        // plant the test -- consumes 1 word
+        Label elseLabel = new Label();
+        Label endLabel = new Label();
+        mv.visitJumpInsn(Opcodes.IFEQ, elseLabel);
+        currentStackHeights.addStackCount(-1);
+        // compile the if branch
+        oper1.compile(mv, currentStackHeights, maxStackHeights);
+        // make sure we type convert to our result type so that either branch stacks the same thing
+        compileTypeConversion(oper1.getType(), type,  mv, currentStackHeights, maxStackHeights);
+        // plant a goto skipping over the else expression
+        mv.visitJumpInsn(Opcodes.GOTO, endLabel);
+        // else starts here
+        mv.visitLabel(elseLabel);
+        // compile the else branch
+        oper2.compile(mv, currentStackHeights, maxStackHeights);
+        // make sure we type convert to our result type so that either branch stacks the same thing
+        compileTypeConversion(oper2.getType(), type,  mv, currentStackHeights, maxStackHeights);
+        // the end is nigh
+        mv.visitLabel(endLabel);
+
+        // check the stack height is what we expect, either 1 or 2 words depending upon the result type
+        if (currentStackHeights.stackCount != currentStack + expected) {
+            throw new CompileException("ConditionalEvalExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+        }
+        // no need to check max stack height as teh left and right expressions will have exceeded anything
+        // we stacked inside this call
     }
 }

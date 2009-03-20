@@ -23,7 +23,7 @@
 */
 package org.jboss.jbossts.orchestration.rule.type;
 
-import org.jboss.jbossts.orchestration.rule.exception.TypeException;
+import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +41,7 @@ public class Type {
      */
     public Type(String typeName, Class clazz)
     {
-        this(typeName, clazz, F_OBJECT, null);
+        this(typeName, clazz, F_OBJECT, 4, null);
     }
 
     /**
@@ -72,7 +72,7 @@ public class Type {
     public Type arrayType(Class clazz)
     {
         if (this.arrayType ==  null) {
-            arrayType = new Type(typeName + "[]", clazz, F_ARRAY, this);
+            arrayType = new Type(typeName + "[]", clazz, F_ARRAY, 1, this);
         }
         return arrayType;
     }
@@ -106,13 +106,24 @@ public class Type {
      */
     public String getInternalName()
     {
+        return getInternalName(false);
+    }
+
+    /**
+     * get the internal name for this type used by the class loader. this is only valid for
+     * defined types, defined array types or primitive types
+     * @return the type name
+     */
+    public String getInternalName(boolean forDescriptor)
+    {
         if (isArray()) {
-            return "[" + baseType.getInternalName();
+            return "[" + baseType.getInternalName(forDescriptor);
         } else if (isPrimitive()) {
             return internalNames.get(typeName);
         } else {
             String name = aliasFor.getTargetClass().getCanonicalName();
-            if (name.indexOf(';') == 0) {
+            name = name.replaceAll("\\.", "/");
+            if (forDescriptor) {
                 name = "L" + name + ";";
             }
             return name;
@@ -423,10 +434,19 @@ public class Type {
     }
 
     /**
+     * return the number of stack words occupied by instances of this type
+     * @return true if this is an array type
+     */
+    public int getNBytes()
+    {
+        return nBytes;
+    }
+
+    /**
      * return the builtin type associated with a given class
      * @return the corresponding builtin type
      */
-    public Type builtinType(Class clazz)
+    public static Type builtinType(Class clazz)
     {
         return builtinTypes.get(clazz.getName());
     }
@@ -435,10 +455,19 @@ public class Type {
      * return the primitive type whose boxed equivalent is associated with a given class
      * @return the corresponding primitive type
      */
-    public Type primitiveType(Class clazz)
+    public static Type boxType(Class clazz)
     {
         Type type = builtinType(clazz);
 
+        return boxedTypes.get(type);
+    }
+
+    /**
+     * return the primitive type for a boxed type or vice versa
+     * @return the corresponding primitive type
+     */
+    public static Type boxType(Type type)
+    {
         return boxedTypes.get(type);
     }
 
@@ -446,16 +475,17 @@ public class Type {
     private Class clazz;
     private String packageName;
     private int flags;
+    private int nBytes;
     private Type aliasFor;
     private Type baseType;
     private Type arrayType;
 
-    protected Type(String typeName, Class clazz, int flags)
+    protected Type(String typeName, Class clazz, int flags, int nBytes)
     {
-        this(typeName, clazz, flags, null);
+        this(typeName, clazz, flags, nBytes, null);
     }
 
-    protected Type(String typeName, Class clazz, int flags, Type baseType)
+    protected Type(String typeName, Class clazz, int flags, int nBytes, Type baseType)
     {
         this.typeName = typeName;
 
@@ -466,6 +496,9 @@ public class Type {
         this.clazz = clazz;
 
         this.flags = flags;
+
+        this.nBytes = nBytes;
+
         if ((flags & F_ARRAY) != 0) {
             this.baseType = baseType;
             baseType.arrayType = this;
@@ -514,13 +547,13 @@ public class Type {
             } else if (type1 == INTEGER || type2 == INTEGER || type1 == I || type2 == I) {
                 return I;
             } else if ((type1 == SHORT || type1 == S) && (type2 == SHORT || type2 == S)) {
-                return SHORT;
+                return S;
             } else if ((type1 == CHARACTER || type1 == C) && (type2 == CHARACTER || type2 == C)) {
                 return C;
             } else if ((type1 == BYTE || type1 == B) && (type2 == BYTE || type2 == B)) {
                 return B;
             } else {
-                return INTEGER;
+                return I;
             }
         }
     }
@@ -696,6 +729,11 @@ public class Type {
         return result;
     }
 
+    public static String internalName(Class<?> clazz)
+    {
+        return clazz.getName().replaceAll("\\.", "/");
+    }
+
     // private class used to type unknown types
     private static class Undefined {
     }
@@ -727,30 +765,31 @@ public class Type {
 
     // we need to cope with array types
 
-    final public static Type Z = new Type("boolean", boolean.class, F_BOOLEAN|F_PRIMITIVE);
-    final public static Type B = new Type("byte", byte.class, F_INTEGRAL|F_PRIMITIVE);
-    final public static Type S = new Type("short", short.class, F_INTEGRAL|F_PRIMITIVE);
-    final public static Type C = new Type("char", char.class, F_INTEGRAL|F_PRIMITIVE);
-    final public static Type I = new Type("int", int.class, F_INTEGRAL|F_PRIMITIVE);
-    final public static Type J = new Type("long", long.class, F_INTEGRAL|F_PRIMITIVE);
-    final public static Type F = new Type("float", float.class, F_FLOATING|F_PRIMITIVE);
-    final public static Type D = new Type("double", double.class, F_FLOATING|F_PRIMITIVE);
+    final public static Type Z = new Type("boolean", boolean.class, F_BOOLEAN|F_PRIMITIVE, 4);
+    final public static Type B = new Type("byte", byte.class, F_INTEGRAL|F_PRIMITIVE, 1);
+    final public static Type S = new Type("short", short.class, F_INTEGRAL|F_PRIMITIVE, 2);
+    final public static Type C = new Type("char", char.class, F_INTEGRAL|F_PRIMITIVE, 2);
+    final public static Type I = new Type("int", int.class, F_INTEGRAL|F_PRIMITIVE, 4);
+    final public static Type J = new Type("long", long.class, F_INTEGRAL|F_PRIMITIVE, 8);
+    final public static Type F = new Type("float", float.class, F_FLOATING|F_PRIMITIVE, 4);
+    final public static Type D = new Type("double", double.class, F_FLOATING|F_PRIMITIVE, 8);
     // pseudo type representing an undefined numeric primitive type
-    final public static Type N = new Type("", null, F_UNKNOWN|F_NUMERIC|F_PRIMITIVE);
+    final public static Type N = new Type("", null, F_UNKNOWN|F_NUMERIC|F_PRIMITIVE, 0);
 
-    final public static Type BOOLEAN = new Type("java.lang.Boolean", Boolean.class, F_BOOLEAN);
-    final public static Type BYTE = new Type("java.lang.Byte", Byte.class, F_INTEGRAL);
-    final public static Type SHORT = new Type("java.lang.Short", Short.class, F_INTEGRAL);
-    final public static Type CHARACTER = new Type("java.lang.Character", Character.class, F_INTEGRAL);
-    final public static Type INTEGER = new Type("java.lang.Integer", Integer.class, F_INTEGRAL);
-    final public static Type LONG = new Type("java.lang.Long", Long.class, F_INTEGRAL);
-    final public static Type FLOAT = new Type("java.lang.Float", Float.class, F_FLOATING);
-    final public static Type DOUBLE = new Type("java.lang.Double", Double.class, F_FLOATING);
-    final public static Type STRING = new Type("java.lang.String", String.class, F_OBJECT|F_STRING);
-    final public static Type VOID = new Type("void", void.class, F_VOID);
-    final public static Type NUMBER = new Type("java.lang.Number", Number.class, F_NUMERIC);
+    final public static Type BOOLEAN = new Type("java.lang.Boolean", Boolean.class, F_BOOLEAN, 4);
+    final public static Type BYTE = new Type("java.lang.Byte", Byte.class, F_INTEGRAL, 4);
+    final public static Type SHORT = new Type("java.lang.Short", Short.class, F_INTEGRAL, 4);
+    final public static Type CHARACTER = new Type("java.lang.Character", Character.class, F_INTEGRAL, 4);
+    final public static Type INTEGER = new Type("java.lang.Integer", Integer.class, F_INTEGRAL, 4);
+    final public static Type LONG = new Type("java.lang.Long", Long.class, F_INTEGRAL, 4);
+    final public static Type FLOAT = new Type("java.lang.Float", Float.class, F_FLOATING, 4);
+    final public static Type DOUBLE = new Type("java.lang.Double", Double.class, F_FLOATING, 4);
+    final public static Type STRING = new Type("java.lang.String", String.class, F_OBJECT|F_STRING, 4);
+    final public static Type VOID = new Type("void", void.class, F_VOID, 0);
+    final public static Type NUMBER = new Type("java.lang.Number", Number.class, F_NUMERIC, 0);
+    final public static Type OBJECT = new Type("java.lang.Object", Object.class, F_OBJECT, 0);
     // pseudo type representing an undefined primitive or object type
-    final public static Type UNDEFINED = new Type("", Undefined.class, F_UNKNOWN);
+    final public static Type UNDEFINED = new Type("", Undefined.class, F_UNKNOWN, 0);
 
     final private static HashMap<String, Type> builtinTypes;
     final private static HashMap<String, Type> primitiveTypes;
@@ -781,6 +820,7 @@ public class Type {
         builtinTypes.put(VOID.getTargetClass().getName(), VOID);
         builtinTypes.put(NUMBER.getTargetClass().getName(), NUMBER);
         builtinTypes.put(UNDEFINED.getTargetClass().getName(), UNDEFINED);
+        builtinTypes.put(OBJECT.getTargetClass().getName(), OBJECT);
         // nicknames
         builtinTypes.put("Boolean", BOOLEAN);
         builtinTypes.put("Byte", BYTE);
@@ -791,6 +831,7 @@ public class Type {
         builtinTypes.put("Float", FLOAT);
         builtinTypes.put("String", STRING);
         builtinTypes.put("Number", NUMBER);
+        builtinTypes.put("Object", OBJECT);
         builtinTypes.put("", UNDEFINED);
         // allow undefined to be spelled out
         builtinTypes.put("Undefined", UNDEFINED);

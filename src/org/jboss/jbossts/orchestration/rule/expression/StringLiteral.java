@@ -26,9 +26,13 @@ package org.jboss.jbossts.orchestration.rule.expression;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
 
@@ -62,6 +66,26 @@ public class StringLiteral extends Expression
 
     public Object interpret(HelperAdapter helper) throws ExecuteException {
         return text;
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        int currentStack = currentStackHeights.stackCount;
+        int expected = 1;
+
+        // compile a field access
+
+        // compile a load constant instruction
+        mv.visitLdcInsn(text);
+
+        currentStackHeights.addStackCount(expected);
+
+        int overflow = ((currentStack + expected) - maxStackHeights.stackCount);
+
+        if (overflow > 0) {
+            maxStackHeights.addStackCount(overflow);
+        }
+
     }
 
     public void writeTo(StringWriter stringWriter) {

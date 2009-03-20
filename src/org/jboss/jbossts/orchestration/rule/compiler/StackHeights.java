@@ -37,7 +37,7 @@ public class StackHeights
     /**
      * number of local variable slots
      */
-    int localCount;
+    public int localCount;
 
     /**
      * create withinitial counts 0

@@ -26,11 +26,17 @@ package org.jboss.jbossts.orchestration.rule.expression;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
+
+import com.sun.org.apache.bcel.internal.generic.BIPUSH;
 
 /**
  * A binary logical operator expression
@@ -68,6 +74,17 @@ public class BooleanLiteral extends Expression
 
     public Object interpret(HelperAdapter helper) throws ExecuteException {
         return value;
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException {
+        // load a boolean constant
+        mv.visitLdcInsn(value);
+        
+        // increment stack height and update maximmum if necessary
+        currentStackHeights.addStackCount(1);
+        if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
+            maxStackHeights.stackCount = currentStackHeights.stackCount;
+        }
     }
 
     public void writeTo(StringWriter stringWriter) {

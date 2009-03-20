@@ -28,9 +28,13 @@ import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
 import java.lang.reflect.Field;
@@ -178,6 +182,29 @@ public class FieldExpression extends Expression
             } catch (Exception e) {
                 throw new ExecuteException("FieldExpression.interpret : unexpected exception accessing field " + fieldName + getPos(), e);
             }
+        }
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        int currentStack = currentStackHeights.stackCount;
+        int expected = (type.getNBytes() > 4 ? 2 : 1);
+
+        // compile the owner expression and then ensure it is typed correctly
+        owner.compile(mv, currentStackHeights, maxStackHeights);
+        compileTypeConversion(owner.getType(), type, mv, currentStackHeights, maxStackHeights);
+        if (!indirectStatic) {
+            // compile a field access
+            mv.visitFieldInsn(Opcodes.GETFIELD, field.getDeclaringClass().getName(), field.getName(), field.getType().getName());
+        }
+        // check the stack height is ok
+        if (currentStackHeights.stackCount != currentStack + expected) {
+            throw new CompileException("FieldExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+        }
+        // make sure we have room for the field value if it is 2 words
+        int overflow = (currentStack + expected) - maxStackHeights.stackCount;
+        if (overflow > 0) {
+            maxStackHeights.addStackCount(overflow);
         }
     }
 

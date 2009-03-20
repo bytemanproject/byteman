@@ -28,9 +28,13 @@ import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.rule.exception.ThrowException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
 import java.util.List;
@@ -48,6 +52,7 @@ public class ThrowExpression extends Expression
     private String typeName;
     private List<Expression> arguments;
     private List<Type> argumentTypes;
+    private List<Type> paramTypes;
     private Constructor constructor;
 
     public ThrowExpression(Rule rule, ParseNode token, List<Expression> arguments) {
@@ -157,6 +162,15 @@ public class ThrowExpression extends Expression
 
         constructor = candidates.get(0);
 
+        // make sure we know the formal parameter types and have included them in the typegroup
+
+        paramTypes = new ArrayList<Type>();
+        Class<?>[] paramClasses = constructor.getParameterTypes();
+
+        for (int i = 0; i < arguments.size() ; i++) {
+            paramTypes.add(typeGroup.ensureType(paramClasses[i]));
+        }
+
         // expected type should always be void since throw can only occur as a top level action
         // however, we need to be sure that the trigering method throws this exception type or
         // else that it is a subtype of runtime exception
@@ -237,6 +251,70 @@ public class ThrowExpression extends Expression
         } catch (InvocationTargetException e) {
             throw new ExecuteException("ThrowExpression.interpret : unable to invoke exception class constructor for " + typeName + getPos(), e);
         }
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        int currentStack = currentStackHeights.stackCount;
+        int expected = 1;
+        int extraParams = 0;
+
+        // ok, we need to create the thrown exception instance and then
+        // initialise it.
+
+        // create the thrown exception instance -- adds 1 to stack
+        String exceptionClassName = type.getInternalName();
+        mv.visitTypeInsn(Opcodes.NEW, exceptionClassName);
+        currentStackHeights.addStackCount(1);
+        extraParams++;
+
+        int argCount = arguments.size();
+
+        // stack each of the arguments to the constructor
+        for (int i = 0; i < argCount; i++) {
+            Type argType = argumentTypes.get(i);
+            Type paramType = paramTypes.get(i);
+
+            arguments.get(i).compile(mv, currentStackHeights, maxStackHeights);
+            compileTypeConversion(argType, paramType, mv, currentStackHeights, maxStackHeights);
+            // track extra storage used after type conversion
+            extraParams += (paramType.getNBytes() > 4 ? 2 : 1);
+        }
+
+        // construct the exception
+        mv.visitMethodInsn(Opcodes.INVOKESPECIAL, exceptionClassName, "<init>", getDescriptor());
+        // now throw it
+        mv.visitInsn(Opcodes.ATHROW);
+
+        // decrement the stack height to account for stacked param values (removed) and return value (added)
+        currentStackHeights.addStackCount(expected - extraParams);
+
+        // we should only have the thrown exception on the stack
+        if (currentStackHeights.stackCount != currentStack + expected) {
+            throw new CompileException("ThrowExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+        }
+
+        // no need to update max stack unless extraParams is zero in which case the exception
+        // instance may have thrown us over the limit
+
+        if (extraParams < 1) {
+            int overflow = ((currentStack + 1) - maxStackHeights.stackCount);
+            if (overflow > 0) {
+                maxStackHeights.addStackCount(overflow);
+            }
+        }
+    }
+
+    private String getDescriptor()
+    {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("(");
+        int nParams = paramTypes.size();
+        for (int i = 0; i < nParams; i++) {
+            buffer.append(paramTypes.get(i).getInternalName(true));
+        }
+        buffer.append(")V");
+        return buffer.toString();
     }
 
     public void writeTo(StringWriter stringWriter) {

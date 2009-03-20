@@ -136,7 +136,7 @@ public class InterpretedHelper extends Helper implements HelperAdapter
             throws ExecuteException
     {
         // System.out.println(rule.getName() + " test");
-        return rule.getCondition().interpret(this);
+        return (Boolean)rule.getCondition().interpret(this);
     }
         
     private void fire()

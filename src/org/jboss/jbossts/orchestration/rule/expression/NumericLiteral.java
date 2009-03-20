@@ -26,9 +26,13 @@ package org.jboss.jbossts.orchestration.rule.expression;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
 
@@ -40,7 +44,7 @@ public class NumericLiteral extends Expression
     public NumericLiteral(Rule rule, Type type, ParseNode token) {
         super(rule, type, token);
 
-        this.value = token.getChild(0);
+        this.value = (Number)token.getChild(0);
     }
 
     /**
@@ -67,9 +71,52 @@ public class NumericLiteral extends Expression
         return value;
     }
 
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        if (type == Type.I) {
+            int val = value.intValue();
+            // compile code to stack int value
+            if (val >= -1 && val <= 5) {
+                // we can use an iconst instruction
+                mv.visitInsn(Opcodes.ICONST_0 + val);
+            } else {
+                // we have to add an integer constant to the constants pool
+                mv.visitLdcInsn(value);
+            }
+            // we have only added 1 to the stack height
+
+            currentStackHeights.addStackCount(1);
+            if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
+                maxStackHeights.stackCount = currentStackHeights.stackCount;
+            }
+        } else { // type = type.F
+            float val = value.floatValue();
+            if (val == 0.0) {
+                // we can use an fconst instruction
+                mv.visitInsn(Opcodes.FCONST_0);
+            } else if (val == 1.0) {
+                    // we can use an fconst instruction
+                    mv.visitInsn(Opcodes.FCONST_1);
+            } else if (val == 2.0) {
+                    // we can use an fconst instruction
+                    mv.visitInsn(Opcodes.FCONST_2);
+            } else {
+                // we have to add a float constant to the constants pool
+                mv.visitLdcInsn(value);
+            }
+
+            // we have only added 1 to the stack height
+
+            currentStackHeights.addStackCount(1);
+            if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
+                maxStackHeights.stackCount = currentStackHeights.stackCount;
+            }
+        }
+    }
+
     public void writeTo(StringWriter stringWriter) {
         stringWriter.write(value.toString());
     }
 
-    private Object value;
+    private Number value;
 }

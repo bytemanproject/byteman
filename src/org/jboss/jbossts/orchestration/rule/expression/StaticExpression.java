@@ -27,9 +27,13 @@ import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
 import java.lang.reflect.Field;
@@ -95,6 +99,25 @@ public class StaticExpression extends Expression
             throw new ExecuteException("StaticExpression.interpret : error accessing field " + ownerTypeName + "." + fieldName + getPos(), e);
         } catch (Exception e) {
             throw new ExecuteException("StaticExpression.interpret : unexpected exception accessing field " + ownerTypeName + "." + fieldName + getPos(), e);
+        }
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        int currentStack = currentStackHeights.stackCount;
+        int expected;
+
+        // compile a field access
+
+        mv.visitFieldInsn(Opcodes.GETSTATIC, ownerTypeName, fieldName, type.getName());
+        expected = (type.getNBytes() > 4 ? 2 : 1);
+
+        currentStackHeights.addStackCount(expected);
+
+        int overflow = ((currentStack + expected) - maxStackHeights.stackCount);
+        
+        if (overflow > 0) {
+            maxStackHeights.addStackCount(overflow);
         }
     }
 

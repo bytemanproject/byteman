@@ -33,8 +33,12 @@ import static org.jboss.jbossts.orchestration.rule.grammar.ParseNode.*;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.helper.InterpretedHelper;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -100,7 +104,36 @@ public class Action extends RuleElement
         return Type.VOID;
     }
 
-    public void interpret(HelperAdapter helper)
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException {
+        int currentStack = currentStackHeights.stackCount;
+        boolean hasActions = false;
+
+        for (Expression expr : action) {
+            hasActions = true;
+            expr.compile(mv, currentStackHeights, maxStackHeights);
+            Type resultType = expr.getType();
+            if (resultType != Type.VOID) {
+                int expected = (resultType.getNBytes() > 4 ? 2 : 1);
+                for (int i = 0; i < expected; i++) {
+                    mv.visitInsn(Opcodes.POP);
+                    currentStackHeights.addStackCount(-1);
+                }
+            }
+        }
+        if (!hasActions) {
+            // don't check or adjust stack heights as we did nothing
+            return;
+        }
+
+        // check original stack height has been restored
+        if (currentStackHeights.stackCount != currentStack) {
+            throw new CompileException("Action.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack);
+        }
+
+        // each action will have checked whether it needed to increase the maximum stack count so just return
+    }
+
+    public Object interpret(HelperAdapter helper)
             throws ExecuteException
     {
         if (action != null) {
@@ -108,6 +141,8 @@ public class Action extends RuleElement
                 expr.interpret(helper);
             }
         }
+        
+        return null;
     }
 
     public void writeTo(StringWriter stringWriter)

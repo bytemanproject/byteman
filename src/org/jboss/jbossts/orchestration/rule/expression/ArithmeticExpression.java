@@ -26,9 +26,13 @@ package org.jboss.jbossts.orchestration.rule.expression;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * A binary arithmetic operator expression
@@ -253,4 +257,165 @@ public class ArithmeticExpression extends BinaryOperExpression
             throw new ExecuteException("ArithmeticExpression.interpret : unexpected exception for operation " + token + getPos() + " in rule " + helper.getName(), e);
         }
     }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        int currentStack = currentStackHeights.stackCount;
+        int expectedStack = 0;
+        Expression operand0 = getOperand(0);
+        Expression operand1 = getOperand(1);
+        Type type0 = operand0.getType();
+        Type type1 = operand1.getType();
+        // compile lhs -- it adds 1 or 2 to the stack height
+        operand0.compile(mv, currentStackHeights, maxStackHeights);
+        // do any required type conversion
+        compileTypeConversion(type0, type, mv, currentStackHeights, maxStackHeights);
+        // compile lhs -- it adds 1 or 2 to the stack height
+        currentStackHeights.addStackCount((type0.getNBytes() > 4 ? 2 : 1));
+        // do any required type conversion
+        compileTypeConversion(type1, type, mv, currentStackHeights, maxStackHeights);
+
+        try {
+// n.b. be careful with characters here
+            if (type == type.B || type == type.S || type == type.C || type == type.I) {
+                // TODO we should probably only respect the byte, short and char types for + and -
+                // TODO also need to decide how to handle divide by zero
+
+                expectedStack = 1;
+
+                switch (oper)
+                {
+                    case MUL:
+                        mv.visitInsn(Opcodes.IMUL);
+                        break;
+                    case DIV:
+                        mv.visitInsn(Opcodes.IDIV);
+                        break;
+                    case PLUS:
+                        mv.visitInsn(Opcodes.IADD);
+                        break;
+                    case MINUS:
+                        mv.visitInsn(Opcodes.ISUB);
+                        break;
+                    case MOD:
+                        mv.visitInsn(Opcodes.IREM);
+                        break;
+                    default:
+                        // should never happen
+                        throw new CompileException("ArithmeticExpression.compile : unexpected operator " + oper);
+                }
+                // now coerce back to appropriate type
+                if (type == type.B) {
+                    mv.visitInsn(Opcodes.I2B);
+                } else if (type == type.S) {
+                    mv.visitInsn(Opcodes.I2S);
+                } else if (type == type.C) {
+                    mv.visitInsn(Opcodes.I2C);
+                } // else if (type == type.I) { do nothing }
+                // ok, we popped two bytes but added one
+                currentStackHeights.addStackCount(-1);
+            }  else if (type == type.J) {
+
+                expectedStack = 2;
+
+                switch (oper)
+                {
+                    case MUL:
+                        mv.visitInsn(Opcodes.LMUL);
+                        break;
+                    case DIV:
+                        mv.visitInsn(Opcodes.LDIV);
+                        break;
+                    case PLUS:
+                        mv.visitInsn(Opcodes.LADD);
+                        break;
+                    case MINUS:
+                        mv.visitInsn(Opcodes.LSUB);
+                        break;
+                    case MOD:
+                        mv.visitInsn(Opcodes.LREM);
+                        break;
+                    default:
+                        // should never happen
+                        throw new CompileException("ArithmeticExpression.compile : unexpected operator " + oper);
+                }
+                // ok, we popped four bytes but added two
+                currentStackHeights.addStackCount(-2);
+            }  else if (type == type.F) {
+
+                expectedStack = 1;
+
+                switch (oper)
+                {
+                    case MUL:
+                        mv.visitInsn(Opcodes.FMUL);
+                        break;
+                    case DIV:
+                        mv.visitInsn(Opcodes.FDIV);
+                        break;
+                    case PLUS:
+                        mv.visitInsn(Opcodes.FADD);
+                        break;
+                    case MINUS:
+                        mv.visitInsn(Opcodes.FSUB);
+                        break;
+                    case MOD:
+                        mv.visitInsn(Opcodes.FREM);
+                        break;
+                    default:
+                        // should never happen
+                        throw new CompileException("ArithmeticExpression.compile : unexpected operator " + oper);
+                }
+                // ok, we popped two bytes but added one
+                currentStackHeights.addStackCount(-1);
+            }  else if (type == type.D) {
+
+                expectedStack = 2;
+
+                switch (oper)
+                {
+                    case MUL:
+                        mv.visitInsn(Opcodes.DMUL);
+                        break;
+                    case DIV:
+                        mv.visitInsn(Opcodes.DDIV);
+                        break;
+                    case PLUS:
+                        mv.visitInsn(Opcodes.DADD);
+                        break;
+                    case MINUS:
+                        mv.visitInsn(Opcodes.DSUB);
+                        break;
+                    case MOD:
+                        mv.visitInsn(Opcodes.DREM);
+                        break;
+                    default:
+                        // should never happen
+                        throw new CompileException("ArithmeticExpression.compile : unexpected operator " + oper);
+                }
+                // ok, we popped four bytes but added two
+                currentStackHeights.addStackCount(-2);
+            } else {
+                throw new CompileException("ArithmeticExpression.compile : unexpected result type " + type.getName());
+            }
+        } catch (CompileException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CompileException("ArithmeticExpression.compile : unexpected exception for operation " + token + getPos() + " in rule " + rule.getName(), e);
+        }
+
+        // check stack heights
+        if (currentStackHeights.stackCount != currentStack + expectedStack) {
+            throw new CompileException("ArithmeticExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expectedStack);
+        }
+
+        // we needed room for 2 * expectedStack extra values on the stack -- make sure we got it
+        int maxStack = maxStackHeights.stackCount;
+        int overflow = (currentStack + (2 * expectedStack)) - maxStack;
+
+        if (overflow > 0) {
+            maxStackHeights.addStackCount(overflow);
+        }
+    }
+
 }

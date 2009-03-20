@@ -27,9 +27,13 @@ import org.jboss.jbossts.orchestration.rule.binding.Binding;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
 
@@ -92,6 +96,34 @@ public class Variable extends Expression
 
     public Object interpret(HelperAdapter helper) throws ExecuteException {
         return helper.getBinding(name);
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        int currentStack = currentStackHeights.stackCount;
+
+        // stack the current helper
+        // stack the name for the variable
+        // call the getBinding method
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitLdcInsn(name);
+        mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "getBinding", "(Ljava/lang/String;)Ljava/lang/Object;");
+        // ok, we added 2 to the stack and then popped them leaving 1
+        currentStackHeights.addStackCount(1);
+        // perform any necessary type conversion
+        if (type.isPrimitive()) {
+            // cast down to the boxed type then do an unbox
+            compileObjectConversion(Type.OBJECT, Type.boxType(type), mv, currentStackHeights, maxStackHeights);
+            compileUnbox(Type.OBJECT, type,  mv, currentStackHeights, maxStackHeights);
+        } else {
+            // cast down to the required type
+            compileObjectConversion(Type.OBJECT, type, mv, currentStackHeights, maxStackHeights);
+        }
+        // make sure we have room for 2 working slots
+        int overflow = (currentStack + 2 - maxStackHeights.stackCount);
+        if (overflow > 0) {
+            maxStackHeights.addStackCount(overflow);
+        }
     }
 
     public void writeTo(StringWriter stringWriter) {

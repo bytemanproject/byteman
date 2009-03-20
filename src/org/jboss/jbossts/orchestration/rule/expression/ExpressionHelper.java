@@ -139,12 +139,12 @@ public class ExpressionHelper
             break;
             case INTEGER_LITERAL:
             {
-                expr = new NumericLiteral(rule, Type.INTEGER, exprTree);
+                expr = new NumericLiteral(rule, Type.I, exprTree);
             }
             break;
             case FLOAT_LITERAL:
             {
-                expr = new NumericLiteral(rule, Type.FLOAT, exprTree);
+                expr = new NumericLiteral(rule, Type.F, exprTree);
             }
             break;
             case STRING_LITERAL:

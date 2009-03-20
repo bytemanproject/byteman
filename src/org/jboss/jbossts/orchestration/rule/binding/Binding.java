@@ -26,8 +26,14 @@ package org.jboss.jbossts.orchestration.rule.binding;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.expression.Expression;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
+import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
 import org.jboss.jbossts.orchestration.rule.RuleElement;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
+import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
 
@@ -82,6 +88,49 @@ public class Binding extends RuleElement
             throw new TypeException("Binding.typecheck unknown type for binding " + name);
         }
         return type;
+    }
+
+    public Object interpret(HelperAdapter helper) throws ExecuteException
+    {
+        if (isVar()) {
+            Object result = value.interpret(helper);
+            helper.bindVariable(getName(), result);
+            return result;
+        }
+        return null;
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        if (isVar()) {
+            int currentStack = currentStackHeights.stackCount;
+
+            // push the current helper instance i.e. this -- adds 1 to stack height
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            // push the variable name -- adds 1 to stack height
+            mv.visitLdcInsn(name);
+            // increment stack count
+            currentStackHeights.addStackCount(2);
+            // compile the rhs expression for the binding -- adds 1 to stack height
+            value.compile(mv, currentStackHeights, maxStackHeights);
+            // make sure value is boxed if necessary
+            if (type.isPrimitive()) {
+                compileBox(Type.boxType(type), mv, currentStackHeights, maxStackHeights);
+            }
+            // compile a bindVariable call pops 3 from stack height
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "bindVariable", "(Ljava/lang/String;Ljava/lang/Object;)V");
+            currentStackHeights.addStackCount(-3);
+
+            // check the max height was enough for 3 extra values
+
+            // we needed room for 3 more values on the stack -- make sure we got it
+            int maxStack = maxStackHeights.stackCount;
+            int overflow = (currentStack + 3) - maxStack;
+
+            if (overflow > 0) {
+                maxStackHeights.addStackCount(overflow);
+            }
+        }
     }
 
     public String getName()

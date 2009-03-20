@@ -26,9 +26,14 @@ package org.jboss.jbossts.orchestration.rule.expression;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import com.sun.org.apache.bcel.internal.generic.IXOR;
 
 /**
  */
@@ -63,10 +68,6 @@ public class TwiddleExpression extends UnaryOperExpression
                 return ~value.intValue();
             } else if (type == Type.J) {
                 return ~value.longValue();
-            } else if (type == Type.F) {
-                return ~value.longValue();
-            } else if (type == Type.D) {
-                return ~value.longValue();
             } else { // (type == Type.C)
                 return ~value.intValue();
             }
@@ -74,6 +75,49 @@ public class TwiddleExpression extends UnaryOperExpression
             throw e;
         } catch (Exception e) {
             throw new ExecuteException("TwiddleExpression.typeCheck() : unexpected exception : " + token.getText() + getPos(), e);
+        }
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        // compile the operand and then bit twiddle it
+        Expression oper = getOperand(0);
+        Type operType = oper.getType();
+
+        int currentStack = currentStackHeights.stackCount;
+        int expected = 0;
+
+        oper.compile(mv, currentStackHeights, maxStackHeights);
+        currentStackHeights.addStackCount((operType.getNBytes() > 4 ? 2 : 1));
+        compileTypeConversion(operType, type, mv, currentStackHeights, maxStackHeights);
+        if (type == Type.B) {
+            expected = 1;
+            mv.visitInsn(Opcodes.ICONST_1);
+            mv.visitInsn(Opcodes.IXOR);
+            mv.visitInsn(Opcodes.I2B);
+        } else if (type == Type.S) {
+            expected = 1;
+            mv.visitInsn(Opcodes.ICONST_1);
+            mv.visitInsn(Opcodes.IXOR);
+            mv.visitInsn(Opcodes.I2S);
+        } else if (type == Type.C) {
+            expected = 1;
+            mv.visitInsn(Opcodes.ICONST_1);
+            mv.visitInsn(Opcodes.IXOR);
+            mv.visitInsn(Opcodes.I2C);
+        } else if (type == Type.I) {
+            expected = 1;
+            mv.visitInsn(Opcodes.ICONST_1);
+            mv.visitInsn(Opcodes.IXOR);
+        } else if (type == Type.J) {
+            expected = 2;
+            mv.visitInsn(Opcodes.LCONST_1);
+            mv.visitInsn(Opcodes.LXOR);
+        }
+
+        // check the stack height is what we expect
+        if (currentStackHeights.stackCount != currentStack + expected) {
+            throw new CompileException("MinusExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
         }
     }
 }

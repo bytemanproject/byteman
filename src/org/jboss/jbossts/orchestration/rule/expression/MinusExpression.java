@@ -26,9 +26,13 @@ package org.jboss.jbossts.orchestration.rule.expression;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  */
@@ -71,6 +75,47 @@ public class MinusExpression extends UnaryOperExpression
             throw e;
         } catch (Exception e) {
             throw new ExecuteException("MinusExpression.typeCheck() : unexpected exception : " + token.getText() + getPos(), e);
+        }
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        Expression oper = getOperand(0);
+        Type operType = oper.getType();
+
+        int currentStack = currentStackHeights.stackCount;
+        int expected = 0;
+
+        // compile code to execute the value then negate it
+        oper.compile(mv, currentStackHeights, maxStackHeights);
+        compileTypeConversion(operType, type, mv, currentStackHeights, maxStackHeights);
+
+        // ok, now negate the value
+        if (type == Type.B || type == Type.S || type == Type.I) {
+            mv.visitInsn(Opcodes.INEG);
+            expected = 1;
+        } else if (type == Type.J) {
+            mv.visitInsn(Opcodes.LNEG);
+            expected = 2;
+        } else if (type == Type.F) {
+            mv.visitInsn(Opcodes.FNEG);
+            expected = 1;
+        } else if (type == Type.D) {
+            mv.visitInsn(Opcodes.DNEG);
+            expected = 2;
+        }
+
+        // check stack height
+        if (currentStackHeights.stackCount != currentStack + expected) {
+            throw new CompileException("MinusExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+        }
+
+        // ensure we have room for any values we stacked
+
+        int overflow = (currentStack + expected) - maxStackHeights.stackCount;
+
+        if (overflow > 0) {
+            maxStackHeights.addStackCount(overflow);
         }
     }
 }

@@ -26,9 +26,13 @@ package org.jboss.jbossts.orchestration.rule.expression;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.Rule;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import java.util.List;
 import java.util.Iterator;
@@ -119,6 +123,75 @@ public class ArrayExpression extends Expression
         } catch (Exception e) {
             throw new ExecuteException("ArrayExpression.interpret : unexpected exception dereferencing array " + arrayRef.token.getText() + getPos(), e);
         }
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        Type valueType = arrayRef.getType().getBaseType();
+        int currentStack = currentStackHeights.stackCount;
+        int expected = 0;
+
+        // compile load of array reference -- adds 1 to stack height
+        arrayRef.compile(mv, currentStackHeights, maxStackHeights);
+        // for each index expression compile the expression and the do an array load
+        Iterator<Expression> iterator = idxList.iterator();
+
+        while (iterator.hasNext()) {
+            Expression idxExpr = iterator.next();
+            // compile expression index -- adds 1 to height
+            idxExpr.compile(mv, currentStackHeights, maxStackHeights);
+            // make sure the index is an integer
+            compileTypeConversion(idxExpr.getType(), Type.I, mv, currentStackHeights, maxStackHeights);
+
+            if (valueType.isObject()) {
+                // compile load object - pops 2 and adds 1
+                mv.visitInsn(Opcodes.AALOAD);
+                expected = 1;
+            } else if (valueType == Type.Z || valueType == Type.B) {
+                // compile load byte - pops 2 and adds 1
+                mv.visitInsn(Opcodes.BALOAD);
+                expected = 1;
+            } else if (valueType == Type.S) {
+                // compile load short - pops 2 and adds 1
+                mv.visitInsn(Opcodes.SALOAD);
+                expected = 1;
+            } else if (valueType == Type.C) {
+                // compile load char - pops 2 and adds 1
+                mv.visitInsn(Opcodes.CALOAD);
+                expected = 1;
+            } else if (valueType == Type.I) {
+                // compile load int - pops 2 and adds 1
+                mv.visitInsn(Opcodes.IALOAD);
+                expected = 1;
+            } else if (valueType == Type.J) {
+                // compile load long - pops 2 and adds 2
+                mv.visitInsn(Opcodes.LALOAD);
+                expected = 2;
+            } else if (valueType == Type.F) {
+                // compile load float - pops 2 and adds 1
+                mv.visitInsn(Opcodes.FALOAD);
+                expected = 1;
+            } else if (valueType == Type.D) {
+                // compile load double - pops 2 and adds 2
+                mv.visitInsn(Opcodes.DALOAD);
+                expected = 2;
+            }
+            if (iterator.hasNext()) {
+                assert valueType.isArray();
+                valueType =valueType.getBaseType();
+            }
+        }
+        // the last value for expected is how many bytes extra should be on the stack
+        currentStackHeights.addStackCount(expected);
+
+        // check stack height
+        if (currentStackHeights.stackCount != currentStack + expected) {
+            throw new CompileException("ArrayExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+        }
+
+        // we needed room for an aray and an index or for a one or two word result
+        // but the recursive evaluations will have made sure the max stack is big enough
+        // so there is no need to update the maximum stack height
     }
 
     public void writeTo(StringWriter stringWriter) {

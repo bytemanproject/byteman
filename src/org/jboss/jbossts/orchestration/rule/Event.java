@@ -35,8 +35,13 @@ import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.ParseException;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.CompileException;
 import org.jboss.jbossts.orchestration.rule.helper.InterpretedHelper;
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
+import org.jboss.jbossts.orchestration.rule.compiler.StackHeights;
+import org.jboss.jbossts.orchestration.agent.adapter.RuleAdapter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -88,11 +93,6 @@ public class Event extends RuleElement {
     protected Event(Rule rule)
     {
         super(rule);
-    }
-
-    public boolean compile()
-    {
-        return true;
     }
 
     public Bindings getBindings()
@@ -249,7 +249,7 @@ public class Event extends RuleElement {
         }
     }
 
-    public void interpret(HelperAdapter helper)
+    public Object interpret(HelperAdapter helper)
             throws ExecuteException
     {
         Iterator<Binding> iterator = getBindings().iterator();
@@ -257,12 +257,27 @@ public class Event extends RuleElement {
         while (iterator.hasNext()) {
             Binding binding = iterator.next();
 
-            if (binding.isVar()) {
-                Object value = binding.getValue().interpret(helper);
-                helper.bindVariable(binding.getName(), value);
-            }
+            binding.interpret(helper);
+        }
+        
+        return null;
+    }
+
+    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        int currentStack = currentStackHeights.stackCount;
+
+        Iterator<Binding> iterator = getBindings().iterator();
+        while (iterator.hasNext()) {
+            Binding binding = iterator.next();
+
+            binding.compile(mv, currentStackHeights, maxStackHeights);
         }
 
+        // check stack heights
+        if (currentStackHeights.stackCount != currentStack) {
+            throw new CompileException("Event.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack);
+        }
     }
 
     public void writeTo(StringWriter stringWriter)
