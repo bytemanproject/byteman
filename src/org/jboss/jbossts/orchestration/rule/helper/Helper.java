@@ -360,6 +360,15 @@ public class Helper
     }
 
     /**
+     * call signalWake(Object, boolean) defaulting the second argument to
+     * false
+     */
+    public boolean signalWake(Object identifier)
+    {
+        return signalWake(identifier, false);
+    }
+
+    /**
      * signal an event identified by the supplied object, causing all waiting threads to resume
      * rule processing and clearing the event. if there are no threads waiting either because
      * there has been no call to @link{#waitFor} or because some other thread has sent the signal
@@ -369,16 +378,60 @@ public class Helper
      * be delivered to. n.b. the operation is not performed using a notify on the supplied object.
      * this argument is used as a key to identify a synchronization object private to the rule
      * system.
+     * @param mustMeet if true then the signal operation must not be delivered until some other
+     * thread is actually waiting on a waiter identified by identifier. if there is no such waiter
+     * when this method is called then the calling thread will suspend until one arrives.
      */
-    public boolean signalWake(Object identifier)
+    public boolean signalWake(Object identifier, boolean mustMeet)
     {
-        Waiter waiter = removeWaiter(identifier);
+        if (mustMeet == false) {
+            Waiter waiter = removeWaiter(identifier);
 
-        if (waiter != null) {
-            return waiter.signalWake();
+            if (waiter != null) {
+                return waiter.signalWake();
+            }
+
+            return false;
+        } else {
+            Waiter waiter;
+            // may need to do test and insert atomically
+            synchronized (waitMap) {
+                // see if we have a waiter
+                 waiter = removeWaiter(identifier);
+
+                if (waiter != null) {
+                    return waiter.signalWake();
+                } else {
+                    // insert a pre-signalled waiter
+                    waiter = new Waiter(identifier, true, false);
+                    waitMap.put(identifier, waiter);
+                }
+            }
+
+            // ok, so we need to wait until a wait has happened
+
+            synchronized (waiter) {
+                while (!waiter.waiting()) {
+                    try {
+                        waiter.wait();
+                    } catch (InterruptedException e) {
+                        // do nothing
+                    }
+                }
+                // remove the association between the waiter and the wait map
+                removeWaiter(waiter);
+            }
+            return true;
         }
-            
-        return false;
+    }
+
+    /**
+     * call signalKill(Object, boolean) defaulting the second argument to
+     * false
+     */
+    public boolean signalKill(Object identifier)
+    {
+        return signalKill(identifier, false);
     }
 
     /**
@@ -391,16 +444,51 @@ public class Helper
      * be delivered to. n.b. the operation is not performed using a notify on the supplied object.
      * this argument is used as a key to identify a synchronization object private to the rule
      * system.
+     * @param mustMeet if true then the signal operation must not be delivered until some other
+     * thread is actually waiting on a waiter identified by identifier. if there is no such waiter
+     * when this method is called then the calling thread will suspend until one arrives.
      */
-    public boolean signalKill(Object identifier)
+    public boolean signalKill(Object identifier, boolean mustMeet)
     {
-        Waiter waiter = removeWaiter(identifier);
+        if (mustMeet == false) {
+            Waiter waiter = removeWaiter(identifier);
 
-        if (waiter != null) {
-            return waiter.signalKill();
+            if (waiter != null) {
+                return waiter.signalKill();
+            }
+
+            return false;
+        } else {
+            Waiter waiter;
+            // may need to do test and insert atomically
+            synchronized (waitMap) {
+                // see if we have a waiter
+                 waiter = removeWaiter(identifier);
+
+                if (waiter != null) {
+                    return waiter.signalKill();
+                } else {
+                    // insert a pre-signalled waiter
+                    waiter = new Waiter(identifier, true, false);
+                    waitMap.put(identifier, waiter);
+                }
+            }
+
+            // ok, so we need to wait until a wait has happened
+
+            synchronized (waiter) {
+                while (!waiter.waiting()) {
+                    try {
+                        waiter.wait();
+                    } catch (InterruptedException e) {
+                        // do nothing
+                    }
+                }
+                // remove the association between the waiter and the wait map
+                removeWaiter(waiter);
+            }
+            return true;
         }
-
-        return false;
     }
 
     /**
