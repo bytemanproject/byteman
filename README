@@ -14,14 +14,12 @@ orchestration jar as a java agent. This jar implements
   the transformer class which inserts trigger calls to invoke rules
 
   a rule compiler which translates rules into classes which handle the
-  trigger method calls (n.b. at present the rules are excuted by
-  interpreting the type-checked rule parse tree rather than by
-  compiling them but the latter should eventualy follow)
+  trigger method calls
 
 The agent is passed to the JVM using the -javaagent option of the java
 command by setting JAVA_OPTS as follows:
 
-export JAVA_OPTS="-javaagent:${HOME}/jboss/workspace/adinn/orchestration/build/lib/orchestration.jar=script:${HOME}/jboss/workspace/adinn/orchestration/handler.txt -Dorg.jboss.jbossts.orchestration.dump.generated.classes=yes -Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=$HOME/jboss/workspace/adinn/orchestration/dump"
+export JAVA_OPTS="-javaagent:${HOME}/jboss/workspace/adinn/orchestration/build/lib/orchestration.jar=script:${HOME}/jboss/workspace/adinn/orchestration/handler.txt -Dorg.jboss.jbossts.orchestration.compileToBytecode -Dorg.jboss.jbossts.orchestration.dump.generated.classes=yes -Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=$HOME/jboss/workspace/adinn/orchestration/dump"
 
 The =script:<scriptFile> option to the -javaagent argument tells the
 agent premain to search <scriptFile> for rules. Multiple scripts may
@@ -32,6 +30,19 @@ handler.txt contains an example script which defines rules used for
 testing a specific scenario in JBossTS XTS coordinator crash recovery.
 Several other example scritps are available in the dd/scripts
 directory.
+
+By default the rule engine executes rule bindings, conditions and
+actions by interpreting the rule parse tree. However, TOAST also
+supports compiled execution. If system property
+
+  org.jboss.jbossts.orchestration.compileToBytecode
+
+is set to a non-null value then the rule engine will compile the rule
+bindings, condition and action into Java bytecode which will be
+executed when the rule is triggered (see the user guide for full
+details). For rules which are triggered repeatedly during an
+application run this should significantly mitigate the overheads
+imposed by the rule system.
 
 The agent can be configured to dump transformed byte code by setting
 several Java system properties as shown in the example above:

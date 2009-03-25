@@ -54,6 +54,9 @@ public class Waiter
                 } catch (InterruptedException e) {
                     // ignore
                 }
+            } else {
+                // notify in case a signalling thread was waiting
+                this.notifyAll();
             }
         }
         
