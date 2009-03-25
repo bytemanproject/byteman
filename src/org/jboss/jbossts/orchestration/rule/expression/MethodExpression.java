@@ -307,8 +307,10 @@ public class MethodExpression extends Expression
         // no need for type conversion as return type was derived from method
         if (type.getNBytes() > 4) {
             expected = 2;
-        } else {
+        } else if (type != Type.VOID){
             expected = 1;
+        } else {
+            expected = 0;
         }
 
         // decrement the stack height to account for stacked param values (removed) and return value (added)

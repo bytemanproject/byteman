@@ -120,6 +120,8 @@ public class Type {
             return "[" + baseType.getInternalName(forDescriptor);
         } else if (isPrimitive()) {
             return internalNames.get(typeName);
+        } else if (isVoid()) {
+            return internalNames.get(typeName);
         } else {
             String name = aliasFor.getTargetClass().getCanonicalName();
             name = name.replaceAll("\\.", "/");

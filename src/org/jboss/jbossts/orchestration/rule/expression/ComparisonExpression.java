@@ -446,8 +446,8 @@ public class ComparisonExpression extends BooleanExpression
                 mv.visitLabel(endtarget);
             }
         }
-        // we add a single boolean to the stack
-        currentStackHeights.addStackCount(1);
+        // we remove max words and add a single boolean to the stack
+        currentStackHeights.addStackCount(1 - max);
         // no need to check the max heights as we stacked one or two words per operand and
         // the compile and compileConvert calls will have already bumped the maximum stack
     }
