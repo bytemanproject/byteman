@@ -32,14 +32,22 @@ public class Waiter
 {
     public Waiter(Object object)
     {
+        this(object, false, false);
+    }
+
+    public Waiter(Object object, boolean signalled, boolean killed)
+    {
         this.waiterFor = object;
-        this.signalled = false;
-        this.killed = false;
+        this.signalled = signalled;
+        this.killed = killed;
+        this.waiting = false;
     }
 
     public void waitFor(long millisecs)
     {
         synchronized(this) {
+            waiting = true;
+            
             if (!signalled) {
                 try {
                     this.wait(millisecs);
@@ -87,6 +95,11 @@ public class Waiter
         return result;
     }
 
+    public boolean waiting()
+    {
+        return waiting;
+    }
+
     /**
      * the object with which this waiter is associated
      */
@@ -104,4 +117,10 @@ public class Waiter
      */
 
     private boolean killed;
+
+    /**
+     * true if waitFor has been called
+     */
+
+    private boolean waiting;
 }
