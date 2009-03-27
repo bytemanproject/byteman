@@ -363,6 +363,11 @@ public class Transformer implements ClassFileTransformer {
     public static final String VERBOSE = ORCHESTRATION_PACKAGE_PREFIX + "verbose";
 
     /**
+     * system property set (to any value) in order to switch on debug statements in the default Helper
+     */
+
+    public static final String DEBUG = ORCHESTRATION_PACKAGE_PREFIX + "debug";
+    /**
      * system property set (to any value) in order to switch on compilation of rules and left unset
      * if rules are to be interpreted.
      */
@@ -414,8 +419,10 @@ public class Transformer implements ClassFileTransformer {
             System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error processing rule " + ruleName + " : " + th);
             return targetClassBytes;
         }
-        System.out.println(rule);
-
+        if (isVerbose()) {
+            System.out.println(rule);
+        }
+        
         // ok, we have a rule with a matchingclass and a candidiate method and location
         // we need to see if the class has a matching method and, if so, add a call to
         // execute the rule when we hit the relevant line
@@ -476,6 +483,15 @@ public class Transformer implements ClassFileTransformer {
     }
 
     /**
+     * check whether debug mode for rule processing is enabled or disabled
+     * @return true if debug mode is enabled or verbose mode is enabled otherwise false
+     */
+    public static boolean isDebug()
+    {
+        return debug || verbose;
+    }
+
+    /**
      * check whether compilation of rules is enabled or disabled
      * @return true if compilation of rules is enabled etherwise false
      */
@@ -517,6 +533,11 @@ public class Transformer implements ClassFileTransformer {
      *  switch to control verbose output during rule processing
      */
     private final static boolean verbose = (System.getProperty(VERBOSE) != null);
+
+    /**
+     *  switch to control verbose output during rule processing
+     */
+    private final static boolean debug = (System.getProperty(DEBUG) != null);
 
     /**
      *  switch to control verbose output during rule processing

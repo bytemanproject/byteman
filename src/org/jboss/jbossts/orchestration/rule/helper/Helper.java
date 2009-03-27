@@ -28,6 +28,8 @@ import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
 import org.jboss.jbossts.orchestration.synchronization.CountDown;
 import org.jboss.jbossts.orchestration.synchronization.Counter;
 import org.jboss.jbossts.orchestration.synchronization.Waiter;
+import org.jboss.jbossts.orchestration.synchronization.Rendezvous;
+import org.jboss.jbossts.orchestration.agent.Transformer;
 
 import java.io.*;
 import java.util.HashMap;
@@ -60,7 +62,9 @@ public class Helper
      */
     public boolean debug(String text)
     {
-        System.out.println("rule.debug{" + rule.getName() + "} : " + text);
+        if (Transformer.isDebug()) {
+            System.out.println("rule.debug{" + rule.getName() + "} : " + text);
+        }
         return true;
     }
 
@@ -515,6 +519,115 @@ public class Helper
         return createCounter(o, 0);
     }
 
+    // rendezvous support
+    /**
+     * call createRendezvous(Object, int, boolean) supplying false for the last parameter
+     * @param identifier an identifier for the rendezvous
+     * @param expected the number of threads expected to meet at the rendezvous
+     * @return true if the rendezvous is created or false if a rendezvous identified by identifier already exists
+     */
+    public boolean createRendezvous(Object identifier, int expected)
+    {
+        return createRendezvous(identifier, expected, false);
+    }
+
+    /**
+     * create a rendezvous for a given number of threads to join
+     * @param identifier an identifier for the rendezvious in subsequent rendezvous operations
+     * @param expected
+     * @param restartable
+     * @return
+     */
+    public boolean createRendezvous(Object identifier, int expected, boolean restartable)
+    {
+        // need to do this atomically
+        synchronized (rendezvousMap) {
+            Rendezvous rendezvous = rendezvousMap.get(identifier);
+            if (rendezvous !=  null) {
+                return false;
+            }
+            rendezvous = new Rendezvous(expected, restartable);
+            rendezvousMap.put(identifier, rendezvous);
+        }
+        
+        return true;
+    }
+
+    /**
+     * test whether a rendezvous with a specific expected count is associated with identifier
+     * @param identifier the identifier for the rendezvous
+     * @param expected the number of threads expected to meet at the rendezvous
+     * @return the numer of threads currently arrived at the rendezvous
+     */
+    public int getRendezvous(Object identifier, int expected)
+    {
+        Rendezvous rendezvous = rendezvousMap.get(identifier);
+        if (rendezvous == null || rendezvous.getExpected() != expected) {
+            return -1;
+        }
+        
+        return rendezvous.getArrived();
+    }
+
+    /**
+     * meet other threads at a given rendezvous retrunign only when the expected number have arrived
+     * @param identifier the identifier for the rendezvous
+     * @return an ordinal which sorts all parties to the rendezvous in order of arrival from 0 to
+     * (expected-1) or -1 if the rendezvous does not exist
+     */
+    public int rendezvous(Object identifier)
+    {
+        // we don't need to (cannot) synch on the map here although the reasoning is subtle
+        // the last thread in will reset the rendezvous if it is rejoinable in which case
+        // it stays in the map anyway. if it is not rejoinable then any thread which finds it in
+        // the map will return -1 if it is calling rendezvous -- i.e. this is the same as if it was
+        // not present. if a thread calls createRendezvous with the same identifier then this might
+        // make a difference but in that case either the rendezvous should be created rejoinable or
+        // the last thread out should be responsible for recreating the rendezvous.
+
+        Rendezvous rendezvous = rendezvousMap.get(identifier);
+        if (rendezvous !=  null) {
+            int result = rendezvous.rendezvous();
+            if (result == rendezvous.getExpected() && !rendezvous.isRejoinable()) {
+                rendezvousMap.remove(identifier);
+            }
+                
+            return result;
+        }
+
+        return -1;
+    }
+
+    /*
+     * hmm, maybe we need this and maybe not
+     *
+     * terminate a rendezvous, waking any threads which are waiting and resetting the arrived count to zero. If the
+     * rendezous is not restartable then it also gets removed from the rendezvous map. All threads waiting inside
+     * a call to rendezvous return result -1;
+     * @param identifier
+     * @param expected
+     * @return
+
+    public int resetRendezvous(Object identifier)
+    {
+    }
+    */
+
+    /*
+     * hmm, maybe we need this and maybe not
+     *
+     * delete a rendezvous, waking any threads which are waiting and resetting the arrived count to zero. All
+     * threads waiting inside a call to rendezvous return result -1;
+     * @param identifier
+     * @param expected
+     * @return
+    public int deleteRendezvous(Object identifier)
+    {
+    }
+    */
+
+
+    // counter support
     /**
      * create a counter identified by the given object with the supplied value as its iniital count
      * @param o an identifier used to refer to the counter in future
@@ -734,5 +847,10 @@ public class Helper
      * a hash map used to identify waiters from their identifying objects
      */
     private static HashMap<Object, Waiter> waitMap = new HashMap<Object, Waiter>();
+
+    /**
+     * a hash map used to identify rendezvous from their identifying objects
+     */
+    private static HashMap<Object, Rendezvous> rendezvousMap = new HashMap<Object, Rendezvous>();
 
 }
