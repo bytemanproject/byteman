@@ -1,0 +1,214 @@
+<!--
+  JBoss, Home of Professional Open Source
+  Copyright 2007, Red Hat Middleware LLC, and individual contributors
+  as indicated by the @author tags.
+  See the copyright.txt in the distribution for a full listing
+  of individual contributors.
+  This copyrighted material is made available to anyone wishing to use,
+  modify, copy, or redistribute it subject to the terms and conditions
+  of the GNU General Public License, v. 2.0.
+  This program is distributed in the hope that it will be useful, but WITHOUT A
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+  PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  You should have received a copy of the GNU General Public License,
+  v. 2.0 along with this distribution; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+  MA  02110-1301, USA.
+
+  (C) 2008
+  @author JBoss Inc.
+-->
+
+<project name="orchestration-tests" default="tests" basedir=".">
+
+    <!-- the directory in which your installed app server resides -->
+    <property environment="env"/>
+
+    <!-- pick up the toast library -->
+    <property name="toast.home" value="../build/lib"/>
+    <property name="toast.jar" value="orchestration.jar"/>
+
+    <!-- pick up the junit library -->
+    <property name="junit.home" value="../ext"/>
+    <property name="junit.jar" value="junit.jar"/>
+
+    <property name="src.dir"           value="src"/>
+    <property name="dd.dir"            value="dd"/>
+    <property name="scripts.dir"       value="${dd.dir}/scripts"/>
+    <property name="build.dir"         value="build"/>
+    <property name="build.classes.dir" value="${build.dir}/classes"/>
+    <property name="build.lib.dir"     value="${build.dir}/lib"/>
+    <property name="build.output.dir"  value="${build.dir}/output"/>
+
+    <!-- enable debugging of compiled code including refs to local vars -->
+
+    <property name="javac.debug" value="on"/>
+
+    <target name="init">
+        <delete dir="${build.dir}"/>
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${build.classes.dir}"/>
+        <mkdir dir="${build.lib.dir}"/>
+        <mkdir dir="${build.output.dir}"/>
+        <mkdir dir="${build.output.dir}/location"/>
+    </target>
+
+    <target name="compile" depends="init">
+        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}">
+            <classpath>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+        </javac>
+    </target>
+
+     <target name="jar" depends="compile">
+         <jar jarfile="${build.lib.dir}/orchestration-tests.jar">
+             <fileset dir="${build.classes.dir}" includes="**/*"/>
+         </jar>
+    </target>
+
+   <target name="clean">
+       <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="tests" depends="jar, tests.location, tests.location.compiled"/>
+    
+    <target name="tests.location">
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestEntry.txt"/>
+            <!-- uncomment for verbose toast output
+            <jvmarg value="-Dorg.jboss.jbossts.orchestration.verbose"/>
+            -->
+            <!-- uncomment to dump generated code
+            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=dump"/>
+            -->
+            <!-- uncomment to enable debug
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <test name="org.jboss.jbossts.orchestration.tests.location.TestEntry"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestExit.txt"/>
+            <test name="org.jboss.jbossts.orchestration.tests.location.TestExit"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestCall.txt"/>
+            <test name="org.jboss.jbossts.orchestration.tests.location.TestCall"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestSynch.txt"/>
+            <test name="org.jboss.jbossts.orchestration.tests.location.TestSynch"/>
+        </junit>
+        <!-- THROW triggers are not currently working correctly in the presence of synchronizations
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestThrow.txt"/>
+            <test name="org.jboss.jbossts.orchestration.tests.location.TestThrow"/>
+        </junit>
+        -->
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestReadWrite.txt"/>
+            <test name="org.jboss.jbossts.orchestration.tests.location.TestReadWrite"/>
+        </junit>
+    </target>
+
+    <target name="tests.location.compiled">
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestEntry.txt"/>
+            <jvmarg value="-Drg.jboss.jbossts.orchestration.compileToBytecode"/>
+            <!-- uncomment for verbose toast output
+            <jvmarg value="-Dorg.jboss.jbossts.orchestration.verbose"/>
+            -->
+            <!-- uncomment to dump generated code
+            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=dump"/>
+            -->
+            <!-- uncomment to enable debug
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <test name="org.jboss.jbossts.orchestration.tests.location.TestEntry"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestExit.txt"/>
+            <jvmarg value="-Drg.jboss.jbossts.orchestration.compileToBytecode"/>
+            <test name="org.jboss.jbossts.orchestration.tests.location.TestExit"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestCall.txt"/>
+            <jvmarg value="-Drg.jboss.jbossts.orchestration.compileToBytecode"/>
+            <test name="org.jboss.jbossts.orchestration.tests.location.TestCall"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestSynch.txt"/>
+            <jvmarg value="-Drg.jboss.jbossts.orchestration.compileToBytecode"/>
+            <test name="org.jboss.jbossts.orchestration.tests.location.TestSynch"/>
+        </junit>
+        <!-- THROW triggers are not currently working correctly in the presence of synchronizations
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestThrow.txt"/>
+            <jvmarg value="-Drg.jboss.jbossts.orchestration.compileToBytecode"/>
+            <test name="org.jboss.jbossts.orchestration.tests.location.TestThrow"/>
+        </junit>
+        -->
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestReadWrite.txt"/>
+            <jvmarg value="-Drg.jboss.jbossts.orchestration.compileToBytecode"/>
+            <test name="org.jboss.jbossts.orchestration.tests.location.TestReadWrite"/>
+        </junit>
+    </target>
+
+</project>
