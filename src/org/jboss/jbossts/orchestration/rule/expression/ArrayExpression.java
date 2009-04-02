@@ -176,6 +176,7 @@ public class ArrayExpression extends Expression
                 mv.visitInsn(Opcodes.DALOAD);
                 expected = 2;
             }
+            currentStackHeights.addStackCount(-2);
             if (iterator.hasNext()) {
                 assert valueType.isArray();
                 valueType =valueType.getBaseType();

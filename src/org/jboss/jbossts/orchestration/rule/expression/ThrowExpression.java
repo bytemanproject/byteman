@@ -311,7 +311,7 @@ public class ThrowExpression extends Expression
         buffer.append("(");
         int nParams = paramTypes.size();
         for (int i = 0; i < nParams; i++) {
-            buffer.append(paramTypes.get(i).getInternalName(true));
+            buffer.append(paramTypes.get(i).getInternalName(true, true));
         }
         buffer.append(")V");
         return buffer.toString();

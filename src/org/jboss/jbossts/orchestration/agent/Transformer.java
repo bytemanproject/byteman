@@ -340,7 +340,7 @@ public class Transformer implements ClassFileTransformer {
     /**
      * prefix for orchestration test package
      */
-    private static final String ORCHESTRATION_TEST_PACKAGE_PREFIX = "org.jboss.jbossts.orchestration.test.";
+    private static final String ORCHESTRATION_TEST_PACKAGE_PREFIX = "org.jboss.jbossts.orchestration.tests.";
 
     /**
      * prefix for com.arjuna package
@@ -428,9 +428,9 @@ public class Transformer implements ClassFileTransformer {
         // execute the rule when we hit the relevant line
 
         ClassReader cr = new ClassReader(targetClassBytes);
-        // ClassWriter cw = new ClassWriter(0);
-        ClassVisitor empty = new EmptyVisitor();
-        RuleCheckAdapter checkAdapter = handlerLocation.getRuleCheckAdapter(empty, className, handlerMethod);
+        // need to provide a real writer here so that labels get resolved
+        ClassWriter dummy = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        RuleCheckAdapter checkAdapter = handlerLocation.getRuleCheckAdapter(dummy, rule, className, handlerMethod);
         // PrintWriter pw = new PrintWriter(System.out);
         // ClassVisitor traceAdapter = new TraceClassVisitor(cw, pw);
         // RuleCheckAdapter adapter = handlerLocation.getRuleCheckAdapter(traceAdapter, rule, className, handlerMethod);

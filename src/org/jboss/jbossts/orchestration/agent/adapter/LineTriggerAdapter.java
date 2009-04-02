@@ -52,9 +52,9 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
             if (name.equals("<init>")) {
-                return new LineTriggerConstructorAdapter(mv, access, name, desc, signature, exceptions);
+                return new LineTriggerConstructorAdapter(mv, rule, access, name, desc, signature, exceptions);
             } else {
-                return new LineTriggerMethodAdapter(mv, access, name, desc, signature, exceptions);
+                return new LineTriggerMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
             }
         }
         return mv;
@@ -64,7 +64,7 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
      * a method visitor used to add a rule event trigger call to a method
      */
 
-    private class LineTriggerMethodAdapter extends GeneratorAdapter
+    private class LineTriggerMethodAdapter extends RuleTriggerMethodAdapter
     {
         private int access;
         private String name;
@@ -75,9 +75,9 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
         private Label endLabel;
         protected boolean unlatched;
 
-        LineTriggerMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        LineTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, access, name, descriptor);
+            super(mv, rule, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;
@@ -110,7 +110,7 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
                 } else {
                     super.push((Type)null);
                 }
-                super.loadArgArray();
+                doArgLoad();
                 super.invokeStatic(ruleType, method);
                 super.visitLabel(endLabel);
                 visitedLine = true;
@@ -190,9 +190,9 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
 
     private class LineTriggerConstructorAdapter extends LineTriggerMethodAdapter
     {
-        LineTriggerConstructorAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        LineTriggerConstructorAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, access, name, descriptor, signature, exceptions);
+            super(mv, rule, access, name, descriptor, signature, exceptions);
             this.unlatched = false;
         }
 

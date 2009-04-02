@@ -210,7 +210,9 @@ public class TypeGroup {
             Class arrayClazz = null;
             if (baseType.isPrimitive() || baseType.isDefined()) {
                 try {
-                    arrayClazz = loader.loadClass("[" + baseType.getInternalName());
+                    // aaarrghh array base type names use dots not slashes bt still need  L...; bracketing
+                    String internalName ="[" + baseType.getInternalName(true, false);
+                    arrayClazz = loader.loadClass(internalName);
                 } catch (ClassNotFoundException e) {
                     // ignore
                 }

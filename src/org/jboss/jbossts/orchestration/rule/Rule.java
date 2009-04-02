@@ -157,7 +157,7 @@ public class Rule
                 Symbol parse = (debugParse ? parser.debug_parse() : parser.parse());
                 ruleTree = (ParseNode) parse.value;
             } catch (Exception e) {
-                throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : error parsing rule " + ruleSpec, e);
+                throw new ParseException("org.jboss.jbossts.orchestration.rule.Rule : error parsing rule\n" + ruleSpec, e);
             }
             ParseNode eventTree = (ParseNode)ruleTree.getChild(0);
             ParseNode conditionTree = (ParseNode)ruleTree.getChild(1);
@@ -295,10 +295,11 @@ public class Rule
 
         typeGroup.resolveTypes();
 
-        // use the descriptor to derive the method argument types and install bindings for them
-        // in the bindings list
+        // use the descriptor to derive the method argument types and type any bindings for them
+        // that are located in the bindings list
 
-        installParameters((triggerAccess & Opcodes.ACC_STATIC) != 0, triggerClass, triggerDescriptor);
+        installParameters((triggerAccess & Opcodes.ACC_STATIC) != 0, triggerClass);
+
         event.typeCheck(Type.VOID);
         condition.typeCheck(Type.Z);
         action.typeCheck(Type.VOID);
@@ -329,51 +330,48 @@ public class Rule
         return Transformer.isCompileToBytecode();
     }
 
-    private void installParameters(boolean isStatic, String className, String descriptor)
+    private void installParameters(boolean isStatic, String className)
             throws TypeException
     {
-        List<Binding> parameterBindings = new ArrayList<Binding>();
         Type type;
         // add a binding for the rule so we can call builtin static methods
         type = typeGroup.create(helperClass.getCanonicalName());
-        // type = typeGroup.create("org.jboss.jbossts.orchestration.rule.helper.Helper");
-        Binding ruleBinding = new Binding(this, "$", type);
-        parameterBindings.add(ruleBinding);
+        Binding ruleBinding = bindings.lookup("$$");
+        if (ruleBinding != null) {
+            ruleBinding.setType(type);
+        } else {
+            bindings.append(new Binding(this, "$$", type));
+        }
 
         if (!isStatic) {
-            type = typeGroup.create(className);
-            if (type.isUndefined()) {
-                throw new TypeException("Rule.installParameters : Rule " + name + " unable to load class " + className);
+            Binding recipientBinding = bindings.lookup("$0");
+            if (recipientBinding != null) {
+                type = typeGroup.create(className);
+                if (type.isUndefined()) {
+                    throw new TypeException("Rule.installParameters : Rule " + name + " unable to load class " + className);
+                }
+                recipientBinding.setType(type);
             }
-            Binding binding =  new Binding(this, "0", type);
-            parameterBindings.add(binding);
         }
-        List<String> parameterTypenames = Type.parseDescriptor(descriptor, true);
-        int paramIdx = 1;
-        int last = parameterTypenames.size();
-        if (parameterTypenames != null) {
-            for (String typeName : parameterTypenames) {
+
+        Iterator<Binding> iterator = bindings.iterator();
+
+        while (iterator.hasNext()) {
+            Binding binding = iterator.next();
+            if (binding.isParam() || binding.isLocalVar()) {
+                String typeName = binding.getDescriptor();
                 String[] typeAndArrayBounds = typeName.split("\\[");
                 Type baseType = typeGroup.create(typeAndArrayBounds[0]);
                 Type paramType = baseType;
-                Binding binding;
                 if (baseType.isUndefined()) {
                     throw new TypeException("Rule.installParameters : Rule " + name + " unable to load class " + baseType);
                 }
                 for (int i = 1; i < typeAndArrayBounds.length ; i++) {
-                    paramType = typeGroup.createArray(baseType);
+                    paramType = typeGroup.createArray(paramType);
                 }
-                if (paramIdx == last) {
-                    // we also add a special binding to allow us to identify the return type
-                    binding = new Binding(this, "$!", paramType);
-                } else {
-                    binding = new Binding(this, Integer.toString(paramIdx++), paramType);
-                }
-                parameterBindings.add(binding);
+                binding.setType(paramType);
             }
         }
-
-        bindings.addBindings(parameterBindings);
     }
 
     /**

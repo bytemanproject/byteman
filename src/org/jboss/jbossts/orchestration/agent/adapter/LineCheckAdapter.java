@@ -24,15 +24,16 @@
 package org.jboss.jbossts.orchestration.agent.adapter;
 
 import org.objectweb.asm.*;
+import org.jboss.jbossts.orchestration.rule.Rule;
 
 /**
  * asm Adapter class used to check that the target method for a rule exists in a class
  */
 public class LineCheckAdapter extends RuleCheckAdapter
 {
-    public LineCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod, int targetLine)
+    public LineCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod, int targetLine)
     {
-        super(cv, targetClass, targetMethod);
+        super(cv, rule, targetClass, targetMethod);
         this.targetLine = targetLine;
     }
 
@@ -45,7 +46,7 @@ public class LineCheckAdapter extends RuleCheckAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
-            return new LineCheckMethodAdapter(mv, access, name, desc, signature, exceptions);
+            return new LineCheckMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
         }
 
         return mv;
@@ -55,7 +56,7 @@ public class LineCheckAdapter extends RuleCheckAdapter
      * a method visitor used to add a rule event trigger call to a method
      */
 
-    private class LineCheckMethodAdapter extends MethodAdapter
+    private class LineCheckMethodAdapter extends RuleCheckMethodAdapter
     {
         private int access;
         private String name;
@@ -64,9 +65,9 @@ public class LineCheckAdapter extends RuleCheckAdapter
         private String[] exceptions;
         private boolean visited;
 
-        LineCheckMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        LineCheckMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv);
+            super(mv, rule, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;
@@ -79,15 +80,18 @@ public class LineCheckAdapter extends RuleCheckAdapter
             if (!visited && (targetLine <= line)) {
                 // the relevant line occurs in the called method
                 visited = true;
-                setVisitOk();
-                String name = targetClass + "." + targetMethodName + targetDescriptor;
-                if (targetLine >= 0) {
-                    name += targetLine;
-                }
+                setTriggerPoint();
             }
-            mv.visitLineNumber(line, start);
+            super.visitLineNumber(line, start);
         }
 
+        public void visitEnd()
+        {
+            if (checkBindings()) {
+                setVisitOk();
+            }
+            super.visitEnd();
+        }
     }
 
     private int targetLine;

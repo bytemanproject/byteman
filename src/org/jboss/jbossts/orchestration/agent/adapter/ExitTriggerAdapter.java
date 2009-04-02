@@ -34,7 +34,7 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
-            return new ExitTriggerMethodAdapter(mv, access, name, desc, signature, exceptions);
+            return new ExitTriggerMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
         }
 
         return mv;
@@ -44,7 +44,7 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
      * a method visitor used to add a rule event trigger call to a method
      */
 
-    private class ExitTriggerMethodAdapter extends GeneratorAdapter
+    private class ExitTriggerMethodAdapter extends RuleTriggerMethodAdapter
     {
         private int access;
         private String name;
@@ -54,9 +54,9 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
         private Vector<Label> startLabels;
         private Vector<Label> endLabels;
 
-        ExitTriggerMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        ExitTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, access, name, descriptor);
+            super(mv, rule, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;
@@ -132,7 +132,7 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
                         Method method = Method.getMethod("void execute(String, Object, Object[])");
                         // we are at the relevant line in the method -- so add a trigger call here
                         if (Transformer.isVerbose()) {
-                            System.out.println("ThrowTriggerMethodAdapter.visitInsn : inserting trigger for " + rule.getName());
+                            System.out.println("ExitTriggerMethodAdapter.visitInsn : inserting trigger for " + rule.getName());
                         }
                         Label startLabel = super.newLabel();
                         Label endLabel = super.newLabel();
@@ -145,7 +145,7 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
                         } else {
                             super.push((Type)null);
                         }
-                        super.loadArgArray();
+                        doArgLoad();
                         super.invokeStatic(ruleType, method);
                         super.visitLabel(endLabel);
                     }

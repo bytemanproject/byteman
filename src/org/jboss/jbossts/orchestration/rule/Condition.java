@@ -68,7 +68,7 @@ public class Condition extends RuleElement
             Condition condition = new Condition(rule, conditionTree);
             return condition;
         } catch (Exception e) {
-            throw new ParseException("org.jboss.jbossts.orchestration.rule.Condition : error parsing condition " + text, e);
+            throw new ParseException("org.jboss.jbossts.orchestration.rule.Condition : error parsing condition\n" + text, e);
         }
     }
 
@@ -77,7 +77,10 @@ public class Condition extends RuleElement
     {
         super(rule);
         int tag = conditionTree.getTag();
-        this.condition = ExpressionHelper.createExpression(rule, rule.getBindings(), conditionTree, Type.BOOLEAN);
+        condition = ExpressionHelper.createExpression(rule, rule.getBindings(), conditionTree, Type.BOOLEAN);
+        if (!condition.bind()) {
+            throw new TypeException("ExpressionHelper.createExpression : unknown reference in expression" + condition.getPos());
+        }
     }
     
     protected Condition(Rule rule)

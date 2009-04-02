@@ -56,7 +56,7 @@ public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         // we can use the same adapter for methods and constructors
         if (matchTargetMethod(name, desc)) {
-            return new SynchronizeTriggerMethodAdapter(mv, access, name, desc, signature, exceptions);
+            return new SynchronizeTriggerMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
         }
         return mv;
     }
@@ -65,7 +65,7 @@ public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
      * a method visitor used to add a rule event trigger call to a method
      */
 
-    private class SynchronizeTriggerMethodAdapter extends GeneratorAdapter
+    private class SynchronizeTriggerMethodAdapter extends RuleTriggerMethodAdapter
     {
         private int access;
         private String name;
@@ -75,9 +75,9 @@ public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
         private Label startLabel;
         private Label endLabel;
 
-        SynchronizeTriggerMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        SynchronizeTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, access, name, descriptor);
+            super(mv, rule, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;
@@ -117,7 +117,7 @@ public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
                     } else {
                         super.push((Type)null);
                     }
-                    super.loadArgArray();
+                    doArgLoad();
                     super.invokeStatic(ruleType, method);
                     super.visitLabel(endLabel);
                 }

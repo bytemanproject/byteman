@@ -51,7 +51,7 @@ public class FieldExpression extends Expression
         this.owner = owner;
         this.pathList = pathList;
         this.ownerType = null;
-        this.indirectStatic = true;
+        this.indirectStatic = false;
     }
 
     /**

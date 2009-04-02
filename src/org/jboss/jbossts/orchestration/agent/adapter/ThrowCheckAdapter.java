@@ -25,15 +25,19 @@ package org.jboss.jbossts.orchestration.agent.adapter;
 
 import org.objectweb.asm.*;
 import org.jboss.jbossts.orchestration.rule.type.TypeHelper;
+import org.jboss.jbossts.orchestration.rule.Rule;
+
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * asm Adapter class used to check that the target method for a rule exists in a class
  */
 public class ThrowCheckAdapter extends RuleCheckAdapter
 {
-     public ThrowCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod, String exceptionClass, int count)
+     public ThrowCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod, String exceptionClass, int count)
     {
-        super(cv, targetClass, targetMethod);
+        super(cv, rule, targetClass, targetMethod);
         this.exceptionClass = exceptionClass;
         this.count = count;
         this.visitedCount = 0;
@@ -48,7 +52,7 @@ public class ThrowCheckAdapter extends RuleCheckAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
-            return new ThrowCheckMethodAdapter(mv, access, name, desc, signature, exceptions);
+            return new ThrowCheckMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
         }
 
         return mv;
@@ -58,7 +62,7 @@ public class ThrowCheckAdapter extends RuleCheckAdapter
      * a method visitor used to add a rule event trigger call to a method
      */
 
-    private class ThrowCheckMethodAdapter extends MethodAdapter
+    private class ThrowCheckMethodAdapter extends RuleCheckMethodAdapter
     {
         private int access;
         private String name;
@@ -67,9 +71,9 @@ public class ThrowCheckAdapter extends RuleCheckAdapter
         private String[] exceptions;
         private boolean visited;
 
-        ThrowCheckMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        ThrowCheckMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv);
+            super(mv, rule, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;
@@ -86,12 +90,20 @@ public class ThrowCheckAdapter extends RuleCheckAdapter
                     visitedCount++;
                     if (visitedCount == count) {
                         // and we have enough occurences to match the count
-                        setVisitOk();
+                        setTriggerPoint();
                     }
                 }
             }
 
-            mv.visitInsn(opcode);
+            super.visitInsn(opcode);
+        }
+
+        public void visitEnd()
+        {
+            if (checkBindings()) {
+                setVisitOk();
+            }
+            super.visitEnd();
         }
     }
 

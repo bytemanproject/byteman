@@ -75,7 +75,7 @@ public class Action extends RuleElement
             Action action = new Action(rule, actionTree);
             return action;
         } catch (Exception e) {
-            throw new ParseException("org.jboss.jbossts.orchestration.rule.Action : error parsing action " + text);
+            throw new ParseException("org.jboss.jbossts.orchestration.rule.Action : error parsing action\n" + text);
         }
     }
     protected Action(Rule rule, ParseNode actionTree) throws TypeException
@@ -85,6 +85,11 @@ public class Action extends RuleElement
             this.action = new ArrayList<Expression>();
         } else {
             this.action = ExpressionHelper.createExpressionList(rule, this.getBindings(), actionTree, Type.VOID);
+            for (Expression expr : action) {
+                if (!expr.bind()) {
+                    throw new TypeException("ExpressionHelper.createExpression : unknown reference in expression" + expr.getPos());
+                }
+            }
         }
     }
 

@@ -60,15 +60,25 @@ public class Binding extends RuleElement
         this.name = name;
         this.type = (type != null ? type : Type.UNDEFINED);
         this.value = value;
-        if (name.equals("$")) {
-            index = -1;
-        } else if (name.matches("[0-9].*")) {
-            index = Integer.valueOf(name);
+        // ok, check the name to see what type of binding we have
+        if (name.matches("\\$[0-9].*")) {
+            // $NNN references the method target or a parameter from 0 upwards
+            index = Integer.valueOf(name.substring(1));
+        } else if (name.equals("$$")) {
+            // $$ references the helper implicitly associated with a builtin call
+            index = HELPER;
         } else if (name.equals("$!")) {
-            index = -2;
+            // $! refers to the current return value for the triggger method and is only valid when
+            // the rule is triggered AT EXIT
+            index = RETURN;
+        } else if (name.matches("\\$[A-Za-z].*")) {
+           // $AAAAA refers  to a local variable in the trigger method
+            index = LOCALVAR;
         } else {
-            index = -3;
+            // anything else must be a variable introduced in the BINDS clause
+            index = BINDVAR;
         }
+        this.objectArrayIndex = 0;
     }
 
     public Type typeCheck(Type expected)
@@ -92,7 +102,7 @@ public class Binding extends RuleElement
 
     public Object interpret(HelperAdapter helper) throws ExecuteException
     {
-        if (isVar()) {
+        if (isBindVar()) {
             Object result = value.interpret(helper);
             helper.bindVariable(getName(), result);
             return result;
@@ -102,7 +112,7 @@ public class Binding extends RuleElement
 
     public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
     {
-        if (isVar()) {
+        if (isBindVar()) {
             int currentStack = currentStackHeights.stackCount;
 
             // push the current helper instance i.e. this -- adds 1 to stack height
@@ -158,16 +168,27 @@ public class Binding extends RuleElement
 
     public void setType(Type type)
     {
+        this.type = type;
     }
 
-    public boolean isHelper()
+    public int getObjectArrayIndex()
     {
-        return index == -1;
+        return objectArrayIndex;
     }
 
-    public boolean isRecipient()
+    public void setObjectArrayIndex(int objectArrayIndex)
     {
-        return index == 0;
+        this.objectArrayIndex = objectArrayIndex;
+    }
+
+    public int getLocalIndex()
+    {
+        return localIndex;
+    }
+
+    public void setLocalIndex(int localIndex)
+    {
+        this.localIndex = localIndex;
     }
 
     public boolean isParam()
@@ -175,14 +196,29 @@ public class Binding extends RuleElement
         return index > 0;
     }
 
-    public boolean isReturn()
+    public boolean isRecipient()
     {
-        return index == -2;
+        return index == 0;
     }
 
-    public boolean isVar()
+    public boolean isHelper()
     {
-        return index < -2;
+        return index == HELPER;
+    }
+
+    public boolean isReturn()
+    {
+        return index == RETURN;
+    }
+
+    public boolean isLocalVar()
+    {
+        return index == LOCALVAR;
+    }
+
+    public boolean isBindVar()
+    {
+        return index <= BINDVAR;
     }
 
     public int getIndex()
@@ -190,12 +226,20 @@ public class Binding extends RuleElement
         return index;
     }
 
+    public String getDescriptor() {
+        return descriptor;
+    }
+
+    public void setDescriptor(String desc) {
+        this.descriptor = desc;
+    }
+
     public void writeTo(StringWriter stringWriter)
     {
         if (isHelper()) {
-            stringWriter.write("$$");
+            stringWriter.write(name);
         } else if (isParam() || isRecipient()) {
-            stringWriter.write("$" + name);
+            stringWriter.write(name);
             if (type != null && (type.isDefined() || type.isObject())) {
                 stringWriter.write(" : ");
                 stringWriter.write(type.getName());
@@ -213,8 +257,22 @@ public class Binding extends RuleElement
         }
     }
 
+    // special index values for non-positional parameters
+
+    private final static int HELPER = -1;
+    private final static int RETURN = -2;
+    private final static int LOCALVAR = -3;
+    private final static int BINDVAR = -4;
+
     private String name;
+    private String descriptor; // supplied when the binding is for a local var
     private Type type;
     private Expression value;
+    // the position index of the trigger method recipient or a trigger method parameter or one of the special index
+    // values for other types  of parameters.
     private int index;
+    // the offset into the trigger method Object array of the initial value for this parameter
+    private int objectArrayIndex;
+    // the offset into the stack at which a local var is located
+    private int localIndex;
 }

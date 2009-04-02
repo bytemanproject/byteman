@@ -25,16 +25,20 @@ package org.jboss.jbossts.orchestration.agent.adapter;
 
 import org.objectweb.asm.*;
 import org.jboss.jbossts.orchestration.agent.Location;
+import org.jboss.jbossts.orchestration.rule.Rule;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * asm Adapter class used to check that the target method for a rule exists in a class
  */
 public class AccessCheckAdapter extends RuleCheckAdapter
 {
-     public AccessCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod, String ownerClass,
+     public AccessCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod, String ownerClass,
                        String fieldName,  int flags, int count)
     {
-        super(cv, targetClass, targetMethod);
+        super(cv, rule, targetClass, targetMethod);
         this.ownerClass = ownerClass;
         this.fieldName = fieldName;
         this.flags = flags;
@@ -51,7 +55,7 @@ public class AccessCheckAdapter extends RuleCheckAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
-            return new AccessCheckMethodAdapter(mv, access, name, desc, signature, exceptions);
+            return new AccessCheckMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
         }
 
         return mv;
@@ -61,7 +65,7 @@ public class AccessCheckAdapter extends RuleCheckAdapter
      * a method visitor used to add a rule event trigger call to a method
      */
 
-    private class AccessCheckMethodAdapter extends MethodAdapter
+    private class AccessCheckMethodAdapter extends RuleCheckMethodAdapter
     {
         private int access;
         private String name;
@@ -70,9 +74,9 @@ public class AccessCheckAdapter extends RuleCheckAdapter
         private String[] exceptions;
         private boolean visited;
 
-        AccessCheckMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        AccessCheckMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv);
+            super(mv, rule, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;
@@ -91,11 +95,18 @@ public class AccessCheckAdapter extends RuleCheckAdapter
                 // a relevant invocation occurs in the called method
                 visitedCount++;
                 if (visitedCount == count) {
-                    // and we have enough occurences to match the count
-                    setVisitOk();
+                    setTriggerPoint();
                 }
             }
             super.visitFieldInsn(opcode, owner, name, desc);
+        }
+
+        public void visitEnd()
+        {
+            if (checkBindings()) {
+                setVisitOk();
+            }
+            super.visitEnd();
         }
 
         private boolean matchCall(int opcode, String owner, String name, String desc)

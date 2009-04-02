@@ -301,21 +301,24 @@ public class Compiler implements Opcodes
         mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
         mv.visitInsn(POP);
         mv.visitJumpInsn(GOTO, l4);
-        // else if (binding.isParam())
+        // else if (binding.isParam() || binding.isLocalVar())
         mv.visitLabel(l5);
+        Label l6 = new Label();
         mv.visitVarInsn(ALOAD, 5);
         mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/jbossts/orchestration/rule/binding/Binding", "isParam", "()Z");
-        mv.visitJumpInsn(IFEQ, l4);
+        mv.visitJumpInsn(IFNE, l6); // skip to then if true or drop throuogh to || branch if false
+        mv.visitVarInsn(ALOAD, 5);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/jbossts/orchestration/rule/binding/Binding", "isLocalVar", "()Z");
+        mv.visitJumpInsn(IFEQ, l4); // bypass this branch
+        mv.visitLabel(l6);
         // then
-        // bindingMap.put(name, args[binding.getIndex() - 1]);
+        // bindingMap.put(name, args[binding.getObjectArrayIndex]);
         mv.visitVarInsn(ALOAD, 0);
         mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
         mv.visitVarInsn(ALOAD, 6);
         mv.visitVarInsn(ALOAD, 3);
         mv.visitVarInsn(ALOAD, 5);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/jbossts/orchestration/rule/binding/Binding", "getIndex", "()I");
-        mv.visitInsn(ICONST_1);
-        mv.visitInsn(ISUB);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/jbossts/orchestration/rule/binding/Binding", "getObjectArrayIndex", "()I");
         mv.visitInsn(AALOAD);
         mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
         mv.visitInsn(POP);

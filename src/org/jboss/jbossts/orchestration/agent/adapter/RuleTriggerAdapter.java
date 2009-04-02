@@ -33,7 +33,7 @@ public class RuleTriggerAdapter extends RuleAdapter
 {
     protected RuleTriggerAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod)
     {
-        super(cv, targetClass, targetMethod);
+        super(cv, rule, targetClass, targetMethod);
         this.rule = rule;
     }
 

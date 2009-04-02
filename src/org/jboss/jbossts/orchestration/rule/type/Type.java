@@ -106,7 +106,7 @@ public class Type {
      */
     public String getInternalName()
     {
-        return getInternalName(false);
+        return getInternalName(false, true);
     }
 
     /**
@@ -114,17 +114,20 @@ public class Type {
      * defined types, defined array types or primitive types
      * @return the type name
      */
-    public String getInternalName(boolean forDescriptor)
+    public String getInternalName(boolean forDescriptor, boolean slashSeparate)
     {
         if (isArray()) {
-            return "[" + baseType.getInternalName(forDescriptor);
+            // the base name has to be L...; bracketed
+            return "[" + baseType.getInternalName(true, slashSeparate);
         } else if (isPrimitive()) {
             return internalNames.get(typeName);
         } else if (isVoid()) {
             return internalNames.get(typeName);
         } else {
             String name = aliasFor.getTargetClass().getCanonicalName();
-            name = name.replaceAll("\\.", "/");
+            if (slashSeparate) {
+                name = name.replaceAll("\\.", "/");
+            }
             if (forDescriptor) {
                 name = "L" + name + ";";
             }
@@ -582,7 +585,7 @@ public class Type {
         }
     }
 
-    public static List<String> parseDescriptor(String descriptor, boolean includeReturnType)
+    public static List<String> parseMethodDescriptor(String descriptor, boolean includeReturnType)
     {
         List<String> argTypes = new ArrayList<String>();
         int length = descriptor.length();
@@ -718,6 +721,82 @@ public class Type {
         }
 
         return (arrayDepth == 0 ? argTypes : null);
+    }
+
+    public static String parseFieldDescriptor(String descriptor)
+    {
+        int length = descriptor.length();
+        int idx = 0;
+        int arrayDepth = 0;
+        while (idx < length) {
+            char c = descriptor.charAt(idx);
+            switch(descriptor.charAt(idx))
+            {
+                case 'Z':
+                {
+                    String baseType = "boolean";
+                    return(fixArrayType(baseType, arrayDepth));
+                }
+                case 'B':
+                {
+                    String baseType = "byte";
+                    return(fixArrayType(baseType, arrayDepth));
+                }
+                case 'S':
+                {
+                    String baseType = "short";
+                    return(fixArrayType(baseType, arrayDepth));
+                }
+                case 'C':
+                {
+                    String baseType = "char";
+                    return(fixArrayType(baseType, arrayDepth));
+                }
+                case 'I':
+                {
+                    String baseType = "int";
+                    return(fixArrayType(baseType, arrayDepth));
+                }
+                case 'J':
+                {
+                    String baseType = "long";
+                    return(fixArrayType(baseType, arrayDepth));
+                }
+                case 'F':
+                {
+                    String baseType = "float";
+                    return(fixArrayType(baseType, arrayDepth));
+                }
+                case 'D':
+                {
+                    String baseType = "double";
+                    return(fixArrayType(baseType, arrayDepth));
+                }
+                case 'V':
+                {
+                    String baseType = "void";
+                    return(fixArrayType(baseType, arrayDepth));
+                }
+                case 'L':
+                {
+                    int endIdx = descriptor.indexOf(';', idx);
+                    if (endIdx < 0) {
+                        return null;
+                    }
+                    String baseType = descriptor.substring(idx+1, endIdx).replaceAll("/", ".");
+                    return(fixArrayType(baseType, arrayDepth));
+                }
+                case '[':
+                {
+                    arrayDepth++;
+                    idx++;
+                }
+                break;
+                default:
+                    return null;
+            }
+        }
+        return null;
     }
 
     public static String fixArrayType(String baseType, int dimension)

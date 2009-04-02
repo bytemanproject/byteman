@@ -24,6 +24,7 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.binding.Binding;
+import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
@@ -54,10 +55,10 @@ public class DollarExpression extends Expression
     public DollarExpression(Rule rule, Type type, ParseNode token, int index)
     {
         super(rule, type, token);
-        if (index < 0) {
-            name = "$";
+        if (index == -1) {
+            name = "$$";
         } else {
-            name = Integer.toString(index);
+            name = "$" + Integer.toString(index);
         }
         this.index = index;
     }
@@ -66,7 +67,7 @@ public class DollarExpression extends Expression
     {
         super(rule, type, token);
         this.index = -2;
-        this.name = name;
+        this.name = "$" + name;
     }
 
     /**
@@ -79,26 +80,29 @@ public class DollarExpression extends Expression
      */
 
     public boolean bind() {
-        if (index < 0) {
-            System.err.println("DollarExpression.bind : invalid bound parameter $" + name + getPos());
-            return false;
-        } else {
-            // reference to positional parameter -- name must be a non-signed integer
-            // we will do type checking later
-            return true;
+        // ensure that there is a binding in the bindings set for this parameter
+        // we will type check the binding later
+
+        Bindings bindings = getBindings();
+        Binding binding;
+
+        binding = bindings.lookup(name);
+
+        if (binding == null) {
+            binding = new Binding(rule, name, null);
+            bindings.append(binding);
         }
+
+        return true;
     }
 
     public Type typeCheck(Type expected) throws TypeException {
         // ensure there is a parameter with the relevant name in the bindings
         Binding binding;
-        if (index >= 0) {
-            binding = getBindings().lookup(Integer.toString(index));
-        } else {
-            binding = getBindings().lookup(name);
-        }
+        binding = getBindings().lookup(name);
+
         if (binding == null) {
-            throw new TypeException("DollarExpression.typeCheck : invalid bound parameter $" + name + getPos());
+            throw new TypeException("DollarExpression.typeCheck : invalid bound parameter " + name + getPos());
         }
         type = binding.getType();
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
@@ -152,7 +156,7 @@ public class DollarExpression extends Expression
     }
 
     public void writeTo(StringWriter stringWriter) {
-        stringWriter.write("$" + name);
+        stringWriter.write(name);
     }
 
     private String name;

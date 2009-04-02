@@ -24,15 +24,16 @@
 package org.jboss.jbossts.orchestration.agent.adapter;
 
 import org.objectweb.asm.*;
+import org.jboss.jbossts.orchestration.rule.Rule;
 
 /**
  * asm Adapter class used to check that the target method for a rule exists in a class
  */
 public class RuleCheckAdapter extends RuleAdapter
 {
-    protected RuleCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod)
+    protected RuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod)
     {
-        super(cv, targetClass, targetMethod);
+        super(cv, rule, targetClass, targetMethod);
         this.visitOk = false;
     }
 

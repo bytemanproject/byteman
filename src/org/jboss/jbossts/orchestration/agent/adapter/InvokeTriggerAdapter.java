@@ -57,9 +57,9 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
             if (name.equals("<init>")) {
-                return new InvokeTriggerConstructorAdapter(mv, access, name, desc, signature, exceptions);
+                return new InvokeTriggerConstructorAdapter(mv, rule, access, name, desc, signature, exceptions);
             } else {
-                return new InvokeTriggerMethodAdapter(mv, access, name, desc, signature, exceptions);
+                return new InvokeTriggerMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
             }
         }
         return mv;
@@ -69,7 +69,7 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
      * a method visitor used to add a rule event trigger call to a method
      */
 
-    private class InvokeTriggerMethodAdapter extends GeneratorAdapter
+    private class InvokeTriggerMethodAdapter extends RuleTriggerMethodAdapter
     {
         /**
          * flag used by subclass to avoid inserting trigger until after super constructor has been called
@@ -83,9 +83,9 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
         private Label startLabel;
         private Label endLabel;
 
-        InvokeTriggerMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        InvokeTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, access, name, descriptor);
+            super(mv, rule, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;
@@ -131,7 +131,7 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
                     } else {
                         super.push((Type)null);
                     }
-                    super.loadArgArray();
+                    doArgLoad();
                     super.invokeStatic(ruleType, method);
                     super.visitLabel(endLabel);
                 }
@@ -233,9 +233,9 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
 
     private class InvokeTriggerConstructorAdapter extends InvokeTriggerMethodAdapter
     {
-        InvokeTriggerConstructorAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        InvokeTriggerConstructorAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, access, name, descriptor, signature, exceptions);
+            super(mv, rule, access, name, descriptor, signature, exceptions);
             // ensure we don't transform calls before the super constructor is called
             latched = true;
         }

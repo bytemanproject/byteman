@@ -1,0 +1,29 @@
+RULE test exit trigger for constructor
+CLASS TestEntryExitAuxiliarySub
+METHOD <init>(Test)
+AT EXIT
+HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+BIND test : Test = $1
+IF TRUE
+DO test.log("EXIT triggered in constructor")
+ENDRULE
+
+RULE test exit trigger for subclass method
+CLASS TestEntryExitAuxiliarySub
+METHOD testMethod()
+AT EXIT
+HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("EXIT triggered in TestEntryExitAuxiliarySub.testMethod")
+ENDRULE
+
+RULE test exit trigger for superclass method
+CLASS TestEntryExitAuxiliary
+METHOD testMethod()
+AT EXIT
+HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("EXIT triggered in TestEntryExitAuxiliary.testMethod")
+ENDRULE

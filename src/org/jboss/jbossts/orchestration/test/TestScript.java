@@ -129,43 +129,43 @@ public class TestScript
                 while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
                     idx++;
                     if (idx == len) {
-                        throw new ParseException("Rule contains no text : " + script);
+                        throw new ParseException("Rule contains no text :\n" + script);
                     }
                 }
                 if (lines[idx].startsWith("RULE ")) {
                     ruleName = lines[idx].substring(5).trim();
                     idx++;
                 } else {
-                    throw new ParseException("Rule should start with RULE : " + lines[idx]);
+                    throw new ParseException("Rule should start with RULE :\n" + lines[idx]);
                 }
                 while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
                     idx++;
                     if (idx == len) {
-                        throw new ParseException("Rule does not specify CLASS : " + script);
+                        throw new ParseException("Rule does not specify CLASS :\n" + script);
                     }
                 }
                 if (lines[idx].startsWith("CLASS ")) {
                     targetClassName = lines[idx].substring(6).trim();
                     idx++;
                 } else {
-                    throw new ParseException("CLASS should follow RULE : " + lines[idx]) ;
+                    throw new ParseException("CLASS should follow RULE :\n" + lines[idx]) ;
                 }
                 while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
                     idx++;
                     if (idx == len) {
-                        throw new ParseException("Rule does not specify METHOD : " + script);
+                        throw new ParseException("Rule does not specify METHOD\n: " + script);
                     }
                 }
                 if (lines[idx].startsWith("METHOD ")) {
                     targetMethodName = lines[idx].substring(7).trim();
                     idx++;
                 } else {
-                    throw new ParseException("METHOD should follow CLASS : " + lines[idx]) ;
+                    throw new ParseException("METHOD should follow CLASS :\n" + lines[idx]) ;
                 }
                 while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
                     idx++;
                     if (idx == len) {
-                        throw new ParseException("Rule is incomplete : " + script);
+                        throw new ParseException("Rule is incomplete :\n" + script);
                     }
                 }
                 if (lines[idx].startsWith("HELPER ")) {
@@ -174,7 +174,7 @@ public class TestScript
                     while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
                         idx++;
                         if (idx == len) {
-                            throw new ParseException("Rule is incomplete : " + script);
+                            throw new ParseException("Rule is incomplete :\n" + script);
                         }
                     }
                 }
@@ -183,7 +183,7 @@ public class TestScript
                     String parameters = LocationType.parameterText(lines[idx]);
                     targetLocation = Location.create(locationType, parameters);
                     if (targetLocation == null) {
-                        throw new ParseException("Invalid parameters for location specifier " + locationType.specifierText() + " in rule " + ruleName);
+                        throw new ParseException("Invalid parameters for location specifier\n" + locationType.specifierText() + " in rule " + ruleName);
                     }
                     idx++;
                 }
@@ -198,7 +198,7 @@ public class TestScript
                     sepr = "\n";
                 }
                 if (idx == len) {
-                    throw new ParseException("Missing ENDRULE : " + script);
+                    throw new ParseException("Missing ENDRULE :\n" + script);
                 }
 
                 Class targetHelperClass = null;

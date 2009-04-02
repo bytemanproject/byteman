@@ -28,7 +28,6 @@ import org.jboss.jbossts.orchestration.rule.type.TypeHelper;
 import org.jboss.jbossts.orchestration.agent.Location;
 import org.jboss.jbossts.orchestration.agent.Transformer;
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
 
 /**
@@ -58,9 +57,9 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
             if (name.equals("<init>")) {
-                return new AccessTriggerConstructorAdapter(mv, access, name, desc, signature, exceptions);
+                return new AccessTriggerConstructorAdapter(mv, rule, access, name, desc, signature, exceptions);
             } else {
-                return new AccessTriggerMethodAdapter(mv, access, name, desc, signature, exceptions);
+                return new AccessTriggerMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
             }
         }
         return mv;
@@ -70,7 +69,7 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
      * a method visitor used to add a rule event trigger call to a method
      */
 
-    private class AccessTriggerMethodAdapter extends GeneratorAdapter
+    private class AccessTriggerMethodAdapter extends RuleTriggerMethodAdapter
     {
         /**
          * flag used by subclass to avoid inserting trigger until after super constructor has been called
@@ -84,9 +83,9 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
         private Label startLabel;
         private Label endLabel;
 
-        AccessTriggerMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        AccessTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, access, name, descriptor);
+            super(mv, rule, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;
@@ -132,7 +131,7 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
                     } else {
                         super.push((Type)null);
                     }
-                    super.loadArgArray();
+                    doArgLoad();
                     super.invokeStatic(ruleType, method);
                     super.visitLabel(endLabel);
                 }
@@ -248,9 +247,9 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
 
     private class AccessTriggerConstructorAdapter extends AccessTriggerMethodAdapter
     {
-        AccessTriggerConstructorAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        AccessTriggerConstructorAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, access, name, descriptor, signature, exceptions);
+            super(mv, rule, access, name, descriptor, signature, exceptions);
             // ensure we don't transform calls before the super constructor is called
             latched = true;
         }

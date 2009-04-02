@@ -88,8 +88,8 @@ public class InterpretedHelper extends Helper implements HelperAdapter
             } else if (binding.isRecipient()) {
                 bindingMap.put(name, recipient);
                 bindingTypeMap.put(name, type);
-            } else if (binding.isParam()) {
-                bindingMap.put(name, args[binding.getIndex() - 1]);
+            } else if (binding.isParam() || binding.isLocalVar()) {
+                bindingMap.put(name, args[binding.getObjectArrayIndex()]);
                 bindingTypeMap.put(name, type);
             }
         }

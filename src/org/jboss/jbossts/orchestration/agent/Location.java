@@ -54,7 +54,7 @@ public abstract class Location
      * matches this location
      * @return the required adapter
      */
-    public abstract RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod);
+    public abstract RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod);
 
     /**
      * return an adapter which can be used to insert a trigger call in a method containing a trigger point whose
@@ -96,10 +96,10 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod) {
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
             // a line check adapter with line -1 will do the job
 
-            return new LineCheckAdapter(cv, targetClass, targetMethod, -1);
+            return new LineCheckAdapter(cv, rule, targetClass, targetMethod, -1);
         }
 
         /**
@@ -157,8 +157,8 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod) {
-            return new LineCheckAdapter(cv, targetClass, targetMethod, targetLine);
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
+            return new LineCheckAdapter(cv, rule, targetClass, targetMethod, targetLine);
         }
 
         /**
@@ -254,6 +254,10 @@ public abstract class Location
             } else {
                 count = 1;
             }
+            if (text.equals("")) {
+                return null;
+            }
+            
             // check for leading type name
             if (text.contains(".")) {
                 int dotIdx = text.lastIndexOf(".");
@@ -273,8 +277,8 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod) {
-            return new AccessCheckAdapter(cv, targetClass, targetMethod, typeName, fieldName, flags, count);
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
+            return new AccessCheckAdapter(cv, rule, targetClass, targetMethod, typeName, fieldName, flags, count);
         }
 
         /**
@@ -428,8 +432,8 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod) {
-            return new InvokeCheckAdapter(cv, targetClass, targetMethod, typeName, methodName, signature, count);
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
+            return new InvokeCheckAdapter(cv, rule, targetClass, targetMethod, typeName, methodName, signature, count);
         }
 
         /**
@@ -527,8 +531,8 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod) {
-            return new SynchronizeCheckAdapter(cv, targetClass, targetMethod, count);
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
+            return new SynchronizeCheckAdapter(cv, rule, targetClass, targetMethod, count);
         }
 
         /**
@@ -631,8 +635,8 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod) {
-            return new ThrowCheckAdapter(cv, targetClass, targetMethod, typeName, count);
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
+            return new ThrowCheckAdapter(cv, rule, targetClass, targetMethod, typeName, count);
         }
 
         /**
@@ -677,10 +681,10 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, String targetClass, String targetMethod) {
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
             // a line check adapter with line -1 will do the job
 
-            return new ExitCheckAdapter(cv, targetClass, targetMethod);
+            return new ExitCheckAdapter(cv, rule, targetClass, targetMethod);
         }
 
         /**

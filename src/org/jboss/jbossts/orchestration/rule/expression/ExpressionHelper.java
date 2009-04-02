@@ -211,9 +211,12 @@ public class ExpressionHelper
             // we already know this is an invalid type so notify an error and return null
             throw new TypeException("ExpressionHelper.createExpression : invalid expression type " + exprType.getName() + " expecting " + targetType.getName() + exprTree.getPos());
         }
+        // don't do this here as it gets called recursively -- need to do it in Binding, Condition and Action
+        /*
         if (!expr.bind()) {
             throw new TypeException("ExpressionHelper.createExpression : unknown reference in expression" + exprTree.getPos());
         }
+        */
 
         return expr;
     }

@@ -265,7 +265,7 @@ public abstract class RuleElement {
             throws CompileException
     {
         assert toType == Type.STRING;
-        if (fromType.isObject()) {
+        if (fromType.isObject() || fromType.isArray()) {
             // use the toString method
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Object", "toString", "()Ljava/lang/String;");
         } else if (fromType == Type.Z) {
@@ -449,7 +449,7 @@ public abstract class RuleElement {
         } else {
             // this happens when we downcast a bound variable from Object to the variable's type
             assert fromType.isAssignableFrom(toType);
-            mv.visitTypeInsn(Opcodes.CHECKCAST, toType.getInternalName());
+            mv.visitTypeInsn(Opcodes.CHECKCAST, toType.getInternalName(false, true));
         }
     }
 

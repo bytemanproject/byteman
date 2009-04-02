@@ -24,6 +24,7 @@
 package org.jboss.jbossts.orchestration.agent.adapter;
 
 import org.jboss.jbossts.orchestration.rule.type.TypeHelper;
+import org.jboss.jbossts.orchestration.rule.Rule;
 import org.objectweb.asm.*;
 
 /**
@@ -32,14 +33,16 @@ import org.objectweb.asm.*;
  */
 public class RuleAdapter extends ClassAdapter
 {
-    protected RuleAdapter(ClassVisitor cv, String targetClass, String targetMethod)
+    protected RuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod)
     {
         super(cv);
+        this.rule = rule;
         this.targetClass = targetClass;
         this.targetMethodName = TypeHelper.parseMethodName(targetMethod);
         this.targetDescriptor = TypeHelper.parseMethodDescriptor(targetMethod);
     }
 
+    protected Rule rule;
     protected String targetClass;
     protected String targetMethodName;
     protected String targetDescriptor;

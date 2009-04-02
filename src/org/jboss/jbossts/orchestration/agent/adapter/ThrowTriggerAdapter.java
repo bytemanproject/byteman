@@ -29,6 +29,11 @@ import org.jboss.jbossts.orchestration.agent.Transformer;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
+import com.sun.org.apache.bcel.internal.generic.MONITOREXIT;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.LinkedList;
 
 /**
  * asm Adapter class used to add a rule event trigger call to a method of some given class
@@ -53,9 +58,9 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
             if (name.equals("<init>")) {
-                return new ThrowTriggerConstructorAdapter(mv, access, name, desc, signature, exceptions);
+                return new ThrowTriggerConstructorAdapter(mv, rule, access, name, desc, signature, exceptions);
             } else {
-                return new ThrowTriggerMethodAdapter(mv, access, name, desc, signature, exceptions);
+                return new ThrowTriggerMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
             }
         }
         return mv;
@@ -65,7 +70,7 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
      * a method visitor used to add a rule event trigger call to a method
      */
 
-    private class ThrowTriggerMethodAdapter extends GeneratorAdapter
+    private class ThrowTriggerMethodAdapter extends RuleTriggerMethodAdapter
     {
         /**
          * flag used by subclass to avoid inserting trigger until after super constructor has been called
@@ -79,9 +84,9 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
         private Label startLabel;
         private Label endLabel;
 
-        ThrowTriggerMethodAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        ThrowTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, access, name, descriptor);
+            super(mv, rule, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;
@@ -95,6 +100,11 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
 
         public void visitInsn(final int opcode) {
             if (opcode == Opcodes.ATHROW) {
+                // TODO -- this fails if exceptions or throws can occur inside monitor blocks
+                // TODO -- because they get caught and rethrown at the end of the monitor block
+                // TODO -- which means the wrong throws get counted
+                // TODO -- so we need to track throw catch blocks and monitor enter/exits properly
+
                 // ok, we have hit a throw -- for now we just count any throw
                 // later we will try to match the exception class
                 if (visitedCount < count) {
@@ -118,7 +128,7 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
                         } else {
                             super.push((Type)null);
                         }
-                        super.loadArgArray();
+                        doArgLoad();
                         super.invokeStatic(ruleType, method);
                         super.visitLabel(endLabel);
                     }
@@ -200,9 +210,9 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
 
     private class ThrowTriggerConstructorAdapter extends ThrowTriggerMethodAdapter
     {
-        ThrowTriggerConstructorAdapter(MethodVisitor mv, int access, String name, String descriptor, String signature, String[] exceptions)
+        ThrowTriggerConstructorAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, access, name, descriptor, signature, exceptions);
+            super(mv, rule, access, name, descriptor, signature, exceptions);
             // ensure we don't transform calls before the super constructor is called
             latched = true;
         }

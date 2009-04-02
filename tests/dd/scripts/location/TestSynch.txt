@@ -1,0 +1,19 @@
+RULE test getSynchronize trigger
+CLASS TestCallThrowSynchAuxiliary
+METHOD testMethod()
+AT SYNCHRONIZE
+HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("SYNCHRONIZE triggered in TestCallThrowSynchAuxiliary.testMethod")
+ENDRULE
+
+RULE test getSynchronize trigger 2
+CLASS TestCallThrowSynchAuxiliary
+METHOD testMethod()
+AT SYNCHRONIZE 2
+HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("SYNCHRONIZE 2 triggered in TestCallThrowSynchAuxiliary.testMethod")
+ENDRULE
