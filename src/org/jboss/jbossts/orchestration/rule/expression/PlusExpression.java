@@ -74,6 +74,12 @@ public class PlusExpression extends BinaryOperExpression
             String s2 = (String)value2;
             return s1 + s2;
         } else {
+            if (value1 instanceof Character) {
+                value1 = new Integer((Character)value1);
+            }
+            if (value2 instanceof Character) {
+                value2 = new Integer((Character)value2);
+            }
             Number n1 = (Number)value1;
             Number n2 = (Number)value2;
             if (type == Type.B) {
@@ -105,7 +111,7 @@ public class PlusExpression extends BinaryOperExpression
                 char c1 = (char)n1.intValue();
                 char c2 = (char)n2.intValue();
                 char result = (char)(c1 + c2);
-                return new Integer(result);
+                return new Character(result);
             }
         }
     }
@@ -131,37 +137,45 @@ public class PlusExpression extends BinaryOperExpression
             // add two strings leaving one string
             expected = 1;
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "concat", "(Ljava/lang/String;)Ljava/lang/String;");
+            currentStackHeights.addStackCount(-1);
         } else if (type == Type.B) {
             // add two bytes leaving one byte
             expected = 1;
             mv.visitInsn(Opcodes.IADD);
             mv.visitInsn(Opcodes.I2B);
+            currentStackHeights.addStackCount(-1);
         } else if (type == Type.S ) {
             // add two shorts leaving one short
             expected = 1;
             mv.visitInsn(Opcodes.IADD);
             mv.visitInsn(Opcodes.I2S);
+            currentStackHeights.addStackCount(-1);
         } else if (type == Type.C) {
             // add two chars leaving one char
             expected = 1;
             mv.visitInsn(Opcodes.IADD);
             mv.visitInsn(Opcodes.I2C);
+            currentStackHeights.addStackCount(-1);
         } else if (type == Type.I) {
             // add two ints leaving one int
             expected = 1;
             mv.visitInsn(Opcodes.IADD);
+            currentStackHeights.addStackCount(-1);
         } else if (type == Type.J) {
             // add two longs leaving one long
             expected = 1;
             mv.visitInsn(Opcodes.LADD);
+            currentStackHeights.addStackCount(-2);
         } else if (type == Type.F) {
             // add two floats leaving one float
             expected = 1;
             mv.visitInsn(Opcodes.FADD);
+            currentStackHeights.addStackCount(-1);
         } else if (type == Type.D) {
             // add two doubles leaving one double
             expected = 1;
             mv.visitInsn(Opcodes.FADD);
+            currentStackHeights.addStackCount(-2);
         }
 
         if (currentStackHeights.stackCount != currentStack + expected) {

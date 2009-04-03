@@ -24,6 +24,7 @@
 package org.jboss.jbossts.orchestration.rule.expression;
 
 import org.jboss.jbossts.orchestration.rule.binding.Binding;
+import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
@@ -69,6 +70,7 @@ public class ReturnExpression extends Expression
             // ensure the return value expression has all its bindings
             return returnValue.bind();
         }
+
         return true;
     }
 
@@ -85,15 +87,14 @@ public class ReturnExpression extends Expression
      */
     public Type typeCheck(Type expected) throws TypeException {
         // we need to check the returnValue expression against the type of the trigger method
-        Binding returnBinding = getBindings().lookup("$!");
-        Type returnBindingType = (returnBinding != null ? returnBinding.getType() : Type.VOID);
-        if (returnValue == null && !returnBindingType.isVoid()) {
-            throw new TypeException("ReturnExpression.typeCheck : return expression must supply argument when triggered from method with return type " + returnBindingType.getName() + getPos());
+        type = rule.getReturnType();
+        if (returnValue == null && !type.isVoid()) {
+            throw new TypeException("ReturnExpression.typeCheck : return expression must supply argument when triggered from method with return type " + type.getName() + getPos());
         } else if (returnValue != null) {
-            if (returnBindingType.isVoid()) {
+            if (type.isVoid()) {
                 throw new TypeException("ReturnExpression.typeCheck : return expression must not supply argument when triggered from void method" + getPos());
             }
-            returnValue.typeCheck(returnBindingType);
+            returnValue.typeCheck(type);
         }
         return type;
     }
@@ -116,6 +117,51 @@ public class ReturnExpression extends Expression
         // catch this and return as appropriate
         if (returnValue != null) {
             Object value = returnValue.interpret(helper);
+            Type subtype = returnValue.type;
+            if (type.isNumeric()) {
+                // make sure we produce the expected type of numeric
+                if (type == Type.C && subtype != Type.C) {
+                    // ok, transform Number to a Character
+                    int number = ((Number)value).intValue();
+                    value = new Character((char)number);
+                } else if (subtype == Type.C) {
+                    // ok, transform Character to a boxed Numeric if necessary
+                    char c = ((Character)value).charValue();
+                    if (type == Type.B) {
+                        value = new Byte((byte)c);
+                    } else if (type == Type.S) {
+                        value = new Short((short)c);
+                    } else if (type == Type.I) {
+                        value = new Integer((int)c);
+                    } else if (type == Type.J) {
+                        value = new Long((int)c);
+                    } else if (type == Type.F) {
+                        value = new Float((int)c);
+                    } else if (type == Type.D) {
+                        value = new Double((int)c);
+                    }
+                } else {
+                    if (type == Type.B && subtype != Type.B) {
+                        Number number = (Number)value;
+                        value = new Byte(number.byteValue());
+                    } else if (type == Type.S && subtype != Type.S) {
+                        Number number = (Number)value;
+                        value = new Short(number.shortValue());
+                    } else if (type == Type.I && subtype != Type.I) {
+                        Number number = (Number)value;
+                        value = new Integer(number.intValue());
+                    } else if (type == Type.J && subtype != Type.J) {
+                        Number number = (Number)value;
+                        value = new Long(number.longValue());
+                    } else if (type == Type.F && subtype != Type.F) {
+                        Number number = (Number)value;
+                        value = new Float(number.floatValue());
+                    } else if (type == Type.D && subtype != Type.D) {
+                        Number number = (Number)value;
+                        value = new Double(number.doubleValue());
+                    }
+                }
+            }
             throw new EarlyReturnException("return from " + helper.getName(), value);
         } else {
             throw new EarlyReturnException("return from " + helper.getName());

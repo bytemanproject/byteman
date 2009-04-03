@@ -60,8 +60,20 @@ public class ArithmeticExpression extends BinaryOperExpression
     {
         try {
 // n.b. be careful with characters here
-            Number value1 = (Number)getOperand(0).interpret(helper);
-            Number value2 = (Number)getOperand(1).interpret(helper);
+            Object objValue1 = getOperand(0).interpret(helper);
+            Object objValue2 = getOperand(1).interpret(helper);
+            Number value1;
+            Number value2;
+            if (objValue1 instanceof Character) {
+                value1 = new Integer((Character)objValue1);
+            } else {
+                value1 = (Number)objValue1;
+            }
+            if (objValue2 instanceof Character) {
+                value2 = new Integer((Character)objValue2);
+            } else {
+                value2 = (Number)objValue2;
+            }
             // type is the result of promoting one or other or both of the operands
             // and they should be converted to this type before doing the arithmetic operation
             if (type == type.B) {

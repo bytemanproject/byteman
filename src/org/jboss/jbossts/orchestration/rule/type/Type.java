@@ -799,6 +799,85 @@ public class Type {
         return null;
     }
 
+    public static String parseMethodReturnType(String descriptor)
+    {
+        int length = descriptor.length();
+        int idx = descriptor.indexOf(")");
+        int arrayDepth = 0;
+        
+        if (idx < 0) {
+            return "void";
+        }
+        idx = idx + 1;
+        while (idx < length) {
+            char c = descriptor.charAt(idx);
+            switch(c)
+            {
+                case 'Z':
+                {
+                    String baseType = "boolean";
+                    return fixArrayType(baseType, arrayDepth);
+                }
+                case 'B':
+                {
+                    String baseType = "byte";
+                    return fixArrayType(baseType, arrayDepth);
+                }
+                case 'S':
+                {
+                    String baseType = "short";
+                    return fixArrayType(baseType, arrayDepth);
+                }
+                case 'C':
+                {
+                    String baseType = "char";
+                    return fixArrayType(baseType, arrayDepth);
+                }
+                case 'I':
+                {
+                    String baseType = "int";
+                    return fixArrayType(baseType, arrayDepth);
+                }
+                case 'J':
+                {
+                    String baseType = "long";
+                    return fixArrayType(baseType, arrayDepth);
+                }
+                case 'F':
+                {
+                    String baseType = "float";
+                    return fixArrayType(baseType, arrayDepth);
+                }
+                case 'D':
+                {
+                    String baseType = "double";
+                    return fixArrayType(baseType, arrayDepth);
+                }
+                case 'V':
+                {
+                    return "void";
+                }
+                case 'L':
+                {
+                    int endIdx = descriptor.indexOf(';', idx);
+                    if (endIdx < 0) {
+                        return "void";
+                    }
+                    String baseType = descriptor.substring(idx+1, endIdx).replaceAll("/", ".");
+                    return fixArrayType(baseType, arrayDepth);
+                }
+                case '[':
+                {
+                    arrayDepth++;
+                    idx++;
+                }
+                default:
+                    return "void";
+            }
+        }
+        return "void";
+    }
+
     public static String fixArrayType(String baseType, int dimension)
     {
         String result = baseType;
@@ -969,5 +1048,9 @@ public class Type {
         internalNames.put("float", "F");
         internalNames.put("double", "D");
         internalNames.put("void", "V");
+    }
+    public String toString()
+    {
+        return getName();
     }
 }

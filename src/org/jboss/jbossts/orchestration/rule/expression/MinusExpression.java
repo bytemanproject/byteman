@@ -54,7 +54,13 @@ public class MinusExpression extends UnaryOperExpression
 
     public Object interpret(HelperAdapter helper) throws ExecuteException {
         try {
-            Number value = (Number)getOperand(0).interpret(helper);
+            Object objValue = (Object)getOperand(0).interpret(helper);
+            Number value;
+            if (objValue instanceof Character) {
+                value = new Integer((Character)objValue);
+            } else {
+                value = (Number)objValue;
+            }
 
             if (type == Type.B) {
                 return (byte)-value.intValue();

@@ -56,7 +56,9 @@ public abstract class Test extends TestCase
         String output = getOutput();
         String expected = getExpected();
         if (!output.equals(expected)) {
-            fail("\n\nexpecting\n" + expected + "\n\ngot\n" + output);
+            fail("Test " + name + "fail" + "\n\n<expected>\n" + expected + "</expected>\n\n<log>\n" + output +"</log>\n");
+        } else {
+            System.out.println("Test " + name + "success" + "\n\n<log>\n" + output + "</log>\n");
         }
 
         if (reset) {

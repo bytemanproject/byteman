@@ -71,8 +71,11 @@
        <delete dir="${build.dir}"/>
     </target>
 
+    <!--
     <target name="tests" depends="jar, tests.location, tests.location.compiled"/>
-    
+    -->
+    <target name="tests" depends="jar, tests.location, tests.location.compiled, tests.javaops, tests.javaops.compiled"/>
+
     <target name="tests.location">
         <junit fork="true" showoutput="true">
             <classpath>
@@ -208,6 +211,55 @@
             <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestReadWrite.txt"/>
             <jvmarg value="-Drg.jboss.jbossts.orchestration.compileToBytecode"/>
             <test name="org.jboss.jbossts.orchestration.tests.location.TestReadWrite"/>
+        </junit>
+    </target>
+
+    <target name="tests.javaops">
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestArithmetic.txt"/>
+            <!-- uncomment for verbose toast output
+            <jvmarg value="-Dorg.jboss.jbossts.orchestration.verbose"/>
+            -->
+            <!-- uncomment to dump generated code
+            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=dump"/>
+            -->
+            <!-- uncomment to enable debug
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestArithmetic"/>
+        </junit>
+    </target>
+
+    <target name="tests.javaops.compiled">
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestArithmetic.txt"/>
+            <!-- uncomment for verbose toast output
+            <jvmarg value="-Dorg.jboss.jbossts.orchestration.verbose"/>
+            -->
+            <!-- uncomment to dump generated code
+            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=dump"/>
+            -->
+            <!-- uncomment to enable debug
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            <jvmarg value="-Dorg.jboss.jbossts.orchestration.compileToBytecode"/>
+            -->
+            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestArithmetic"/>
         </junit>
     </target>
 

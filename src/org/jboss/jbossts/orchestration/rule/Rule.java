@@ -140,6 +140,12 @@ public class Rule
      */
     private boolean checkFailed;
 
+    /**
+     * return type of the rule's trigger method
+     */
+
+    private Type returnType;
+
     private Rule(String name, String targetClass, String targetMethod,Class<?> helperClass, Location targetLocation, String ruleSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
@@ -175,6 +181,7 @@ public class Rule
         triggerMethod = null;
         triggerDescriptor = null;
         triggerAccess = 0;
+        returnType = null;
     }
 
     public TypeGroup getTypeGroup()
@@ -220,6 +227,11 @@ public class Rule
         return triggerClass;
     }
 
+    public Type getReturnType()
+    {
+        return returnType;
+    }
+    
     public static Rule create(String name, String targetClass, String targetMethod, Class<?> helperClass, Location targetLocation, String ruleSpec, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
@@ -372,6 +384,10 @@ public class Rule
                 binding.setType(paramType);
             }
         }
+
+        String returnTypeName = Type.parseMethodReturnType(triggerDescriptor);
+
+        returnType = typeGroup.create(returnTypeName);
     }
 
     /**
