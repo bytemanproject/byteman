@@ -49,12 +49,17 @@ public abstract class ParseNode
     public final static int PLUS = 47;
     public final static int TWIDDLE = 48;
     public final static int UMINUS = 49;
-    public final static int COND = 50;
 
     /**
      * the type tag for this node
      */
     private int tag;
+
+    /**
+     * the script file containing the text form which this node was parsed
+     */
+
+    private String file;
 
     /**
      * the line position fo rthis node
@@ -73,9 +78,10 @@ public abstract class ParseNode
      * @param line identifies the start line for this node's text
      * @param column identifies the start columen for this node's text
      */
-    protected ParseNode(int tag, int line, int column)
+    protected ParseNode(int tag, String file, int line, int column)
     {
         this.tag  = tag;
+        this.file = file;
         this.line  = line;
         this.column  = column;
     }
@@ -128,7 +134,7 @@ public abstract class ParseNode
      * @return a string representing the position for this node
      */
     public String getPos() {
-        return " @ " + line + "." + column;
+        return " " + file + " @ " + line + "." + column;
     }
 
     /**
@@ -138,9 +144,9 @@ public abstract class ParseNode
      * @param column identifies the start columen for this node's text
      * @return a simple node for a builtin token
      */
-    public static ParseNode node(int tag, int line, int column)
+    public static ParseNode node(int tag, String file, int line, int column)
     {
-        return new NullaryNode(tag, line, column);
+        return new NullaryNode(tag, file, line, column);
     }
 
     /**
@@ -150,24 +156,24 @@ public abstract class ParseNode
      * @param column identifies the start columen for this node's text
      * @return a simple node for a builtin token
      */
-    public static ParseNode node(int tag, int line, int column, Object child0)
+    public static ParseNode node(int tag, String file, int line, int column, Object child0)
     {
-        return new UnaryNode(tag, line, column, child0);
+        return new UnaryNode(tag, file, line, column, child0);
     }
 
-    public static ParseNode node(int tag, int line, int column, Object child0, Object child1)
+    public static ParseNode node(int tag, String file, int line, int column, Object child0, Object child1)
     {
-        return new BinaryNode(tag, line, column, child0, child1);
+        return new BinaryNode(tag, file, line, column, child0, child1);
     }
 
-    public static ParseNode node(int tag, int line, int column, Object child0, Object child1, Object child2)
+    public static ParseNode node(int tag, String file, int line, int column, Object child0, Object child1, Object child2)
     {
-        return new TernaryNode(tag, line, column, child0, child1, child2);
+        return new TernaryNode(tag, file, line, column, child0, child1, child2);
     }
 
-    public static ParseNode node(int tag, int line, int column, Object child0, Object child1, Object child2, Object child3)
+    public static ParseNode node(int tag, String file, int line, int column, Object child0, Object child1, Object child2, Object child3)
     {
-        return new QuaternaryNode(tag, line, column, child0, child1, child2, child3);
+        return new QuaternaryNode(tag, file, line, column, child0, child1, child2, child3);
     }
 
     /**
@@ -175,9 +181,9 @@ public abstract class ParseNode
      */
     private static class NullaryNode extends ParseNode
     {
-        public NullaryNode(int tag, int line, int column)
+        public NullaryNode(int tag, String file, int line, int column)
         {
-            super(tag, line, column);
+            super(tag, file, line, column);
         }
 
         /**
@@ -263,9 +269,9 @@ public abstract class ParseNode
     {
         private Object child0;
 
-        public UnaryNode(int tag, int line, int column, Object child0)
+        public UnaryNode(int tag, String file, int line, int column, Object child0)
         {
-            super(tag, line, column);
+            super(tag, file, line, column);
             this.child0 = child0;
         }
 
@@ -326,9 +332,9 @@ public abstract class ParseNode
         private Object child0;
         private Object child1;
 
-        public BinaryNode(int tag, int line, int column, Object child0, Object child1)
+        public BinaryNode(int tag, String file, int line, int column, Object child0, Object child1)
         {
-            super(tag, line, column);
+            super(tag, file, line, column);
             this.child0 = child0;
             this.child1 = child1;
         }
@@ -411,9 +417,9 @@ public abstract class ParseNode
         private Object child1;
         private Object child2;
 
-        public TernaryNode(int tag, int line, int column, Object child0, Object child1, Object child2)
+        public TernaryNode(int tag, String file, int line, int column, Object child0, Object child1, Object child2)
         {
-            super(tag, line, column);
+            super(tag, file, line, column);
             this.child0 = child0;
             this.child1 = child1;
             this.child2 = child2;
@@ -477,9 +483,9 @@ public abstract class ParseNode
         private Object child2;
         private Object child3;
 
-        public QuaternaryNode(int tag, int line, int column, Object child0, Object child1, Object child2, Object child3)
+        public QuaternaryNode(int tag, String file, int line, int column, Object child0, Object child1, Object child2, Object child3)
         {
-            super(tag, line, column);
+            super(tag, file, line, column);
             this.child0 = child0;
             this.child1 = child1;
             this.child2 = child2;

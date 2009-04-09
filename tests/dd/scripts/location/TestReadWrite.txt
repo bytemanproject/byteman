@@ -1,8 +1,8 @@
 RULE test at read trigger
 CLASS TestReadWriteAuxiliary
 METHOD testMethod()
-AT READ counter
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AT READ counter
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("AT READ 1 triggered in TestReadWriteAuxiliary.testMethod : counter == " + $0.counter)
@@ -11,8 +11,8 @@ ENDRULE
 RULE test after read trigger 2
 CLASS TestReadWriteAuxiliary
 METHOD testMethod()
-AFTER READ counter 2
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AFTER READ counter 2
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("AFTER READ 2 triggered in TestReadWriteAuxiliary.testMethod : counter == " + $0.counter)
@@ -21,8 +21,8 @@ ENDRULE
 RULE test at write trigger
 CLASS TestReadWriteAuxiliary
 METHOD testMethod()
-AT WRITE counter
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AT WRITE counter
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("AT WRITE 1 triggered in TestReadWriteAuxiliary.testMethod : counter == " + $0.counter)
@@ -31,8 +31,8 @@ ENDRULE
 RULE test after write trigger 2
 CLASS TestReadWriteAuxiliary
 METHOD testMethod()
-AFTER WRITE counter 2
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AFTER WRITE counter 2
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("AFTER WRITE 2 triggered in TestReadWriteAuxiliary.testMethod : counter == " + $0.counter)

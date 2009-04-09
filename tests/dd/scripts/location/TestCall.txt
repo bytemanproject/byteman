@@ -1,8 +1,8 @@
 RULE test call getCounter trigger
 CLASS TestCallThrowSynchAuxiliary
 METHOD testMethod()
-AT CALL getCounter
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AT CALL getCounter
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("CALL getCounter triggered in TestCallThrowSynchAuxiliary.testMethod")
@@ -11,8 +11,8 @@ ENDRULE
 RULE test call getCounter trigger 2
 CLASS TestCallThrowSynchAuxiliary
 METHOD testMethod()
-AT CALL getCounter 2
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AT CALL getCounter 2
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("CALL getCounter 2 triggered in TestCallThrowSynchAuxiliary.testMethod")
@@ -21,8 +21,8 @@ ENDRULE
 RULE test call getCounter trigger 3
 CLASS TestCallThrowSynchAuxiliary
 METHOD testMethod()
-AT CALL getCounter 3
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AT CALL getCounter 3
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("CALL getCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod")
@@ -31,8 +31,8 @@ ENDRULE
 RULE test call setCounter trigger
 CLASS TestCallThrowSynchAuxiliary
 METHOD testMethod()
-AT CALL setCounter
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AT CALL setCounter
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("CALL setCounter triggered in TestCallThrowSynchAuxiliary.testMethod")
@@ -41,8 +41,8 @@ ENDRULE
 RULE test call setCounter trigger 2
 CLASS TestCallThrowSynchAuxiliary
 METHOD testMethod()
-AT CALL setCounter 2
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AT CALL setCounter 2
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("CALL setCounter 2 triggered in TestCallThrowSynchAuxiliary.testMethod")

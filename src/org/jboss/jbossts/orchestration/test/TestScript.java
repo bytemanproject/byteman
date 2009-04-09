@@ -69,7 +69,7 @@ public class TestScript
                 FileInputStream fis = new FileInputStream(new File(script));
                 System.out.println("checking rules in " + script);
                 List<String> rules = processRules(fis);
-                checkRules(rules);
+                checkRules(rules, script);
             } catch (IOException ioe) {
                 System.err.println("TestScript: unable to open rule script file : " + script);
             }
@@ -104,7 +104,7 @@ public class TestScript
         return rules;
     }
 
-    private void checkRules(List<String> ruleScripts)
+    private void checkRules(List<String> ruleScripts, String file)
     {
         ClassLoader loader = getClass().getClassLoader();
         int errorCount = 0;
@@ -125,6 +125,7 @@ public class TestScript
                 String sepr = "";
                 int idx = 0;
                 int len = lines.length;
+                int lineNumber = 0;
 
                 while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
                     idx++;
@@ -187,6 +188,7 @@ public class TestScript
                     }
                     idx++;
                 }
+                lineNumber = idx;
                 for (;idx < len; idx++) {
                     if (lines[idx].trim().startsWith("#")) {
                         lines[idx] = "";
@@ -209,7 +211,7 @@ public class TestScript
                         System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : unknown helper class " + targetHelperName + " for rule " + ruleName);
                     }
                 }
-                Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetHelperClass, targetLocation, text, loader);
+                Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetHelperClass, targetLocation, text, lineNumber, file, loader);
                 System.err.println("TestScript: parsed rule " + rule.getName());
                 System.err.println(rule);
                 

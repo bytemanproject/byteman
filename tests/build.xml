@@ -95,8 +95,8 @@
             <jvmarg  value="-Xnoagent"/>
             <jvmarg  value="-Djava.compiler=NONE"/>
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
-            -->
             <test name="org.jboss.jbossts.orchestration.tests.location.TestEntry"/>
+            -->
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
@@ -221,6 +221,14 @@
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
             <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestArithmetic.txt"/>
+            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestArithmetic"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestLogical.txt"/>
             <!-- uncomment for verbose toast output
             <jvmarg value="-Dorg.jboss.jbossts.orchestration.verbose"/>
             -->
@@ -233,8 +241,8 @@
             <jvmarg  value="-Xnoagent"/>
             <jvmarg  value="-Djava.compiler=NONE"/>
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestLogical"/>
             -->
-            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestArithmetic"/>
         </junit>
     </target>
 
@@ -245,6 +253,14 @@
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
             <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestArithmetic.txt"/>
+            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestArithmetic"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestLogical.txt"/>
             <!-- uncomment for verbose toast output
             <jvmarg value="-Dorg.jboss.jbossts.orchestration.verbose"/>
             -->
@@ -259,7 +275,7 @@
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             <jvmarg value="-Dorg.jboss.jbossts.orchestration.compileToBytecode"/>
             -->
-            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestArithmetic"/>
+            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestLogical"/>
         </junit>
     </target>
 

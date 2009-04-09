@@ -12,8 +12,10 @@ public class Script
     private String targetHelper;
     private Location targetLocation;
     private String ruleText;
+    int line;
+    String file;
 
-    Script (String name, String targetClass, String targetMethod, String targetHelper, Location targetLocation, String ruleText)
+    Script (String name, String targetClass, String targetMethod, String targetHelper, Location targetLocation, String ruleText, int line, String file)
     {
         this.name = name;
         this.targetClass = targetClass;
@@ -21,6 +23,8 @@ public class Script
         this.targetHelper = targetHelper;
         this.targetLocation = targetLocation;
         this.ruleText = ruleText;
+        this.line = line;
+        this.file = file;
     }
 
     public String getName() {
@@ -45,5 +49,15 @@ public class Script
 
     public String getRuleText() {
         return ruleText;
+    }
+
+    public int getLine()
+    {
+        return line;
+    }
+
+    public String getFile()
+    {
+        return file;
     }
 }

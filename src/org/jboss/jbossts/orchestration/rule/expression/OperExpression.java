@@ -177,7 +177,7 @@ public abstract class OperExpression extends Expression
             org.jboss.jbossts.orchestration.rule.grammar.ParseNode.PLUS,
             org.jboss.jbossts.orchestration.rule.grammar.ParseNode.MINUS,
             org.jboss.jbossts.orchestration.rule.grammar.ParseNode.MOD,
-            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.COND
+            org.jboss.jbossts.orchestration.rule.grammar.ParseNode.TERNOP
     };
 
     final private static String[] operandNames = {

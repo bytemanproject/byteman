@@ -40,11 +40,25 @@ import org.jboss.jbossts.orchestration.rule.grammar.PrintableSymbol;
 %{
   StringBuffer string = new StringBuffer();
 
+  private int startLine = 0;
+
+  private String file = "";
+
+  public void setStartLine(int startLine)
+  {
+    this.startLine = startLine;
+  }
+
+  public void setFile(String file)
+  {
+    this.file = file;
+  }
+
   private Symbol symbol(int type) {
-    return new PrintableSymbol(type, yyline, yycolumn);
+    return new PrintableSymbol(type, file, yyline + startLine, yycolumn);
   }
   private Symbol symbol(int type, Object value) {
-    return new PrintableSymbol(type, yyline, yycolumn, value);
+    return new PrintableSymbol(type, file, yyline + startLine, yycolumn, value);
   }
 %}
 

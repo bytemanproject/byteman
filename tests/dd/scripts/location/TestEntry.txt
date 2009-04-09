@@ -1,8 +1,8 @@
 RULE test entry trigger for constructor
 CLASS TestEntryExitAuxiliarySub
 METHOD <init>(Test)
-AT ENTRY
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AT ENTRY
 BIND test : Test = $1
 IF TRUE
 DO test.log("ENTRY triggered in constructor")
@@ -11,8 +11,8 @@ ENDRULE
 RULE test entry trigger for subclass method
 CLASS TestEntryExitAuxiliarySub
 METHOD testMethod()
-AT ENTRY
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AT ENTRY
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("ENTRY triggered in TestEntryExitAuxiliarySub.testMethod")
@@ -21,8 +21,8 @@ ENDRULE
 RULE test entry trigger for superclass method
 CLASS TestEntryExitAuxiliary
 METHOD testMethod()
-AT ENTRY
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AT ENTRY
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("ENTRY triggered in TestEntryExitAuxiliary.testMethod")

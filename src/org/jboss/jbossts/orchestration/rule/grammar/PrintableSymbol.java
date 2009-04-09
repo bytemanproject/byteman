@@ -7,19 +7,24 @@ import java_cup.runtime.Symbol;
  */
 public class PrintableSymbol extends Symbol
 {
-    public PrintableSymbol(int id, int l, int r, Object o)
+    private String file;
+
+    public PrintableSymbol(int id, String file, int l, int r, Object o)
     {
         super(id, l, r, o);
+        this.file= file;
     }
 
-    public PrintableSymbol(int id, int l, int r)
+    public PrintableSymbol(int id, String file, int l, int r)
     {
         super(id, l, r);
+        this.file= file;
     }
 
     public PrintableSymbol(int id, Object o)
     {
         super(id, o);
+        this.file= "";
     }
 
     public String toString()
@@ -37,6 +42,11 @@ public class PrintableSymbol extends Symbol
             }
             return "#" + sym;
         }
+    }
+
+    public String getPos()
+    {
+        return file + " @ " + left + "." + right;
     }
 
     public static String[] sym_name = new String[100];

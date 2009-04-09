@@ -57,7 +57,7 @@ public abstract class Expression extends RuleElement
         this.token = token;
         if (token != null) {
             this.charPos = token.getColumn();
-            this.line = token.getLine();
+            this.line = rule.getLine() + token.getLine();
         } else {
             this.charPos = 0;
             this.line = 0;
@@ -74,7 +74,7 @@ public abstract class Expression extends RuleElement
 
     public String getPos()
     {
-        return " @ line " + line + "." + charPos;
+        return rule.getFile() + " @ line " + "." + charPos;
     }
 
     public Type getType()

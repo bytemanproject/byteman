@@ -75,6 +75,14 @@ public class Rule
      */
     private Location targetLocation;
     /**
+     * the line number for the start of the parseable rule text (the BIND clause)
+     */
+    private int line;
+    /**
+     * the name of the file which contains this rule
+     */
+    private String file;
+    /**
      * the parsed event derived from the script for this rule
      */
     private Event event;
@@ -146,12 +154,14 @@ public class Rule
 
     private Type returnType;
 
-    private Rule(String name, String targetClass, String targetMethod,Class<?> helperClass, Location targetLocation, String ruleSpec, ClassLoader loader)
+    private Rule(String name, String targetClass, String targetMethod,Class<?> helperClass, Location targetLocation, String ruleSpec, int line, String file, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
         ParseNode ruleTree;
 
         this.name = name;
+        this.line = line;
+        this.file = file;
         typeGroup = new TypeGroup(loader);
         bindings = new Bindings();
         if (ruleSpec != null) {
@@ -159,7 +169,10 @@ public class Rule
             String fullSpec = "\n" + ruleSpec;
             try {
                 ECATokenLexer lexer = new ECATokenLexer(new StringReader(fullSpec));
+                lexer.setStartLine(line);
+                lexer.setFile(file);
                 ECAGrammarParser parser = new ECAGrammarParser(lexer);
+                parser.setFile(file);
                 Symbol parse = (debugParse ? parser.debug_parse() : parser.parse());
                 ruleTree = (ParseNode) parse.value;
             } catch (Exception e) {
@@ -232,10 +245,10 @@ public class Rule
         return returnType;
     }
     
-    public static Rule create(String name, String targetClass, String targetMethod, Class<?> helperClass, Location targetLocation, String ruleSpec, ClassLoader loader)
+    public static Rule create(String name, String targetClass, String targetMethod, Class<?> helperClass, Location targetLocation, String ruleSpec, int line, String file, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
-            return new Rule(name, targetClass, targetMethod, helperClass, targetLocation, ruleSpec, loader);
+            return new Rule(name, targetClass, targetMethod, helperClass, targetLocation, ruleSpec, line, file, loader);
     }
 
     public void setEvent(String eventSpec) throws ParseException, TypeException
@@ -475,6 +488,24 @@ public class Rule
         String key = getName() + "_" + nextId();
         ruleKeyMap.put(key, this);
         return key;
+    }
+
+    /**
+     * retrieve the start line for the ruel's parseable text
+     * @return the start line for the ruel's parseable text
+     */
+    public int getLine()
+    {
+        return line;
+    }
+
+    /**
+     * retrieve the name of the file containing this rule
+     * @return the name of the file containing this rule
+     */
+    public String getFile()
+    {
+        return file;
     }
 
     /**

@@ -73,6 +73,7 @@ public class Transformer implements ClassFileTransformer {
         int scriptIdx = 0;
         while (iter.hasNext()) {
             String scriptText = iter.next();
+            String file = scriptPaths.get(scriptIdx);
             if (scriptText != null) {
                 // split rules into separate lines
                 String[] lines = scriptText.split("\n");
@@ -90,6 +91,7 @@ public class Transformer implements ClassFileTransformer {
                 boolean inRule = false;
                 for (String line : lines) {
                     lineNumber++;
+                    int startNumber = -1;
                     if (line.trim().startsWith("#")) {
                         if (inRule) {
                             // add a blank line in place of the comment so the line numbers
@@ -102,7 +104,7 @@ public class Transformer implements ClassFileTransformer {
                         name = line.substring(5).trim();
                     } else if (!inRule) {
                         if (!line.trim().equals("")) {
-                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : invalid text outside of RULE/ENDRULE " + "at line " + lineNumber + " in script " + scriptPaths.get(scriptIdx));
+                            throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : invalid text outside of RULE/ENDRULE " + "at line " + lineNumber + " in script " + file);
                         }
                     } else if (line.startsWith("CLASS ")) {
                         targetClass = line.substring(6).trim();
@@ -132,7 +134,7 @@ public class Transformer implements ClassFileTransformer {
                             if (targetLocation == null) {
                                 targetLocation = Location.create(LocationType.ENTRY, "");
                             }
-                            Script script = new Script(name, targetClass, targetMethod, targetHelper, targetLocation, nextRule);
+                            Script script = new Script(name, targetClass, targetMethod, targetHelper, targetLocation, nextRule, startNumber, file);
                             scripts.add(script);
                             if (isVerbose()) {
                                 System.out.println("RULE " + script.getName());
@@ -160,6 +162,9 @@ public class Transformer implements ClassFileTransformer {
                     } else if (lineNumber == maxLines && !nextRule.trim().equals("")) {
                             throw new Exception("org.jboss.jbossts.orchestration.agent.Transformer : no matching ENDRULE for RULE " + name + " in script " + scriptPaths.get(scriptIdx));
                     } else {
+                        if (startNumber < 0) {
+                            startNumber = lineNumber;
+                        }
                         nextRule += sepr + line;
                         sepr = "\n";
                     }
@@ -391,6 +396,8 @@ public class Transformer implements ClassFileTransformer {
         final String handlerMethod = script.getTargetMethod();
         final String helperName = script.getTargetHelper();
         final Location handlerLocation = script.getTargetLocation();
+        final int lineNumber = script.getLine();
+        final String file = script.getFile();
         Class helperClass = null;
         if (helperName != null) {
             try {
@@ -408,7 +415,7 @@ public class Transformer implements ClassFileTransformer {
         final Rule rule;
         String ruleName = script.getName();
         try {
-            rule = Rule.create(ruleName, handlerClass, handlerMethod, helperClass, handlerLocation, script.getRuleText(), loader);
+            rule = Rule.create(ruleName, handlerClass, handlerMethod, helperClass, handlerLocation, script.getRuleText(), lineNumber, file, loader);
         } catch (ParseException pe) {
             System.out.println("org.jboss.jbossts.orchestration.agent.Transformer : error parsing rule " + ruleName + " : " + pe);
             return targetClassBytes;

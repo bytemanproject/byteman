@@ -485,42 +485,41 @@ public class ExpressionHelper
     public static Expression createTernaryExpression(Rule rule, Bindings bindings, ParseNode exprTree, Type type)
             throws TypeException
     {
-        // we expect ^(TERNOP ternary_oper simple_expr expr expr)
+        // we only expect ^(TERNOP ternary_oper simple_expr expr expr)
 
         ParseNode child0 = (ParseNode) exprTree.getChild(0);
         ParseNode child1 = (ParseNode) exprTree.getChild(1);
         ParseNode child2 = (ParseNode) exprTree.getChild(2);
-        ParseNode child3 = (ParseNode) exprTree.getChild(3);
         Expression expr;
-        int oper = child0.getTag();
+        int oper = exprTree.getTag();
 
         switch (oper)
         {
-            case COND:
+            case TERNOP:
             {
-                // the argument must be a numeric expression
-                Expression operand1 = createExpression(rule, bindings, child1, Type.BOOLEAN);
+                // the first argument must be a boolean expression
+                Expression operand0 = createExpression(rule, bindings, child0, Type.BOOLEAN);
+                Expression operand1 = createExpression(rule, bindings, child1, type);
                 Expression operand2 = createExpression(rule, bindings, child2, type);
-                Expression operand3 = createExpression(rule, bindings, child3, type);
+                Type type1 = Type.dereference(operand1.getType());
                 Type type2 = Type.dereference(operand2.getType());
-                Type type3 = Type.dereference(operand3.getType());
-                if (type2.isNumeric() || type3.isNumeric()) {
+                if (type1.isNumeric() || type2.isNumeric()) {
                     if (!type.isUndefined() && !type.isVoid() && !type.isNumeric()) {
                         throw new TypeException("ExpressionHelper.createUnaryExpression : invalid numeric expression" + exprTree.getPos());
                     }
-                    expr = new ConditionalEvalExpression(rule, Type.promote(type2, type3),  exprTree, operand1,  operand2, operand3);
-                } else if (type2.isDefined() && type3.isDefined()) {
+                    expr = new ConditionalEvalExpression(rule, Type.promote(type1, type2),  exprTree, operand0,  operand1, operand2);
+                } else if (type1.isDefined() && type2.isDefined()) {
                     // since they are not numeric we have to have the same type
-                    if (type2 == type3) {
+                    if (type1 == type2) {
                         // use this type
-                        expr = new ConditionalEvalExpression(rule, type2,  exprTree, operand1,  operand2, operand3);
+                        expr = new ConditionalEvalExpression(rule, type1,  exprTree, operand0,  operand1, operand2);
                     } else {
                         // mismatched types so don't generate a result
-                        throw new TypeException("ExpressionHelper.createTernaryExpression : mismatched types " + type2.getName() + " and " + type3.getName()  + " in conditional expression " + exprTree.getText() + exprTree.getPos());
+                        throw new TypeException("ExpressionHelper.createTernaryExpression : mismatched types " + type1.getName() + " and " + type2.getName()  + " in conditional expression " + exprTree.getText() + exprTree.getPos());
                     }
                 } else {
                     // have to wait for type check to resolve types
-                    expr = new ConditionalEvalExpression(rule, Type.UNDEFINED,  exprTree, operand1,  operand2, operand3);
+                    expr = new ConditionalEvalExpression(rule, Type.UNDEFINED,  exprTree, operand0,  operand1, operand2);
                 }
             }
             break;

@@ -34,39 +34,46 @@ action code {:
     /*
     private ParseNode node(int tag)
     {
-    return ParseNode.node(tag);
+    return ParseNode.node(tag, parser.file);
     }
     */
 
     private ParseNode node(int tag, int line, int column)
     {
-	return ParseNode.node(tag, line, column);
+	return ParseNode.node(tag, parser.file, line, column);
     }
 
     private ParseNode node(int tag, int line, int column, Object child0)
     {
-	return ParseNode.node(tag, line, column, child0);
+	return ParseNode.node(tag, parser.file, line, column, child0);
     }
 
     private ParseNode node(int tag, int line, int column, Object child0, Object child1)
     {
-	return ParseNode.node(tag, line, column, child0, child1);
+	return ParseNode.node(tag, parser.file, line, column, child0, child1);
     }
 
     private ParseNode node(int tag, int line, int column, Object child0, Object child1, Object child2)
     {
-	return ParseNode.node(tag, line, column, child0, child1, child2);
+	return ParseNode.node(tag, parser.file, line, column, child0, child1, child2);
     }
 
     /*
     private ParseNode node(int tag, int line, int column, Object child0, Object child1, Object child2, Object child3)
     {
-	return ParseNode.node(tag, line, column, child0, child1, child2, child3);
+	return ParseNode.node(tag, parser.file, line, column, child0, child1, child2, child3);
     }
     */
 :}
 
 parser code {:
+
+  public String file = "";
+
+  public void setFile(String file)
+  {
+    this.file = file;
+  }
 
   /*. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .*/
 
