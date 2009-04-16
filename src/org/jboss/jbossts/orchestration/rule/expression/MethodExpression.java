@@ -382,23 +382,32 @@ public class MethodExpression extends Expression
 
     public int getPathCount(String name)
     {
-        int charMax = name.length();
-        int charCount = 0;
-        int dotExtra = 0;
-        int idx;
-        for (idx = 0; idx < pathList.length; idx++) {
-            charCount += (dotExtra + pathList[idx].length());
-            if (charCount > charMax) {
-                break;
+        // name will be package qualified so check whether the path list also includes the package
+        if (name.startsWith(pathList[0])) {
+            int charMax = name.length();
+            int charCount = 0;
+            int dotExtra = 0;
+            int idx;
+            for (idx = 0; idx < pathList.length; idx++) {
+                charCount += (dotExtra + pathList[idx].length());
+                if (charCount > charMax) {
+                    break;
+                }
             }
+            return idx;
+        } else {
+            // name must have been obtained by globalizing an unqualified type name so the typename
+            // is the first element in the path list
+            return 1;
         }
-        return idx;
     }
 
     public void writeTo(StringWriter stringWriter) {
         if (recipient != null) {
             recipient.writeTo(stringWriter);
             stringWriter.write(".");
+        } else if (pathList != null) {
+            stringWriter.write(getPath(pathList.length));
         }
         stringWriter.write(name);
         stringWriter.write("(");

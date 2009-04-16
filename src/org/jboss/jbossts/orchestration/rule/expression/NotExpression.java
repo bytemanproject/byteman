@@ -63,7 +63,7 @@ public class NotExpression extends UnaryOperExpression
         Type operType = oper.getType();
 
         int currentStack = currentStackHeights.stackCount;
-        int expected = 0;
+        int expected = 1;
 
         // compile code to execute the operand -- adds 1
         oper.compile(mv, currentStackHeights, maxStackHeights);

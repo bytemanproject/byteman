@@ -113,8 +113,9 @@ public class Variable extends Expression
         // perform any necessary type conversion
         if (type.isPrimitive()) {
             // cast down to the boxed type then do an unbox
-            compileObjectConversion(Type.OBJECT, Type.boxType(type), mv, currentStackHeights, maxStackHeights);
-            compileUnbox(Type.OBJECT, type,  mv, currentStackHeights, maxStackHeights);
+            Type boxType = Type.boxType(type);
+            compileObjectConversion(Type.OBJECT, boxType, mv, currentStackHeights, maxStackHeights);
+            compileUnbox(boxType, type,  mv, currentStackHeights, maxStackHeights);
         } else {
             // cast down to the required type
             compileObjectConversion(Type.OBJECT, type, mv, currentStackHeights, maxStackHeights);

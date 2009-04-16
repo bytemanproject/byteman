@@ -391,6 +391,8 @@ field_expr
 expr_field_expr
 	::=	simple_expr:se DOT simple_name:f
 		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, se); :}
+	|	meth_expr:me DOT simple_name:f
+		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, me); :}
 	|	expr_field_expr:efe DOT simple_name:f
 		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, efe); :}
 	;

@@ -109,7 +109,10 @@ public class StaticExpression extends Expression
 
         // compile a field access
 
-        mv.visitFieldInsn(Opcodes.GETSTATIC, ownerTypeName, fieldName, type.getName());
+        String ownerType = Type.internalName(field.getDeclaringClass());
+        String fieldName = field.getName();
+        String fieldType = Type.internalName(field.getType(), true);
+        mv.visitFieldInsn(Opcodes.GETSTATIC, ownerType, fieldName, fieldType);
         expected = (type.getNBytes() > 4 ? 2 : 1);
 
         currentStackHeights.addStackCount(expected);

@@ -3,7 +3,7 @@ package org.jboss.jbossts.orchestration.tests.javaops;
 import org.jboss.jbossts.orchestration.tests.Test;
 
 /**
- * Test to ensure at entry trigger points are correctly identified
+ * Test to ensure arithmetic operations compute as expected
  */
 public class TestArithmetic extends Test
 {

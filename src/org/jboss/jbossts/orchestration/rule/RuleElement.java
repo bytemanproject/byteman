@@ -99,8 +99,9 @@ public abstract class RuleElement {
                 Type midType = Type.boxType(toType);
                 compileUnbox(fromType, midType, mv, currentStackHeights, maxStackHeights);
                 compileBox(midType, mv, currentStackHeights, maxStackHeights);
+            } else {
+                compileUnbox(fromType, toType, mv, currentStackHeights, maxStackHeights);
             }
-            compileUnbox(fromType, toType, mv, currentStackHeights, maxStackHeights);
         } else if (box) {
             Type midType = Type.boxType(toType);
             if (fromType != midType) {
@@ -177,87 +178,24 @@ public abstract class RuleElement {
     protected void compileBox(Type toType, MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights)
             throws CompileException
     {
+        // use the statci methods on the class  to do conversions -- that means the class gets a chance
+        // to reuse cached values
         if (toType == Type.BOOLEAN) {
-            // this temporarily adds 2 to the stack height
-            if (currentStackHeights.stackCount + 2 > maxStackHeights.stackCount) {
-                maxStackHeights.stackCount = currentStackHeights.stackCount + 2;
-            }
-            mv.visitTypeInsn(Opcodes.NEW,  "java/lang/Boolean");
-            mv.visitInsn(Opcodes.DUP_X1);
-            mv.visitInsn(Opcodes.SWAP);
-            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Boolean", "<init>", "(Z)V");
-        } else if (toType == Type.BOOLEAN) {
-            // this temporarily adds 2 to the stack height
-            if (currentStackHeights.stackCount + 2 > maxStackHeights.stackCount) {
-                maxStackHeights.stackCount = currentStackHeights.stackCount + 2;
-            }
-            mv.visitTypeInsn(Opcodes.NEW,  "java/lang/Byte");
-            mv.visitInsn(Opcodes.DUP_X1);
-            mv.visitInsn(Opcodes.SWAP);
-            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Byte", "<init>", "(B)V");
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;");
+        } else if (toType == Type.BYTE) {
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;");
         } else if (toType == Type.SHORT){
-            // this temporarily adds 2 to the stack height
-            if (currentStackHeights.stackCount + 2 > maxStackHeights.stackCount) {
-                maxStackHeights.stackCount = currentStackHeights.stackCount + 2;
-            }
-            mv.visitTypeInsn(Opcodes.NEW,  "java/lang/Short");
-            mv.visitInsn(Opcodes.DUP_X1);
-            mv.visitInsn(Opcodes.SWAP);
-            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Short", "<init>", "(S)V");
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;");
         } else if (toType == Type.CHARACTER){
-            // this temporarily adds 2 to the stack height
-            if (currentStackHeights.stackCount + 2 > maxStackHeights.stackCount) {
-                maxStackHeights.stackCount = currentStackHeights.stackCount + 2;
-            }
-            mv.visitTypeInsn(Opcodes.NEW,  "java/lang/Character");
-            mv.visitInsn(Opcodes.DUP_X1);
-            mv.visitInsn(Opcodes.SWAP);
-            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Character", "<init>", "(C)V");
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;");
         } else if (toType == Type.INTEGER) {
-            // initial stack [i, ...]
-            // this temporarily adds 2 to the stack height
-            if (currentStackHeights.stackCount + 2 > maxStackHeights.stackCount) {
-                maxStackHeights.stackCount = currentStackHeights.stackCount + 2;
-            }
-            mv.visitTypeInsn(Opcodes.NEW,  "java/lang/Integer"); // => [Integer, i, ...]
-            mv.visitInsn(Opcodes.DUP_X1);                        // => [Integer, i, Integer, ...]
-            mv.visitInsn(Opcodes.SWAP);                          // => [i, Integer, Integer, ...]
-            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Integer", "<init>", "(I)V");
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;");
         } else if (toType == Type.LONG) {
-            // initial stack [i, ...]
-            mv.visitInsn(Opcodes.I2L);  // => [l1, l0, ...]
-            // this temporarily adds 4 to the stack height
-            if (currentStackHeights.stackCount + 4 > maxStackHeights.stackCount) {
-                maxStackHeights.stackCount = currentStackHeights.stackCount + 4;
-            }
-            mv.visitTypeInsn(Opcodes.NEW,  "java/lang/Long");   // => [Long, l1, l0, ...]
-            mv.visitInsn(Opcodes.DUP_X2);                       // => [Long, l1, l0, Long, ...]
-            mv.visitInsn(Opcodes.DUP_X2);                       // => [Long, l1, l0, Long Long, ...]
-            mv.visitInsn(Opcodes.POP);                          // => [l1, l0, Long, Long ...]
-            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Long", "<init>", "(J)V"); // => [ Long, ...]
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Long", "valueOf", "(L)Ljava/lang/Long;");
         } else if (toType == Type.FLOAT) {
-            // initial stack [i, ...]
-            mv.visitInsn(Opcodes.I2F); // => [f, ...]
-            // this temporarily adds 2 to the stack height
-            if (currentStackHeights.stackCount + 2 > maxStackHeights.stackCount) {
-                maxStackHeights.stackCount = currentStackHeights.stackCount + 2;
-            }
-            mv.visitTypeInsn(Opcodes.NEW,  "java/lang/Float"); // => [Float, f, ...]
-            mv.visitInsn(Opcodes.DUP_X1);                      // => [Float, f, Float, ...]
-            mv.visitInsn(Opcodes.SWAP);                        // => [f, Float, Float, ...]
-            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Float", "<init>", "(F)V");
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;");
         } else if (toType == Type.DOUBLE) {
-            // initial stack [i, ...]
-            mv.visitInsn(Opcodes.I2D);  // => [d1, d0, ...]
-            // this temporarily adds 4 to the stack height
-            if (currentStackHeights.stackCount + 4 > maxStackHeights.stackCount) {
-                maxStackHeights.stackCount = currentStackHeights.stackCount + 4;
-            }
-            mv.visitTypeInsn(Opcodes.NEW,  "java/lang/Double");   // => [Double, d1, d0, ...]
-            mv.visitInsn(Opcodes.DUP_X2);                         // => [Double, d1, d0, Double, ...]
-            mv.visitInsn(Opcodes.DUP_X2);                         // => [Double, d1, d0, Double, Double, ...]
-            mv.visitInsn(Opcodes.POP) ;                           // => [d1, d0, Double, Double, ...]
-            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Double", "<init>", "(D)V");
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;");
         }
     }
 

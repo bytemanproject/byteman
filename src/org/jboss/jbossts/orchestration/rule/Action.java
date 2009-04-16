@@ -26,6 +26,8 @@ package org.jboss.jbossts.orchestration.rule;
 import org.jboss.jbossts.orchestration.rule.type.Type;
 import org.jboss.jbossts.orchestration.rule.expression.ExpressionHelper;
 import org.jboss.jbossts.orchestration.rule.expression.Expression;
+import org.jboss.jbossts.orchestration.rule.expression.ReturnExpression;
+import org.jboss.jbossts.orchestration.rule.expression.ThrowExpression;
 import org.jboss.jbossts.orchestration.rule.grammar.ECATokenLexer;
 import org.jboss.jbossts.orchestration.rule.grammar.ECAGrammarParser;
 import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
@@ -117,7 +119,10 @@ public class Action extends RuleElement
             hasActions = true;
             expr.compile(mv, currentStackHeights, maxStackHeights);
             Type resultType = expr.getType();
-            if (resultType != Type.VOID) {
+            // return and throw expressions don't actually leave a value on the stack even
+            // though they may have a non-VOID value type
+            boolean maybePop = !(expr instanceof ReturnExpression || expr instanceof ThrowExpression);
+            if (maybePop && resultType != Type.VOID) {
                 int expected = (resultType.getNBytes() > 4 ? 2 : 1);
                 for (int i = 0; i < expected; i++) {
                     mv.visitInsn(Opcodes.POP);

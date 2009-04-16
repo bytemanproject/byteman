@@ -266,7 +266,9 @@ public class ThrowExpression extends Expression
         String exceptionClassName = type.getInternalName();
         mv.visitTypeInsn(Opcodes.NEW, exceptionClassName);
         currentStackHeights.addStackCount(1);
-        extraParams++;
+        // copy the exception so we can init it
+        mv.visitInsn(Opcodes.DUP);
+        currentStackHeights.addStackCount(1);
 
         int argCount = arguments.size();
 
@@ -274,25 +276,30 @@ public class ThrowExpression extends Expression
         for (int i = 0; i < argCount; i++) {
             Type argType = argumentTypes.get(i);
             Type paramType = paramTypes.get(i);
+            int paramCount = (paramType.getNBytes() > 4 ? 2 : 1);
 
+            // track extra storage used after type conversion
+            currentStackHeights.addStackCount(paramCount);
+            extraParams += (paramCount);
             arguments.get(i).compile(mv, currentStackHeights, maxStackHeights);
             compileTypeConversion(argType, paramType, mv, currentStackHeights, maxStackHeights);
-            // track extra storage used after type conversion
-            extraParams += (paramType.getNBytes() > 4 ? 2 : 1);
         }
 
         // construct the exception
         mv.visitMethodInsn(Opcodes.INVOKESPECIAL, exceptionClassName, "<init>", getDescriptor());
-        // now throw it
-        mv.visitInsn(Opcodes.ATHROW);
 
-        // decrement the stack height to account for stacked param values (removed) and return value (added)
-        currentStackHeights.addStackCount(expected - extraParams);
+        // modify the stack height to account for the removed exception and params
+        currentStackHeights.addStackCount(-(extraParams+1));
 
         // we should only have the thrown exception on the stack
         if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("ThrowExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+            throw new CompileException("ThrowExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
         }
+
+        // now throw the exception and decrement the stack height
+
+        mv.visitInsn(Opcodes.ATHROW);
+        currentStackHeights.addStackCount(-1);
 
         // no need to update max stack unless extraParams is zero in which case the exception
         // instance may have thrown us over the limit

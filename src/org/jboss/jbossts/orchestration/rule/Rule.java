@@ -25,10 +25,7 @@ package org.jboss.jbossts.orchestration.rule;
 
 import org.jboss.jbossts.orchestration.rule.type.TypeGroup;
 import org.jboss.jbossts.orchestration.rule.type.Type;
-import org.jboss.jbossts.orchestration.rule.exception.ParseException;
-import org.jboss.jbossts.orchestration.rule.exception.CompileException;
-import org.jboss.jbossts.orchestration.rule.exception.TypeException;
-import org.jboss.jbossts.orchestration.rule.exception.ExecuteException;
+import org.jboss.jbossts.orchestration.rule.exception.*;
 import org.jboss.jbossts.orchestration.rule.binding.Bindings;
 import org.jboss.jbossts.orchestration.rule.binding.Binding;
 import org.jboss.jbossts.orchestration.rule.grammar.ECATokenLexer;
@@ -472,6 +469,16 @@ public class Rule
                 System.out.println("cast exception " + helperImplementationClass.getCanonicalName());
                 e.printStackTrace(System.out);
                 return;
+            } catch (EarlyReturnException e) {
+                throw e;
+            } catch (ThrowException e) {
+                throw e;
+            } catch (ExecuteException e) {
+                System.out.println(getName() + " : " + e);
+                throw e;
+            } catch (Throwable throwable) {
+                System.out.println(getName() + " : " + throwable);
+                throw new ExecuteException(getName() + " unknnown error : " + throwable, throwable);
             }
         }
     }

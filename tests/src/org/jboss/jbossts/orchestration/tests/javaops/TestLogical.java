@@ -3,11 +3,7 @@ package org.jboss.jbossts.orchestration.tests.javaops;
 import org.jboss.jbossts.orchestration.tests.Test;
 
 /**
- * Created by IntelliJ IDEA.
- * User: adinn
- * Date: 08-Apr-2009
- * Time: 16:04:11
- * To change this template use File | Settings | File Templates.
+ * Test to ensure logical operations compute as expected
  */
 public class TestLogical extends Test
 {

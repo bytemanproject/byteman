@@ -74,7 +74,7 @@ public abstract class Expression extends RuleElement
 
     public String getPos()
     {
-        return rule.getFile() + " @ line " + "." + charPos;
+        return " file " + rule.getFile() + " @ " + line + "." + charPos;
     }
 
     public Type getType()

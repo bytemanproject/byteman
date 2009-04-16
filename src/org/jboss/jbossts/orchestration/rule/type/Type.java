@@ -24,6 +24,7 @@
 package org.jboss.jbossts.orchestration.rule.type;
 
 import org.jboss.jbossts.orchestration.rule.helper.HelperAdapter;
+import org.jboss.jbossts.orchestration.rule.exception.TypeException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -527,14 +528,13 @@ public class Type {
      * @param type2 the type of the right operand which must be numeric but may be undefined
      * @return the corresponding promotion/result type which may be undefined numeric
      */
-    public static Type promote(Type type1, Type type2) {
-        if (!type1.isNumeric() || !type2.isNumeric()) {
-            // should not happen!
-            System.err.println("Type.promote : unexpected non-numeric type argument");
-            return N;
-        } else if (type1.isUndefined() || type2.isUndefined()) {
+    public static Type promote(Type type1, Type type2) throws TypeException {
+        if (type1.isUndefined() || type2.isUndefined()) {
                 // don't know for sure which is which so return undefined numeric
                 return N;
+        } else if (!type1.isNumeric() || !type2.isNumeric()) {
+                // should not happen!
+            throw new TypeException("Type.promote : unexpected non-numeric type argument");
         } else if (type1.isFloating() || type2.isFloating()) {
             if (type1 == DOUBLE || type2 == DOUBLE || type1 == D || type2 == D) {
                 return D;
@@ -891,7 +891,25 @@ public class Type {
 
     public static String internalName(Class<?> clazz)
     {
-        return clazz.getName().replaceAll("\\.", "/");
+        return internalName(clazz, false);
+    }
+
+    public static String internalName(Class<?> clazz, boolean forField)
+    {
+        if (clazz.isPrimitive()) {
+            if (forField) {
+                return internalNames.get(clazz.getName());
+            } else {
+                return clazz.getName();
+            }
+        } else if (clazz.isArray()) {
+            Class base = clazz.getComponentType();
+            return "[" + internalName(base, true);
+        } else if (forField) {
+            return "L" + clazz.getName().replaceAll("\\.", "/") + ";";
+        } else {
+            return clazz.getName().replaceAll("\\.", "/");
+        }
     }
 
     // private class used to type unknown types

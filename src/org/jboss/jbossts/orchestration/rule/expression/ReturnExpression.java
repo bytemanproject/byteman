@@ -173,7 +173,7 @@ public class ReturnExpression extends Expression
         Type returnType = returnValue.getType();
         int currentStack = currentStackHeights.stackCount;
         int expected = 1;
-        int extraSlots = 3;
+        int extraSlots = 0;
 
         // ok, we need to create the EarlyReturnException instance and then
         // initialise it using the appropriate return value or null if no
@@ -185,32 +185,44 @@ public class ReturnExpression extends Expression
         // create am EarlyReturnException -- adds 1 to stack
         String exceptionClassName = Type.internalName(EarlyReturnException.class);
         mv.visitTypeInsn(Opcodes.NEW, exceptionClassName);
+        currentStackHeights.addStackCount(1);
+        // copy the exception so we can initialise it -- adds 1 to stack
+        mv.visitInsn(Opcodes.DUP);
+        currentStackHeights.addStackCount(1);
         // stack a string constant to initialise the exception with -- adds 1 to stack
         mv.visitLdcInsn("return from " + rule.getName());
+        currentStackHeights.addStackCount(1);
         // stack any required return value or null -- adds 1 to stack but may use 2 slots
         if (returnValue != null) {
             returnValue.compile(mv, currentStackHeights, maxStackHeights);
             if (returnType.isPrimitive()) {
-                // we need an object not a primitive
-                compileBox(returnType, mv, currentStackHeights, maxStackHeights);
                 // if the intermediate value used 2 words then at the peak we needed an extra stack slot
                 if (returnType.getNBytes() > 4) {
                     extraSlots++;
                 }
+                // we need an object not a primitive
+                compileBox(Type.boxType(returnType), mv, currentStackHeights, maxStackHeights);
             }
         } else {
             // just push null
             mv.visitInsn(Opcodes.ACONST_NULL);
+            currentStackHeights.addStackCount(1);
         }
-        // construct the exception
+        // construct the exception -- pops 3
         mv.visitMethodInsn(Opcodes.INVOKESPECIAL, exceptionClassName, "<init>", "(Ljava/lang/String;Ljava/lang/Object;)V");
+        currentStackHeights.addStackCount(-3);
 
         // check current stack and increment max stack if necessary
         if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("ReturnExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+            throw new CompileException("ReturnExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
         }
 
-        int overflow = ((currentStack + extraSlots) - maxStackHeights.stackCount);
+        // now insert the throw instruction and decrement the stack height accordingly
+        
+        mv.visitInsn(Opcodes.ATHROW);
+        currentStackHeights.addStackCount(-1);
+
+        int overflow = ((currentStack + 3 +  extraSlots) - maxStackHeights.stackCount);
         if (overflow > 0) {
             maxStackHeights.addStackCount(overflow);
         }

@@ -190,12 +190,14 @@ public class FieldExpression extends Expression
         int currentStack = currentStackHeights.stackCount;
         int expected = (type.getNBytes() > 4 ? 2 : 1);
 
-        // compile the owner expression and then ensure it is typed correctly
+        // compile the owner expression
         owner.compile(mv, currentStackHeights, maxStackHeights);
-        compileTypeConversion(owner.getType(), type, mv, currentStackHeights, maxStackHeights);
         if (!indirectStatic) {
             // compile a field access
-            mv.visitFieldInsn(Opcodes.GETFIELD, field.getDeclaringClass().getName(), field.getName(), field.getType().getName());
+            String ownerType = Type.internalName(field.getDeclaringClass());
+            String fieldName = field.getName();
+            String fieldType = Type.internalName(field.getType(), true);
+            mv.visitFieldInsn(Opcodes.GETFIELD, ownerType, fieldName, fieldType);
         }
         // check the stack height is ok
         if (currentStackHeights.stackCount != currentStack + expected) {
@@ -222,17 +224,24 @@ public class FieldExpression extends Expression
 
     public int getPathCount(String name)
     {
-        int charMax = name.length();
-        int charCount = 0;
-        int dotExtra = 0;
-        int idx;
-        for (idx = 0; idx < pathList.length; idx++) {
-            charCount += (dotExtra + pathList[idx].length());
-            if (charCount > charMax) {
-                break;
+        // name will be package qualified so check whether the path list also includes the package
+        if (name.startsWith(pathList[0])) {
+            int charMax = name.length();
+            int charCount = 0;
+            int dotExtra = 0;
+            int idx;
+            for (idx = 0; idx < pathList.length; idx++) {
+                charCount += (dotExtra + pathList[idx].length());
+                if (charCount > charMax) {
+                    break;
+                }
             }
+            return idx;
+        } else {
+            // name must have been obtained by globalizing an unqualified type name so the typename
+            // is the first element in the path list
+            return 1;
         }
-        return idx;
     }
 
     public void writeTo(StringWriter stringWriter) {

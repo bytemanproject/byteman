@@ -40,6 +40,7 @@ import org.objectweb.asm.Opcodes;
 public class BitExpression extends BinaryOperExpression
 {
     public BitExpression(Rule rule, int oper, ParseNode token, Expression left, Expression right)
+            throws TypeException
     {
         // n.b. left and right must be of integral type
 

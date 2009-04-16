@@ -94,6 +94,8 @@ public class LogicalExpression extends BooleanExpression
             mv.visitLdcInsn(true);
             mv.visitJumpInsn(Opcodes.GOTO, endLabel);
         }
+        // in either case if we get here the if test removed 1 from the stack
+        currentStackHeights.addStackCount(-1);
         // the else branch -- adds 1 to stack height
         mv.visitLabel(nextLabel);
         oper1.compile(mv, currentStackHeights, maxStackHeights);
@@ -103,9 +105,10 @@ public class LogicalExpression extends BooleanExpression
         // the final result is the result of the second oper which is on the stack already
         // This is the end, my beau-tiful friend
         mv.visitLabel(endLabel);
+        // in either case if we get here we should have one extra value on the stack
         // check stack height
         if (currentStackHeights.stackCount != currentStack + 1) {
-            throw new CompileException("LogicalExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + 1);
+            throw new CompileException("LogicalExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + 1));
         }
         // no need to check max stack height as recursive calls will have added at least 1 
     }

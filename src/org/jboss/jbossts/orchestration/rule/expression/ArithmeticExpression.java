@@ -40,6 +40,7 @@ import org.objectweb.asm.Opcodes;
 public class ArithmeticExpression extends BinaryOperExpression
 {
     public ArithmeticExpression(Rule rule, int oper, ParseNode token, Expression left, Expression right)
+            throws TypeException
     {
         super(rule, oper, Type.promote(left.getType(), right.getType()), token, left, right);
     }

@@ -106,6 +106,12 @@ public class ConditionalEvalExpression extends TernaryOperExpression
         compileTypeConversion(oper1.getType(), type,  mv, currentStackHeights, maxStackHeights);
         // plant a goto skipping over the else expression
         mv.visitJumpInsn(Opcodes.GOTO, endLabel);
+        // check the stack height is what we expect, either 1 or 2 words depending upon the result type
+        if (currentStackHeights.stackCount != currentStack + expected) {
+            throw new CompileException("ConditionalEvalExpression.compile : invalid true branch stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+        }
+        // ok, now reset stack height for false branch
+        currentStackHeights.addStackCount(-expected);
         // else starts here
         mv.visitLabel(elseLabel);
         // compile the else branch
@@ -117,8 +123,9 @@ public class ConditionalEvalExpression extends TernaryOperExpression
 
         // check the stack height is what we expect, either 1 or 2 words depending upon the result type
         if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("ConditionalEvalExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+            throw new CompileException("ConditionalEvalExpression.compile : invalid false branch stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
         }
+
         // no need to check max stack height as teh left and right expressions will have exceeded anything
         // we stacked inside this call
     }
