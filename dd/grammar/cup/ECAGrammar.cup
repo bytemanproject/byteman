@@ -418,6 +418,10 @@ expr_meth_expr
 		{: RESULT = node(ParseNode.METH, mleft, mright, m, eme, null); :}
 	|	meth_expr:eme DOT simple_name:m LPAREN expr_list:args RPAREN
 		{: RESULT = node(ParseNode.METH, mleft, mright, m, eme, args); :}
+	|	expr_field_expr:efe DOT simple_name:m LPAREN RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, efe, null); :}
+	|	expr_field_expr:efe DOT simple_name:m LPAREN expr_list:args RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, efe, args); :}
 	;
 
 simple_expr

@@ -1,0 +1,56 @@
+RULE test method 1
+CLASS TestMethod
+METHOD triggerMethod1(TestFieldMethodAuxiliary)
+HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AFTER CALL log
+BIND test : Test = $0,
+     arg : TestFieldMethodAuxiliary = $1
+IF arg.left.value <= 1
+DO test.log("triggerMethod1 : arg == " + $1),
+   test.log("triggerMethod1 : arg.getLeft() == " + arg.getLeft()),
+   test.log("triggerMethod1 : arg.getRight() == " + arg.getRight()),
+   return arg.getLeft().getLeft()
+ENDRULE
+
+RULE test method 2
+CLASS TestMethod
+METHOD triggerMethod1(TestFieldMethodAuxiliary)
+HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AFTER CALL log
+BIND test : Test = $0,
+     arg : TestFieldMethodAuxiliary = $1
+IF arg.left.value > 1
+DO test.log("triggerMethod1 : arg == " + $1),
+   test.log("triggerMethod1 : arg.left.getRight() == " + arg.left.getRight()),
+   test.log("triggerMethod1 : arg.right.getRight().right == " + arg.right.getRight().right),
+   return arg.getRight().right
+ENDRULE
+
+RULE test method 3
+CLASS TestMethod
+METHOD triggerMethod2(TestFieldMethodAuxiliary)
+HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AFTER CALL log
+BIND test : Test = $0,
+     arg : TestFieldMethodAuxiliary = $1
+IF arg.value == 4
+DO test.log("triggerMethod2 : arg == " + $1),
+   test.log("triggerMethod2 : org.jboss.jbossts.orchestration.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().left.value == " + org.jboss.jbossts.orchestration.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().left.value),
+   test.log("triggerMethod2 : TestFieldMethodAuxiliary.getTheAuxiliary().left.getRight().right == " + (TestFieldMethodAuxiliary.getTheAuxiliary().left.getRight()).right),
+   return org.jboss.jbossts.orchestration.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().getLeft().right
+ENDRULE
+
+RULE test method 4
+CLASS TestMethod
+METHOD triggerMethod2(TestFieldMethodAuxiliary)
+HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AFTER CALL log
+BIND test : Test = $0,
+     arg : TestFieldMethodAuxiliary = $1
+IF arg.value != 4
+DO test.log("triggerMethod2 : arg == " + $1),
+   test.log("triggerMethod2 : TestFieldMethodAuxiliary.getTheAuxiliary().getValue() == " + TestFieldMethodAuxiliary.getTheAuxiliary().getValue()),
+   test.log("triggerMethod2 : org.jboss.jbossts.orchestration.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().right.right.getRight().right.getValue() == " + org.jboss.jbossts.orchestration.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().right.right.getRight().right.getValue()),
+   return arg.getLeft()
+ENDRULE
+

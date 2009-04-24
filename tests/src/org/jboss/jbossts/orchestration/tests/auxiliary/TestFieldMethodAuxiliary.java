@@ -3,37 +3,42 @@ package org.jboss.jbossts.orchestration.tests.auxiliary;
 /**
  * Auxiliary class used to implement TestField test class
  */
-public class TestFieldAuxiliary
+public class TestFieldMethodAuxiliary
 {
-    public static TestFieldAuxiliary theAuxiliary;
+    public static TestFieldMethodAuxiliary theAuxiliary;
     
     public int value;
-    public TestFieldAuxiliary left;
-    public TestFieldAuxiliary right;
+    public TestFieldMethodAuxiliary left;
+    public TestFieldMethodAuxiliary right;
 
-    public TestFieldAuxiliary(int value)
+    public TestFieldMethodAuxiliary(int value)
     {
         this(null, value, null);
     }
 
-    public TestFieldAuxiliary(TestFieldAuxiliary left, int value)
+    public TestFieldMethodAuxiliary(TestFieldMethodAuxiliary left, int value)
     {
         this(left, value, null);
     }
 
-    public TestFieldAuxiliary(int value, TestFieldAuxiliary right)
+    public TestFieldMethodAuxiliary(int value, TestFieldMethodAuxiliary right)
     {
         this(null, value, right);
     }
 
-    public TestFieldAuxiliary(TestFieldAuxiliary left, int value, TestFieldAuxiliary right)
+    public TestFieldMethodAuxiliary(TestFieldMethodAuxiliary left, int value, TestFieldMethodAuxiliary right)
     {
         this.left = left;
         this.value = value;
         this.right = right;
     }
 
-    public TestFieldAuxiliary getLeft()
+    public static TestFieldMethodAuxiliary getTheAuxiliary()
+    {
+        return theAuxiliary;
+    }
+
+    public TestFieldMethodAuxiliary getLeft()
     {
         return left;
     }
@@ -43,7 +48,7 @@ public class TestFieldAuxiliary
         return value;
     }
     
-    public TestFieldAuxiliary getRight()
+    public TestFieldMethodAuxiliary getRight()
     {
         return right;
     }

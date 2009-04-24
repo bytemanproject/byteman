@@ -1,10 +1,10 @@
 RULE test field 1
 CLASS TestField
-METHOD triggerMethod1(TestFieldAuxiliary)
+METHOD triggerMethod1(TestFieldMethodAuxiliary)
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0,
-     arg : TestFieldAuxiliary = $1
+     arg : TestFieldMethodAuxiliary = $1
 IF arg.left.value <= 1
 DO test.log("triggerMethod1 : arg == " + $1),
    test.log("triggerMethod1 : arg.left == " + arg.left),
@@ -14,11 +14,11 @@ ENDRULE
 
 RULE test field 2
 CLASS TestField
-METHOD triggerMethod1(TestFieldAuxiliary)
+METHOD triggerMethod1(TestFieldMethodAuxiliary)
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0,
-     arg : TestFieldAuxiliary = $1
+     arg : TestFieldMethodAuxiliary = $1
 IF arg.left.value > 1
 DO test.log("triggerMethod1 : arg == " + $1),
    test.log("triggerMethod1 : arg.left.right == " + arg.left.right),
@@ -28,29 +28,29 @@ ENDRULE
 
 RULE test field 3
 CLASS TestField
-METHOD triggerMethod2(TestFieldAuxiliary)
+METHOD triggerMethod2(TestFieldMethodAuxiliary)
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0,
-     arg : TestFieldAuxiliary = $1
+     arg : TestFieldMethodAuxiliary = $1
 IF arg.value == 4
 DO test.log("triggerMethod2 : arg == " + $1),
-   test.log("triggerMethod2 : TestFieldAuxiliary.theAuxiliary.left.value == " + TestFieldAuxiliary.theAuxiliary.left.value),
-   test.log("triggerMethod2 : TestFieldAuxiliary.theAuxiliary.left.getRight().right == " + (TestFieldAuxiliary.theAuxiliary.left.getRight()).right),
-   return TestFieldAuxiliary.theAuxiliary.getLeft().right
+   test.log("triggerMethod2 : TestFieldMethodAuxiliary.theAuxiliary.left.value == " + TestFieldMethodAuxiliary.theAuxiliary.left.value),
+   test.log("triggerMethod2 : TestFieldMethodAuxiliary.theAuxiliary.left.getRight().right == " + (TestFieldMethodAuxiliary.theAuxiliary.left.getRight()).right),
+   return TestFieldMethodAuxiliary.theAuxiliary.getLeft().right
 ENDRULE
 
 RULE test field 4
 CLASS TestField
-METHOD triggerMethod2(TestFieldAuxiliary)
+METHOD triggerMethod2(TestFieldMethodAuxiliary)
 HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0,
-     arg : TestFieldAuxiliary = $1
+     arg : TestFieldMethodAuxiliary = $1
 IF arg.value != 4
 DO test.log("triggerMethod2 : arg == " + $1),
-   test.log("triggerMethod2 : TestFieldAuxiliary.theAuxiliary.value == " + TestFieldAuxiliary.theAuxiliary.value),
-   test.log("triggerMethod2 : TestFieldAuxiliary.theAuxiliary.right.right.right.right.value == " + TestFieldAuxiliary.theAuxiliary.right.right.right.right.value),
+   test.log("triggerMethod2 : TestFieldMethodAuxiliary.theAuxiliary.value == " + TestFieldMethodAuxiliary.theAuxiliary.value),
+   test.log("triggerMethod2 : TestFieldMethodAuxiliary.theAuxiliary.right.right.right.right.value == " + TestFieldMethodAuxiliary.theAuxiliary.right.right.right.right.value),
    return arg.getLeft()
 ENDRULE
 

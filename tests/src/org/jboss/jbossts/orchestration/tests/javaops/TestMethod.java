@@ -6,12 +6,12 @@ import org.jboss.jbossts.orchestration.tests.auxiliary.TestFieldMethodAuxiliary;
 /**
  * Test to ensure static and instance field accesses work as expected
  */
-public class TestField extends Test
+public class TestMethod extends Test
 {
     public int value = 0;
 
-    public TestField() {
-        super(TestField.class.getCanonicalName());
+    public TestMethod() {
+        super(TestMethod.class.getCanonicalName());
     }
 
     static int runNumber = 0;
@@ -64,9 +64,9 @@ public class TestField extends Test
 
         runNumber = 1;
         try {
-            log("calling TestField.triggerMethod1");
+            log("calling TestMethod.triggerMethod1");
             res = triggerMethod1(aux[0]);
-            log("called TestField.triggerMethod1 : result == " + res);
+            log("called TestMethod.triggerMethod1 : result == " + res);
         } catch (Exception e) {
             log(e);
         }
@@ -75,9 +75,9 @@ public class TestField extends Test
 
         runNumber = 2;
         try {
-            log("calling TestField.triggerMethod1");
+            log("calling TestMethod.triggerMethod1");
             res = triggerMethod1(aux[2]);
-            log("called TestField.triggerMethod1 : result == " + res);
+            log("called TestMethod.triggerMethod1 : result == " + res);
         } catch (Exception e) {
             log(e);
         }
@@ -86,9 +86,9 @@ public class TestField extends Test
 
         runNumber = 3;
         try {
-            log("calling TestField.triggerMethod2");
+            log("calling TestMethod.triggerMethod2");
             res = triggerMethod2(aux[4]);
-            log("called TestField.triggerMethod2 : result == " + res);
+            log("called TestMethod.triggerMethod2 : result == " + res);
         } catch (Exception e) {
             log(e);
         }
@@ -97,9 +97,9 @@ public class TestField extends Test
 
         runNumber = 4;
         try {
-            log("calling TestField.triggerMethod2");
+            log("calling TestMethod.triggerMethod2");
             res = triggerMethod2(aux[7]);
-            log("called TestField.triggerMethod2 : result == " + res);
+            log("called TestMethod.triggerMethod2 : result == " + res);
         } catch (Exception e) {
             log(e);
         }
@@ -109,13 +109,13 @@ public class TestField extends Test
 
     public TestFieldMethodAuxiliary triggerMethod1(TestFieldMethodAuxiliary arg)
     {
-        log("inside TestField.triggerMethod1");
+        log("inside TestMethod.triggerMethod1");
         return arg;
     }
 
     public TestFieldMethodAuxiliary triggerMethod2(TestFieldMethodAuxiliary arg)
     {
-        log("inside TestField.triggerMethod2");
+        log("inside TestMethod.triggerMethod2");
         return arg;
     }
 
@@ -124,42 +124,42 @@ public class TestField extends Test
         switch (runNumber) {
             case 1:
             {
-                logExpected("calling TestField.triggerMethod1");
-                logExpected("inside TestField.triggerMethod1");
+                logExpected("calling TestMethod.triggerMethod1");
+                logExpected("inside TestMethod.triggerMethod1");
                 logExpected("triggerMethod1 : arg == " + aux[0]);
-                logExpected("triggerMethod1 : arg.left == " + aux[0].left);
-                logExpected("triggerMethod1 : arg.right == " + aux[0].right);
-                logExpected("called TestField.triggerMethod1 : result == " + aux[0].left.left);
+                logExpected("triggerMethod1 : arg.getLeft() == " + aux[0].getLeft());
+                logExpected("triggerMethod1 : arg.getRight() == " + aux[0].getRight());
+                logExpected("called TestMethod.triggerMethod1 : result == " + aux[0].getLeft().getLeft());
             }
             break;
             case 2:
             {
-                logExpected("calling TestField.triggerMethod1");
-                logExpected("inside TestField.triggerMethod1");
+                logExpected("calling TestMethod.triggerMethod1");
+                logExpected("inside TestMethod.triggerMethod1");
                 logExpected("triggerMethod1 : arg == " + aux[2]);
-                logExpected("triggerMethod1 : arg.left.right == " + aux[2].left.right);
-                logExpected("triggerMethod1 : arg.right.right.right == " + aux[2].right.right.right);
-                logExpected("called TestField.triggerMethod1 : result == " + aux[2].right.getRight());
+                logExpected("triggerMethod1 : arg.left.getRight() == " + aux[2].left.getRight());
+                logExpected("triggerMethod1 : arg.right.getRight().right == " + aux[2].right.getRight().right);
+                logExpected("called TestMethod.triggerMethod1 : result == " + aux[2].getRight().right);
             }
             break;
             case 3:
             {
-                logExpected("calling TestField.triggerMethod2");
-                logExpected("inside TestField.triggerMethod2");
+                logExpected("calling TestMethod.triggerMethod2");
+                logExpected("inside TestMethod.triggerMethod2");
                 logExpected("triggerMethod2 : arg == " + aux[4]);
-                logExpected("triggerMethod2 : TestFieldMethodAuxiliary.theAuxiliary.left.value == " + aux[0].left.value);
-                logExpected("triggerMethod2 : TestFieldMethodAuxiliary.theAuxiliary.left.getRight().right == " + aux[0].left.getRight().right);
-                logExpected("called TestField.triggerMethod2 : result == " + aux[0].getLeft().right);
+                logExpected("triggerMethod2 : org.jboss.jbossts.orchestration.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().left.value == " + (org.jboss.jbossts.orchestration.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary()).left.value);
+                logExpected("triggerMethod2 : TestFieldMethodAuxiliary.getTheAuxiliary().left.getRight().right == " + TestFieldMethodAuxiliary.getTheAuxiliary().left.getRight().right);
+                logExpected("called TestMethod.triggerMethod2 : result == " + org.jboss.jbossts.orchestration.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().getLeft().right);
             }
             break;
             case 4:
             {
-                logExpected("calling TestField.triggerMethod2");
-                logExpected("inside TestField.triggerMethod2");
+                logExpected("calling TestMethod.triggerMethod2");
+                logExpected("inside TestMethod.triggerMethod2");
                 logExpected("triggerMethod2 : arg == " + aux[7]);
-                logExpected("triggerMethod2 : TestFieldMethodAuxiliary.theAuxiliary.value == " + aux[0].value);
-                logExpected("triggerMethod2 : TestFieldMethodAuxiliary.theAuxiliary.right.right.right.right.value == " + aux[0].right.right.right.right.value);
-                logExpected("called TestField.triggerMethod2 : result == " + aux[7].getLeft());
+                logExpected("triggerMethod2 : TestFieldMethodAuxiliary.getTheAuxiliary().getValue() == " + TestFieldMethodAuxiliary.getTheAuxiliary().getValue());
+                logExpected("triggerMethod2 : org.jboss.jbossts.orchestration.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().right.right.getRight().right.getValue() == " + org.jboss.jbossts.orchestration.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().right.right.getRight().right.getValue());
+                logExpected("called TestMethod.triggerMethod2 : result == " + aux[7].getLeft());
             }
             break;
         }
