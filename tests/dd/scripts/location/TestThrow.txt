@@ -1,12 +1,12 @@
-RULE test throw trigger
-CLASS TestCallThrowSynchAuxiliary
-METHOD testMethod()
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
-AT THROW
-BIND test : Test = $0.getTest()
-IF TRUE
-DO test.log("THROW 1 triggered in TestCallThrowSynchAuxiliary.testMethod")
-ENDRULE
+#RULE test throw trigger
+#CLASS TestCallThrowSynchAuxiliary
+#METHOD testMethod()
+#HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+#AT THROW
+#BIND test : Test = $0.getTest()
+#IF TRUE
+#DO test.log("THROW 1 triggered in TestCallThrowSynchAuxiliary.testMethod")
+#ENDRULE
 
 RULE test throw trigger 2
 CLASS TestCallThrowSynchAuxiliary

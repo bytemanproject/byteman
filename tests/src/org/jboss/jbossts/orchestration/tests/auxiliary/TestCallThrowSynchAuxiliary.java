@@ -45,6 +45,12 @@ public class TestCallThrowSynchAuxiliary
         synchronized(this) {
             test.log("3: currentCounter == " + currentCounter);
         }
+        
+        synchronized(this) {
+            setCounter(currentCounter + 1);
+            // should not get printed for call test since call to setCounter should trigger a return
+            test.log("4: currentCounter == " + currentCounter);
+        }
     }
 
     public Test getTest()

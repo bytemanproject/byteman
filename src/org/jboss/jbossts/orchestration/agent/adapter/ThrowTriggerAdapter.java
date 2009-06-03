@@ -100,107 +100,41 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
 
         public void visitInsn(final int opcode) {
             if (opcode == Opcodes.ATHROW) {
-                // TODO -- this fails if exceptions or throws can occur inside monitor blocks
-                // TODO -- because they get caught and rethrown at the end of the monitor block
-                // TODO -- which means the wrong throws get counted
-                // TODO -- so we need to track throw catch blocks and monitor enter/exits properly
-
                 // ok, we have hit a throw -- for now we just count any throw
                 // later we will try to match the exception class
                 if (visitedCount < count) {
                     // a relevant invocation occurs in the called method
-                    visitedCount++;
-                    if (!latched && visitedCount == count) {
-                        rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
-                        String key = rule.getKey();
-                        Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.Rule"));
-                        Method method = Method.getMethod("void execute(String, Object, Object[])");
-                        // we are at the relevant line in the method -- so add a trigger call here
-                        if (Transformer.isVerbose()) {
-                            System.out.println("ThrowTriggerMethodAdapter.visitInsn : inserting trigger for " + rule.getName());
+                    // check whether this is a real throw or a rethrow after a monitorexit
+                    if (!inRethrowHandler()) {
+                        visitedCount++;
+                        if (!latched && visitedCount == count) {
+                            rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
+                            String key = rule.getKey();
+                            Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.Rule"));
+                            Method method = Method.getMethod("void execute(String, Object, Object[])");
+                            // we are at the relevant line in the method -- so add a trigger call here
+                            if (Transformer.isVerbose()) {
+                                System.out.println("ThrowTriggerMethodAdapter.visitInsn : inserting trigger for " + rule.getName());
+                            }
+                            startLabel = newLabel();
+                            endLabel = newLabel();
+                            visitTriggerStart(startLabel);
+                            push(key);
+                            if ((access & Opcodes.ACC_STATIC) == 0) {
+                                loadThis();
+                            } else {
+                                push((Type)null);
+                            }
+                            doArgLoad();
+                            invokeStatic(ruleType, method);
+                            visitTriggerEnd(endLabel);
                         }
-                        startLabel = super.newLabel();
-                        endLabel = super.newLabel();
-                        super.visitLabel(startLabel);
-                        super.push(key);
-                        if ((access & Opcodes.ACC_STATIC) == 0) {
-                            super.loadThis();
-                        } else {
-                            super.push((Type)null);
-                        }
-                        doArgLoad();
-                        super.invokeStatic(ruleType, method);
-                        super.visitLabel(endLabel);
                     }
                 }
             }
             
             super.visitInsn(opcode);
         }
-
-        public void visitEnd()
-        {
-            /*
-             * unfortunately, if we generate the handler code here it comes too late for the stack size
-             * computation to take account of it. the handler code uses 4 stack slots so this causes and
-             * error when the method body uses less than 4. we can patch this by generating the handler
-             * code when visitMaxs is called
-            Type exceptionType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.exception.ExecuteException"));
-            Type earlyReturnExceptionType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.exception.EarlyReturnException"));
-            Type returnType =  Type.getReturnType(descriptor);
-            // add exception handling code subclass first
-            super.catchException(startLabel, endLabel, earlyReturnExceptionType);
-            if (returnType == Type.VOID_TYPE) {
-                // drop exception and just return
-                super.pop();
-                super.visitInsn(Opcodes.RETURN);
-            } else {
-                // fetch value from exception, unbox if needed and return value
-                Method getReturnValueMethod = Method.getMethod("Object getReturnValue()");
-                super.invokeVirtual(earlyReturnExceptionType, getReturnValueMethod);
-                super.unbox(returnType);
-                super.returnValue();
-            }
-            super.catchException(startLabel, endLabel, exceptionType);
-            super.throwException(exceptionType, rule.getName() + " execution exception ");
-            */
-            super.visitEnd();
-        }
-
-        public void visitMaxs(int maxStack, int maxLocals) {
-            /*
-             * this really ought to be in visitEnd but see above for why we do it here
-             */
-            Type exceptionType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.exception.ExecuteException"));
-            Type earlyReturnExceptionType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.exception.EarlyReturnException"));
-            Type throwExceptionType = Type.getType(TypeHelper.externalizeType("org.jboss.jbossts.orchestration.rule.exception.ThrowException"));
-            Type throwableType = Type.getType(TypeHelper.externalizeType("java.lang.Throwable"));
-            Type returnType =  Type.getReturnType(descriptor);
-            // add exception handling code subclass first
-            super.catchException(startLabel, endLabel, earlyReturnExceptionType);
-            if (returnType == Type.VOID_TYPE) {
-                // drop exception and just return
-                super.pop();
-                super.visitInsn(Opcodes.RETURN);
-            } else {
-                // fetch value from exception, unbox if needed and return value
-                Method getReturnValueMethod = Method.getMethod("Object getReturnValue()");
-                super.invokeVirtual(earlyReturnExceptionType, getReturnValueMethod);
-                super.unbox(returnType);
-                super.returnValue();
-            }
-            super.catchException(startLabel, endLabel, throwExceptionType);
-            // fetch value from exception, unbox if needed and return value
-            Method getThrowableMethod = Method.getMethod("Throwable getThrowable()");
-            super.invokeVirtual(throwExceptionType, getThrowableMethod);
-            super.throwException();
-
-            super.catchException(startLabel, endLabel, exceptionType);
-            super.throwException(exceptionType, rule.getName() + " execution exception ");
-            // ok now recompute the stack size
-            super.visitMaxs(maxStack, maxLocals);
-        }
-
     }
 
     /**

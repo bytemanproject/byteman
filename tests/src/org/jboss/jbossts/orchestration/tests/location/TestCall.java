@@ -52,6 +52,7 @@ public class TestCall extends Test
         logExpected("CALL setCounter 2 triggered in TestCallThrowSynchAuxiliary.testMethod");
         logExpected("CALL getCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod");
         logExpected("3: currentCounter == 2");
+        logExpected("CALL setCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod");
         logExpected("called TestCallThrowSynchAuxiliary.testMethod");
 
         return super.getExpected();

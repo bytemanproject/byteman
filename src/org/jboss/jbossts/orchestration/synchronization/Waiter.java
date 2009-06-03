@@ -82,7 +82,7 @@ public class Waiter
         return result;
     }
 
-    public boolean signalKill()
+    public boolean signalThrow()
     {
         boolean result;
 

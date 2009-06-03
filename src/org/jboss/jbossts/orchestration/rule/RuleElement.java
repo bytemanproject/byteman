@@ -383,7 +383,13 @@ public abstract class RuleElement {
         }
 
         if (toType.isAssignableFrom(fromType)) {
-            // nothing more to do
+            // special case -- isAssignableFrom says yes if we are trying to assign to a String but
+            // we may still need to do a toString cobversion all the same
+            if (toType == Type.STRING && fromType != Type.STRING) {
+                compileStringConversion(fromType, toType, mv, currentStackHeights, maxStackHeights);
+            } else {
+                // nothing more to do
+            }
         } else {
             // this happens when we downcast a bound variable from Object to the variable's type
             assert fromType.isAssignableFrom(toType);

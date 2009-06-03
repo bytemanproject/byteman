@@ -259,11 +259,19 @@ public class Helper
 
     // countdown support
     /**
+     * for backwards compatibility
+     */
+    public boolean getCountDown(Object identifier)
+    {
+        return isCountDown(identifier);
+    }
+
+    /**
      * builtin to test test if a countdown has been installed
      * @param identifier an object which uniquely identifies the countdown in question
      * @return true if the countdown is currently installed
      */
-    public boolean getCountDown(Object identifier)
+    public boolean isCountDown(Object identifier)
     {
         synchronized (countDownMap) {
             return (countDownMap.get(identifier) != null);
@@ -430,12 +438,28 @@ public class Helper
     }
 
     /**
-     * call signalKill(Object, boolean) defaulting the second argument to
-     * false
+     * for backwards compatibility
      */
     public boolean signalKill(Object identifier)
     {
-        return signalKill(identifier, false);
+        return signalThrow(identifier);
+    }
+
+    /**
+     * for backwards compatibility
+     */
+    public boolean signalKill(Object identifier, boolean mustMeet)
+    {
+        return signalThrow(identifier, mustMeet);
+    }
+
+    /**
+     * call signalThrow(Object, boolean) defaulting the second argument to
+     * false
+     */
+    public boolean signalThrow(Object identifier)
+    {
+        return signalThrow(identifier, false);
     }
 
     /**
@@ -452,13 +476,13 @@ public class Helper
      * thread is actually waiting on a waiter identified by identifier. if there is no such waiter
      * when this method is called then the calling thread will suspend until one arrives.
      */
-    public boolean signalKill(Object identifier, boolean mustMeet)
+    public boolean signalThrow(Object identifier, boolean mustMeet)
     {
         if (mustMeet == false) {
             Waiter waiter = removeWaiter(identifier);
 
             if (waiter != null) {
-                return waiter.signalKill();
+                return waiter.signalThrow();
             }
 
             return false;
@@ -470,7 +494,7 @@ public class Helper
                  waiter = removeWaiter(identifier);
 
                 if (waiter != null) {
-                    return waiter.signalKill();
+                    return waiter.signalThrow();
                 } else {
                     // insert a pre-signalled waiter
                     waiter = new Waiter(identifier, true, false);
@@ -507,16 +531,6 @@ public class Helper
         } catch (InterruptedException e) {
             // ignore this
         }
-    }
-
-    /**
-     * create a counter identified by the given object with count 0 as its initial count
-     * @param o an identifier used to refer to the counter in future
-     * @return true if a new counter was created and false if one already existed under the given identifier
-     */
-    public boolean createCounter(Object o)
-    {
-        return createCounter(o, 0);
     }
 
     // rendezvous support
@@ -557,6 +571,19 @@ public class Helper
      * test whether a rendezvous with a specific expected count is associated with identifier
      * @param identifier the identifier for the rendezvous
      * @param expected the number of threads expected to meet at the rendezvous
+     * @return true if the endezvous exists and is active otherwise false
+     */
+    public boolean isRendezvous(Object identifier, int expected)
+    {
+        int arrived = getRendezvous(identifier, expected);
+
+        return (arrived >= 0 && arrived < expected);
+    }
+
+    /**
+     * test whether a rendezvous with a specific expected count is associated with identifier
+     * @param identifier the identifier for the rendezvous
+     * @param expected the number of threads expected to meet at the rendezvous
      * @return the numer of threads currently arrived at the rendezvous
      */
     public int getRendezvous(Object identifier, int expected)
@@ -565,7 +592,7 @@ public class Helper
         if (rendezvous == null || rendezvous.getExpected() != expected) {
             return -1;
         }
-        
+
         return rendezvous.getArrived();
     }
 
@@ -628,6 +655,16 @@ public class Helper
 
 
     // counter support
+    /**
+     * create a counter identified by the given object with count 0 as its initial count
+     * @param o an identifier used to refer to the counter in future
+     * @return true if a new counter was created and false if one already existed under the given identifier
+     */
+    public boolean createCounter(Object o)
+    {
+        return createCounter(o, 0);
+    }
+
     /**
      * create a counter identified by the given object with the supplied value as its iniital count
      * @param o an identifier used to refer to the counter in future

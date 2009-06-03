@@ -48,3 +48,14 @@ IF TRUE
 DO test.log("CALL setCounter 2 triggered in TestCallThrowSynchAuxiliary.testMethod")
 ENDRULE
 
+RULE test call setCounter trigger 3
+CLASS TestCallThrowSynchAuxiliary
+METHOD testMethod()
+HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+AT CALL setCounter 3
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("CALL setCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod"),
+   return
+ENDRULE
+

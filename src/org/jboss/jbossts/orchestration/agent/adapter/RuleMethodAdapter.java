@@ -1,6 +1,7 @@
 package org.jboss.jbossts.orchestration.agent.adapter;
 
 import org.objectweb.asm.commons.GeneratorAdapter;
+import org.objectweb.asm.commons.LocalVariablesSorter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Label;
 import org.jboss.jbossts.orchestration.rule.Rule;
@@ -14,7 +15,8 @@ import java.util.List;
  * local variables
  */
 
-public class RuleMethodAdapter extends GeneratorAdapter {
+// public class RuleMethodAdapter extends GeneratorAdapter {
+public class RuleMethodAdapter extends RuleGeneratorAdapter {
     public RuleMethodAdapter(final MethodVisitor mv, final Rule rule, final int access, final String name, final String desc) {
         super(mv, access, name, desc);
         this.name = name;

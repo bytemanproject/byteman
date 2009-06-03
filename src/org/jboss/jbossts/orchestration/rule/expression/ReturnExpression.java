@@ -170,7 +170,7 @@ public class ReturnExpression extends Expression
 
     public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
     {
-        Type returnType = returnValue.getType();
+        Type returnType = (returnValue == null ? Type.VOID : returnValue.getType());
         int currentStack = currentStackHeights.stackCount;
         int expected = 1;
         int extraSlots = 0;

@@ -47,6 +47,7 @@ public class TestSynch extends Test
         // and before printing the 3rd counter
         logExpected("SYNCHRONIZE 2 triggered in TestCallThrowSynchAuxiliary.testMethod");
         logExpected("3: currentCounter == 2");
+        logExpected("4: currentCounter == 2");
         logExpected("called TestCallThrowSynchAuxiliary.testMethod");
 
         return super.getExpected();
