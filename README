@@ -269,13 +269,13 @@ to extend the rule language as nw requirements arise.
 
 Type Checking Scripts
 ---------------------
-Rule scripts may be checked offline by running the TestScript program.
-See build.xml for an example of how to use it to check the example
-test scenario defined in file handler.txt.
+Rule scripts may be checked offline by running the bash shell script
+bytemancheck.sh located in the bin directory. See the script header
+for details.
 
 Documentation
 -------------
-For full details of ruel syntaxthe operation of the byteman
+For full details of rule syntax the operation of the byteman
 package see the manual in the docs directory. See also the dd/scripts
 directory for some example rule scripts used to test JBossTS recovery.
 
