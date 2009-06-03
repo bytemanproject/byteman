@@ -19,14 +19,14 @@
   @author JBoss Inc.
 -->
 
-<project name="orchestration-tests" default="tests" basedir=".">
+<project name="byteman-tests" default="tests" basedir=".">
 
     <!-- the directory in which your installed app server resides -->
     <property environment="env"/>
 
-    <!-- pick up the toast library -->
-    <property name="toast.home" value="../build/lib"/>
-    <property name="toast.jar" value="orchestration.jar"/>
+    <!-- pick up the byteman library -->
+    <property name="byteman.home" value="../build/lib"/>
+    <property name="byteman.jar" value="byteman.jar"/>
 
     <!-- pick up the junit library -->
     <property name="junit.home" value="../ext"/>
@@ -62,7 +62,7 @@
     </target>
 
      <target name="jar" depends="compile">
-         <jar jarfile="${build.lib.dir}/orchestration-tests.jar">
+         <jar jarfile="${build.lib.dir}/byteman-tests.jar">
              <fileset dir="${build.classes.dir}" includes="**/*"/>
          </jar>
     </target>
@@ -79,44 +79,16 @@
     <target name="tests.location">
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestEntry.txt"/>
-            <!-- uncomment for verbose toast output
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.verbose"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestEntry.txt"/>
+            <!-- uncomment for verbose byteman output
+            <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
             <!-- uncomment to dump generated code
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes"/>
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=dump"/>
-            -->
-            <!-- uncomment to enable debug
-            <jvmarg value="-Xdebug"/>
-            <jvmarg  value="-Xnoagent"/>
-            <jvmarg  value="-Djava.compiler=NONE"/>
-            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
-            <test name="org.jboss.jbossts.orchestration.tests.location.TestEntry"/>
-            -->
-        </junit>
-        <junit fork="true" showoutput="true">
-            <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
-                <pathelement location="${junit.home}/${junit.jar}"/>
-            </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestExit.txt"/>
-            <test name="org.jboss.jbossts.orchestration.tests.location.TestExit"/>
-        </junit>
-        <junit fork="true" showoutput="true">
-            <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
-                <pathelement location="${junit.home}/${junit.jar}"/>
-            </classpath>
-            <!-- uncomment for verbose toast output
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.verbose"/>
-            -->
-            <!-- uncomment to dump generated code
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes"/>
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=dump"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
             -->
             <!-- uncomment to enable debug
             <jvmarg value="-Xdebug"/>
@@ -124,49 +96,76 @@
             <jvmarg  value="-Djava.compiler=NONE"/>
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             -->
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestCall.txt"/>
-            <test name="org.jboss.jbossts.orchestration.tests.location.TestCall"/>
+            <test name="org.jboss.byteman.tests.location.TestEntry"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestSynch.txt"/>
-            <test name="org.jboss.jbossts.orchestration.tests.location.TestSynch"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestExit.txt"/>
+            <test name="org.jboss.byteman.tests.location.TestExit"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestThrow.txt"/>
-            <test name="org.jboss.jbossts.orchestration.tests.location.TestThrow"/>
+            <!-- uncomment for verbose byteman output
+            <jvmarg value="-Dorg.jboss.byteman.verbose"/>
+            -->
+            <!-- uncomment to dump generated code
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+            -->
+            <!-- uncomment to enable debug
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestCall.txt"/>
+            <test name="org.jboss.byteman.tests.location.TestCall"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestReadWrite.txt"/>
-            <test name="org.jboss.jbossts.orchestration.tests.location.TestReadWrite"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestSynch.txt"/>
+            <test name="org.jboss.byteman.tests.location.TestSynch"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestThrow.txt"/>
+            <test name="org.jboss.byteman.tests.location.TestThrow"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWrite.txt"/>
+            <test name="org.jboss.byteman.tests.location.TestReadWrite"/>
         </junit>
     </target>
 
     <target name="tests.location.compiled">
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestEntry.txt"/>
-            <jvmarg value="-Drg.jboss.jbossts.orchestration.compileToBytecode"/>
-            <!-- uncomment for verbose toast output
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.verbose"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestEntry.txt"/>
+            <!-- uncomment for verbose byteman output
+            <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
             <!-- uncomment to dump generated code
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes"/>
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=dump"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
             -->
             <!-- uncomment to enable debug
             <jvmarg value="-Xdebug"/>
@@ -174,28 +173,29 @@
             <jvmarg  value="-Djava.compiler=NONE"/>
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             -->
-            <test name="org.jboss.jbossts.orchestration.tests.location.TestEntry"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <test name="org.jboss.byteman.tests.location.TestEntry"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestExit.txt"/>
-            <jvmarg value="-Drg.jboss.jbossts.orchestration.compileToBytecode"/>
-            <test name="org.jboss.jbossts.orchestration.tests.location.TestExit"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestExit.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <test name="org.jboss.byteman.tests.location.TestExit"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <!-- uncomment for verbose toast output
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.verbose"/>
+            <!-- uncomment for verbose byteman output
+            <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
             <!-- uncomment to dump generated code
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes"/>
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=dump"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
             -->
             <!-- uncomment to enable debug
             <jvmarg value="-Xdebug"/>
@@ -203,82 +203,82 @@
             <jvmarg  value="-Djava.compiler=NONE"/>
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             -->
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestCall.txt"/>
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.compileToBytecode"/>
-            <test name="org.jboss.jbossts.orchestration.tests.location.TestCall"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestCall.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <test name="org.jboss.byteman.tests.location.TestCall"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestSynch.txt"/>
-            <jvmarg value="-Drg.jboss.jbossts.orchestration.compileToBytecode"/>
-            <test name="org.jboss.jbossts.orchestration.tests.location.TestSynch"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestSynch.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <test name="org.jboss.byteman.tests.location.TestSynch"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestThrow.txt"/>
-            <jvmarg value="-Drg.jboss.jbossts.orchestration.compileToBytecode"/>
-            <test name="org.jboss.jbossts.orchestration.tests.location.TestThrow"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestThrow.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <test name="org.jboss.byteman.tests.location.TestThrow"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/location/TestReadWrite.txt"/>
-            <jvmarg value="-Drg.jboss.jbossts.orchestration.compileToBytecode"/>
-            <test name="org.jboss.jbossts.orchestration.tests.location.TestReadWrite"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWrite.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <test name="org.jboss.byteman.tests.location.TestReadWrite"/>
         </junit>
     </target>
 
     <target name="tests.javaops">
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestArithmetic.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestArithmetic.txt"/>
             <!--
             <jvmarg value="-Xdebug"/>
             <jvmarg  value="-Xnoagent"/>
             <jvmarg  value="-Djava.compiler=NONE"/>
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             -->
-            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestArithmetic"/>
+            <test name="org.jboss.byteman.tests.javaops.TestArithmetic"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestLogical.txt"/>
-            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestLogical"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestLogical.txt"/>
+            <test name="org.jboss.byteman.tests.javaops.TestLogical"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestField.txt"/>
-            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestField"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestField.txt"/>
+            <test name="org.jboss.byteman.tests.javaops.TestField"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestMethod.txt"/>
-            <!-- uncomment for verbose toast output
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.verbose"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestMethod.txt"/>
+            <!-- uncomment for verbose byteman output
+            <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
             <!-- uncomment to dump generated code
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes"/>
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=dump"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
             -->
             <!-- uncomment to enable debug
             <jvmarg value="-Xdebug"/>
@@ -287,33 +287,33 @@
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             -->
             <!--  set this to debug the rule parser
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.rule.debug"/>
-            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestMethod"/>
+            <jvmarg value="-Dorg.jboss.byteman.rule.debug"/>
             -->
+            <test name="org.jboss.byteman.tests.javaops.TestMethod"/>
         </junit>
     </target>
 
     <target name="tests.javaops.compiled">
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestArithmetic.txt"/>
-            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestArithmetic"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestArithmetic.txt"/>
+            <test name="org.jboss.byteman.tests.javaops.TestArithmetic"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestLogical.txt"/>
-            <!-- uncomment for verbose toast output
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.verbose"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestLogical.txt"/>
+            <!-- uncomment for verbose byteman output
+            <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
             <!-- uncomment to dump generated code
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes"/>
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=dump"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
             -->
             <!-- uncomment to enable debug
             <jvmarg value="-Xdebug"/>
@@ -322,21 +322,21 @@
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             -->
             <!--  set this to debug the rule parser
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.rule.debug"/>
+            <jvmarg value="-Dorg.jboss.byteman.rule.debug"/>
             -->
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.compileToBytecode"/>
-            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestLogical"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <test name="org.jboss.byteman.tests.javaops.TestLogical"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestField.txt"/>
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.compileToBytecode"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestField.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!-- uncomment to dump generated code
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes"/>
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=dump"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
             -->
             <!-- uncomment to enable debug
             <jvmarg value="-Xdebug"/>
@@ -344,18 +344,18 @@
             <jvmarg  value="-Djava.compiler=NONE"/>
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             -->
-            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestField"/>
+            <test name="org.jboss.byteman.tests.javaops.TestField"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>
-                <pathelement location="${build.lib.dir}/orchestration-tests.jar"/>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${toast.home}/${toast.jar}=script:${scripts.dir}/javaops/TestMethod.txt"/>
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.compileToBytecode"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestMethod.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!-- uncomment to dump generated code
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes"/>
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=dump"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
             -->
             <!-- uncomment to enable debug
             <jvmarg value="-Xdebug"/>
@@ -363,7 +363,7 @@
             <jvmarg  value="-Djava.compiler=NONE"/>
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             -->
-            <test name="org.jboss.jbossts.orchestration.tests.javaops.TestMethod"/>
+            <test name="org.jboss.byteman.tests.javaops.TestMethod"/>
         </junit>
     </target>
 

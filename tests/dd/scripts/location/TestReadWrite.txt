@@ -1,7 +1,7 @@
 RULE test at read trigger
 CLASS TestReadWriteAuxiliary
 METHOD testMethod()
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AT READ counter
 BIND test : Test = $0.getTest()
 IF TRUE
@@ -11,7 +11,7 @@ ENDRULE
 RULE test after read trigger 2
 CLASS TestReadWriteAuxiliary
 METHOD testMethod()
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AFTER READ counter 2
 BIND test : Test = $0.getTest()
 IF TRUE
@@ -21,7 +21,7 @@ ENDRULE
 RULE test at write trigger
 CLASS TestReadWriteAuxiliary
 METHOD testMethod()
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AT WRITE counter
 BIND test : Test = $0.getTest()
 IF TRUE
@@ -31,7 +31,7 @@ ENDRULE
 RULE test after write trigger 2
 CLASS TestReadWriteAuxiliary
 METHOD testMethod()
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AFTER WRITE counter 2
 BIND test : Test = $0.getTest()
 IF TRUE

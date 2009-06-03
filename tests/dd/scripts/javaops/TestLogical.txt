@@ -1,7 +1,7 @@
 RULE test logical 1
 CLASS TestLogical
 METHOD triggerMethod1(boolean)
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0,
      arg : boolean = $1
@@ -15,7 +15,7 @@ ENDRULE
 RULE test logical 2
 CLASS TestLogical
 METHOD triggerMethod1(boolean)
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0,
      arg : boolean = $1
@@ -29,7 +29,7 @@ ENDRULE
 RULE test logical 3
 CLASS TestLogical
 METHOD triggerMethod2(boolean)
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0,
      arg : boolean = $1
@@ -43,7 +43,7 @@ ENDRULE
 RULE test logical 4
 CLASS TestLogical
 METHOD triggerMethod2(boolean)
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0,
      arg : boolean = $1

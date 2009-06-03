@@ -1,7 +1,7 @@
 RULE test field 1
 CLASS TestField
 METHOD triggerMethod1(TestFieldMethodAuxiliary)
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0,
      arg : TestFieldMethodAuxiliary = $1
@@ -15,7 +15,7 @@ ENDRULE
 RULE test field 2
 CLASS TestField
 METHOD triggerMethod1(TestFieldMethodAuxiliary)
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0,
      arg : TestFieldMethodAuxiliary = $1
@@ -29,7 +29,7 @@ ENDRULE
 RULE test field 3
 CLASS TestField
 METHOD triggerMethod2(TestFieldMethodAuxiliary)
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0,
      arg : TestFieldMethodAuxiliary = $1
@@ -43,7 +43,7 @@ ENDRULE
 RULE test field 4
 CLASS TestField
 METHOD triggerMethod2(TestFieldMethodAuxiliary)
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0,
      arg : TestFieldMethodAuxiliary = $1

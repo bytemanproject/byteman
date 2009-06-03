@@ -1,7 +1,7 @@
 #RULE test throw trigger
 #CLASS TestCallThrowSynchAuxiliary
 #METHOD testMethod()
-#HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+#HELPER org.jboss.byteman.tests.helpers.Default
 #AT THROW
 #BIND test : Test = $0.getTest()
 #IF TRUE
@@ -11,7 +11,7 @@
 RULE test throw trigger 2
 CLASS TestCallThrowSynchAuxiliary
 METHOD testMethod()
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AT THROW 2
 BIND test : Test = $0.getTest()
 IF TRUE

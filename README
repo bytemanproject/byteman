@@ -1,11 +1,11 @@
-Type 'ant jar' to create the orchestration package library. This
+Type 'ant jar' to create the byteman package library. This
 package supports definition of Event Condition Action rules for
 orchestrating test scenarios.
 
 Set up
 ------
 In order to use this library you need to supply JVM with the
-orchestration jar as a java agent. This jar implements
+byteman jar as a java agent. This jar implements
 
   an agent class which monitors bytecode load operations and selects
   classes which match the compiled rule set as candidates for
@@ -19,7 +19,7 @@ orchestration jar as a java agent. This jar implements
 The agent is passed to the JVM using the -javaagent option of the java
 command by setting JAVA_OPTS as follows:
 
-export JAVA_OPTS="-javaagent:${HOME}/jboss/workspace/adinn/orchestration/build/lib/orchestration.jar=script:${HOME}/jboss/workspace/adinn/orchestration/handler.txt -Dorg.jboss.jbossts.orchestration.compileToBytecode -Dorg.jboss.jbossts.orchestration.dump.generated.classes=yes -Dorg.jboss.jbossts.orchestration.dump.generated.classes.directory=$HOME/jboss/workspace/adinn/orchestration/dump"
+export JAVA_OPTS="-javaagent:${HOME}/jboss/workspace/adinn/byteman/build/lib/byteman.jar=script:${HOME}/jboss/workspace/adinn/byteman/handler.txt -Dorg.jboss.byteman.compileToBytecode -Dorg.jboss.byteman.dump.generated.classes=yes -Dorg.jboss.byteman.dump.generated.classes.directory=$HOME/jboss/workspace/adinn/byteman/dump"
 
 The =script:<scriptFile> option to the -javaagent argument tells the
 agent premain to search <scriptFile> for rules. Multiple scripts may
@@ -32,10 +32,10 @@ Several other example scritps are available in the dd/scripts
 directory.
 
 By default the rule engine executes rule bindings, conditions and
-actions by interpreting the rule parse tree. However, TOAST also
+actions by interpreting the rule parse tree. However, byteman also
 supports compiled execution. If system property
 
-  org.jboss.jbossts.orchestration.compileToBytecode
+  org.jboss.byteman.compileToBytecode
 
 is set to a non-null value then the rule engine will compile the rule
 bindings, condition and action into Java bytecode which will be
@@ -47,13 +47,13 @@ imposed by the rule system.
 The agent can be configured to dump transformed byte code by setting
 several Java system properties as shown in the example above:
 
-  org.jboss.jbossts.orchestration.dump.generated.classes
+  org.jboss.byteman.dump.generated.classes
 
 this can be set to any value to enable dumping of generated
 code. Files will be written in a directory tree correspnding to the
 package hierarchy for the associated class.
 
-  org.jboss.jbossts.orchestration.dump.generated.classes.directory
+  org.jboss.byteman.dump.generated.classes.directory
 
 this can be set to a directory below which files will be written. if
 unset files are written to the current working directory of the JVM
@@ -62,7 +62,7 @@ thread executing the transformer code.
 Rule Definition
 ---------------
 
-The orchestration package employs Event Condition Action rules. The
+The byteman package employs Event Condition Action rules. The
 event component is limited to matching an invocation of a specific
 method when execution reaches a particular location in the method
 body. The event automatically binds the arguments of the trigger
@@ -275,7 +275,7 @@ test scenario defined in file handler.txt.
 
 Documentation
 -------------
-For full details of ruel syntaxthe operation of the orchestration
+For full details of ruel syntaxthe operation of the byteman
 package see the manual in the docs directory. See also the dd/scripts
 directory for some example rule scripts used to test JBossTS recovery.
 

@@ -3,7 +3,7 @@
 # Heuristic Recovery After Delayed Commit in Single JVM
 #
 # This script automates testing of a specific recovery scenario for the
-# JBossTS XTS implementation of the WS-AT 1.1 protocol using orchestration
+# JBossTS XTS implementation of the WS-AT 1.1 protocol using byteman
 # rules. The scenario is as follows:
 #
 # AS boots

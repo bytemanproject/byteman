@@ -1,3 +1,3 @@
-Premain-Class: org.jboss.jbossts.orchestration.agent.Main
+Premain-Class: org.jboss.byteman.agent.Main
 Can-Redefine-Classes: true
 Can-Retransform-Classes: true

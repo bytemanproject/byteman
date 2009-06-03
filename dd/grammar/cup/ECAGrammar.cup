@@ -24,9 +24,9 @@
 
 import java_cup.runtime.*;
 
-import org.jboss.jbossts.orchestration.rule.grammar.ParseNode;
+import org.jboss.byteman.rule.grammar.ParseNode;
 // cannot do this!
-// import static org.jboss.jbossts.orchestration.rule.grammar.ParseNode.*;
+// import static org.jboss.byteman.rule.grammar.ParseNode.*;
 
 /* parser methods to make it easier to access the ParseNode package */
 

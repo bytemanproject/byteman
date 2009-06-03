@@ -19,7 +19,7 @@
   @author JBoss Inc.
 -->
 
-<project name="orchestration" default="jar" basedir=".">
+<project name="byteman" default="jar" basedir=".">
 
     <!-- the directory in which your installed app server resides -->
     <property environment="env"/>
@@ -117,21 +117,21 @@ The XTS installation directory must be specified with the XTS_HOME environment v
                 <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
             </classpath>
 	    <arg value="-package"/>
-	    <arg value="org.jboss.jbossts.orchestration.rule.grammar"/>
+	    <arg value="org.jboss.byteman.rule.grammar"/>
             <arg value="-parser" />
             <arg value="ECAGrammarParser" />
             <arg value="-nonterms"/>
             <arg value="${dd.grammar.dir}/cup/ECAGrammar.cup"/>
         </java>
-	<delete file="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/ECATokenLexer.java"/>
-	<delete file="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/ECAGrammarParser.java"/>
-	<delete file="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/sym.java"/>
+	<delete file="${src.dir}/org/jboss/byteman/rule/grammar/ECATokenLexer.java"/>
+	<delete file="${src.dir}/org/jboss/byteman/rule/grammar/ECAGrammarParser.java"/>
+	<delete file="${src.dir}/org/jboss/byteman/rule/grammar/sym.java"/>
         <move file="${dd.grammar.dir}/flex/ECATokenLexer.java"
-            tofile="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/ECATokenLexer.java"/>
+            tofile="${src.dir}/org/jboss/byteman/rule/grammar/ECATokenLexer.java"/>
         <move file="ECAGrammarParser.java"
-            tofile="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/ECAGrammarParser.java"/>
+            tofile="${src.dir}/org/jboss/byteman/rule/grammar/ECAGrammarParser.java"/>
         <move file="sym.java"
-            tofile="${src.dir}/org/jboss/jbossts/orchestration/rule/grammar/sym.java"/>
+            tofile="${src.dir}/org/jboss/byteman/rule/grammar/sym.java"/>
     </target>
 
     <target name="compile" depends="init">
@@ -150,7 +150,7 @@ The XTS installation directory must be specified with the XTS_HOME environment v
 	 -->
          <unjar src="${ext.lib.dir}/javacuprt.jar" dest="${build.classes.dir}"/>
          <unjar src="${ext.lib.dir}/asm-all-3.0.jar" dest="${build.classes.dir}"/>
-         <jar jarfile="${build.lib.dir}/orchestration.jar" manifest="${dd.dir}/META-INF/MANIFEST.MF">
+         <jar jarfile="${build.lib.dir}/byteman.jar" manifest="${dd.dir}/META-INF/MANIFEST.MF">
              <fileset dir="${build.classes.dir}" includes="**/*"/>
          </jar>
     </target>
@@ -161,9 +161,9 @@ The XTS installation directory must be specified with the XTS_HOME environment v
     </target>
 
     <target name="TestScript" depends="jar">
-        <java classname="org.jboss.jbossts.orchestration.test.TestScript" fork="true">
+        <java classname="org.jboss.byteman.test.TestScript" fork="true">
             <classpath>
-                <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
+                <fileset dir="${build.lib.dir}" includes="byteman.jar"/>
                 <pathelement location="${asm.home}/${asm.jar}"/>
                 <!-- xts, jta and jboss as jars-->
                 <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
@@ -174,16 +174,16 @@ The XTS installation directory must be specified with the XTS_HOME environment v
                 <fileset dir="${jboss.server.deploy.dir}" includes="${jboss.server.deploy.jars}"/>
             </classpath>
 	    <!-- uncomment this to see parser debug output
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.rule.debug=foo"/>
+            <jvmarg value="-Dorg.jboss.jbossts.byteman.rule.debug=foo"/>
 	    -->
 	    <arg value="handler.txt"/>
         </java>
     </target>
 
     <target name="TestScriptDebug" depends="jar">
-        <java classname="org.jboss.jbossts.orchestration.test.TestScript" fork="true">
+        <java classname="org.jboss.byteman.test.TestScript" fork="true">
             <classpath>
-                <fileset dir="${build.lib.dir}" includes="orchestration.jar"/>
+                <fileset dir="${build.lib.dir}" includes="byteman.jar"/>
                 <pathelement location="${asm.home}/${asm.jar}"/>
                 <!-- xts, jta and jboss as jars-->
                 <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
@@ -196,7 +196,7 @@ The XTS installation directory must be specified with the XTS_HOME environment v
             <jvmarg value="-Xdebug"/>
             <jvmarg value="-Xrunjdwp:transport=dt_socket,server=n,address=5005,suspend=y"/>
 	    <!-- uncomment this to see parser debug output
-            <jvmarg value="-Dorg.jboss.jbossts.orchestration.rule.debug=foo"/>
+            <jvmarg value="-Dorg.jboss.jbossts.byteman.rule.debug=foo"/>
 	    -->
 	    <arg value="handler.txt"/>
         </java>

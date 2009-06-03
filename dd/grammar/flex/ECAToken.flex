@@ -22,10 +22,10 @@
 * @authors Andrew Dinn
 */
 
-package org.jboss.jbossts.orchestration.rule.grammar;
+package org.jboss.byteman.rule.grammar;
 
 import java_cup.runtime.*;
-import org.jboss.jbossts.orchestration.rule.grammar.PrintableSymbol;
+import org.jboss.byteman.rule.grammar.PrintableSymbol;
 
 %%
 

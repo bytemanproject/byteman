@@ -1,7 +1,7 @@
 RULE test entry trigger for constructor
 CLASS TestEntryExitAuxiliarySub
 METHOD <init>(Test)
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : Test = $1
 IF TRUE
@@ -11,7 +11,7 @@ ENDRULE
 RULE test entry trigger for subclass method
 CLASS TestEntryExitAuxiliarySub
 METHOD testMethod()
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : Test = $0.getTest()
 IF TRUE
@@ -21,7 +21,7 @@ ENDRULE
 RULE test entry trigger for superclass method
 CLASS TestEntryExitAuxiliary
 METHOD testMethod()
-HELPER org.jboss.jbossts.orchestration.tests.helpers.Default
+HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : Test = $0.getTest()
 IF TRUE
