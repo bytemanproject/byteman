@@ -367,6 +367,18 @@ public class Transformer implements ClassFileTransformer {
     public static final String VERBOSE = BYTEMAN_PACKAGE_PREFIX + "verbose";
 
     /**
+     * system property set (to any value) in order to switch on dumping of control flow graph for
+     * trigger method at each stage of construction
+     */
+    public static final String DUMP_CFG_PARTIAL = BYTEMAN_PACKAGE_PREFIX + "dump.cfg.partial";
+
+    /**
+     * system property set (to any value) in order to switch on dumping of control flow graph for
+     * triger method after construction
+     */
+    public static final String DUMP_CFG = BYTEMAN_PACKAGE_PREFIX + "dump.cfg";
+
+    /**
      * system property set (to any value) in order to switch on debug statements in the default Helper
      */
 
@@ -489,6 +501,24 @@ public class Transformer implements ClassFileTransformer {
     }
 
     /**
+     * check whether dumping of the control flow graph for the trigger class is enabled
+     * @return true if dumping is enabled etherwise false
+     */
+    public static boolean isDumpCFG()
+    {
+        return dumpCFG;
+    }
+
+    /**
+     * check whether dumping of the control flow graph for the trigger class during construction is enabled
+     * @return true if dumping is enabled etherwise false
+     */
+    public static boolean isDumpCFGPartial()
+    {
+        return dumpCFGPartial;
+    }
+
+    /**
      * check whether debug mode for rule processing is enabled or disabled
      * @return true if debug mode is enabled or verbose mode is enabled otherwise false
      */
@@ -539,6 +569,16 @@ public class Transformer implements ClassFileTransformer {
      *  switch to control verbose output during rule processing
      */
     private final static boolean verbose = (System.getProperty(VERBOSE) != null);
+
+    /**
+     *  switch to control control flow graph output during rule processing
+     */
+    private final static boolean dumpCFGPartial = (System.getProperty(DUMP_CFG_PARTIAL) != null);
+
+    /**
+     *  switch to control control flow graph output during rule processing
+     */
+    private final static boolean dumpCFG = (dumpCFGPartial || (System.getProperty(DUMP_CFG) != null));
 
     /**
      *  switch to control verbose output during rule processing

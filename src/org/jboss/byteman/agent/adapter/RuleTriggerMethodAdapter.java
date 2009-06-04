@@ -498,19 +498,19 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                     CodeLocation enterLocation = openEnters.get(listIdx);
                     int varIdx = cfg.getSavedMonitorIdx(enterLocation);
                     // call super method to avoid indexing these instructions
-                    super.visitIntInsn(Opcodes.ALOAD, varIdx);
-                    super.visitInsn(Opcodes.MONITOREXIT);
+                    visitIntInsn(Opcodes.ALOAD, varIdx);
+                    visitInsn(Opcodes.MONITOREXIT);
                 }
                 // throw must be in scope of the try catch
                 // call super method to avoid creating new blocks
-                super.visitInsn(Opcodes.ATHROW);
-                visitLabel(newEnd);
-                // now add try catch blocks for each of the exception types -- use super call to avoid
-                // normal inhibition of try catch generation
-                super.visitTryCatchBlock(newStart, newEnd, newEarlyReturn, EARLY_RETURN_EXCEPTION_TYPE_NAME);
-                super.visitTryCatchBlock(newStart, newEnd, newExecute, EXECUTE_EXCEPTION_TYPE_NAME);
+                visitInsn(Opcodes.ATHROW);
+                // add try catch blocks for each of the exception types
+                visitTryCatchBlock(newStart, newEnd, newEarlyReturn, EARLY_RETURN_EXCEPTION_TYPE_NAME);
+                visitTryCatchBlock(newStart, newEnd, newThrow, THROW_EXCEPTION_TYPE_NAME);
                 // this comes last because it is the superclass of the previous two
-                super.visitTryCatchBlock(newStart, newEnd, newThrow, THROW_EXCEPTION_TYPE_NAME);
+                visitTryCatchBlock(newStart, newEnd, newExecute, EXECUTE_EXCEPTION_TYPE_NAME);
+                // now visit label so they get processed
+                visitLabel(newEnd);
                 // and update the details so it will catch these exceptions
                 details.setStart(newStart);
                 details.setEnd(newEnd);
@@ -532,21 +532,21 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         }
 
         if (Transformer.isVerbose()) {
-            super.getStatic(Type.getType(System.class), "out", Type.getType(PrintStream.class));
-            super.visitLdcInsn("caught ReturnException");
-            super.invokeVirtual(Type.getType(PrintStream.class), Method.getMethod("void println(String)"));
+            getStatic(Type.getType(System.class), "out", Type.getType(PrintStream.class));
+            visitLdcInsn("caught ReturnException");
+            invokeVirtual(Type.getType(PrintStream.class), Method.getMethod("void println(String)"));
         }
         // add exception handling code subclass first
         if (returnType == Type.VOID_TYPE) {
             // drop exception and just return
-            super.pop();
-            super.visitInsn(Opcodes.RETURN);
+            pop();
+            visitInsn(Opcodes.RETURN);
         } else {
             // fetch value from exception, unbox if needed and return value
             Method getReturnValueMethod = Method.getMethod("Object getReturnValue()");
-            super.invokeVirtual(EARLY_RETURN_EXCEPTION_TYPE, getReturnValueMethod);
-            super.unbox(returnType);
-            super.returnValue();
+            invokeVirtual(EARLY_RETURN_EXCEPTION_TYPE, getReturnValueMethod);
+            unbox(returnType);
+            returnValue();
         }
 
         iterator = cfg.triggerDetails();
@@ -557,14 +557,14 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         }
 
         if (Transformer.isVerbose()) {
-            super.getStatic(Type.getType(System.class), "out", Type.getType(PrintStream.class));
-            super.visitLdcInsn("caught ThrowException");
-            super.invokeVirtual(Type.getType(PrintStream.class), Method.getMethod("void println(String)"));
+            getStatic(Type.getType(System.class), "out", Type.getType(PrintStream.class));
+            visitLdcInsn("caught ThrowException");
+            invokeVirtual(Type.getType(PrintStream.class), Method.getMethod("void println(String)"));
         }
         // fetch value from exception, unbox if needed and return value
         Method getThrowableMethod = Method.getMethod("Throwable getThrowable()");
-        super.invokeVirtual(THROW_EXCEPTION_TYPE, getThrowableMethod);
-        super.throwException();
+        invokeVirtual(THROW_EXCEPTION_TYPE, getThrowableMethod);
+        throwException();
 
         // execute exception  comes last because it is the super of the othher two classes
         
@@ -576,12 +576,13 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         }
 
         if (Transformer.isVerbose()) {
-            super.getStatic(Type.getType(System.class), "out", Type.getType(PrintStream.class));
-            super.visitLdcInsn("caught ExecuteException");
-            super.invokeVirtual(Type.getType(PrintStream.class), Method.getMethod("void println(String)"));
+            getStatic(Type.getType(System.class), "out", Type.getType(PrintStream.class));
+            visitLdcInsn("caught ExecuteException");
+            invokeVirtual(Type.getType(PrintStream.class), Method.getMethod("void println(String)"));
         }
         // rethrow an execute exception
-        super.throwException(EXECUTE_EXCEPTION_TYPE, rule.getName() + " execution exception ");
+        throwException(EXECUTE_EXCEPTION_TYPE, rule.getName() + " execution exception ");
+
         super.visitMaxs(maxStack, maxLocals);
 
         // hmm, don't think we need this

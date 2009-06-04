@@ -534,7 +534,7 @@ public class CFG
      */
     private void carryForward()
     {
-        if (Transformer.isVerbose()) {
+        if (Transformer.isDumpCFGPartial()) {
             System.out.println("Carry forward for block " + current.getBlockIdx());
         }
         
@@ -560,7 +560,7 @@ public class CFG
 
         current.updateActiveTryStarts(openTryCatchStarts);
 
-        if (Transformer.isVerbose()) {
+        if (Transformer.isDumpCFGPartial()) {
             System.out.println(current);
         }
 
@@ -581,7 +581,7 @@ public class CFG
         int entersCount = current.getMonitorEnterCount();
         int exitsCount = current.getMonitorExitCount();
 
-        if (Transformer.isVerbose()) {
+        if (Transformer.isDumpCFGPartial()) {
             System.out.print("Carry forward open monitors for " + current.getBlockIdx() +" ==>" );
             for (int i = 0; i < openEntersCount; i++) {
                 System.out.print(" ");
@@ -651,7 +651,7 @@ public class CFG
             openEnters = openMonitorEnters.get(label);
             if (openEnters == null) {
                 openMonitorEnters.put(label, newOpenEnters);
-                if (Transformer.isVerbose()) {
+                if (Transformer.isDumpCFGPartial()) {
                     System.out.print("open monitors " + label + " ==>");
                     for (int j = 0; j < newOpenCount; j++) {
                         CodeLocation l = newOpenEnters.get(j);
@@ -1086,7 +1086,7 @@ public class CFG
     {
         // we don't need to do anything here to but for now just dump the CFG if we are verbose
 
-        if (Transformer.isVerbose()) {
+        if (Transformer.isDumpCFG()) {
             System.out.println(this);
         }
     }
