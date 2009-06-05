@@ -206,9 +206,11 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                 // add this instruction to the current block and then start a new current block
                 cfg.add(opcode);
                 Label newStart = super.newLabel();
+                Iterator<CodeLocation> exits = cfg.currentExits();
                 // must call split before visiting the label
                 cfg.split(newStart);
                 visitLabel(newStart);
+                checkMonitorExits(exits);
             }
             break;
             case Opcodes.MONITORENTER:
@@ -300,9 +302,11 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                 // the second out
                 cfg.add(opcode);
                 Label newStart = super.newLabel();
+                Iterator<CodeLocation> exits = cfg.currentExits();
                 // must call split before visiting the label
                 cfg.split(newStart, label, newStart);
                 visitLabel(newStart);
+                checkMonitorExits(exits);
             }
             break;
             case Opcodes.GOTO:
@@ -311,9 +315,11 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                 // first out of the old current block
                 cfg.add(opcode);
                 Label newStart = super.newLabel();
+                Iterator<CodeLocation> exits = cfg.currentExits();
                 // must call split before visiting the label
                 cfg.split(newStart, label);
                 visitLabel(newStart);
+                checkMonitorExits(exits);
             }
             break;
             case Opcodes.JSR:
@@ -323,9 +329,11 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                 // JSR but we cannot represent that statically
                 cfg.add(opcode);
                 Label newStart = super.newLabel();
+                Iterator<CodeLocation> exits = cfg.currentExits();
                 // must call split before visiting the label
                 cfg.split(newStart, label, newStart);
                 visitLabel(newStart);
+                checkMonitorExits(exits);
             }
             break;
             case Opcodes.IFNULL:
@@ -336,9 +344,11 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                 // the second out
                 cfg.add(opcode);
                 Label newStart = super.newLabel();
+                Iterator<CodeLocation> exits = cfg.currentExits();
                 // must call split before visiting the label
                 cfg.split(newStart, label, newStart);
                 visitLabel(newStart);
+                checkMonitorExits(exits);
             }
             break;
         }
@@ -423,9 +433,11 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         // create a new current block and then add the default lable and each of the switch labels as an
         // outgoing path from the current block
         Label newStart = super.newLabel();
+        Iterator<CodeLocation> exits = cfg.currentExits();
         // must call split before visiting the label
         cfg.split(newStart, dflt, labels);
         visitLabel(newStart);
+        checkMonitorExits(exits);
     }
 
     @Override
@@ -436,9 +448,11 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         // create a new current block and then add the default lable and each of the switch labels as an
         // outgoing path from the current block
         Label newStart = super.newLabel();
+        Iterator<CodeLocation> exits = cfg.currentExits();
         // must call split before visiting the label
         cfg.split(newStart, dflt, labels);
         visitLabel(newStart);
+        checkMonitorExits(exits);
     }
 
     @Override
@@ -460,71 +474,79 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         cfg.visitTryCatchBlock(start, end, handler, type);
     }
 
+    public void checkMonitorExits(Iterator<CodeLocation> exits)
+    {
+        while (exits.hasNext()) {
+            CodeLocation exit = exits.next();
+            if (cfg.isPrimaryExit(exit)) {
+                CodeLocation enter = cfg.pairedEnter(exit);
+
+                // we just closed a monitor open so find any pending triggers in its scope
+                // and generate a handler block to rethrow its exceptions
+
+                Iterator<TriggerDetails> iterator = cfg.triggerDetails();
+                boolean noneLeft = true;
+
+                while (iterator.hasNext()) {
+                    TriggerDetails details = iterator.next();
+                    Label startLabel = details.getStart();
+                    CodeLocation startLocation = cfg.getLocation(startLabel);
+                    // if the trigger start label is after the enter and before the exit
+                    // then we need to generate a handler block for it now which exits the
+                    // monitor and then rethrows the exception
+                    if (enter.compareTo(startLocation) <= 0 && startLocation.compareTo(exit) <= 0) {
+                        // add a handler here which unlocks each object and rethrows the
+                        // saved exception then protect it with a try catch block and update
+                        // the details so that it is the target of this block
+
+                        // make the old exceptions arrive here
+                        visitLabel(details.getExecuteHandler());
+                        visitLabel(details.getEarlyReturnHandler());
+                        visitLabel(details.getThrowHandler());
+                        // now add a rethrow handler which exits the open monitors
+                        Label newStart = newLabel();
+                        Label newEnd = newLabel();
+                        visitLabel(newStart);
+                        int varIdx = cfg.getSavedMonitorIdx(enter);
+                        visitVarInsn(Opcodes.ALOAD, varIdx);
+                        visitInsn(Opcodes.MONITOREXIT);
+                        // throw must be in scope of the try catch
+                        visitInsn(Opcodes.ATHROW);
+
+                        // add try catch blocks for each of the exception types
+                        Label newExecute = newLabel();
+                        Label newEarlyReturn = newLabel();
+                        Label newThrow = newLabel();
+
+                        visitTryCatchBlock(newStart, newEnd, newEarlyReturn, EARLY_RETURN_EXCEPTION_TYPE_NAME);
+                        visitTryCatchBlock(newStart, newEnd, newThrow, THROW_EXCEPTION_TYPE_NAME);
+                        // this comes last because it is the superclass of the previous two
+                        visitTryCatchBlock(newStart, newEnd, newExecute, EXECUTE_EXCEPTION_TYPE_NAME);
+                        // now visit label so they get processed
+                        visitLabel(newEnd);
+                        
+                        // and update the details so it will catch these exceptions
+                        details.setStart(newStart);
+                        details.setEnd(newEnd);
+                        details.setExecuteHandler(newExecute);
+                        details.setEarlyReturnHandler(newEarlyReturn);
+                        details.setThrowHandler(newThrow);
+                    }
+                }
+
+
+            }
+        }
+    }
+
     @Override
     public void visitMaxs(int maxStack, int maxLocals)
     {
-        Type returnType =  Type.getReturnType(descriptor);
-
-        // check whether there are outstanding monitor opens at the start of the trigger
-        // block and, if so, insert a handler which unlocks the monitor and then rethrows
-        // the exception.
-
-        Iterator<TriggerDetails> iterator = cfg.triggerDetails();
-        boolean noneLeft = true;
-
-        while (iterator.hasNext()) {
-            TriggerDetails details = iterator.next();
-            Label startLabel = details.getStart();
-            CodeLocation startLocation = cfg.getLocation(startLabel);
-            List<CodeLocation> openEnters = cfg.getOpenMonitors(startLocation);
-            if (openEnters != null) {
-                // add a handler here which unlocks each object and rethrows the
-                // saved exception then protect it with a try catch block and update
-                // the details so that it is the target of this block
-
-                Label newStart = newLabel();
-                Label newEnd = newLabel();
-                Label newExecute = newLabel();
-                Label newEarlyReturn = newLabel();
-                Label newThrow = newLabel();
-                // make the old exceptions arrive here
-                visitLabel(details.getExecuteHandler());
-                visitLabel(details.getEarlyReturnHandler());
-                visitLabel(details.getThrowHandler());
-                // now add a rethrow handler which exits the open monitors
-                visitLabel(newStart);
-                int listIdx = openEnters.size();
-                while (listIdx-- > 0) {
-                    CodeLocation enterLocation = openEnters.get(listIdx);
-                    int varIdx = cfg.getSavedMonitorIdx(enterLocation);
-                    // call super method to avoid indexing these instructions
-                    visitIntInsn(Opcodes.ALOAD, varIdx);
-                    visitInsn(Opcodes.MONITOREXIT);
-                }
-                // throw must be in scope of the try catch
-                // call super method to avoid creating new blocks
-                visitInsn(Opcodes.ATHROW);
-                // add try catch blocks for each of the exception types
-                visitTryCatchBlock(newStart, newEnd, newEarlyReturn, EARLY_RETURN_EXCEPTION_TYPE_NAME);
-                visitTryCatchBlock(newStart, newEnd, newThrow, THROW_EXCEPTION_TYPE_NAME);
-                // this comes last because it is the superclass of the previous two
-                visitTryCatchBlock(newStart, newEnd, newExecute, EXECUTE_EXCEPTION_TYPE_NAME);
-                // now visit label so they get processed
-                visitLabel(newEnd);
-                // and update the details so it will catch these exceptions
-                details.setStart(newStart);
-                details.setEnd(newEnd);
-                details.setExecuteHandler(newExecute);
-                details.setEarlyReturnHandler(newEarlyReturn);
-                details.setThrowHandler(newThrow);
-            }
-        }
-
-        // ok, so now we have to add the handler code for trigger block try catch handlers
+        // ok, so now we have to add the real handler code for trigger block try catch handlers
         // we only need to add the handler code once but we need to make sure it is the target of
         //  all the try catch blocks by visiting their handler label before we insert the code
 
-        iterator = cfg.triggerDetails();
+        Iterator<TriggerDetails> iterator = cfg.triggerDetails();
 
         while (iterator.hasNext()) {
             TriggerDetails details = iterator.next();
