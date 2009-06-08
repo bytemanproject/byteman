@@ -742,47 +742,6 @@ public class CFG
     }
 
     /**
-     * return an iterator over the monitor exit locations for the current block
-     * 
-     * @return
-     */
-    public Iterator<CodeLocation> currentExits() {
-        return current.getMonitorExits();
-    }
-
-    /**
-     * return true if a location is the first monitor exit associated with a corresponding monitor enter
-     * otherwise return false
-     * @param exit the code location which should identify a MONITOREXIT instruction
-     * @return
-     */
-    public boolean isPrimaryExit(CodeLocation exit)
-    {
-        CodeLocation enter = inverseMonitorPairs.get(exit);
-        if (enter == null) {
-            // hmm, this is not a monitor exit
-            System.out.println("cfg.isPrimaryExit : location is not a monitor exit " + exit);
-            return false;
-        }
-
-        List<CodeLocation> pairs = monitorPairs.get(enter);
-        if (pairs == null && pairs.size() == 0) {
-            System.out.println("cfg.isPrimaryExit : location is not a monitor enter " + enter);
-            return false;
-        }
-        return pairs.get(0) == exit;
-    }
-
-    /**
-     * return the location oif the enter instrution paired with a given exit
-     * @param exit the code location which should identify a MONITOREXIT instruction
-     * @return
-     */
-    public CodeLocation pairedEnter(CodeLocation exit)
-    {
-        return inverseMonitorPairs.get(exit);
-    }
-    /**
      * split the graph at a control-flow dead-end using the label provided to identify the new current
      * block. the caller is obliged to call visitLabel immediately after calling this method to ensure
      * that the current block label is indexed appropriately.
