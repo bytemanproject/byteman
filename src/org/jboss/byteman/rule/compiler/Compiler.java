@@ -76,7 +76,9 @@ public class Compiler implements Opcodes
                 // dump the compiled class bytes if required
                 Transformer.getTheTransformer().maybeDumpClass(externalName, classBytes);
                 // ensure the class is loaded
-                adapterClass = Transformer.getTheTransformer().loadHelperAdapter(helperClass, externalName, classBytes);
+                // think we need to load the generated helper using the class loader of the trigger class
+                ClassLoader loader = rule.getLoader();
+                adapterClass = loadHelperAdapter(loader, externalName, classBytes);
             } catch(CompileException ce) {
                 throw ce;
             } catch (Throwable th) {
@@ -517,4 +519,46 @@ public class Compiler implements Opcodes
     {
         return ++nextId;
     }
+
+    /**
+     * this is a classloader used to define classes from bytecode
+     */
+    private static class ClassbyteClassLoader extends ClassLoader
+    {
+        ClassbyteClassLoader(ClassLoader cl)
+        {
+            super(cl);
+        }
+
+        public Class addClass(String name, byte[] bytes)
+                throws ClassFormatError
+        {
+            Class cl = defineClass(name, bytes, 0, bytes.length);
+            resolveClass(cl);
+
+            return cl;
+        }
+    }
+
+    /**
+     * dynamically load and return a generated helper adapter classes using a custom classloader derived from the
+     * trigger class's loader
+     * @param triggerClassLoader the class loader of the trigger class which has been matched with this
+     * helper class's rule
+     * @param helperAdapterName the name of the helper adaptter class to be loaded
+     * @param classBytes the byte array defining the class
+     * @return
+     */
+    public static Class<?> loadHelperAdapter(ClassLoader triggerClassLoader, String helperAdapterName, byte[] classBytes)
+    {
+        // create the helper class in a classloader derived from the trigger class
+        // this allows the injected code to refer to the triggger class type and related
+        // application types. the defalt helper will be accessible because it is loaded bby the
+        // ootstrap loader. custom helpers need to be made avvailable to the applicattion either
+        // by deployng them with it or by locating them in the JVM classpath.
+        ClassbyteClassLoader loader = new ClassbyteClassLoader(triggerClassLoader);
+
+        return loader.addClass(helperAdapterName, classBytes);
+    }
+
 }

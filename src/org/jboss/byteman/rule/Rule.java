@@ -59,6 +59,10 @@ public class Rule
      */
     private String name;
     /**
+     * the class loader for the target class
+     */
+    private ClassLoader loader;
+    /**
      * the name of the target class for this rule supplied in the rule script
      */
     private String targetClass;
@@ -183,6 +187,7 @@ public class Rule
             action = Action.create(this, actionTree);
         }
         checked = false;
+        this.loader = loader;
         this.targetClass = targetClass;
         this.targetMethod = targetMethod;
         this.helperClass = (helperClass != null ? helperClass : Helper.class);
@@ -241,7 +246,16 @@ public class Rule
     {
         return returnType;
     }
-    
+
+    /**
+     * get the class loader of the target class for the rule
+     * @return
+     */
+    public ClassLoader getLoader()
+    {
+        return loader;
+    }
+
     public static Rule create(String name, String targetClass, String targetMethod, Class<?> helperClass, Location targetLocation, String ruleSpec, int line, String file, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {

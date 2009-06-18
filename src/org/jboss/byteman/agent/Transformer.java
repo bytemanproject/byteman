@@ -292,48 +292,6 @@ public class Transformer implements ClassFileTransformer {
         }
     }
 
-    /**
-     * this is a classloader used to define classes from bytecode
-     *
-     * TODO -- we probably need to use the protection domain of the trigger class somewhere here
-     */
-    private static class ClassbyteClassLoader extends ClassLoader
-    {
-        ClassbyteClassLoader(ClassLoader cl)
-        {
-            super(cl);
-        }
-        
-        public Class addClass(String name, byte[] bytes)
-                throws ClassFormatError
-        {
-            Class cl = defineClass(name, bytes, 0, bytes.length);
-            resolveClass(cl);
-
-            return cl;
-        }
-    }
-
-    /**
-     * a singleton instance of the classloader used to define classes from bytecode
-     */
-    private static ClassbyteClassLoader theLoader = new ClassbyteClassLoader(Transformer.class.getClassLoader());
-
-    /**
-     * a helper method which allows dynamic creation of generated helper adapter classes
-     * @param helperAdapterName
-     * @param classBytes
-     * @return
-     */
-    public Class<?> loadHelperAdapter(Class<?> helperClass, String helperAdapterName, byte[] classBytes)
-    {
-         //return theLoader.addClass(helperAdapterName, classBytes);
-
-        ClassbyteClassLoader loader = new ClassbyteClassLoader(helperClass.getClassLoader());
-
-        return loader.addClass(helperAdapterName, classBytes);
-    }
-
     /* switches controlling behaviour of transformer */
 
     /**
