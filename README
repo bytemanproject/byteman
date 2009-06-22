@@ -1,9 +1,26 @@
-Type 'ant jar' to create the byteman package library. This
-package supports definition of Event Condition Action rules for
-orchestrating test scenarios.
+Byteman 1.0.1 README
+------------------
 
-Set up
-------
+Byteman supports injection of side effects into Java programs for the
+purpose of tsting application behaviour.
+
+If you have downloaded a binary release then the byteman jar can be found
+in
+
+  lib/byteman.jar
+
+If you have downloaded a source release then type 'ant jar' to build
+the byteman jar. It will be found in
+
+  build/lib/byteman.jar
+
+A summary of how to use Byteman is provided below. For full details of
+the operation of Byteman consult the user guide in
+
+  docs/ProgrammersGuide.pdf
+
+Set up and Execution
+--------------------
 In order to use this library you need to supply JVM with the
 byteman jar as a java agent. This jar implements
 
@@ -19,17 +36,16 @@ byteman jar as a java agent. This jar implements
 The agent is passed to the JVM using the -javaagent option of the java
 command by setting JAVA_OPTS as follows:
 
-export JAVA_OPTS="-javaagent:${HOME}/jboss/workspace/adinn/byteman/build/lib/byteman.jar=script:${HOME}/jboss/workspace/adinn/byteman/handler.txt -Dorg.jboss.byteman.compileToBytecode -Dorg.jboss.byteman.dump.generated.classes=yes -Dorg.jboss.byteman.dump.generated.classes.directory=$HOME/jboss/workspace/adinn/byteman/dump"
+export JAVA_OPTS="-javaagent:<...>/byteman.jar=script:<...>myscript.txt"
+
+where the ellipsis <...> is replaced with a suitable path to the jar
+and script files.
 
 The =script:<scriptFile> option to the -javaagent argument tells the
-agent premain to search <scriptFile> for rules. Multiple scripts may
-be supplied by repeating the =script:<scriptFile> argument separated
-by a ','. The agent will parse each script file to identify rules to
-be triggered from methods occurring in application classes. File
-handler.txt contains an example script which defines rules used for
-testing a specific scenario in JBossTS XTS coordinator crash recovery.
-Several other example scritps are available in the dd/scripts
-directory.
+agent to search <scriptFile> for rules. Multiple scripts may be
+supplied by repeating the =script:<scriptFile> argument separated by a
+','. The agent will parse each script file to identify rules to be
+triggered from methods occurring in application classes.
 
 By default the rule engine executes rule bindings, conditions and
 actions by interpreting the rule parse tree. However, byteman also
@@ -43,6 +59,19 @@ executed when the rule is triggered (see the user guide for full
 details). For rules which are triggered repeatedly during an
 application run this should significantly mitigate the overheads
 imposed by the rule system.
+
+Calls to builtin method debug normally do not generate output. However
+debug prinotut to System.out can be enabled by setting system property
+on the java command line.
+
+  org.jboss.byteman.debug
+
+If more verbose output is desired then property
+
+  org.jboss.byteman.verbose
+
+can be set. This enables debug output from rule scripts and also
+traces various of the actions performed by the byteman agent.
 
 The agent can be configured to dump transformed byte code by setting
 several Java system properties as shown in the example above:
@@ -106,11 +135,8 @@ builtin options.
 The target class may be specified with or without a full package
 qualification. If no package is specified then all classes whose
 unqualified name equals the target will be candidiates for rule
-trigger insertion. Note, however, that for safety triggers will only
-be inserted into com.arjuna or org.jboss classes. So, for example,
-targetClass="TransactionImple" would match all the transaction
-implementation classes in the JTA, JTS and XTS packages but would not
-match any org.jboss implementations.
+trigger insertion. Note, however, that for safety triggers will not be
+inserted into java.lang or org.jboss.byteman classes.
 
 Class names mentioned in rules are resolved against a candidate
 trigger class and related classes at runtime as they are being loaded
@@ -145,7 +171,8 @@ rebuild the test code base.
 Rule Events
 -----------
 An event specification comprises a location specification and a set of
-bindings. All location specification declare a target class and target method using the syntax
+bindings. All location specification declare a target class and target
+method using the syntax
 
 CLASS <classname>
 METHOD <methodname>
@@ -177,11 +204,14 @@ which can be referenced during evaluaton of the rule condition and
 execution of the rule actions. Bindings are established in the context
 of the target method. By default, the target method arguments are
 pre-bound using the special syntax $0 (for this, when the target
-method is not static) and $1...$N for arguments 1..N of the target
-method. Further bindings, using symbolic names for the bound
-variables, can be established by assigning a symbolic constant to an
-expression which may refer to previously bound variables or static
-data. For example,
+method is not static) and $1...$N for arguments 1..N of the
+method. The value of local variables in scope at the trigger point may
+be referenced by prefixing the varable name with a dollar sign e.g. if
+the trigger point occurs inside a for loop with loop variable i then
+the loop ndex may be accessed using name $i. Further bindings,
+employing standard alphanumeric names for the bound variables, can be
+established by assigning a name to an expression which may refer to
+previously bound variables or static data. For example,
 
   'BIND coordinator:Coordinator = $0,
    recovered:boolean = coordinator.recovered,
@@ -199,8 +229,9 @@ various builtin expressions plus most Java expressions such as static
 or instance field accesses and invocations, array dereferences,
 operator expressions, method invocations, etc (but *not* assignment
 expressions). The RHS of a binding may refer to method argument
-variables and to variables bound in earlier bindings but not to its
-own variable or later bound variables. Rebinding of variables is not
+variables, method local variables in scope at the trigger point and
+variables bound in earlier bindings. The RHS may not refer to its own
+LHS variable or later bound variables. Rebinding of variables is not
 permitted.
 
 Rule Conditions
@@ -234,6 +265,11 @@ exception, killing the therad in normal circumstances
   'debug("terminator X it"), killJVM()'
 
 will print a debug message and cause an immediate halt of the JVM.
+Debug printout must be enabled by setting System property
+
+  org.jboss.byteman.debug
+
+on the java command line.
 
 Expressions
 -----------
@@ -250,22 +286,31 @@ A variety of builtin methods are available. These may be written as
 function calls although internally they are treated as invocations of
 instance methods on an object identified by an implicit bound variable
 $$ of type Rule.Helper. Each time a rule is triggered a Helper
-instance is used to store the table of bindings for the trigger method
-arguments $0, $1 etc and for event variables. Every public instance
-method on class Helper is automatically available as a callable
-function in a rule binding, condition or action. For example, Helper
-defines a boolean method debug(String) which prints text to
-System.out. So, a call to debug("call to debug") will result in a call
-to the hhelper's instance method (n.b. debug always returns true,
-allowing it to be composed in AND conditions as well invoked as an
-action).
+instance is used to store the table of bindings for any trigger method
+arguments $0, $1 etc, local variables mentioned in the rule and event
+variables explicitly bound by the rule. Every public instance method
+on class Helper is automatically available as a callable function in a
+rule binding, condition or action. For example, Helper defines a
+boolean method debug(String) which prints text to System.out. So, a
+call to debug("call to debug") will result in a call to the helper's
+instance method (n.b. debug always returns true, allowing it to be
+composed in AND conditions as well invoked as an action).
 
-Helper provides other builtins which allow countdowns to be initiated,
-detected and decremented and allows threads to be blocked on a wait,
-resumed and killed. Methods to support rendezvous will be added
-soon. Adding a method to Helper automatically makes it available as a
-builtin (type-checking happens automically too) so it should be easy
-to extend the rule language as nw requirements arise.
+Helper provides other builtins which perform thread synchronization
+operations, manage rule system state which coordinates actions across
+independent rule firings and tarces execution of rules. Methods to
+support rendezvous will be added soon. It is possible to specify per
+rule that an alternative Helper class should be employed, enabling
+test-specific builtin operations to be used where appropriate. This is achieved by adding a line in the format
+
+  HELPER <classname>
+
+before the location specifier (AT XXX) in the rule definition. Any
+public methdos of the supplied class will be available for use as
+builtin methods in the rule body. n.b. it is usually best to supply a
+class which extends the built-in class Helper as this will
+conservatively extend (or possibly override) the default set of
+builtpin operations.
 
 Type Checking Scripts
 ---------------------
@@ -276,8 +321,7 @@ for details.
 Documentation
 -------------
 For full details of rule syntax the operation of the byteman
-package see the manual in the docs directory. See also the dd/scripts
-directory for some example rule scripts used to test JBossTS recovery.
+package see the manual in the docs directory.
 
 Copyright
 ---------
