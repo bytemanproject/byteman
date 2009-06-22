@@ -155,6 +155,14 @@ The XTS installation directory must be specified with the XTS_HOME environment v
          </jar>
     </target>
 
+    <target name="install" depends="jar">
+        <zip  destfile="${build.dir}/byteman.zip">
+            <fileset dir="${build.dir}" includes="lib/byteman.jar"/>
+            <fileset dir="." includes="README"/>
+            <fileset dir="." includes="docs/ProgrammersGuide.pdf"/>
+        </zip>
+    </target>
+
    <target name="clean">
        <delete dir="${build.dir}"/>
        <delete dir="${dd.grammar.dir}" includes="*.java *.tokens"/>
