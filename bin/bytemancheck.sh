@@ -27,7 +27,7 @@
 # usage: bytemancheck -cp classpath script1 . . . scriptN
 #
 BASE=${0%*/bin/bytemancheck.sh}
-CP=${BASE}/build/lib/byteman.jar
+CP=${BASE}/lib/byteman.jar
 CP=${CP}:${BASE}}/ext/asm-all-3.0.jar
 if [ $1 == "-cp" ] ; then
   CP=${CP}:$2

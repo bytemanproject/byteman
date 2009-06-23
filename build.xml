@@ -160,6 +160,8 @@ The XTS installation directory must be specified with the XTS_HOME environment v
             <fileset dir="${build.dir}" includes="lib/byteman.jar"/>
             <fileset dir="." includes="README"/>
             <fileset dir="." includes="docs/ProgrammersGuide.pdf"/>
+            <fileset dir="." includes="bin/bytemancheck.sh"/>
+            <fileset dir="." includes="ext/asm-all-3.0.jar"/>
         </zip>
     </target>
 
