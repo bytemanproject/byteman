@@ -386,8 +386,8 @@ action_expr_list
 		{: RESULT = node(ParseNode.SEMI, eleft, eright, e, ael); :}
 	|	expr:e COMMA action_expr_list:ael
 		{: RESULT = node(ParseNode.SEMI, eleft, eright, e, ael); :}
-    |   action_expr_list_error_invalid_action:ael {: RESULT = ael; :}
 	|	action_expr:ae {: RESULT = ae; :}
+    |   action_expr_list_error_invalid_action:ael {: RESULT = ael; :}
 	;
 
 action_expr_list_error_invalid_action
@@ -398,7 +398,7 @@ action_expr_list_error_invalid_action
 
 action_expr
 	::=	expr:e {: RESULT = e; :}
-	| throw_return_expr
+	| throw_return_expr:tre {: RESULT = tre; :}
 	;
 
 throw_return_expr
