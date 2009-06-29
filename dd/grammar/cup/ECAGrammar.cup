@@ -89,7 +89,7 @@ parser code {:
   public void error(String message, int line, int col)
   {
         errorCount++;
-        System.out.println(file + " @ " + line + "." + col + " : " + message);
+        System.out.println(file + " line " + line + " : " + message);
   }
 
   /** Report a non fatal error (or warning).  This method takes a message
@@ -103,12 +103,14 @@ parser code {:
    */
   public void report_error(String message, Object info)
   {
+      /*
       if (info instanceof Symbol) {
           Symbol sym = (Symbol)info;
           System.err.println(message + " at line " + sym.left +  " character " + sym.right);
       } else {
           System.err.println(message);
       }
+      */
   }
 
   public void error(String message)
@@ -281,9 +283,7 @@ non terminal ParseNode eca_error;
 non terminal ParseNode eca_error_in_event;
 non terminal ParseNode eca_error_in_condition;
 non terminal ParseNode eca_error_in_action;
-//non terminal ParseNode bindings_error_missing_sepr;
 non terminal ParseNode action_expr_list_error_invalid_action;
-//non terminal ParseNode expr_list_error_missing_sepr;
 non terminal ParseNode expr_list_error_invalid_expr;
 
 /* precedences from weakest to tightest binding */
@@ -350,14 +350,8 @@ event	::=	NOTHING:n {: RESULT = node(ParseNode.NOTHING, nleft, nright); :}
 bindings
 	::=	binding:b COMMA bindings:bs {: RESULT = node(ParseNode.COMMA, bleft, bright, b, bs); :}
 	|	binding:b SEMI bindings:bs {: RESULT = node(ParseNode.COMMA, bleft, bright, b, bs); :}
-//	|   bindings_error_missing_sepr:b {: RESULT = b; :}
 	|	binding:b {: RESULT = b; :}
 	;
-
-//bindings_error_missing_sepr
-//    ::= binding:b bindings:bs {: error("missing separator", bleft, bright);
-//	                             RESULT = node(ParseNode.COMMA, bleft, bright, b, bs); :}
-//    ;
 
 binding	::=	bind_sym:s ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, sleft, sright, s, e); :}
 	;
@@ -422,15 +416,8 @@ expr_list
 	::=	expr:e {: RESULT = e; :}
 	|	expr:e COMMA expr_list:el
 		{: RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
-//	|	expr_list_error_missing_sepr:el {: RESULT = el; :}
 	|	expr_list_error_invalid_expr:el {: RESULT = el; :}
 	;
-
-//expr_list_error_missing_sepr
-//    ::= expr:e expr_list:el
-//		{: error("missing separator");
-//		   RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
-//    ;
 
 expr_list_error_invalid_expr
     ::= error COMMA:c expr_list:el

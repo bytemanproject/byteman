@@ -84,6 +84,8 @@
             <arg value="-parser" />
             <arg value="ECAGrammarParser" />
             <arg value="-nonterms"/>
+            <arg value="-expect"/>
+            <arg value="66"/>
             <arg value="${dd.grammar.dir}/cup/ECAGrammar.cup"/>
         </java>
 	<delete file="${src.dir}/org/jboss/byteman/rule/grammar/ECATokenLexer.java"/>
