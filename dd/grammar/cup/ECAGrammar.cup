@@ -34,45 +34,97 @@ action code {:
     /*
     private ParseNode node(int tag)
     {
-    return ParseNode.node(tag, parser.file);
+    return ParseNode.node(tag, parser.getFile());
     }
     */
 
     private ParseNode node(int tag, int line, int column)
     {
-	return ParseNode.node(tag, parser.file, line, column);
+	return ParseNode.node(tag, parser.getFile(), line, column);
     }
 
     private ParseNode node(int tag, int line, int column, Object child0)
     {
-	return ParseNode.node(tag, parser.file, line, column, child0);
+	return ParseNode.node(tag, parser.getFile(), line, column, child0);
     }
 
     private ParseNode node(int tag, int line, int column, Object child0, Object child1)
     {
-	return ParseNode.node(tag, parser.file, line, column, child0, child1);
+	return ParseNode.node(tag, parser.getFile(), line, column, child0, child1);
     }
 
     private ParseNode node(int tag, int line, int column, Object child0, Object child1, Object child2)
     {
-	return ParseNode.node(tag, parser.file, line, column, child0, child1, child2);
+	return ParseNode.node(tag, parser.getFile(), line, column, child0, child1, child2);
     }
 
     /*
     private ParseNode node(int tag, int line, int column, Object child0, Object child1, Object child2, Object child3)
     {
-	return ParseNode.node(tag, parser.file, line, column, child0, child1, child2, child3);
+	return ParseNode.node(tag, parser.getFile(), line, column, child0, child1, child2, child3);
     }
     */
+    public void error(String message, int line, int col)
+    {
+        parser.error(message, line, col);
+    }
+
+    public void error(String message)
+    {
+        parser.error(message);
+    }
+
 :}
 
 parser code {:
 
-  public String file = "";
+  private String file = "";
+  private int errorCount = 0;
 
   public void setFile(String file)
   {
     this.file = file;
+  }
+
+  public void error(String message, int line, int col)
+  {
+        errorCount++;
+        System.out.println(file + " @ " + line + "." + col + " : " + message);
+  }
+
+  /** Report a non fatal error (or warning).  This method takes a message
+   *  string and an additional object (to be used by specializations
+   *  implemented in subclasses).  Here in the base class a very simple
+   *  implementation is provided which simply prints the message to
+   *  System.err.
+   *
+   * @param message an error message.
+   * @param info    an extra object reserved for use by specialized subclasses.
+   */
+  public void report_error(String message, Object info)
+  {
+      if (info instanceof Symbol) {
+          Symbol sym = (Symbol)info;
+          System.err.println(message + " at line " + sym.left +  " character " + sym.right);
+      } else {
+          System.err.println(message);
+      }
+  }
+
+  public void error(String message)
+  {
+        errorCount++;
+        System.out.println(file + " : " + message);
+  }
+
+  public String getFile()
+  {
+    return file;
+  }
+
+  public int getErrorCount()
+  {
+    return errorCount;
   }
 
   /*. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .*/
@@ -199,6 +251,7 @@ non terminal ParseNode condition;
 non terminal ParseNode actions;
 non terminal ParseNode action_expr_list;
 non terminal ParseNode action_expr;
+non terminal ParseNode throw_return_expr;
 
 non terminal ParseNode expr_list;
 
@@ -221,6 +274,17 @@ non terminal ParseNode array_idx;
 non terminal ParseNode name;
 non terminal ParseNode simple_name;
 non terminal ParseNode path;
+
+/* error patterns */
+
+non terminal ParseNode eca_error;
+non terminal ParseNode eca_error_in_event;
+non terminal ParseNode eca_error_in_condition;
+non terminal ParseNode eca_error_in_action;
+//non terminal ParseNode bindings_error_missing_sepr;
+non terminal ParseNode action_expr_list_error_invalid_action;
+//non terminal ParseNode expr_list_error_missing_sepr;
+non terminal ParseNode expr_list_error_invalid_expr;
 
 /* precedences from weakest to tightest binding */
 
@@ -247,7 +311,33 @@ eca_rule
 eca	::=	BIND event:e
 		IF condition:c
 		DO actions:a {: RESULT = node(ParseNode.BIND, eleft, eright, e, c, a); :}
+	|   eca_error
 	;
+
+eca_error
+    ::= eca_error_in_event
+    |   eca_error_in_condition
+    |   eca_error_in_action
+    ;
+
+eca_error_in_event
+    ::= BIND:b error {: error("invalid event", bleft, bright); :}
+        IF condition:c
+        DO actions:a {: RESULT = node(ParseNode.BIND, bleft, bright, null, c, a); :}
+    ;
+
+eca_error_in_condition
+    ::= BIND event:e
+        IF:i error {: error("invalid condition", ileft, iright); :}
+        DO actions:a {: RESULT = node(ParseNode.BIND, eleft, eright, e, null, a); :}
+    ;
+
+eca_error_in_action
+    ::= BIND event:e
+        IF condition:c
+        DO:d error {: error("invalid action", dleft, dright);
+                      RESULT = node(ParseNode.BIND, eleft, eright, e, c, null); :}
+    ;
 
 // event specifications -- for now events are just a list of bindings
 
@@ -260,8 +350,14 @@ event	::=	NOTHING:n {: RESULT = node(ParseNode.NOTHING, nleft, nright); :}
 bindings
 	::=	binding:b COMMA bindings:bs {: RESULT = node(ParseNode.COMMA, bleft, bright, b, bs); :}
 	|	binding:b SEMI bindings:bs {: RESULT = node(ParseNode.COMMA, bleft, bright, b, bs); :}
+//	|   bindings_error_missing_sepr:b {: RESULT = b; :}
 	|	binding:b {: RESULT = b; :}
 	;
+
+//bindings_error_missing_sepr
+//    ::= binding:b bindings:bs {: error("missing separator", bleft, bright);
+//	                             RESULT = node(ParseNode.COMMA, bleft, bright, b, bs); :}
+//    ;
 
 binding	::=	bind_sym:s ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, sleft, sright, s, e); :}
 	;
@@ -296,12 +392,24 @@ action_expr_list
 		{: RESULT = node(ParseNode.SEMI, eleft, eright, e, ael); :}
 	|	expr:e COMMA action_expr_list:ael
 		{: RESULT = node(ParseNode.SEMI, eleft, eright, e, ael); :}
+    |   action_expr_list_error_invalid_action:ael {: RESULT = ael; :}
+    |   action_expr_list_error_missing_semi:ael {: RESULT = ael; :}
 	|	action_expr:ae {: RESULT = ae; :}
 	;
 
+action_expr_list_error_invalid_action
+    ::= error action_expr_list:ael
+        {: error("invalid action", aelleft, aelright);
+           RESULT = ael; :}
+    ;
+
 action_expr
 	::=	expr:e {: RESULT = e; :}
-	|	RETURN:r
+	| throw_return_expr
+	;
+
+throw_return_expr
+    ::=	RETURN:r
 		{: RESULT = node(ParseNode.RETURN, rleft, rright, null); :}
 	|	RETURN:r expr:e
 		{: RESULT = node(ParseNode.RETURN, rleft, rright, e); :}
@@ -315,10 +423,25 @@ expr_list
 	::=	expr:e {: RESULT = e; :}
 	|	expr:e COMMA expr_list:el
 		{: RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
+//	|	expr_list_error_missing_sepr:el {: RESULT = el; :}
+	|	expr_list_error_invalid_expr:el {: RESULT = el; :}
 	;
 
-expr	::=	ternary_oper_expr:e {: RESULT = e; :}
-     	|	binary_oper_expr:e {: RESULT = e; :}
+//expr_list_error_missing_sepr
+//    ::= expr:e expr_list:el
+//		{: error("missing separator");
+//		   RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
+//    ;
+
+expr_list_error_invalid_expr
+    ::= error COMMA:c expr_list:el
+		{: error("invalid expression", cleft, cright);
+		   RESULT = node(ParseNode.COMMA, cleft, cright, null, el); :}
+    ;
+
+expr
+    ::= ternary_oper_expr:e {: RESULT = e; :}
+    |	binary_oper_expr:e {: RESULT = e; :}
 	|	unary_oper_expr:e {: RESULT = e; :}
 	|	array_expr:e {: RESULT = e; :}
 	|	field_expr:e {: RESULT = e; :}
@@ -360,7 +483,8 @@ unary_oper_expr
 	::=	NOT:o expr:e {: RESULT = node(ParseNode.UNOP, eleft, eright, node(ParseNode.NOT, oleft, oright), e); :}
 	/* bitwise operators */
 	|	TWIDDLE:o expr:e {: RESULT = node(ParseNode.UNOP, eleft, eright, node(ParseNode.TWIDDLE, oleft, oright), e); :}
-	|	MINUS:o expr:e {: RESULT = node(ParseNode.UNOP, eleft, eright, node(ParseNode.UMINUS, oleft, oright), e); :} %prec UMINUS
+	/* arithmetic operators */
+    |   MINUS:o expr:e {: RESULT = node(ParseNode.UNOP, eleft, eright, node(ParseNode.UMINUS, oleft, oright), e); :} %prec UMINUS
 	;
 
 array_expr
