@@ -393,7 +393,6 @@ action_expr_list
 	|	expr:e COMMA action_expr_list:ael
 		{: RESULT = node(ParseNode.SEMI, eleft, eright, e, ael); :}
     |   action_expr_list_error_invalid_action:ael {: RESULT = ael; :}
-    |   action_expr_list_error_missing_semi:ael {: RESULT = ael; :}
 	|	action_expr:ae {: RESULT = ae; :}
 	;
 
