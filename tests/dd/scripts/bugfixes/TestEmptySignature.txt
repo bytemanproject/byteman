@@ -21,6 +21,8 @@
 #
 # @authors Andrew Dinn
 #
+# Test for bug reported by Kabir Khan pre-JIRA where the Transformer failed to accept a CALL
+# trigger location specified with an empty argument list.
 
 RULE test empty signature
 CLASS TestEmptySignature

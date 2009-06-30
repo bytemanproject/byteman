@@ -28,8 +28,8 @@ import org.jboss.byteman.tests.location.TestCall;
 import org.jboss.byteman.tests.auxiliary.TestCallThrowSynchAuxiliary;
 
 /**
- * Test for bug reported by Kabir Khan pre-JIRA where the Transformer failed ot accept a trigger
- * method specified with an empty argument list.
+ * Test for bug reported by Kabir Khan pre-JIRA where the Transformer failed to accept a CALL
+ * trigger location specified with an empty argument list.
  */
 public class TestEmptySignature extends Test
 {
