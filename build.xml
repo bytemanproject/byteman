@@ -129,6 +129,20 @@
         </zip>
     </target>
 
+    <target name="install-src">
+        <zip  destfile="${build.dir}/byteman-src.zip">
+            <fileset dir="." includes="README build.xml"/>
+            <fileset dir="." includes="src/**/*" excludes="src/**/.svn/**/*"/>
+            <fileset dir="." includes="docs/**" excludes="docs/**/.svn/**/*"/>
+            <fileset dir="." includes="bin/**" excludes="bin/**/.svn/**/*"/>
+            <fileset dir="." includes="ext/**" excludes="ext/**/.svn/**/*"/>
+            <fileset dir="." includes="dd/**" excludes="dd/**/.svn/**/*"/>
+            <fileset dir="." includes="tests/build.xml"/>
+            <fileset dir="." includes="tests/src/**/*" excludes="tests/src/**/.svn/**/*"/>
+            <fileset dir="." includes="tests/dd/**/*" excludes="tests/sdd/**/.svn/**/*"/>
+        </zip>
+    </target>
+
    <target name="clean">
        <delete dir="${build.dir}"/>
        <delete dir="${dd.grammar.dir}" includes="*.java *.tokens"/>
