@@ -104,7 +104,7 @@ public class ExitCheckAdapter extends RuleCheckAdapter
             // check whether type is one of ours and if so add the labels to the
             // return table
 
-            if (type.equals("org/jboss/byteman/rule/exception/EarlyReturnException")) {
+            if (type != null && type.equals("org/jboss/byteman/rule/exception/EarlyReturnException")) {
                 earlyReturnHandlers.add(handler);
             }
             super.visitTryCatchBlock(start, end, handler, type);

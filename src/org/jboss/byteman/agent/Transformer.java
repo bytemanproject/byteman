@@ -411,7 +411,7 @@ public class Transformer implements ClassFileTransformer {
         // ClassVisitor traceAdapter = new TraceClassVisitor(cw, pw);
         // RuleCheckAdapter adapter = handlerLocation.getRuleCheckAdapter(traceAdapter, rule, className, handlerMethod);
         try {
-            cr.accept(checkAdapter, 0);
+            cr.accept(checkAdapter, ClassReader.EXPAND_FRAMES);
         } catch (Throwable th) {
             System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + rule.getName() + " to class " + className + th);
             th.printStackTrace(System.out);
@@ -426,7 +426,7 @@ public class Transformer implements ClassFileTransformer {
             // RuleTriggerAdapter adapter = handlerLocation.getRuleAdapter(traceAdapter, rule, className, handlerMethod);
             RuleTriggerAdapter adapter = handlerLocation.getRuleAdapter(cw, rule, className, handlerMethod);
             try {
-                cr.accept(adapter, 0);
+                cr.accept(adapter, ClassReader.EXPAND_FRAMES);
             } catch (Throwable th) {
                 System.out.println("org.jboss.byteman.agent.Transformer : error compiling rule " + rule.getName() + " for class " + className + th);
                 th.printStackTrace(System.out);

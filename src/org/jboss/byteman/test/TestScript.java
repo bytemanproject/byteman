@@ -24,16 +24,24 @@
 package org.jboss.byteman.test;
 
 import org.jboss.byteman.rule.type.TypeHelper;
+import org.jboss.byteman.rule.type.Type;
+import org.jboss.byteman.rule.type.TypeGroup;
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.rule.binding.Bindings;
+import org.jboss.byteman.rule.binding.Binding;
 import org.jboss.byteman.rule.exception.ParseException;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.agent.LocationType;
 import org.jboss.byteman.agent.Location;
+import org.jboss.byteman.agent.adapter.RuleCheckAdapter;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
@@ -245,8 +253,18 @@ public class TestScript
                                         access = Opcodes.ACC_STATIC;
                                     }
                                     rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
-                                    rule.typeCheck();
-                                    System.err.println("TestScript: type checked rule " + ruleName);
+                                    // the param and local var types are normally set by the check adapter but we
+                                    // cannot run that without accessing the byte[] version of the class so we have
+                                    // to install the param types by hand and we cannot check local var types
+                                    int paramErrorCount = installParamTypes(rule, targetClassName, access, candidateName, candidateDesc);
+                                    if (paramErrorCount == 0) {
+                                        rule.typeCheck();
+                                        System.err.println("TestScript: type checked rule " + ruleName);
+                                    } else {
+                                        errorCount += paramErrorCount;
+                                        typeErrorCount += paramErrorCount;
+                                        System.err.println("TestScript: failed to type check rule " + ruleName);
+                                    }
                                 }
                             }
                         }
@@ -274,8 +292,18 @@ public class TestScript
                                         access = Opcodes.ACC_STATIC;
                                     }
                                     rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
-                                    rule.typeCheck();
-                                    System.err.println("TestScript: type checked rule " + ruleName);
+                                    // the param and local var types are normally set by the check adapter but we
+                                    // cannot run that without accessing the byte[] version of the class so we have
+                                    // to install the param types by hand and we cannot check local var types
+                                    int paramErrorCount = installParamTypes(rule, targetClassName, access, candidateName, candidateDesc);
+                                    if (paramErrorCount == 0) {
+                                        rule.typeCheck();
+                                        System.err.println("TestScript: type checked rule " + ruleName);
+                                    } else {
+                                        errorCount += paramErrorCount;
+                                        typeErrorCount += paramErrorCount;
+                                        System.err.println("TestScript: failed to type check rule " + ruleName);
+                                    }
                                 }
                             }
                         }
@@ -346,6 +374,42 @@ public class TestScript
         desc += ")";
 
         return desc;
+    }
+
+    public int installParamTypes(Rule rule, String targetClassName, int access, String candidateName, String candidateDesc)
+    {
+        List<String> paramTypes = Type.parseMethodDescriptor(candidateDesc, false);
+        int paramCount = paramTypes.size();
+        int errorCount = 0;
+
+        TypeGroup typegroup = rule.getTypeGroup();
+
+        Bindings bindings = rule.getBindings();
+        Iterator<Binding> iterator = bindings.iterator();
+
+        while (iterator.hasNext()) {
+            Binding binding = iterator.next();
+
+            if (binding.getType() == Type.UNDEFINED) {
+                if (binding.isRecipient()) {
+                    binding.setDescriptor(targetClassName);
+                } else if (binding.isParam()) {
+                    int idx = binding.getIndex();
+                    // n.b. param indices are 1-based so use > here not >=
+                    if (idx > paramCount) {
+                        errorCount++;
+                        System.err.println("TestScript: invalid method parameter reference $" + idx  + " in rule " + rule.getName());
+                    } else {
+                        binding.setDescriptor(paramTypes.get(idx - 1));
+                    }
+                } else if (binding.isLocalVar()) {
+                    errorCount++;
+                    System.err.println("TestScript: cannot typecheck local variable " + binding.getName()  + " in rule " + rule.getName());
+                }
+            }
+        }
+
+        return errorCount;
     }
 
     /**

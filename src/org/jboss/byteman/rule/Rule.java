@@ -175,7 +175,12 @@ public class Rule
                 ECAGrammarParser parser = new ECAGrammarParser(lexer);
                 parser.setFile(file);
                 Symbol parse = (debugParse ? parser.debug_parse() : parser.parse());
+                if (parser.getErrorCount() != 0) {
+                    throw new ParseException("org.jboss.byteman.rule.Rule : error parsing rule\n" + ruleSpec);
+                }
                 ruleTree = (ParseNode) parse.value;
+            } catch (ParseException pe) {
+                throw pe;
             } catch (Exception e) {
                 throw new ParseException("org.jboss.byteman.rule.Rule : error parsing rule\n" + ruleSpec, e);
             }

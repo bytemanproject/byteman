@@ -411,19 +411,27 @@ public abstract class Location
             if (text.contains(")")) {
                 int tailIdx = text.lastIndexOf(")");
                 String countText = text.substring(tailIdx + 1).trim();
-                try {
-                    count = Integer.valueOf(countText);
-                } catch (NumberFormatException nfe) {
-                    return null;
+                if (!countText.equals("")) {
+                    try {
+                        count = Integer.valueOf(countText);
+                    } catch (NumberFormatException nfe) {
+                        return null;
+                    }
+                } else {
+                    count = 1;
                 }
                 text = text.substring(0, tailIdx).trim();
             } else if (text.contains(" ")) {
                 int tailIdx = text.lastIndexOf(" ");
                 String countText = text.substring(tailIdx + 1).trim();
-                try {
-                    count = Integer.valueOf(countText);
-                } catch (NumberFormatException nfe) {
-                    return null;
+                if (!countText.equals("")) {
+                    try {
+                        count = Integer.valueOf(countText);
+                    } catch (NumberFormatException nfe) {
+                        return null;
+                    }
+                } else {
+                    count = 1;
                 }
                 text = text.substring(0, tailIdx).trim();
             } else {
