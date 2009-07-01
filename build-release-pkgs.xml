@@ -160,7 +160,7 @@
             <arg value="-Dpackaging=jar"/>
             <arg value="-Durl=${mvn.url}"/>
             <arg value="-DrepositoryId=${mvn.repositoryId}"/>
-            <arg value="-DgroupId=jboss.byteman"/>
+            <arg value="-DgroupId=org.jboss.byteman"/>
             <arg value="-DartifactId=byteman"/>
             <arg value="-Dversion=${filename}"/>
             <arg value="-DgeneratePom=true"/>
