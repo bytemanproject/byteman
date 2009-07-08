@@ -255,10 +255,29 @@ public class TypeGroup {
     public Type match(String[] path)
     {
         // check to see if the first element of path is a known type or an alias for a known type
-        Type type = typeTable.get(path[0]);
+        String name = path[0];
+
+        Type type = typeTable.get(name);
         if (type != null) {
             return Type.dereference(type);
         }
+
+        // also check to see if the first element of path is a non-primitive type in java.lang e.g. System
+
+        name = "java.lang." + name;
+        type = typeTable.get(name);
+        if (type != null) {
+            return Type.dereference(type);
+        } else {
+            try {
+                Class clazz = loader.loadClass(name);
+                return ensureType(clazz);
+            } catch (ClassNotFoundException e) {
+                // ignore
+            }
+        }
+
+
         // ok, see if we can find a type using some initial segment of the path
         
         String fullName = "";
