@@ -229,46 +229,9 @@ public class TestScript
                 boolean multiple = false;
                 try {
                     Class targetClass = loader.loadClass(targetClassName);
-                    if (!targetName.equals("<init>")) {
-                        Method[] candidates = targetClass.getDeclaredMethods();
-                        for (Method candidate : candidates) {
-                            String candidateName = candidate.getName();
-                            String candidateDesc = makeDescriptor(candidate);
-                            if (targetName.equals(candidateName)) {
-                                if (targetDesc.equals("") || TypeHelper.equalDescriptors(targetDesc, candidateDesc)) {
-                                    System.err.println("TestScript: checking rule " + ruleName);
-                                    if (found) {
-                                        multiple = true;
-                                        break;
-                                    }
-                                    found = true;
-                                    int access = 0;
-                                    Class<?>[] exceptionClasses = candidate.getExceptionTypes();
-                                    int l = exceptionClasses.length;
-                                    String[] exceptionNames = new String[l];
-                                    for (int i = 0; i < l; i++) {
-                                        exceptionNames[i] = exceptionClasses[i].getCanonicalName();
-                                    }
-                                    if ((candidate.getModifiers() & Modifier.STATIC) != 0) {
-                                        access = Opcodes.ACC_STATIC;
-                                    }
-                                    rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
-                                    // the param and local var types are normally set by the check adapter but we
-                                    // cannot run that without accessing the byte[] version of the class so we have
-                                    // to install the param types by hand and we cannot check local var types
-                                    int paramErrorCount = installParamTypes(rule, targetClassName, access, candidateName, candidateDesc);
-                                    if (paramErrorCount == 0) {
-                                        rule.typeCheck();
-                                        System.err.println("TestScript: type checked rule " + ruleName);
-                                    } else {
-                                        errorCount += paramErrorCount;
-                                        typeErrorCount += paramErrorCount;
-                                        System.err.println("TestScript: failed to type check rule " + ruleName);
-                                    }
-                                }
-                            }
-                        }
-                    } else {
+                    if (targetName.equals("<clinit>")) {
+                        System.err.println("TestScript: cannot type check <clinit> rule " + ruleName);
+                    } else if (targetName.equals("<init>")) {
                         Constructor[] constructors = targetClass.getConstructors();
                         for (Constructor constructor : constructors) {
                             String candidateName = constructor.getName();
@@ -289,6 +252,45 @@ public class TestScript
                                         exceptionNames[i] = exceptionClasses[i].getCanonicalName();
                                     }
                                     if ((constructor.getModifiers() & Modifier.STATIC) != 0) {
+                                        access = Opcodes.ACC_STATIC;
+                                    }
+                                    rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
+                                    // the param and local var types are normally set by the check adapter but we
+                                    // cannot run that without accessing the byte[] version of the class so we have
+                                    // to install the param types by hand and we cannot check local var types
+                                    int paramErrorCount = installParamTypes(rule, targetClassName, access, candidateName, candidateDesc);
+                                    if (paramErrorCount == 0) {
+                                        rule.typeCheck();
+                                        System.err.println("TestScript: type checked rule " + ruleName);
+                                    } else {
+                                        errorCount += paramErrorCount;
+                                        typeErrorCount += paramErrorCount;
+                                        System.err.println("TestScript: failed to type check rule " + ruleName);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Method[] candidates = targetClass.getDeclaredMethods();
+                        for (Method candidate : candidates) {
+                            String candidateName = candidate.getName();
+                            String candidateDesc = makeDescriptor(candidate);
+                            if (targetName.equals(candidateName)) {
+                                if (targetDesc.equals("") || TypeHelper.equalDescriptors(targetDesc, candidateDesc)) {
+                                    System.err.println("TestScript: checking rule " + ruleName);
+                                    if (found) {
+                                        multiple = true;
+                                        break;
+                                    }
+                                    found = true;
+                                    int access = 0;
+                                    Class<?>[] exceptionClasses = candidate.getExceptionTypes();
+                                    int l = exceptionClasses.length;
+                                    String[] exceptionNames = new String[l];
+                                    for (int i = 0; i < l; i++) {
+                                        exceptionNames[i] = exceptionClasses[i].getCanonicalName();
+                                    }
+                                    if ((candidate.getModifiers() & Modifier.STATIC) != 0) {
                                         access = Opcodes.ACC_STATIC;
                                     }
                                     rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
