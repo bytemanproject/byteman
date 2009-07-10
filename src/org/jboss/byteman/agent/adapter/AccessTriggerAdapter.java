@@ -164,12 +164,23 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
                 break;
             }
             if (ownerClass != null) {
-                if (!ownerClass.equals(owner)) {
+                if (!ownerClass.equals(TypeHelper.internalizeClass(owner))) {
                     // TODO check for unqualified names
-                    return false;
+                    // if the called class has no package qualification and the owner class does then we
+                    // can still match if the unqualified owner name equals the called class
+
+                    if (ownerClass.indexOf('.') >= 0) {
+                        return false;
+                    }
+
+                    int ownerPackageIdx = owner.lastIndexOf('/');
+                    if (ownerPackageIdx < 0) {
+                        return false;
+                    } else if (!owner.substring(ownerPackageIdx+1).equals(ownerClass)) {
+                        return false;
+                    }
                 }
             }
-            // TODO work out how to use desc???
             return true;
         }
     }

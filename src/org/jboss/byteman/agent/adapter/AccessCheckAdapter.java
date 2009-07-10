@@ -26,6 +26,7 @@ package org.jboss.byteman.agent.adapter;
 import org.objectweb.asm.*;
 import org.jboss.byteman.agent.Location;
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.rule.type.TypeHelper;
 
 /**
  * asm Adapter class used to check that the target method for a rule exists in a class
@@ -130,13 +131,25 @@ public class AccessCheckAdapter extends RuleCheckAdapter
                 }
                 break;
             }
+
             if (ownerClass != null) {
-                if (!ownerClass.equals(owner)) {
+                if (!ownerClass.equals(TypeHelper.internalizeClass(owner))) {
                     // TODO check for unqualified names
-                    return false;
+                    // if the called class has no package qualification and the owner class does then we
+                    // can still match if the unqualified owner name equals the called class
+
+                    if (ownerClass.indexOf('.') >= 0) {
+                        return false;
+                    }
+
+                    int ownerPackageIdx = owner.lastIndexOf('/');
+                    if (ownerPackageIdx < 0) {
+                        return false;
+                    } else if (!owner.substring(ownerPackageIdx+1).equals(ownerClass)) {
+                        return false;
+                    }
                 }
             }
-            // TODO work out how to use desc???
             return true;
         }
     }

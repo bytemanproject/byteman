@@ -46,7 +46,7 @@ RULE test call getCounter trigger 3
 CLASS TestCallThrowSynchAuxiliary
 METHOD testMethod()
 HELPER org.jboss.byteman.tests.helpers.Default
-AT CALL getCounter 3
+AT CALL TestCallThrowSynchAuxiliary.getCounter 3
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("CALL getCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod")
@@ -56,7 +56,7 @@ RULE test call setCounter trigger
 CLASS TestCallThrowSynchAuxiliary
 METHOD testMethod()
 HELPER org.jboss.byteman.tests.helpers.Default
-AT CALL setCounter
+AT CALL TestCallThrowSynchAuxiliary.setCounter
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("CALL setCounter triggered in TestCallThrowSynchAuxiliary.testMethod")
@@ -66,7 +66,7 @@ RULE test call setCounter trigger 2
 CLASS TestCallThrowSynchAuxiliary
 METHOD testMethod()
 HELPER org.jboss.byteman.tests.helpers.Default
-AT CALL setCounter 2
+AT CALL org.jboss.byteman.tests.auxiliary.TestCallThrowSynchAuxiliary.setCounter 2
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("CALL setCounter 2 triggered in TestCallThrowSynchAuxiliary.testMethod")
@@ -76,7 +76,7 @@ RULE test call setCounter trigger 3
 CLASS TestCallThrowSynchAuxiliary
 METHOD testMethod()
 HELPER org.jboss.byteman.tests.helpers.Default
-AT CALL setCounter 3
+AT CALL org.jboss.byteman.tests.auxiliary.TestCallThrowSynchAuxiliary.setCounter 3
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("CALL setCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod"),
