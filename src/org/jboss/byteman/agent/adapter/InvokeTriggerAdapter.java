@@ -147,7 +147,7 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
                 return false;
             }
             if (calledClass != null) {
-                if (!calledClass.equals(owner)) {
+                if (!calledClass.equals(TypeHelper.internalizeClass(owner))) {
                     // TODO check for unqualified names
                     // if the called class has no package qualification and the owner class does
                     // then we can still match if the unqualified owner name equals the called class
