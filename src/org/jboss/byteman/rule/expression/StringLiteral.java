@@ -44,7 +44,7 @@ public class StringLiteral extends Expression
     {
         super(rule, Type.STRING, token);
 
-        this.text = token.getText();
+        this.text = token.getText().intern();
     }
 
     /**
