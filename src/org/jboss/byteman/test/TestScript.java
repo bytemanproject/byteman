@@ -119,11 +119,13 @@ public class TestScript
         int parseErrorCount = 0;
         int typeErrorCount = 0;
         int compileErrorCount = 0;
+        int baseline = 0;
 
         for (String script : ruleScripts) {
             String ruleName = "";
+            String[] lines = script.split("\n");
+            int len = lines.length;
             try {
-                String[] lines = script.split("\n");
                 String targetClassName;
                 String targetMethodName;
                 String targetHelperName = null;
@@ -132,7 +134,6 @@ public class TestScript
                 String text = "";
                 String sepr = "";
                 int idx = 0;
-                int len = lines.length;
                 int lineNumber = 0;
 
                 while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
@@ -219,7 +220,7 @@ public class TestScript
                         System.out.println("org.jboss.byteman.agent.Transformer : unknown helper class " + targetHelperName + " for rule " + ruleName);
                     }
                 }
-                Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetHelperClass, targetLocation, text, lineNumber, file, loader);
+                Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetHelperClass, targetLocation, text, baseline + lineNumber, file, loader);
                 System.err.println("TestScript: parsed rule " + rule.getName());
                 System.err.println(rule);
                 
@@ -262,10 +263,12 @@ public class TestScript
                                     if (paramErrorCount == 0) {
                                         rule.typeCheck();
                                         System.err.println("TestScript: type checked rule " + ruleName);
+                                        System.err.println();
                                     } else {
                                         errorCount += paramErrorCount;
                                         typeErrorCount += paramErrorCount;
                                         System.err.println("TestScript: failed to type check rule " + ruleName);
+                                        System.err.println();
                                     }
                                 }
                             }
@@ -301,10 +304,12 @@ public class TestScript
                                     if (paramErrorCount == 0) {
                                         rule.typeCheck();
                                         System.err.println("TestScript: type checked rule " + ruleName);
+                                        System.err.println();
                                     } else {
                                         errorCount += paramErrorCount;
                                         typeErrorCount += paramErrorCount;
                                         System.err.println("TestScript: failed to type check rule " + ruleName);
+                                        System.err.println();
                                     }
                                 }
                             }
@@ -313,30 +318,38 @@ public class TestScript
                 } catch(ClassNotFoundException cfe) {
                     errorCount++;
                     System.err.println("TestScript: unable to load class " + targetClassName);
+                    System.err.println();
                 }
                 if (!found) {
                     errorCount++;
                     System.err.println("TestScript: no matching method for rule " + ruleName);
+                    System.err.println();
                 } else if (multiple) {
                     errorCount++;
                     System.err.println("TestScript: multiple matching methods for rule " + ruleName);
+                    System.err.println();
                 }
             } catch (ParseException e) {
                 errorCount++;
                 parseErrorCount++;
                 System.err.println("TestScript: parse exception for rule " + ruleName + " : " + e);
                 e.printStackTrace(System.err);
+                System.err.println();
             } catch (TypeException e) {
                 typeErrorCount++;
                 errorCount++;
                 System.err.println("TestScript: type exception for rule " + ruleName + " : " + e);
                 e.printStackTrace(System.err);
+                System.err.println();
             } catch (CompileException e) {
                 compileErrorCount++;
                 errorCount++;
                 System.err.println("TestScript: createHelperAdapter exception for rule " + " : " + ruleName + e);
                 e.printStackTrace(System.err);
+                System.err.println();
             }
+
+            baseline += len;
         }
         if (errorCount != 0) {
             System.err.println("TestScript: " + errorCount + " total errors");

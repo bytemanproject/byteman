@@ -157,7 +157,7 @@ public abstract class ParseNode
      * @return a string representing the position for this node
      */
     public String getPos() {
-        return " " + file + " @ " + line + "." + column;
+        return " " + file + " line " + line;
     }
 
     /**

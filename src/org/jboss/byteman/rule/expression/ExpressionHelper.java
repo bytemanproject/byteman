@@ -83,7 +83,7 @@ public class ExpressionHelper
                     // we should only get these as identifiers for binding types or throw types which are
                     // explicitly caught by the bindings or throw processing case handlers so this is an error
 
-                    throw new TypeException("ExpressionHelper.createExpression : unexpected occurence of IDENTIFIER in parse tree "  + exprTree.getText() + exprTree.getPos());
+                    throw new TypeException("ExpressionHelper.createExpression : unexpected IDENTIFIER " + exprTree.getText() + " in "  + exprTree.getPos());
                 }
             }
             break;
@@ -118,7 +118,7 @@ public class ExpressionHelper
                 int tag0 = child0.getTag();
                 if (tag0 != IDENTIFIER) {
                     // uurgh we expected a method name
-                    throw new TypeException("ExpressionHelper.createExpression : invalid unexpected type tag for method selector " + tag + " for expression " + child0.getText() + child0.getPos());
+                    throw new TypeException("ExpressionHelper.createExpression : invalid method selector " + tag + " in expression " + child0.getText() + child0.getPos());
                 }
 
                 expr = createCallExpression(rule, bindings, child0, child1, child2, type);
@@ -131,7 +131,7 @@ public class ExpressionHelper
                 int tag0 = child0.getTag();
 
                 if (tag0 != IDENTIFIER) {
-                    throw new TypeException("ExpressionHelper.createExpression : unexpected type tag in throw expression tree " + tag + " for expression " + child0.getText() + child0.getPos());
+                    throw new TypeException("ExpressionHelper.createExpression : invalid throw type " + tag + " in expression " + child0.getText() + child0.getPos());
                 } else {
                     expr = createThrowExpression(rule, bindings, child0, child1);
                 }
@@ -198,7 +198,7 @@ public class ExpressionHelper
             break;
             default:
             {
-                throw new TypeException("ExpressionHelper.createExpression : unexpected type tag in expression tree " + tag + " for expression " + exprTree.getPos());
+                throw new TypeException("ExpressionHelper.createExpression : unexpected token type " + tag + " for expression " + exprTree.getPos());
             }
         }
 
@@ -364,13 +364,13 @@ public class ExpressionHelper
                     Integer intObject = (Integer) child1.getChild(0);
                     expr = new DollarExpression(rule, type, exprTree, intObject.intValue());
                 } else {
-                    throw new TypeException("ExpressionHelper.createUnaryExpression : unexpected type tag " + child1.getTag() + " for dollar expression tree " + child1.getText() + "" + child1.getPos());
+                    throw new TypeException("ExpressionHelper.createUnaryExpression : unexpected token type " + child1.getTag() + " for dollar expression tree " + child1.getText() + "" + child1.getPos());
                 }
             }
             break;
             default:
             {
-                throw new TypeException("ExpressionHelper.createUnaryExpression : unexpected type tag " + exprTree.getTag() + " for expression tree " + exprTree.getText() + "" + exprTree.getPos());
+                throw new TypeException("ExpressionHelper.createUnaryExpression : unexpected token type " + exprTree.getTag() + " for expression tree " + exprTree.getText() + "" + exprTree.getPos());
             }
         }
 
@@ -475,7 +475,7 @@ public class ExpressionHelper
             break;
             default:
             {
-                throw new TypeException("ExpressionHelper.createBinaryExpression : unexpected type tag in expression tree " + exprTree.getTag() + " for expression " + exprTree.getText() + "" + exprTree.getPos());
+                throw new TypeException("ExpressionHelper.createBinaryExpression : unexpected token type " + exprTree.getTag() + " for expression " + exprTree.getText() + "" + exprTree.getPos());
             }
         }
 
@@ -515,7 +515,7 @@ public class ExpressionHelper
                         expr = new ConditionalEvalExpression(rule, type1,  exprTree, operand0,  operand1, operand2);
                     } else {
                         // mismatched types so don't generate a result
-                        throw new TypeException("ExpressionHelper.createTernaryExpression : mismatched types " + type1.getName() + " and " + type2.getName()  + " in conditional expression " + exprTree.getText() + exprTree.getPos());
+                        throw new TypeException("ExpressionHelper.createTernaryExpression : mismatched expression types " + type1.getName() + " and " + type2.getName()  + " in conditional expression " + exprTree.getText() + exprTree.getPos());
                     }
                 } else {
                     // have to wait for type check to resolve types
@@ -525,7 +525,7 @@ public class ExpressionHelper
             break;
             default:
             {
-                throw new TypeException("ExpressionHelper.createTernaryExpression : unexpected type tag in expression tree " + exprTree.getTag() + " for expression " + exprTree.getText() + "" + exprTree.getPos());
+                throw new TypeException("ExpressionHelper.createTernaryExpression : unexpected token type " + exprTree.getTag() + " for expression " + exprTree.getText() + "" + exprTree.getPos());
             }
         }
 
