@@ -138,6 +138,18 @@ public class TypeGroup {
                     // ignore this for now as we may resolve it later
                 }
             }
+            // if the name is not package qualified and matches a class in package java.lang then
+            // use the java.lang class
+
+            if (clazz == null && name.indexOf('.') < 0) {
+                try {
+                    String newName = "java.lang." + name;
+                    clazz = loader.loadClass(newName);
+                    name = newName;
+                } catch (ClassNotFoundException cfe) {
+                    // ignore this for now as we may resolve it later
+                }
+            }
 
             Type newType = new Type(name, clazz);
             if (checkAlias(newType)) {
