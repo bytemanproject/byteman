@@ -624,16 +624,18 @@ public class CFG
         }
 
         // any left over values are still open
+        // n.b. the lists are now in reverse order so we use addFirst to put them back in
+        // source code order
         
-        List<CodeLocation> newOpenEnters = new LinkedList<CodeLocation>();
+        LinkedList<CodeLocation> newOpenEnters = new LinkedList<CodeLocation>();
 
         while (entersIter.hasNext()) {
-            newOpenEnters.add(entersIter.next());
+            newOpenEnters.addFirst(entersIter.next());
         }
 
         if (openEntersIter != null) {
             while (openEntersIter.hasNext()) {
-                newOpenEnters.add(openEntersIter.next());
+                newOpenEnters.addFirst(openEntersIter.next());
             }
         }
 
@@ -706,7 +708,7 @@ public class CFG
                     // try start is after the enter -- now see where the corresponding exit is
 
                     CodeLocation exit = getPairedExit(enter);
-                    if (exit != null && tryStart.compareTo(exit) <= 0) {
+                    if (exit == null || tryStart.compareTo(exit) <= 0) {
                         // open is in scope of try catch so attach it to the try start
                         details.addOpenEnter(enter);
                     }
@@ -732,7 +734,7 @@ public class CFG
                     // try start is after the enter -- now see where the corresponding exit is
 
                     CodeLocation exit = getPairedExit(enter);
-                    if (exit != null && tryStart.compareTo(exit) <= 0) {
+                    if (exit == null || tryStart.compareTo(exit) <= 0) {
                         // open is in scope of try catch so attach it to the try start
                         details.addOpenEnter(enter);
                     }

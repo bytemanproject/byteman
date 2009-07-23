@@ -55,7 +55,7 @@ public class CodeLocation implements Comparable<CodeLocation>
 
     public String toString()
     {
-        return "B" + block.getBlockIdx() + "." + getInstructionIdx();
+        return "BB" + block.getBlockIdx() + "." + getInstructionIdx();
     }
 
     public int compareTo(CodeLocation loc)

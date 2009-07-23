@@ -365,28 +365,50 @@
     </target>
 
     <target name="tests.bugfixes">
-          <junit fork="true" showoutput="true">
-            <classpath>
-                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
-                <pathelement location="${junit.home}/${junit.jar}"/>
-            </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestEmptySignature.txt"/>
-            <!-- uncomment for verbose byteman output
-            <jvmarg value="-Dorg.jboss.byteman.verbose"/>
-            -->
-            <!-- uncomment to dump generated code
-            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
-            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
-            -->
-            <!-- uncomment to enable debug
-            <jvmarg value="-Xdebug"/>
-            <jvmarg  value="-Xnoagent"/>
-            <jvmarg  value="-Djava.compiler=NONE"/>
-            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
-            -->
-            <test name="org.jboss.byteman.tests.bugfixes.TestEmptySignature"/>
+        <junit fork="true" showoutput="true">
+          <classpath>
+              <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+              <pathelement location="${junit.home}/${junit.jar}"/>
+          </classpath>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestEmptySignature.txt"/>
+          <!-- uncomment for verbose byteman output
+          <jvmarg value="-Dorg.jboss.byteman.verbose"/>
+          -->
+          <!-- uncomment to dump generated code
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+          -->
+          <!-- uncomment to enable debug
+          <jvmarg value="-Xdebug"/>
+          <jvmarg  value="-Xnoagent"/>
+          <jvmarg  value="-Djava.compiler=NONE"/>
+          <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+          -->
+          <test name="org.jboss.byteman.tests.bugfixes.TestEmptySignature"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+          <classpath>
+              <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+              <pathelement location="${junit.home}/${junit.jar}"/>
+          </classpath>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestEnclosedSynchronizationPropagation.txt"/>
+          <!-- uncomment for verbose byteman output
+          <jvmarg value="-Dorg.jboss.byteman.verbose"/>
+          -->
+          <!-- uncomment to dump generated code
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+          -->
+          <!-- uncomment to enable debug
+          <jvmarg value="-Xdebug"/>
+          <jvmarg  value="-Xnoagent"/>
+          <jvmarg  value="-Djava.compiler=NONE"/>
+          <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+          -->
+          <test name="org.jboss.byteman.tests.bugfixes.TestEnclosedSynchronizationPropagation"/>
         </junit>
   </target>
+
     <target name="tests.bugfixes.compiled">
           <junit fork="true" showoutput="true">
             <classpath>
@@ -410,5 +432,31 @@
             -->
             <test name="org.jboss.byteman.tests.bugfixes.TestEmptySignature"/>
         </junit>
+        <junit fork="true" showoutput="true">
+          <classpath>
+              <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+              <pathelement location="${junit.home}/${junit.jar}"/>
+          </classpath>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestEnclosedSynchronizationPropagation.txt"/>
+          <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+          <!-- uncomment for verbose byteman output
+          <jvmarg value="-Dorg.jboss.byteman.verbose"/>
+          -->
+            <!-- uncomment for cfg output
+              <jvmarg value="-Dorg.jboss.byteman.dump.cfg.partial"/>
+            -->
+          <!-- uncomment to dump generated code
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+          -->
+          <!-- uncomment to enable debug
+          <jvmarg value="-Xdebug"/>
+          <jvmarg  value="-Xnoagent"/>
+          <jvmarg  value="-Djava.compiler=NONE"/>
+          <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+          -->
+          <test name="org.jboss.byteman.tests.bugfixes.TestEnclosedSynchronizationPropagation"/>
+      </junit>
   </target>
+
 </project>

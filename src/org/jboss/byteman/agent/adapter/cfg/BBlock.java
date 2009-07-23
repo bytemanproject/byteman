@@ -443,9 +443,10 @@ public class BBlock
      */
     void printTo(StringBuffer buf)
     {
+        int blockIdx = this.getBlockIdx();
         buf.append(this.getLabel().getOffset());
         buf.append(": BB ");
-        buf.append(this.getBlockIdx());
+        buf.append(blockIdx);
         buf.append("\n");
         Link containsLink = cfg.getContains(this);
         Iterator<Label> containsIter;
@@ -553,7 +554,11 @@ public class BBlock
                 containedLabel = (containsIter.hasNext() ? containsIter.next() : null);
                 containedPosition = (containedLabel != null ? cfg.getBlockInstructionIdx(containedLabel) : -1);
             }
-            buf.append("   ");
+            // buf.append("   ");
+            buf.append(blockIdx);
+            buf.append(".");
+            buf.append(i);
+            buf.append(": ");
             int opcode = this.getInstruction(i);
             switch (OpcodesHelper.insnType(opcode)) {
                 case OpcodesHelper.INSN_NONE:
