@@ -287,7 +287,7 @@ public class Helper
      * @param identifier an object which uniquely identifies the countdown in question
      * @param count the number of times the countdown needs to be counted down before the
      * countdown operation returns true. e.g. if count is supplied as 2 then the first two
-     * calls to @link{#countdown(Object)} will return false and the third call will return true.
+     * calls to {@link #countDown(Object)} will return false and the third call will return true.
      * @return true if a new countdown is installed, false if one already exists.
      */
     public boolean addCountDown(Object identifier, int count)
@@ -340,7 +340,7 @@ public class Helper
     }
     /**
      * wait for another thread to signal an event with no timeout. see
-     * @link{#waitFor(Object, long)} for details and caveats regarding calling this builtin.
+     * {@link #waitFor(Object, long)} for details and caveats regarding calling this builtin.
      * @param identifier an object used to identify the signal that is to be waited on.
      */
     public void waitFor(Object identifier)
@@ -383,7 +383,7 @@ public class Helper
     /**
      * signal an event identified by the supplied object, causing all waiting threads to resume
      * rule processing and clearing the event. if there are no threads waiting either because
-     * there has been no call to @link{#waitFor} or because some other thread has sent the signal
+     * there has been no call to {@link #waitFor} or because some other thread has sent the signal
      * then this call returns false, otherwise it returns true. This operation is atomic,
      * allowing the builtin to be used in rule conditions.
      * @param identifier an object used to identify the which waiting threads the signal should
@@ -465,7 +465,7 @@ public class Helper
     /**
      * signal an event identified by the suppied object, causing all waiting threads to throw an
      * exception and clearing the event. if there are no objects waiting, either because there has been
-     * no call to @link{#waitFor} or because some other thread has already sent the signal, then this
+     * no call to {@link #waitFor} or because some other thread has already sent the signal, then this
      * call returns false, otherwise it returns true. This operation is atomic, allowing the builtin
      * to be used safely in rule conditions.
      * @param identifier an object used to identify the which waiting threads the signal should

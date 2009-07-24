@@ -33,10 +33,14 @@ import java.util.Iterator;
 
 /**
  * A Basic Block represents a segment of bytecode in a control flow graph. Basic blocks divide up the
- * code at control flow branch points and hence there is not control flow internal to a block. Normal
+ * code at control flow branch points and hence there is no normal control flow internal to a block. Normal
  * control flow will only transfer control from the end of one basic block to the start of another
- * basic block or to the caller (via a return or throw). Exception control flow may transfer control
- * from any point within a basic block to the the start of another basic block or to the caller.
+ * basic block or to the caller (via a return or throw).
+ * <p/>
+ * If the block overlaps a try/catch region then exception control flow may transfer control
+ * from any instruction lying within the try/catch region to the the start of another basic
+ * block which handles the instruction. So, exception control flow may exit a block at a location
+ * preceding the block end but may only enter at block start.
  */
 
 public class BBlock
@@ -63,7 +67,7 @@ public class BBlock
      * instruction computes to false followed by the target branch if the instruction computes to
      * true.
      */
-    private Link outGoing;
+    private FanOut outGoing;
 
     /**
      * an index for the block allocated by the CFG starting from 0 in block order
@@ -108,7 +112,7 @@ public class BBlock
     {
         this.cfg = cfg;
         this.instructions = new InstructionSequence();
-        this.outGoing = new Link(start);
+        this.outGoing = new FanOut(start);
         this.blockIdx = blockIdx;
         this.activeTryStarts = new LinkedList<TryCatchDetails>();
         this.tryStarts = new LinkedList<TryCatchDetails>();
@@ -448,12 +452,12 @@ public class BBlock
         buf.append(": BB ");
         buf.append(blockIdx);
         buf.append("\n");
-        Link containsLink = cfg.getContains(this);
+        FanOut containsFanOut = cfg.getContains(this);
         Iterator<Label> containsIter;
         Label containedLabel;
         int containedPosition;
-        if (containsLink != null) {
-            containsIter = containsLink.iterator();
+        if (containsFanOut != null) {
+            containsIter = containsFanOut.iterator();
             if (containsIter.hasNext()) {
                 containedLabel = containsIter.next();
                 containedPosition = cfg.getBlockInstructionIdx(containedLabel);

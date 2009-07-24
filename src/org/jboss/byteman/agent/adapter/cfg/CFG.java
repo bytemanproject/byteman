@@ -30,14 +30,156 @@ import org.jboss.byteman.agent.Transformer;
 import java.util.*;
 
 /**
- * A control flow graph for use by the trigger adapter. the cfg maintains the current instruction sequence
- * for the bytecode in encoded form as it is being generated. It segments the instructions into basic blocks,
- * splitting them at control flow branch points. It also keeps track of the location of try catch blocks
- * and their handlers and of monitor enter and exit instructions. In particular it allows the rule trigger
- * insertion adapter to identify whether or not an inserted rule trigger call is within the scope of one
- * or more synchronized blocks and hence protect the trigger call with try catch handlers which ensure that
- * any pending monitor enters are roudned off with a corresponidng monitor exit. See RuleTriggerMethodAdapter
- * for details of hos the methods provided by this class are used.
+ * A control flow graph (cfg) for use by trigger method adapters. the trigger method adapter is required to
+ * notify the CFG each time an instruction or label is visited and each time a try catch block is notified.
+ * The cfg allows the rule trigger insertion adapter to identify whether or not an inserted rule trigger call
+ * is within the scope of one or more synchronized blocks. The trigger injector may then protect the trigger
+ * call with try catch handlers which ensure that any open monitor enters are rounded off with a corresponidng
+ * monitor exit. the cfg is constructed dynamically as the code is visited in order to enable trigger insertion
+ * to be performed during a single pass of the bytecode. See {@link org.jboss.byteman.agent.adapter.RuleTriggerMethodAdapter}
+ * for an example of how the methods provided by this class are invoked during visiting of the method byte code.
+ * Methods provided for driving CFG construction include
+ * <ul>
+ * <li> non-control instruction visit:
+ *  {@link CFG#add(int)}, {@link CFG#add(int, int)},
+ * {@link CFG#add(int, int, int)} {@link CFG#add(int, int[])}  {@link CFG#add(int, String)},
+ * {@link CFG#add(int, String, String, String)}, {@link CFG#add(int, String, int)},
+ * <li> control instruction visit:
+ * {@link CFG#split(org.objectweb.asm.Label)}, {@link CFG#split(org.objectweb.asm.Label, org.objectweb.asm.Label)},
+ * {@link CFG#split(org.objectweb.asm.Label, org.objectweb.asm.Label, org.objectweb.asm.Label)},
+ * {@link CFG#split(org.objectweb.asm.Label, org.objectweb.asm.Label, org.objectweb.asm.Label[])},
+ * <li> label visit:
+ * {@link CFG#visitLabel(org.objectweb.asm.Label)},
+ * <li> try/catch block visit:
+ * {@link CFG#visitTryCatchBlock(org.objectweb.asm.Label, org.objectweb.asm.Label, org.objectweb.asm.Label, String)},
+ * <li> trigger region demarcation:
+ * {@link CFG#visitTriggerStart(org.objectweb.asm.Label)}, {@link CFG#visitTriggerEnd(org.objectweb.asm.Label)},
+ * <li> code visit end demarcation:
+ * {@link org.jboss.byteman.agent.adapter.cfg.CFG#visitMaxs()}, {@link org.jboss.byteman.agent.adapter.cfg.CFG#visitEnd()},
+ * </ul>
+ * <p/>
+ * the cfg maintains the current instruction sequence for the method in encoded form as it is being generated.
+ * It splits the instruction stream at control flow branch points, segmenting the instructions into basic blocks.
+ * The control flow linkage between these basic blocks defines the graph structure. The cfg correlates labels
+ * with i) blocks and ii) instruction offsets within those blocks as the labels are visited during bytecode visiting.
+ * It also tracks the locations within blocks of try catch regions and their handlers and of monitor enter and exit
+ * instructions.
+ * <p/>
+ * The lock propagation algorithm employed to track the extent of monitor enter/exit pairs and try/catch blocks is
+ * the most complex aspect of this implementation, mainly because it has to be done in a single pass. This means
+ * that the end location of a try catch block or the location of the (one or more) monitor exit(s) associated with a
+ * monitor enter may not be known when a trigger point is reached. This algorithm is described below in detail.
+ * First an explanation of the CFG organization is provided.
+ * </p>
+ * <h3>Control flow graph model</h3>
+ * The bytecode sequence is segmented into basic blocks at control flow barnches ensuring there is no explicit
+ * control flow internal to a block. The only way normal control can flow from one block to another is via a
+ * switch/goto/branch instruction occuring at the end of the block. So, basic blocks are the nodes of the CFG
+ * and the links in the graph identify these control flow transitions.
+ * <p>
+ * Normal control flow linkage is explicitly
+ * represented in the blocks as a list containing the labels of the target blocks. Labels are used rather than
+ * handles on the block themselves so that forward links to blocks which have not yet been generated can be
+ * modelled. Labels are resolved to the relevant block and instruction index as they are visited during walking
+ * of the bytecode.
+ * </p>
+ * The outgoing control flow link count can be obtained by calling method
+ * {@link BBlock#nOuts()}. The label of the block to which control is transferred can be identified by calling
+ * method {@link BBlock#nthOut(int)}. Once a label has been visited it can be resolved to a {@link CodeLocation}
+ * by calling method {@link CFG#getLocation(org.objectweb.asm.Label)}. The returned value identifies both a
+ * block and an instruction offset in the block.
+ * <p/>
+ * Several caveats apply to this simple picture. Firstly, blocks ending in return or throw have no control flow -- they
+ * pass control back to the caller rather than to another basic block. So, the count returned by {@link BBlock#nOuts()}
+ * will be 0 for such blocks.
+ * <p/>
+ * Secondly, all blocks except the last have a distinguished link which identifies the
+ * next generated block in bytecode order. This link can be obtained by supplying value 0 as argument to method
+ * {@link BBlock#nthOut(int)}. Strictly this link is not a control flow link and it is <em>not</em> included in the
+ * count returned by {@link BBlock#nOuts()} i.e. the nett effect is that the sequence of control flow links is
+ * 1-based rather than 0-based.Note that where there is a control flow link to the next block in line (e.g. where
+ * the block ends in an ifXX instruction) the label employed for the distinguished 0 link will also appear in the
+ * set of control flow links (as link 1 in the case of an ifXX instrcution).
+ * <p/>
+ * The final caveat is that
+ * this graph model does not identify control flow which occurs as a consequence of generated exceptions.
+ * </p>
+ * <h3>Exceptional Control Flow</h3>
+ * Exception control flow is modelled independently from normal flow because it relates to regions in the graph
+ * rather than individual instructions. A specific exception flow is associated with a each try catch block and the
+ * target of the flow is the start of the handler block. The cfg maintains a list of {@link TryCatchDetails} which
+ * identify the location of the try/catch start, end and handler start locations. Once again labels are used so as
+ * to allow modelling of forward references to code locations which have not yet been generated.
+ * <p/>
+ * Note that handler
+ * start labels always refer to a code location which is at the start of a basic block. Start and end labels for a
+ * given try/catch block may refer to code locations offset into their containing basic block and possibly in
+ * distinct blocks.
+ * <p/>
+ * Methods {@link #tryCatchStart(org.objectweb.asm.Label)}, {@link #tryCatchEnd(org.objectweb.asm.Label)}
+ * and {@link #tryCatchHandlerStart(org.objectweb.asm.Label)} can be called to determine whether a given label
+ * identifies, respectively, the start of a try catch block, the end of a try catch block or the start of a handler
+ * block. Methods {@link #tryCatchStartDetails(org.objectweb.asm.Label)} {@link #tryCatchEndDetails(org.objectweb.asm.Label)},
+ * and {@link #tryCatchHandlerStartDetails(org.objectweb.asm.Label)} can be used to retrieve the associated
+ * {@link TryCatchDetails} information.
+ * </p>
+ * <h3>Label Resolution</h3>
+ * The cfg relies upon its adapter client to notify it whenever a label is visited during a walk of the bytecode.
+ * This allows it to associate labels with the basic blocks and instruction offsets within those blocks. The cfg
+ * provides method {@link CFG#getBlock(org.objectweb.asm.Label)} to resolve the primary label for a block (i.e. the
+ * one supplied as argument to a split call) to the associated block. It also provides method
+ * {@link CFG#getBlockInstructionIdx(org.objectweb.asm.Label)} to resolve a label to a {@link CodeLocation} i.e.
+ * block and instruction index within a block. Both method return null if the label has not yet been visited.
+ * <p/>
+ * Method {@link CFG#getContains(BBlock)} is also provided to obtain a list of all labels contained within a
+ * specific block. There may be more than one label which resolves to a location within a specific block. For
+ * example, the handler start label associated with a try/catch handler is contained in the handler block at
+ * offset 0 but is never the primary label for the block. Iteration over the contained set is used internally
+ * in the cfg to resolve equivalent labels.
+ * <h3>lock propagation algorithm</h3>
+ * The cfg tracks the occurence of monitor enter and monitor exit instructions as they are encountered during
+ * the bytecode walk. Note that the relationship between enter and exit instructions is 1 to many. For any given
+ * monitor enter there is a distinguished primary exit associated with the normal control flow path and zero
+ * or more alternative exits associated with exception control flow paths. The association between monitor
+ * entry and monitor exit instructions is made available via methods {@link CFG#getPairedEnter(CodeLocation)},
+ * and {@link CFG#getPairedExit(CodeLocation)}.
+ * <p/>
+ * The cfg associates monitor enters and exits with their enclosing block, allowing it to identify the start and end
+ * of synchronized regions within a specific block. This information can be propagated along control flow links
+ * to identify the start and end of synchronized regions along control flow paths. Whenever a block is created
+ * it is associated with a set of open enter instructions i.e. enter instructions occurring along the control flow
+ * path to the block for which no corresponding exit has been executed.
+ * <p/>
+ * For the initial block the open enters list is empty.
+ * <p/>
+ * For a block reached by normal control flow the open enters list can be derived from any of the earlier blocks
+ * which transfer control to it. It is computed by adding and removing entries to/from the preceding block's open
+ * enters list according to the order the enters or exits appear in the block. Any feed block is valid because
+ * enters and exits are strictly nested so two paths to the same block cannot introduce different enters and exits.
+ * Note also that this strict nesting also means that loop control flow will never require revision of a previously
+ * visited block's open enters list.
+ * <p/>
+ * The algorithm propagates open enters along normal control flow paths whenever a split instruction is invoked
+ * (splitting the instruction stream into a new block). The work is done in method {@link CFG#carryForward()}. This
+ * method identifies the current block's open enters list (how will emerge below), updates it with any enters and
+ * exits performed in the block and then, for each each outgoing link, associates the new block with the new list by
+ * inserting the list into a hash table keyed by the link label. Clearly, if the old block was itself arrived at
+ * via normal control flow then its open enters list will already be available in the hash table (it will be keyed
+ * by a link contained in th eblock at offset 0 but not necessarily by the block's primary link). For blocks
+ * which are the target of exception handlers a different lookup is required.
+ * <p/>
+ * Computing the open enters list for a block which is the target of exception control flow is also done in
+ * method {@link CFG#carryForward()}. This requires identifying which try/catch regions are active in the block
+ * and ensuring that the corresponding {@link TryCatchDetails} object are tagged with the location of all the block's
+ * monitor enter instructions which lie between the try/catch start and end. If this is done for every block
+ * encountered during the bytecode walk then at the point where the handler block is split all open instructions
+ * which lie within the try/catch region will be listed in the {@link TryCatchDetails}. So, at the split point
+ * the old block can be tested to see if it is labelled as a try/catch handler target and, if so, its open enters
+ * list can be looked up by locating the {@link TryCatchDetails} associated with the handler start label.
+ * <p/>
+ * Note that there is no need to worry about nested try/catch regions shadowing outer try/catch handlers with the
+ * same exception type. The bytecode format ensures that handlers of the same type are never nested (n.b. I am not
+ * certain that this is not just bytecode generated by Sun's java compiler).
  */
 public class CFG
 {
@@ -69,7 +211,7 @@ public class CFG
      * a map identifying the containment relationship between a basic block and labels which identify
      * instructions located within the block - the first entry is the block label itself
      */
-    private Map<BBlock, Link> contains;
+    private Map<BBlock, FanOut> contains;
     /**
      * a list of names employed in the bytecode
      */
@@ -140,7 +282,7 @@ public class CFG
         this.nextIdx = 0;
         this.entry = this.current = new BBlock(this, start, nextIdx++);
         blocks = new HashMap<Label, BBlock>();
-        contains = new HashMap<BBlock, Link>();
+        contains = new HashMap<BBlock, FanOut>();
         labelLocations = new HashMap<Label, CodeLocation>();
         names = new ArrayList<String>();
         triggerStarts = new HashMap<Label, TriggerDetails>();
@@ -154,7 +296,7 @@ public class CFG
         inverseMonitorPairs = new HashMap<CodeLocation, CodeLocation>();
         blocks.put(start, current);
         setLocation(start);
-        contains.put(current, new Link(start));
+        contains.put(current, new FanOut(start));
         openMonitorEnters.put(start, new LinkedList<CodeLocation>());
         openTryCatchStarts = new LinkedList<TryCatchDetails>();
     }
@@ -329,7 +471,7 @@ public class CFG
      * @return the associated set of labels
      */
 
-    public Link getContains(BBlock block)
+    public FanOut getContains(BBlock block)
     {
         return contains.get(block);
     }
@@ -341,12 +483,12 @@ public class CFG
      */
     private void addContains(BBlock block, Label label)
     {
-        Link containsLink = contains.get(block);
-        if (containsLink == null) {
-            containsLink = new Link(block.getLabel());
-            contains.put(block,  containsLink);
+        FanOut containsFanOut = contains.get(block);
+        if (containsFanOut == null) {
+            containsFanOut = new FanOut(block.getLabel());
+            contains.put(block, containsFanOut);
         }
-        containsLink.append(label);
+        containsFanOut.append(label);
     }
 
     /**
@@ -376,10 +518,10 @@ public class CFG
         // for the block which will have offset 0
 
         // so first check the block for handler labels -- they will have offset 0
-        Link link = getContains(block);
-        int count = link.getToCount();
+        FanOut fanOut = getContains(block);
+        int count = fanOut.getToCount();
         for (int i = 0; i < count; i++) {
-            Label l = link.getTo(i);
+            Label l = fanOut.getTo(i);
             CodeLocation loc = getLocation(l);
             if (loc.getInstructionIdx() == 0) {
                 // see if this is a try catch label
@@ -397,12 +539,12 @@ public class CFG
             }
         }
 
-        // if that failed then look fro a control flow label with the propagated information
+        // if that failed then look for a control flow label with the propagated information
         // any of them will do since they all *must* have the same open monitor list
 
         if (blockMonitorEnters ==  null) {
             for (int i = 0; i < count; i++) {
-                Label l = link.getTo(i);
+                Label l = fanOut.getTo(i);
                 CodeLocation loc = getLocation(l);
                 if (loc.getInstructionIdx() > 0) {
                     // nothing open on entry to this block

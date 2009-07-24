@@ -51,7 +51,7 @@ public class TryCatchDetails
      */
     private Label handler;
     /**
-     * a list of monitor enter instructions which are still open on entry to this try catch block
+     * a list of monitor enter instructions which are opened within the scope of this try catch block
      * and hence which may require closing in the associated handler
      */
     private List<CodeLocation> openEnters;

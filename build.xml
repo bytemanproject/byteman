@@ -33,6 +33,7 @@
     <property name="build.dir"         value="build"/>
     <property name="build.classes.dir" value="${build.dir}/classes"/>
     <property name="build.lib.dir"     value="${build.dir}/lib"/>
+    <property name="htdocs.dir"     value="htdocs"/>
 
     <property name="ext.jflex.jars" value="JFlex.jar"/>
     <property name="ext.javacup.jars" value="javacup.jar"/>
@@ -143,6 +144,19 @@
             <fileset dir="." includes="tests/dd/**/*" excludes="tests/sdd/**/.svn/**/*"/>
         </zip>
     </target>
+
+   <target name="htdocs">
+       <delete dir="${htdocs.dir}"/>
+       <mkdir dir="${htdocs.dir}"/>
+       <javadoc packagenames="org.jboss.byteman" destdir="${htdocs.dir}" linksource="true">
+           <classpath>
+               <fileset dir="${ext.lib.dir}" includes="${ext.asm.jars}"/>
+               <fileset dir="${ext.lib.dir}" includes="${ext.javacup.jars}"/>
+               <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
+           </classpath>
+           <fileset dir="${src.dir}" includes="**/*.java"/>
+       </javadoc>
+   </target>
 
    <target name="clean">
        <delete dir="${build.dir}"/>

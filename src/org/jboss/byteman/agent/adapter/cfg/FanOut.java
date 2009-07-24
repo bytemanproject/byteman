@@ -37,7 +37,7 @@ import java.util.Iterator;
  * the block. Note that in the former case the use of labels allows control flow linkes to basic
  * blocks which have not yet been generated to be recorded.
  */
-public class Link
+public class FanOut
 {
     /**
      * the 1 in the 1:m
@@ -52,7 +52,7 @@ public class Link
      * construct a new empty link
      * @param from
      */
-    public Link(Label from)
+    public FanOut(Label from)
     {
         this.from = from;
         this.to = new LinkedList<Label>();
@@ -63,7 +63,7 @@ public class Link
      * @param from
      * @param to
      */
-    public Link(Label from, Label to)
+    public FanOut(Label from, Label to)
     {
         this(from);
         append(to);
@@ -75,7 +75,7 @@ public class Link
      * @param to1
      * @param to2
      */
-    public Link(Label from, Label to1, Label to2)
+    public FanOut(Label from, Label to1, Label to2)
     {
         this(from);
         append(to1);

@@ -38,7 +38,7 @@ public class InstructionSequence
     private int[] instructionOffsets;
 
     /**
-     * the number of valid offsets to instrctions in array instructionOffsets
+     * the number of valid offsets to instructions in array instructionOffsets
      */
 
     private int numInstructions;
@@ -49,13 +49,8 @@ public class InstructionSequence
      * integer operands are embedded as is
      * operands which are strings (type, const, field etc)  must be translated via the names array in
      * the associated cfg.
-     * operands which are jump labels msut be translated by calling getNthOut() on the associated
+     * operands which are jump labels must be translated by calling getNthOut() on the associated
      * basic block.
-     * n.b. all basic blocks are terminated by a jump instruction so when this class is used to encode
-     * instructions in a basic block or in the terminal basic block of a path the encoded argument
-     * is always -1. when it is used to encode instructions in a basic block in some initial segment of a
-     * path the encoded argument identifies the out path from the branch and will be a non-negative integer.
-     * It can be converted to a block start label by calling BBlock.nthOut(arg)
      */
     private int[] encodedInstructions;
 
