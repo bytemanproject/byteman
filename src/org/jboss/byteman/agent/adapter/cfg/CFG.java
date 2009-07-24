@@ -510,39 +510,27 @@ public class CFG
     {
         List<CodeLocation> blockMonitorEnters = null;
 
-        // if this is a handler target block then the open list can be constructed by combining the
-        // lists attached to the try catch details. these can be looked up using the handler
-        // labels
+        // if this is a handler target block then it will have an attached list of handler starts
+        // the open enters list can be constructed by combining the lists attached to the try catch
+        // details.
 
-        // if this is a normal block then the open list will have been attached to a GOTO label
-        // for the block which will have offset 0
+        Iterator<TryCatchDetails> iterator = block.getTryHandlerStarts();
 
-        // so first check the block for handler labels -- they will have offset 0
-        FanOut fanOut = getContains(block);
-        int count = fanOut.getToCount();
-        for (int i = 0; i < count; i++) {
-            Label l = fanOut.getTo(i);
-            CodeLocation loc = getLocation(l);
-            if (loc.getInstructionIdx() == 0) {
-                // see if this is a try catch label
-                List<TryCatchDetails> detailsList = tryCatchHandlerStartDetails(l);
-                if (detailsList != null) {
-                    Iterator<TryCatchDetails> iterator = detailsList.iterator();
-                    while (iterator.hasNext()) {
-                        TryCatchDetails details = iterator.next();
-                        if (blockMonitorEnters == null) {
-                            blockMonitorEnters = new LinkedList<CodeLocation>();
-                        }
-                        details.addOpenLocations(blockMonitorEnters);
-                    }
-                }
+        if (iterator.hasNext()) {
+            // at least one try/catch targets this block as a handler
+            blockMonitorEnters = new LinkedList<CodeLocation>();
+            while (iterator.hasNext()) {
+                TryCatchDetails details = iterator.next();
+                details.addOpenLocations(blockMonitorEnters);
             }
         }
 
         // if that failed then look for a control flow label with the propagated information
         // any of them will do since they all *must* have the same open monitor list
 
-        if (blockMonitorEnters ==  null) {
+        if (blockMonitorEnters == null) {
+            FanOut fanOut = getContains(block);
+            int count = fanOut.getToCount();
             for (int i = 0; i < count; i++) {
                 Label l = fanOut.getTo(i);
                 CodeLocation loc = getLocation(l);
