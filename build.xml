@@ -148,7 +148,7 @@
    <target name="htdocs">
        <delete dir="${htdocs.dir}"/>
        <mkdir dir="${htdocs.dir}"/>
-       <javadoc packagenames="org.jboss.byteman" destdir="${htdocs.dir}" linksource="true">
+       <javadoc packagenames="org.jboss.byteman" destdir="${htdocs.dir}" linksource="true" private="true">
            <classpath>
                <fileset dir="${ext.lib.dir}" includes="${ext.asm.jars}"/>
                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.jars}"/>
