@@ -53,7 +53,7 @@ public abstract class Expression extends RuleElement
         this.token = token;
         if (token != null) {
             this.charPos = token.getColumn();
-            this.line = rule.getLine() + token.getLine();
+            this.line = token.getLine();
         } else {
             this.charPos = 0;
             this.line = 0;
