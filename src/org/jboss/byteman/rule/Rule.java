@@ -376,7 +376,7 @@ public class Rule
     {
         Type type;
         // add a binding for the rule so we can call builtin static methods
-        type = typeGroup.create(helperClass.getCanonicalName());
+        type = typeGroup.create(helperClass.getName());
         Binding ruleBinding = bindings.lookup("$$");
         if (ruleBinding != null) {
             ruleBinding.setType(type);
