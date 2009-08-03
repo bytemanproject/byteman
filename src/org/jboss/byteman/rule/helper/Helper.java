@@ -592,66 +592,62 @@ public class Helper
         if (rendezvous == null || rendezvous.getExpected() != expected) {
             return -1;
         }
-
-        return rendezvous.getArrived();
+        synchronized (rendezvous) {
+            return rendezvous.getArrived();
+        }
     }
 
     /**
-     * meet other threads at a given rendezvous retrunign only when the expected number have arrived
+     * meet other threads at a given rendezvous returning only when the expected number have arrived
      * @param identifier the identifier for the rendezvous
      * @return an ordinal which sorts all parties to the rendezvous in order of arrival from 0 to
      * (expected-1) or -1 if the rendezvous does not exist
      */
     public int rendezvous(Object identifier)
     {
-        // we don't need to (cannot) synch on the map here although the reasoning is subtle
-        // the last thread in will reset the rendezvous if it is rejoinable in which case
-        // it stays in the map anyway. if it is not rejoinable then any thread which finds it in
-        // the map will return -1 if it is calling rendezvous -- i.e. this is the same as if it was
-        // not present. if a thread calls createRendezvous with the same identifier then this might
-        // make a difference but in that case either the rendezvous should be created rejoinable or
-        // the last thread out should be responsible for recreating the rendezvous.
-
         Rendezvous rendezvous = rendezvousMap.get(identifier);
+
         if (rendezvous !=  null) {
-            int result = rendezvous.rendezvous();
-            if (result == rendezvous.getExpected() && !rendezvous.isRejoinable()) {
-                rendezvousMap.remove(identifier);
+            synchronized(rendezvous) {
+                int result = rendezvous.rendezvous();
+                // make sure the rendezvous is removed from the map if required
+                // n.b. this implementation makes sure the remove happens before any thread
+                // successfully passes the rendezvous call
+                if (rendezvous.needsRemove()) {
+                    rendezvousMap.remove(identifier);
+                    rendezvous.setRemoved();
+                }
+
+                return result;
             }
-                
-            return result;
         }
 
         return -1;
     }
 
     /*
-     * hmm, maybe we need this and maybe not
-     *
-     * terminate a rendezvous, waking any threads which are waiting and resetting the arrived count to zero. If the
-     * rendezous is not restartable then it also gets removed from the rendezvous map. All threads waiting inside
-     * a call to rendezvous return result -1;
+     * delete a rendezvous. All threads waiting inside a call to rendezvous return result -1;
      * @param identifier
      * @param expected
-     * @return
-
-    public int resetRendezvous(Object identifier)
-    {
-    }
+     * @return true if the rendezvous was active and deleted and false if it had already been deleted
     */
-
-    /*
-     * hmm, maybe we need this and maybe not
-     *
-     * delete a rendezvous, waking any threads which are waiting and resetting the arrived count to zero. All
-     * threads waiting inside a call to rendezvous return result -1;
-     * @param identifier
-     * @param expected
-     * @return
-    public int deleteRendezvous(Object identifier)
+    public boolean deleteRendezvous(Object identifier, int expected)
     {
+        Rendezvous rendezvous = rendezvousMap.get(identifier);
+        if (rendezvous == null || rendezvous.getExpected() != expected) {
+            return false;
+        }
+        synchronized (rendezvous) {
+            if (rendezvous.delete()) {
+                if (rendezvous.needsRemove()) {
+                    rendezvousMap.remove(identifier);
+                }
+                return true;
+            }
+        }
+        // hmm, completed before we got there
+        return false;
     }
-    */
 
 
     // counter support

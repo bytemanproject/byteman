@@ -36,31 +36,85 @@ public class Rendezvous
     public Rendezvous(int expected, boolean rejoinable)
     {
         this.expected = expected;
-        this.arrived = 0;
         this.rejoinable = rejoinable;
+        this.needsRemove = false;
+        this.isDeleted = false;
+        this.counter = new Counter();
     }
 
+    /**
+     * enter this rendezvous. n.b. this must be called synchronized on the rendezvous object
+     * in question
+     * @return the index in arrival order from 0 to expected of the calling thread or -1 if
+     * either the rendezvous has completed and is not restartable or the rendezvous has been deleted
+     */
     public int rendezvous()
     {
-        synchronized(this) {
-            int index = arrived++;
-            if (arrived < expected) {
+        Counter currentCounter = counter;
+
+        // too late the rendezvous has expired
+        
+        if (isDeleted || (currentCounter.arrived == expected)) {
+            return -1;
+        }
+
+        // n.b. getting here implies !currentCounter.isPoisoned
+
+        int index = currentCounter.arrived++;
+
+        if (currentCounter.arrived < expected) {
+            // make sure we don't return before the rendezvous has actually happened
+            while (currentCounter.arrived < expected) {
                 try {
                     this.wait();
                 } catch (InterruptedException e) {
                     // do nothing
                 }
-            } else {
-                if (rejoinable) {
-                    // the last one in needs to set the count back to zero while it has the lock
-                    // this makes sure that any of the existing threads or any new thread trying
-                    // to re-enter the rendezvous will not fail to suspend
-                    arrived = 0;
+
+                // isPoisoned may have changed because a delete happened while we were waiting
+
+                if (currentCounter.isPoisoned) {
+                    return -1;
                 }
-                this.notifyAll();
             }
-            return index;
+        } else {
+            if (rejoinable) {
+                // create a new counter for the next rendezvous -- this allows the current threads
+                // to complete without counting them back out
+                counter = new Counter();
+            } else {
+                // tag the rendezvous to indicate that it has been deleted and needs ot be removed. the
+                // first thread emerging from a call to rendezvous must make sure it gets removed from
+                // the rendezvous map.
+                isDeleted = true;
+                needsRemove = true;
+            }
+            this.notifyAll();
         }
+
+        return index;
+    }
+
+    /**
+     * delete this rendezvous causing any waiting threads to return -1 form the rendezvous call. n.b. this
+     * must be called synchronized on the rendezvous object in question
+     * @return
+     */
+    public boolean delete()
+    {
+        if (isDeleted) {
+            return false;
+        }
+        isDeleted = true;
+        needsRemove = true;
+
+        // if any threads arrived then make sure they are *all* poisoned
+        if (counter.arrived > 0 && counter.arrived < expected) {
+            counter.isPoisoned = true;
+            this.notifyAll();
+        }
+
+        return true;
     }
 
     public int getExpected() {
@@ -72,19 +126,72 @@ public class Rendezvous
     private int expected;
 
     /**
-     * the number of threads which have arrive at this rendezvous so far
+     * the current counter for this rendezvous
      */
-    private int arrived;
+    private Counter counter;
     /**
      * true if this rendezvous can be repeatedly joined, false it it is a one-off meeting
      */
     private boolean rejoinable;
 
-    public boolean isRejoinable() {
-        return rejoinable;
+    /**
+     * true if a rendezvous was deleted while a rendezbvous was in progress but had not completed
+     */
+
+    private boolean isDeleted;
+
+    /**
+     * true if a non-restartable rendezvous has completed and has not been removed from the rendezvous map
+     */
+    private boolean needsRemove;
+
+    /**
+     * retrieve the number of threads waiting at the rendezvous or -1 if the rendezvous has
+     * been deleted
+     * @return
+     */
+    public int getArrived() {
+        if (isDeleted) {
+            return -1;
+        }
+        return counter.arrived;
     }
 
-    public int getArrived() {
-        return arrived;
+    /**
+     * check if the rendezvous has completed but has not yet been rtemoved
+     * @return
+     */
+    public boolean needsRemove() {
+        return needsRemove;
+    }
+
+    /**
+     * mark a completed rendezvous to indicate that it has been removed
+     * @return
+     */
+    public void setRemoved() {
+        needsRemove = false;
+    }
+
+    /**
+     * class encapsulating state for a specific rendezvous
+     */
+
+    public class Counter
+    {
+        /**
+         *  count of the number of threads actually arrived at this rendezvous
+         */
+        public int arrived;
+        /**
+         *  true if this
+         */
+        public boolean isPoisoned;
+
+        public Counter()
+        {
+            arrived = 0;
+            isPoisoned = false;
+        }
     }
 }
