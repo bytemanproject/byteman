@@ -25,16 +25,11 @@ package org.jboss.byteman.rule.helper;
 
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.exception.ExecuteException;
-import org.jboss.byteman.synchronization.CountDown;
-import org.jboss.byteman.synchronization.Counter;
-import org.jboss.byteman.synchronization.Waiter;
-import org.jboss.byteman.synchronization.Rendezvous;
+import org.jboss.byteman.synchronization.*;
 import org.jboss.byteman.agent.Transformer;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * This is the default helper class which is used to define builtin operations for rules.
@@ -649,6 +644,101 @@ public class Helper
         return false;
     }
 
+    public boolean createJoin(Object key, int max)
+    {
+        if (max <= 0) {
+            return false;
+        }
+
+        synchronized(joinerMap) {
+            if (joinerMap.get(key) != null) {
+                return false;
+            }
+            joinerMap.put(key, new Joiner(max));
+        }
+
+        return true;
+    }
+
+    public boolean isJoin(Object key, int max)
+    {
+        synchronized(joinerMap) {
+            Joiner joiner = joinerMap.get(key);
+
+            if (joiner == null || joiner.getMax() != max) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean joinEnlist(Object key)
+    {
+        Joiner joiner;
+        synchronized (joinerMap)
+        {
+            joiner = joinerMap.get(key);
+        }
+
+        if (joiner == null) {
+            return false;
+        }
+
+        Thread current = Thread.currentThread();
+
+        switch (joiner.addChild(current)) {
+            case DUPLICATE:
+            case EXCESS:
+            {
+                // failed to add  child
+                return false;
+            }
+            case ADDED:
+            case FILLED:
+            {
+                // added child but parent was not waiting so leave joiner in the map for parent to find
+                return true;
+            }
+            case DONE:
+            default:
+            {
+                // added child and parent was waiting so remove joiner from map now
+                synchronized (joinerMap) {
+                    joinerMap.remove(joiner);
+                }
+                return true;
+            }
+        }
+    }
+
+    public boolean joinWait(Object key, int count)
+    {
+        Joiner joiner;
+        synchronized (joinerMap)
+        {
+            joiner = joinerMap.get(key);
+        }
+
+        if (joiner == null || joiner.getMax() != count) {
+            return false;
+        }
+
+        Thread current = Thread.currentThread();
+
+        if (joiner.joinChildren(current)) {
+            // successfully joined all child threads so remove joiner form map
+            synchronized (joinerMap) {
+                joinerMap.remove(joiner);
+            }
+            return true;
+        } else {
+            // hmm, another thread must have done the join so leave it do the remove
+            return true;
+        }
+    }
+
+    private static HashMap<Object, Joiner> joinerMap = new HashMap<Object, Joiner>();
 
     // counter support
     /**
