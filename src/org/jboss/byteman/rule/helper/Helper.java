@@ -274,7 +274,15 @@ public class Helper
     }
 
     /**
-     * builtin to test add a countdown identified by a specific object and with the specified
+     * alias for createCountDown provided for backwards compatibility
+     */
+    public boolean addCountDown(Object identifier, int count)
+    {
+        return createCountDown(identifier, count);
+    }
+
+    /**
+     * builtin to test create a countdown identified by a specific object and with the specified
      * count. n.b. this builtin checks if a countdown identified by the supplied object is
      * currently installed, returning false if so, otherwise atomically adds the countdown
      * and returns true. This allows the builtin to be used safely in conditions where concurrent
@@ -285,7 +293,7 @@ public class Helper
      * calls to {@link #countDown(Object)} will return false and the third call will return true.
      * @return true if a new countdown is installed, false if one already exists.
      */
-    public boolean addCountDown(Object identifier, int count)
+    public boolean createCountDown(Object identifier, int count)
     {
         synchronized (countDownMap) {
             if (countDownMap.get(identifier) == null) {
