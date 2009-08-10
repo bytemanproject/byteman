@@ -984,4 +984,10 @@ public class Helper
      */
     private static HashMap<Object, Rendezvous> rendezvousMap = new HashMap<Object, Rendezvous>();
 
+    // initialise the trace map so it contains the system  output and error keyed under "out" and "err"
+
+    static {
+        traceMap.put("out", System.out);
+        traceMap.put("err", System.err);
+    }
 }
