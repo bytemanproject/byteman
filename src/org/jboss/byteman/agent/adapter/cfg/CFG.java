@@ -647,11 +647,25 @@ public class CFG
         if (instruction != Opcodes.MONITORENTER) {
             System.out.println("getSavedMonitorIdx : unexpected! close pair instruction " + instruction + " is not MONITOREXIT");
         }
-        instruction = block.getInstruction(instructionIdx - 1);
+        instructionIdx--;
+        instruction = block.getInstruction(instructionIdx );
+        // normally the monitorenter is preceded by a DUP ASTORE pair to save the monitor object
+        // however, if an AT SYNCHRONIZE trigger has been injected before the MONITORENTER then
+        // there may be a call to Rule.execute between the ASTORE and the MONITORENTER
+        if (instruction == Opcodes.INVOKESTATIC) {
+            // we can safely skip backwards to the last ASTORE because the trigger sequence will not
+            // use an ASTORE
+            while (instruction != Opcodes.ASTORE && instructionIdx > 0) {
+                // skip backwards until we find the required ASTORE
+                instructionIdx--;
+                instruction = block.getInstruction(instructionIdx);
+            }
+        }
         if (instruction != Opcodes.ASTORE) {
             System.out.println("getSavedMonitorIdx : unexpected! close pair preceding instruction " + instruction + " is not ASTORE");
+            return -1;
         }
-        int varIdx = block.getInstructionArg(instructionIdx - 1, 0);
+        int varIdx = block.getInstructionArg(instructionIdx, 0);
         if (varIdx < 0) {
             System.out.println("getSavedMonitorIdx : unexpected! close pair preceding ASTORE instruction has invalid index " + varIdx);
         }
