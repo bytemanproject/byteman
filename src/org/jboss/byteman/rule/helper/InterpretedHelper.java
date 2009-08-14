@@ -81,6 +81,11 @@ public class InterpretedHelper extends Helper implements HelperAdapter
         while (iterator.hasNext()) {
             Binding binding = iterator.next();
             String name = binding.getName();
+            if (binding.isAlias()) {
+                // this is a local var used to refer to a method recipient or parameter
+                // so use the value and type associated with the alias
+                binding = binding.getAlias();
+            }
             Type type = binding.getType();
             if (binding.isHelper()) {
                 bindingMap.put(name, this);
@@ -89,7 +94,7 @@ public class InterpretedHelper extends Helper implements HelperAdapter
                 bindingMap.put(name, recipient);
                 bindingTypeMap.put(name, type);
             } else if (binding.isParam() || binding.isLocalVar()) {
-                bindingMap.put(name, args[binding.getObjectArrayIndex()]);
+                bindingMap.put(name, args[binding.getCallArrayIndex()]);
                 bindingTypeMap.put(name, type);
             }
         }

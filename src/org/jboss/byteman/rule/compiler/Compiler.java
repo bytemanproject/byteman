@@ -254,6 +254,18 @@ public class Compiler implements Opcodes
         mv.visitVarInsn(ALOAD, 5);
         mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "getName", "()Ljava/lang/String;");
         mv.visitVarInsn(ASTORE, 6);
+        // if (binding.isAlias())
+        mv.visitVarInsn(ALOAD, 5);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "isAlias", "()Z");
+        Label l2a = new Label();
+        mv.visitJumpInsn(IFEQ, l2a);
+        // then
+        // binding = binding.getAlias();
+        mv.visitVarInsn(ALOAD, 5);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "getAlias", "()Lorg/jboss/byteman/rule/binding/Binding;");
+        mv.visitVarInsn(ASTORE, 5);
+        // endif
+        mv.visitLabel(l2a);
         // Type type = binding.getType();
         mv.visitVarInsn(ALOAD, 5);
         mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "getType", "()Lorg/jboss/byteman/rule/type/Type;");
@@ -313,13 +325,13 @@ public class Compiler implements Opcodes
         mv.visitJumpInsn(IFEQ, l4); // bypass this branch
         mv.visitLabel(l6);
         // then
-        // bindingMap.put(name, args[binding.getObjectArrayIndex]);
+        // bindingMap.put(name, args[binding.getCallArrayIndex]);
         mv.visitVarInsn(ALOAD, 0);
         mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
         mv.visitVarInsn(ALOAD, 6);
         mv.visitVarInsn(ALOAD, 3);
         mv.visitVarInsn(ALOAD, 5);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "getObjectArrayIndex", "()I");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "getCallArrayIndex", "()I");
         mv.visitInsn(AALOAD);
         mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
         mv.visitInsn(POP);

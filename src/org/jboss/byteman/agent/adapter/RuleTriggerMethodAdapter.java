@@ -48,9 +48,10 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         super(mv, rule, access, name, descriptor);
         this.access = access;
         this.descriptor = descriptor;
-        this.paramBindings = new ArrayList<Binding>();
+        this.callArrayBindings = new ArrayList<Binding>();
         this.returnType = Type.getReturnType(descriptor);
         this.argumentTypes = Type.getArgumentTypes(descriptor);
+        this.argLocalIndices = new int[argumentTypes.length];
         this.bindingsDone = false;
         this.localTypes = new ArrayList();
     }
@@ -59,23 +60,63 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
     {
         Bindings bindings = rule.getBindings();
         Iterator<Binding> iterator = bindings.iterator();
+        List<Binding> aliasBindings = new ArrayList<Binding>();
+        int argLocalIndex = 0;
 
-        // make sure all entries are valid
+        // if this is an instance method then the local 0 holds this and args start at local index 1
+
+        if ((access & Opcodes.ACC_STATIC) == 0) {
+            argLocalIndex += 1;
+        }
+
+        // compute the local indices of each method parameter
+
+        for (int i = 0; i < argumentTypes.length; i++) {
+            argLocalIndices[i] = argLocalIndex;
+            argLocalIndex += argumentTypes[i].getSize();
+        }
+
+        // check the local var bindings and, if any of them are actually refereces to method params
+        // alias them to the corresponding param binding
+
+        while (iterator.hasNext()) {
+            Binding binding = iterator.next();
+            if  (binding.isLocalVar()){
+                int localIdx = binding.getLocalIndex();
+                if (localIdx < argLocalIndex) {
+                    binding = alias(binding, bindings, localIdx);
+                    if (binding != null) {
+                        // the aliased param binding was not present so ensure it gets added to the
+                        // binding set once we have finished iterating. there is no need to add it
+                        // to the call bindings since we pass the aliased method param instead
+                        aliasBindings.add(binding);
+                    }
+                } else {
+                    callArrayBindings.add(binding);
+                }
+            }
+        }
+
+        bindings.addBindings(aliasBindings);
+        
+        // now iterate over the param vars and ensure they go into the call bindings list
+
+        iterator = bindings.iterator();
+        
         while (iterator.hasNext()) {
             Binding binding = iterator.next();
             if (binding.isParam()) {
-                paramBindings.add(binding);
+                callArrayBindings.add(binding);
             } else if (binding.isReturn()) {
                 // at some point we will allow reference to the current return value so we need
-                // to be sure that the method has a non-void return type bit for now we do nothing
-            } else if (binding.isLocalVar()){
-                paramBindings.add(binding);
+                // to be sure that the method has a non-void return type and that the location
+                // specifier is AT RETURN but for now we do nothing
             }
         }
         // we don't have to do this but it makes debgging easier
         
         if (true) {
-            // ok now sort the paramBindings for later use
+            // ok now sort the callArrayBindings for later use
 
             Comparator<Binding> comparator = new Comparator<Binding>() {
                 public int compare(Binding b1, Binding b2)
@@ -100,14 +141,55 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                 }
             };
 
-            Collections.sort(paramBindings, comparator);
+            Collections.sort(callArrayBindings, comparator);
         }
 
         // now give each binding a unique index in the object array
-        int n = paramBindings.size();
+        int n = callArrayBindings.size();
         for (int i = 0; i < n; i++) {
-            paramBindings.get(i).setObjectArrayIndex(i);
+            callArrayBindings.get(i).setCallArrayIndex(i);
         }
+    }
+
+    private Binding alias(Binding binding, Bindings bindings, int localIdx)
+    {
+        if (((access & Opcodes.ACC_STATIC) == 0) && (localIdx == 0)) {
+            String name = "$0";
+            Binding alias = bindings.lookup(name);
+            if (alias == null) {
+                alias = new Binding(rule, name);
+                alias.setDescriptor(binding.getDescriptor());
+                alias.setLocalIndex(binding.getLocalIndex());
+                binding.aliasTo(alias);
+                // alias var was new so return it for addition to the binding set
+                return alias;
+            } else {
+                // just alias the binding
+                binding.aliasTo(alias);
+                return null;
+            }
+        }
+
+        for (int i = 0; i < argLocalIndices.length; i++) {
+            if (argLocalIndices[i] == localIdx) {
+                String name = "$" + (i + 1);
+                Binding alias = bindings.lookup(name);
+                if (alias == null) {
+                    alias = new Binding(rule, name);
+                    alias.setDescriptor(binding.getDescriptor());
+                    alias.setLocalIndex(binding.getLocalIndex());
+                    binding.aliasTo(alias);
+                    // alias var was new so return it for addition to the binding set
+                    return alias;
+                } else {
+                    // just alias the binding
+                    binding.aliasTo(alias);
+                    return null;
+                }
+            }
+        }
+
+        return null;
     }
 
     public void doArgLoad()
@@ -117,19 +199,19 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
             bindingsDone = true;
         }
         
-        if (paramBindings.size() ==  0) {
+        if (callArrayBindings.size() ==  0) {
             push((org.objectweb.asm.Type)null);
             return;
         }
 
-        int arraySize = paramBindings.size();
+        int arraySize = callArrayBindings.size();
 
         push(arraySize);
         Type objectType = Type.getType(Object.class);
         newArray(objectType);
 
         for (int i = 0; i < arraySize; i++) {
-            Binding binding = paramBindings.get(i);
+            Binding binding = callArrayBindings.get(i);
             dup();
             push(i);
             if (binding.isParam()) {
@@ -159,7 +241,8 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
     private String descriptor;
     private Type returnType;
     private Type[] argumentTypes;
-    private List<Binding> paramBindings;
+    private int[] argLocalIndices;
+    private List<Binding> callArrayBindings;
     private boolean bindingsDone;
     private final List localTypes;
 
