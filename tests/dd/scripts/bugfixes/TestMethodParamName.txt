@@ -29,6 +29,7 @@ CLASS TestMethodParamName
 METHOD callWithNamedParams
 # HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
+BIND test : TestMethodParamName = $0
 IF TRUE
 DO test.log("injected foo() " + $this + " " + $bar + " " + $baz)
 ENDRULE
