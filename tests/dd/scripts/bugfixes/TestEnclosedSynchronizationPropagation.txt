@@ -28,7 +28,7 @@ CLASS TestEnclosedSynchronizationPropagation
 METHOD test
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL testAuxiliary()
-BIND NOTHING
+# BIND NOTHING
 IF TRUE
 DO System.out.println("AFTER CALL testAuxiliary()")
 ENDRULE

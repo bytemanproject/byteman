@@ -116,19 +116,19 @@ public class Event extends RuleElement {
 
     private void createBindings(ParseNode eventTree) throws TypeException
     {
+        // we expect BINDINGS = NOTHING | BINDING | (COMMA BINDING BINDINGS)
+        // where BINDING = (BIND BINDSYM EXPR)
+
+        if (eventTree == null || eventTree.getTag() == NOTHING) {
+            return;
+        }
+        
         Bindings bindings = getBindings();
 
         // we bundle exceptions from each binding to report more than just the first error
 
         List<TypeException> exceptions = new ArrayList<TypeException>();
 
-        // we expect BINDINGS = NOTHING | BINDING | (COMMA BINDING BINDINGS)
-        // where BINDING = (BIND BINDSYM EXPR)
-
-        if (eventTree.getTag() == NOTHING) {
-            return;
-        }
-        
         while (eventTree != null) {
             try {
                 int tag = eventTree.getTag();

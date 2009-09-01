@@ -242,6 +242,7 @@ terminal	String IDENTIFIER;
 
 non terminal ParseNode eca_rule;
 non terminal ParseNode eca;
+non terminal ParseNode ca;
 
 non terminal ParseNode event;
 non terminal ParseNode bindings;
@@ -283,6 +284,9 @@ non terminal ParseNode eca_error;
 non terminal ParseNode eca_error_in_event;
 non terminal ParseNode eca_error_in_condition;
 non terminal ParseNode eca_error_in_action;
+non terminal ParseNode ca_error;
+non terminal ParseNode ca_error_in_condition;
+non terminal ParseNode ca_error_in_action;
 non terminal ParseNode action_expr_list_error_invalid_action;
 non terminal ParseNode expr_list_error_invalid_expr;
 
@@ -306,6 +310,7 @@ precedence left DOT;
 
 eca_rule
 	::=	eca:rule {: RESULT = rule; :}
+	| ca:rule  {: RESULT = rule; :}
 	;
 	
 eca	::=	BIND event:e
@@ -337,6 +342,27 @@ eca_error_in_action
         IF condition:c
         DO:d error {: error("invalid action", dleft, dright);
                       RESULT = node(ParseNode.BIND, eleft, eright, e, c, null); :}
+    ;
+
+ca	::=	IF condition:c
+		DO actions:a {: RESULT = node(ParseNode.BIND, cleft, cright, null, c, a); :}
+	|   ca_error
+	;
+
+ca_error
+    ::= ca_error_in_condition
+    |   ca_error_in_action
+    ;
+
+ca_error_in_condition
+    ::= IF:i error {: error("invalid condition", ileft, iright); :}
+        DO actions:a {: RESULT = node(ParseNode.BIND, ileft, iright, null, null, a); :}
+    ;
+
+ca_error_in_action
+    ::= IF condition:c
+        DO:d error {: error("invalid action", dleft, dright);
+                      RESULT = node(ParseNode.BIND, cleft, cright, null, c, null); :}
     ;
 
 // event specifications -- for now events are just a list of bindings
