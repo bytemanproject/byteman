@@ -86,11 +86,11 @@ public class Transformer implements ClassFileTransformer {
                 LocationType locationType = null;
                 Location targetLocation = null;
                 int lineNumber = 0;
+                int startNumber = -1;
                 int maxLines = lines.length;
                 boolean inRule = false;
                 for (String line : lines) {
                     lineNumber++;
-                    int startNumber = -1;
                     if (line.trim().startsWith("#")) {
                         if (inRule) {
                             // add a blank line in place of the comment so the line numbers
@@ -158,6 +158,8 @@ public class Transformer implements ClassFileTransformer {
                         nextRule = "";
                         sepr = "";
                         inRule = false;
+                        // reset start nuuber so we pick up the next rule text line
+                        startNumber = -1;
                     } else if (lineNumber == maxLines && !nextRule.trim().equals("")) {
                             throw new Exception("org.jboss.byteman.agent.Transformer : no matching ENDRULE for RULE " + name + " in script " + scriptPaths.get(scriptIdx));
                     } else {
