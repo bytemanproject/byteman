@@ -27,7 +27,7 @@ package org.jboss.byteman.agent;
  * information about a single rule derived from a rule script
  */
 
-public class Script
+public class RuleScript
 {
     private String name;
     private String targetClass;
@@ -38,7 +38,7 @@ public class Script
     int line;
     String file;
 
-    Script (String name, String targetClass, String targetMethod, String targetHelper, Location targetLocation, String ruleText, int line, String file)
+    RuleScript(String name, String targetClass, String targetMethod, String targetHelper, Location targetLocation, String ruleText, int line, String file)
     {
         this.name = name;
         this.targetClass = targetClass;

@@ -66,7 +66,7 @@ public class Transformer implements ClassFileTransformer {
     {
         theTransformer = this;
         this.inst = inst;
-        targetToScriptMap = new HashMap<String, List<Script>>();
+        targetToScriptMap = new HashMap<String, List<RuleScript>>();
 
         Iterator<String> iter = scriptTexts.iterator();
         int scriptIdx = 0;
@@ -125,29 +125,29 @@ public class Transformer implements ClassFileTransformer {
                         } else if (targetMethod == null) {
                             throw new Exception("org.jboss.byteman.agent.Transformer : no METHOD for RULE  " + name + " in script " + scriptPaths.get(scriptIdx));
                         } else {
-                            List<Script> scripts = targetToScriptMap.get(targetClass);
-                            if (scripts == null) {
-                                scripts = new ArrayList<Script>();
-                                targetToScriptMap.put(targetClass, scripts);
+                            List<RuleScript> ruleScripts = targetToScriptMap.get(targetClass);
+                            if (ruleScripts == null) {
+                                ruleScripts = new ArrayList<RuleScript>();
+                                targetToScriptMap.put(targetClass, ruleScripts);
                             }
                             if (targetLocation == null) {
                                 targetLocation = Location.create(LocationType.ENTRY, "");
                             }
-                            Script script = new Script(name, targetClass, targetMethod, targetHelper, targetLocation, nextRule, startNumber, file);
-                            scripts.add(script);
+                            RuleScript ruleScript = new RuleScript(name, targetClass, targetMethod, targetHelper, targetLocation, nextRule, startNumber, file);
+                            ruleScripts.add(ruleScript);
                             if (isVerbose()) {
-                                System.out.println("RULE " + script.getName());
-                                System.out.println("CLASS " + script.getTargetClass());
-                                System.out.println("METHOD " + script.getTargetMethod());
-                                if (script.getTargetHelper() != null) {
-                                    System.out.println("HELPER " + script.getTargetHelper());
+                                System.out.println("RULE " + ruleScript.getName());
+                                System.out.println("CLASS " + ruleScript.getTargetClass());
+                                System.out.println("METHOD " + ruleScript.getTargetMethod());
+                                if (ruleScript.getTargetHelper() != null) {
+                                    System.out.println("HELPER " + ruleScript.getTargetHelper());
                                 }
                                 if (targetLocation != null) {
                                     System.out.println(targetLocation);
                                 } else {
                                     System.out.println("AT ENTRY");
                                 }
-                                System.out.println(script.getRuleText());
+                                System.out.println(ruleScript.getRuleText());
                                 System.out.println("ENDRULE");
                             }
                         }
@@ -247,12 +247,12 @@ public class Transformer implements ClassFileTransformer {
         // ok, we need to check whether there are any scripts associated with this class and if so
         // we will consider transforming the byte code
 
-        List<Script> scripts = targetToScriptMap.get(internalClassName);
+        List<RuleScript> ruleScripts = targetToScriptMap.get(internalClassName);
 
-        if (scripts != null) {
-            for (Script script : scripts) {
+        if (ruleScripts != null) {
+            for (RuleScript ruleScript : ruleScripts) {
                 try {
-                    newBuffer = transform(script, loader, internalClassName,  classBeingRedefined, newBuffer);
+                    newBuffer = transform(ruleScript, loader, internalClassName,  classBeingRedefined, newBuffer);
                 } catch (Throwable th) {
                     System.err.println("Transformer.transform : caught throwable " + th);
                     th.printStackTrace(System.err);
@@ -260,18 +260,18 @@ public class Transformer implements ClassFileTransformer {
             }
         }
 
-        // if the class is not in the default package then we also need to look for scripts
+        // if the class is not in the default package then we also need to look for ruleScripts
         // which specify the class without the package qualification
 
         int dotIdx = internalClassName.lastIndexOf('.');
 
         if (dotIdx >= 0) {
-            scripts = targetToScriptMap.get(internalClassName.substring(dotIdx + 1));
+            ruleScripts = targetToScriptMap.get(internalClassName.substring(dotIdx + 1));
 
-            if (scripts != null) {
-                for (Script script : scripts) {
+            if (ruleScripts != null) {
+                for (RuleScript ruleScript : ruleScripts) {
                     try {
-                        newBuffer = transform(script, loader, internalClassName,  classBeingRedefined, newBuffer);
+                        newBuffer = transform(ruleScript, loader, internalClassName,  classBeingRedefined, newBuffer);
                     } catch (Throwable th) {
                         System.err.println("Transformer.transform : caught throwable " + th);
                         th.printStackTrace(System.err);
@@ -359,20 +359,20 @@ public class Transformer implements ClassFileTransformer {
      */
     public static final String DUMP_GENERATED_CLASSES_DIR = BYTEMAN_PACKAGE_PREFIX + "dump.generated.classes.directory";
 
-    private byte[] transform(Script script, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
+    private byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
     {
-        final String handlerClass = script.getTargetClass();
-        final String handlerMethod = script.getTargetMethod();
-        final String helperName = script.getTargetHelper();
-        final Location handlerLocation = script.getTargetLocation();
-        final int lineNumber = script.getLine();
-        final String file = script.getFile();
+        final String handlerClass = ruleScript.getTargetClass();
+        final String handlerMethod = ruleScript.getTargetMethod();
+        final String helperName = ruleScript.getTargetHelper();
+        final Location handlerLocation = ruleScript.getTargetLocation();
+        final int lineNumber = ruleScript.getLine();
+        final String file = ruleScript.getFile();
         Class helperClass = null;
         if (helperName != null) {
             try {
                 helperClass = loader.loadClass(helperName);
             } catch (ClassNotFoundException e) {
-                System.out.println("org.jboss.byteman.agent.Transformer : unknown helper class " + helperName + " for rule " + script.getName());
+                System.out.println("org.jboss.byteman.agent.Transformer : unknown helper class " + helperName + " for rule " + ruleScript.getName());
             }
         }
         if (isVerbose()) {
@@ -382,9 +382,9 @@ public class Transformer implements ClassFileTransformer {
             System.out.println("  " + handlerLocation);
         }
         final Rule rule;
-        String ruleName = script.getName();
+        String ruleName = ruleScript.getName();
         try {
-            rule = Rule.create(ruleName, handlerClass, handlerMethod, helperClass, handlerLocation, script.getRuleText(), lineNumber, file, loader);
+            rule = Rule.create(ruleName, handlerClass, handlerMethod, helperClass, handlerLocation, ruleScript.getRuleText(), lineNumber, file, loader);
         } catch (ParseException pe) {
             System.out.println("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + " : " + pe);
             return targetClassBytes;
@@ -521,7 +521,7 @@ public class Transformer implements ClassFileTransformer {
      * rule details
      */
 
-    private final HashMap<String, List<Script>> targetToScriptMap;
+    private final HashMap<String, List<RuleScript>> targetToScriptMap;
 
     /**
      *  switch to control verbose output during rule processing
