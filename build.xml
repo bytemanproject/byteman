@@ -130,12 +130,13 @@
         </zip>
     </target>
 
-    <target name="install-src">
+    <target name="install-src" depends="htdocs">
         <zip  destfile="${build.dir}/byteman-src.zip">
             <fileset dir="." includes="README build.xml"/>
             <fileset dir="${build.dir}" includes="lib/byteman.jar"/>
             <fileset dir="." includes="src/**/*" excludes="src/**/.svn/**/*"/>
             <fileset dir="." includes="docs/**" excludes="docs/**/.svn/**/*"/>
+            <fileset dir="." includes="htdocs/**" excludes="docs/**/.svn/**/*"/>
             <fileset dir="." includes="bin/**" excludes="bin/**/.svn/**/*"/>
             <fileset dir="." includes="ext/**" excludes="ext/**/.svn/**/*"/>
             <fileset dir="." includes="dd/**" excludes="dd/**/.svn/**/*"/>
