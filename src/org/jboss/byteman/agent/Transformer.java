@@ -35,10 +35,7 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
-import java.util.List;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.*;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.File;
@@ -73,107 +70,147 @@ public class Transformer implements ClassFileTransformer {
         while (iter.hasNext()) {
             String scriptText = iter.next();
             String file = scriptPaths.get(scriptIdx);
-            if (scriptText != null) {
-                // split rules into separate lines
-                String[] lines = scriptText.split("\n");
-                List<String> rules = new ArrayList<String>();
-                String nextRule = "";
-                String sepr = "";
-                String name = null;
-                String targetClass = null;
-                String targetMethod = null;
-                String targetHelper = null;
-                LocationType locationType = null;
-                Location targetLocation = null;
-                int lineNumber = 0;
-                int startNumber = -1;
-                int maxLines = lines.length;
-                boolean inRule = false;
-                for (String line : lines) {
-                    lineNumber++;
-                    if (line.trim().startsWith("#")) {
-                        if (inRule) {
-                            // add a blank line in place of the comment so the line numbers
-                            // are reported consistently during parsing
-                            nextRule += sepr;
-                            sepr = "\n";
-                        } // else { // just drop comment line }
-                    } else if (line.startsWith("RULE ")) {
-                        inRule = true;
-                        name = line.substring(5).trim();
-                    } else if (!inRule) {
-                        if (!line.trim().equals("")) {
-                            throw new Exception("org.jboss.byteman.agent.Transformer : invalid text outside of RULE/ENDRULE " + "at line " + lineNumber + " in script " + file);
-                        }
-                    } else if (line.startsWith("CLASS ")) {
-                        targetClass = line.substring(6).trim();
-                    } else if (line.startsWith("METHOD ")) {
-                        targetMethod = line.substring(7).trim();
-                    } else if (line.startsWith("HELPER ")) {
-                        targetHelper = line.substring(7).trim();
-                    } else if ((locationType = LocationType.type(line)) != null) {
-                        String parameters = LocationType.parameterText(line);
-                        targetLocation = Location.create(locationType, parameters);
-                        if (targetLocation == null) {
-                            throw new Exception("org.jboss.byteman.agent.Transformer : invalid target location at line " + lineNumber + " in script " + scriptPaths.get(scriptIdx));
-                        }
-                    } else if (line.startsWith("ENDRULE")) {
-                        if (name == null) {
-                            throw new Exception("org.jboss.byteman.agent.Transformer : no matching RULE for ENDRULE at line " + lineNumber + " in script " + scriptPaths.get(scriptIdx));
-                        } else if (targetClass == null) {
-                            throw new Exception("org.jboss.byteman.agent.Transformer : no CLASS for RULE  " + name + " in script " + scriptPaths.get(scriptIdx));
-                        } else if (targetMethod == null) {
-                            throw new Exception("org.jboss.byteman.agent.Transformer : no METHOD for RULE  " + name + " in script " + scriptPaths.get(scriptIdx));
-                        } else {
-                            List<RuleScript> ruleScripts = targetToScriptMap.get(targetClass);
-                            if (ruleScripts == null) {
-                                ruleScripts = new ArrayList<RuleScript>();
-                                targetToScriptMap.put(targetClass, ruleScripts);
-                            }
-                            if (targetLocation == null) {
-                                targetLocation = Location.create(LocationType.ENTRY, "");
-                            }
-                            RuleScript ruleScript = new RuleScript(name, targetClass, targetMethod, targetHelper, targetLocation, nextRule, startNumber, file);
-                            ruleScripts.add(ruleScript);
-                            if (isVerbose()) {
-                                System.out.println("RULE " + ruleScript.getName());
-                                System.out.println("CLASS " + ruleScript.getTargetClass());
-                                System.out.println("METHOD " + ruleScript.getTargetMethod());
-                                if (ruleScript.getTargetHelper() != null) {
-                                    System.out.println("HELPER " + ruleScript.getTargetHelper());
-                                }
-                                if (targetLocation != null) {
-                                    System.out.println(targetLocation);
-                                } else {
-                                    System.out.println("AT ENTRY");
-                                }
-                                System.out.println(ruleScript.getRuleText());
-                                System.out.println("ENDRULE");
-                            }
-                        }
-                        name = null;
-                        targetClass = null;
-                        targetMethod = null;
-                        targetLocation = null;
-                        nextRule = "";
-                        sepr = "";
-                        inRule = false;
-                        // reset start nuuber so we pick up the next rule text line
-                        startNumber = -1;
-                    } else if (lineNumber == maxLines && !nextRule.trim().equals("")) {
-                            throw new Exception("org.jboss.byteman.agent.Transformer : no matching ENDRULE for RULE " + name + " in script " + scriptPaths.get(scriptIdx));
-                    } else {
-                        if (startNumber < 0) {
-                            startNumber = lineNumber;
-                        }
-                        nextRule += sepr + line;
-                        sepr = "\n";
-                    }
-                }
+            List<RuleScript> ruleScripts = processScripts(scriptText, file);
+            for (RuleScript ruleScript : ruleScripts) {
+                addScript(ruleScript);
             }
         }
     }
 
+    private List<RuleScript> processScripts(String scriptText, String scriptFile) throws Exception
+    {
+        List<RuleScript> ruleScripts = new LinkedList<RuleScript>();
+
+        if (scriptText != null) {
+            // split rules into separate lines
+            String[] lines = scriptText.split("\n");
+            List<String> rules = new ArrayList<String>();
+            String nextRule = "";
+            String sepr = "";
+            String name = null;
+            String targetClass = null;
+            String targetMethod = null;
+            String targetHelper = null;
+            LocationType locationType = null;
+            Location targetLocation = null;
+            int lineNumber = 0;
+            int startNumber = -1;
+            int maxLines = lines.length;
+            boolean inRule = false;
+            for (String line : lines) {
+                line = line.trim();
+                lineNumber++;
+                if (line.startsWith("#")) {
+                    if (inRule) {
+                        // add a blank line in place of the comment so the line numbers
+                        // are reported consistently during parsing
+                        nextRule += sepr;
+                        sepr = "\n";
+                    } // else { // just drop comment line }
+                } else if (line.startsWith("RULE ")) {
+                    inRule = true;
+                    name = line.substring(5).trim();
+                    if (name.equals("")) {
+                        throw new Exception("org.jboss.byteman.agent.Transformer : RULE with no name at line " + lineNumber + " in script " + scriptFile);
+                    }
+                } else if (!inRule) {
+                    if (!line.equals("")) {
+                        throw new Exception("org.jboss.byteman.agent.Transformer : invalid text outside of RULE/ENDRULE " + "at line " + lineNumber + " in script " + scriptFile);
+                    }
+                } else if (line.startsWith("CLASS ")) {
+                    targetClass = line.substring(6).trim();
+                } else if (line.startsWith("METHOD ")) {
+                    targetMethod = line.substring(7).trim();
+                } else if (line.startsWith("HELPER ")) {
+                    targetHelper = line.substring(7).trim();
+                } else if ((locationType = LocationType.type(line)) != null) {
+                    String parameters = LocationType.parameterText(line);
+                    targetLocation = Location.create(locationType, parameters);
+                    if (targetLocation == null) {
+                        throw new Exception("org.jboss.byteman.agent.Transformer : invalid target location at line " + lineNumber + " in script " + scriptFile);
+                    }
+                } else if (line.startsWith("ENDRULE")) {
+                    if (name == null) {
+                        throw new Exception("org.jboss.byteman.agent.Transformer : no matching RULE for ENDRULE at line " + lineNumber + " in script " + scriptFile);
+                    } else if (targetClass == null) {
+                        throw new Exception("org.jboss.byteman.agent.Transformer : no CLASS for RULE  " + name + " in script " + scriptFile);
+                    } else if (targetMethod == null) {
+                        throw new Exception("org.jboss.byteman.agent.Transformer : no METHOD for RULE  " + name + " in script " + scriptFile);
+                    } else {
+                        if (targetLocation == null) {
+                            targetLocation = Location.create(LocationType.ENTRY, "");
+                        }
+                        ruleScripts.add(new RuleScript(name, targetClass, targetMethod, targetHelper, targetLocation, nextRule, startNumber, scriptFile));
+                    }
+                    name = null;
+                    targetClass = null;
+                    targetMethod = null;
+                    targetLocation = null;
+                    nextRule = "";
+                    sepr = "";
+                    inRule = false;
+                    // reset start nuuber so we pick up the next rule text line
+                    startNumber = -1;
+                } else if (lineNumber == maxLines && !nextRule.trim().equals("")) {
+                    throw new Exception("org.jboss.byteman.agent.Transformer : no matching ENDRULE for RULE " + name + " in script " + scriptFile);
+                } else {
+                    // this is a line of rule text - see if it is the first one
+                    if (startNumber < 0) {
+                        startNumber = lineNumber;
+                    }
+                    nextRule += sepr + line;
+                    sepr = "\n";
+                }
+            }
+        }
+
+        return ruleScripts;
+    }
+
+    private void indexScriptByTarget(RuleScript ruleScript)
+    {
+        String targetClass = ruleScript.getTargetClass();
+
+        List<RuleScript> ruleScripts;
+
+        synchronized (targetToScriptMap) {
+            ruleScripts = targetToScriptMap.get(targetClass);
+            if (ruleScripts == null) {
+                ruleScripts = new ArrayList<RuleScript>();
+                targetToScriptMap.put(targetClass, ruleScripts);
+            }
+        }
+
+        ruleScripts.add(ruleScript);
+    }
+
+    private void dumpScript(RuleScript ruleScript)
+    {
+        String file = ruleScript.getFile();
+        int line = ruleScript.getLine();
+        if (file != null) {
+            System.out.println("# " + file + " line " + line);
+        }
+        System.out.println("RULE " + ruleScript.getName());
+        System.out.println("CLASS " + ruleScript.getTargetClass());
+        System.out.println("METHOD " + ruleScript.getTargetMethod());
+        if (ruleScript.getTargetHelper() != null) {
+            System.out.println("HELPER " + ruleScript.getTargetHelper());
+        }
+        System.out.println(ruleScript.getTargetLocation());
+        System.out.println(ruleScript.getRuleText());
+        System.out.println("ENDRULE");
+    }
+
+    private void addScript(RuleScript ruleScript) throws Exception
+    {
+        indexScriptByTarget(ruleScript);
+
+        if (isVerbose()) {
+            dumpScript(ruleScript);
+        }
+    }
+    
     /**
      * The implementation of this method may transform the supplied class file and
      * return a new replacement class file.
@@ -238,12 +275,18 @@ public class Transformer implements ClassFileTransformer {
             throws IllegalClassFormatException
     {
         byte[] newBuffer = classfileBuffer;
-        // we only transform certain classes -- in  particular, we exclude bootstrap classes whose loader is null
-        // and we exclude byteman classes
+        // we only transform certain classes -- we do allow bootstrap classes whose loader is null
+        // but we exclude byteman classes and java.lang classes
         String internalClassName = TypeHelper.internalizeClass(className);
 
-        if (loader == null || isBytemanClass(internalClassName) || !isTransformable(internalClassName)) {
+        if (isBytemanClass(internalClassName) || !isTransformable(internalClassName)) {
             return null;
+        }
+
+        // TODO-- reconsider this as it is a bit dodgy as far as security is concerned
+
+        if (loader == null) {
+            loader = ClassLoader.getSystemClassLoader();
         }
 
         // ok, we need to check whether there are any scripts associated with this class and if so
@@ -286,7 +329,7 @@ public class Transformer implements ClassFileTransformer {
         if (newBuffer != classfileBuffer) {
             // see if we need to dump the transformed bytecode for checking
             if (dumpGeneratedClasses) {
-                dumpClass(internalClassName, newBuffer);
+                dumpClass(internalClassName, newBuffer, classfileBuffer);
             }
             return newBuffer;
         } else {
@@ -361,14 +404,12 @@ public class Transformer implements ClassFileTransformer {
      */
     public static final String DUMP_GENERATED_CLASSES_DIR = BYTEMAN_PACKAGE_PREFIX + "dump.generated.classes.directory";
 
-    private byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
+    protected byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
     {
         final String handlerClass = ruleScript.getTargetClass();
         final String handlerMethod = ruleScript.getTargetMethod();
         final String helperName = ruleScript.getTargetHelper();
         final Location handlerLocation = ruleScript.getTargetLocation();
-        final int lineNumber = ruleScript.getLine();
-        final String file = ruleScript.getFile();
         Class helperClass = null;
         if (helperName != null) {
             try {
@@ -386,21 +427,24 @@ public class Transformer implements ClassFileTransformer {
         final Rule rule;
         String ruleName = ruleScript.getName();
         try {
-            rule = Rule.create(ruleName, handlerClass, handlerMethod, helperClass, handlerLocation, ruleScript.getRuleText(), lineNumber, file, loader);
+            rule = Rule.create(ruleScript, helperClass, loader);
         } catch (ParseException pe) {
             System.out.println("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + " : " + pe);
+            ruleScript.recordTransform(loader, className, null, pe);
             return targetClassBytes;
         } catch (TypeException te) {
             System.out.println("org.jboss.byteman.agent.Transformer : error checking rule " + ruleName + " : " + te);
+            ruleScript.recordTransform(loader, className, null, te);
             return targetClassBytes;
         } catch (Throwable th) {
             System.out.println("org.jboss.byteman.agent.Transformer : error processing rule " + ruleName + " : " + th);
+            ruleScript.recordTransform(loader, className, null, th);
             return targetClassBytes;
         }
         if (isVerbose()) {
             System.out.println(rule);
         }
-        
+
         // ok, we have a rule with a matchingclass and a candidiate method and location
         // we need to see if the class has a matching method and, if so, add a call to
         // execute the rule when we hit the relevant line
@@ -415,8 +459,9 @@ public class Transformer implements ClassFileTransformer {
         try {
             cr.accept(checkAdapter, ClassReader.EXPAND_FRAMES);
         } catch (Throwable th) {
-            System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + rule.getName() + " to class " + className + th);
+            System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + rule.getName() + " to class " + className + " " + th);
             th.printStackTrace(System.out);
+            ruleScript.recordTransform(loader, className, rule, th);
             return targetClassBytes;
         }
         // only insert the rule trigger call if there is a suitable location in the target method
@@ -430,12 +475,17 @@ public class Transformer implements ClassFileTransformer {
             try {
                 cr.accept(adapter, ClassReader.EXPAND_FRAMES);
             } catch (Throwable th) {
-                System.out.println("org.jboss.byteman.agent.Transformer : error compiling rule " + rule.getName() + " for class " + className + th);
+                System.out.println("org.jboss.byteman.agent.Transformer : error injecting trigger for rule " + rule.getName() + " into class " + className + " " +  th);
                 th.printStackTrace(System.out);
+                ruleScript.recordTransform(loader, className, rule, th);
                 return targetClassBytes;
             }
-            // hand back the transformed byte code
-            return cw.toByteArray();
+            // only return transformed code if ruleScript is still active
+
+            if (ruleScript.recordTransform(loader, className, rule)) {
+                // hand back the transformed byte code
+                return cw.toByteArray();
+            }
         }
 
         return targetClassBytes;
@@ -583,6 +633,11 @@ public class Transformer implements ClassFileTransformer {
 
     private void dumpClass(String fullName, byte[] bytes)
     {
+        dumpClass(fullName, bytes, null);
+    }
+
+    private void dumpClass(String fullName, byte[] bytes, byte[] oldBytes)
+    {
         int dotIdx = fullName.lastIndexOf('.');
 
         String name = (dotIdx < 0 ? fullName : fullName.substring(dotIdx + 1));
@@ -592,15 +647,27 @@ public class Transformer implements ClassFileTransformer {
             System.out.println("org.jboss.byteman.agent.Transformer : Cannot dump transformed bytes to directory " + dir + File.separator + prefix);
             return;
         }
-        name = dir + File.separator + name + ".class";
-        System.out.println("org.jboss.byteman.agent.Transformer : Saving transformed bytes to " + name);
+        String newname = dir + File.separator + name + ".class";
+        System.out.println("org.jboss.byteman.agent.Transformer : Saving transformed bytes to " + newname);
         try {
-            FileOutputStream fio = new FileOutputStream(name);
+            FileOutputStream fio = new FileOutputStream(newname);
             fio.write(bytes);
             fio.close();
         } catch (IOException ioe) {
-            System.out.println("Error saving transformed bytes to" + name);
+            System.out.println("Error saving transformed bytes to" + newname);
             ioe.printStackTrace(System.out);
+        }
+        if (oldBytes != null) {
+            String oldname = dir + File.separator + name + "_orig.class";
+            System.out.println("org.jboss.byteman.agent.Transformer : Saving original bytes to " + oldname);
+            try {
+                FileOutputStream fio = new FileOutputStream(oldname);
+                fio.write(oldBytes);
+                fio.close();
+            } catch (IOException ioe) {
+                System.out.println("Error saving transformed bytes to" + oldname);
+                ioe.printStackTrace(System.out);
+            }
         }
     }
 

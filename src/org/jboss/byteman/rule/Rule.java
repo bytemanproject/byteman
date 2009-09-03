@@ -37,6 +37,7 @@ import org.jboss.byteman.rule.helper.InterpretedHelper;
 import org.jboss.byteman.agent.Location;
 import org.jboss.byteman.agent.LocationType;
 import org.jboss.byteman.agent.Transformer;
+import org.jboss.byteman.agent.RuleScript;
 import org.objectweb.asm.Opcodes;
 
 import org.jboss.byteman.rule.compiler.Compiler;
@@ -54,6 +55,10 @@ import java_cup.runtime.Symbol;
  */
 public class Rule
 {
+    /**
+     * the script defining this rule
+     */
+    private RuleScript ruleScript;
     /**
      * the name of this rule supplied in the rule script
      */
@@ -155,53 +160,53 @@ public class Rule
 
     private Type returnType;
 
-    private Rule(String name, String targetClass, String targetMethod,Class<?> helperClass, Location targetLocation, String ruleSpec, int line, String file, ClassLoader loader)
+    /**
+     * the key under which this rule is indexed in the rule key map.
+     */
+
+    private String key;
+
+    private Rule(RuleScript ruleScript, Class<?> helperClass, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
         ParseNode ruleTree;
 
-        this.name = name;
-        this.line = line;
-        this.file = file;
+        this.ruleScript = ruleScript;
+        this.helperClass = (helperClass != null ? helperClass : Helper.class);
+        this.loader = loader;
+
         typeGroup = new TypeGroup(loader);
         bindings = new Bindings();
-        if (ruleSpec != null) {
-            // ensure line numbers start at 1
-            String fullSpec = "\n" + ruleSpec;
-            try {
-                ECATokenLexer lexer = new ECATokenLexer(new StringReader(fullSpec));
-                lexer.setStartLine(line);
-                lexer.setFile(file);
-                ECAGrammarParser parser = new ECAGrammarParser(lexer);
-                parser.setFile(file);
-                Symbol parse = (debugParse ? parser.debug_parse() : parser.parse());
-                if (parser.getErrorCount() != 0) {
-                    throw new ParseException("org.jboss.byteman.rule.Rule : error parsing rule\n" + ruleSpec);
-                }
-                ruleTree = (ParseNode) parse.value;
-            } catch (ParseException pe) {
-                throw pe;
-            } catch (Exception e) {
-                throw new ParseException("org.jboss.byteman.rule.Rule : error parsing rule\n" + ruleSpec, e);
-            }
-            ParseNode eventTree = (ParseNode)ruleTree.getChild(0);
-            ParseNode conditionTree = (ParseNode)ruleTree.getChild(1);
-            ParseNode actionTree = (ParseNode)ruleTree.getChild(2);
-            event = Event.create(this, eventTree);
-            condition = Condition.create(this, conditionTree);
-            action = Action.create(this, actionTree);
-        }
         checked = false;
-        this.loader = loader;
-        this.targetClass = targetClass;
-        this.targetMethod = targetMethod;
-        this.helperClass = (helperClass != null ? helperClass : Helper.class);
-        this.targetLocation = (targetLocation != null ? targetLocation : Location.create(LocationType.ENTRY, ""));
         triggerClass = null;
         triggerMethod = null;
         triggerDescriptor = null;
         triggerAccess = 0;
         returnType = null;
+        try {
+            ECATokenLexer lexer = new ECATokenLexer(new StringReader(ruleScript.getRuleText()));
+            lexer.setStartLine(getLine());
+            lexer.setFile(getFile());
+            ECAGrammarParser parser = new ECAGrammarParser(lexer);
+            parser.setFile(file);
+            Symbol parse = (debugParse ? parser.debug_parse() : parser.parse());
+            if (parser.getErrorCount() != 0) {
+                throw new ParseException("org.jboss.byteman.rule.Rule : error parsing rule\n" + ruleScript.getRuleText());
+            }
+            ruleTree = (ParseNode) parse.value;
+        } catch (ParseException pe) {
+            throw pe;
+        } catch (Exception e) {
+            throw new ParseException("org.jboss.byteman.rule.Rule : error parsing rule\n" + ruleScript.getRuleText(), e);
+        }
+
+        ParseNode eventTree = (ParseNode)ruleTree.getChild(0);
+        ParseNode conditionTree = (ParseNode)ruleTree.getChild(1);
+        ParseNode actionTree = (ParseNode)ruleTree.getChild(2);
+
+        event = Event.create(this, eventTree);
+        condition = Condition.create(this, conditionTree);
+        action = Action.create(this, actionTree);
     }
 
     public TypeGroup getTypeGroup()
@@ -215,19 +220,37 @@ public class Rule
     }
 
     public String getName() {
-        return name;
+        return ruleScript.getName();
     }
 
     public String getTargetClass() {
-        return targetClass;
+        return ruleScript.getTargetClass();
     }
 
     public String getTargetMethod() {
-        return targetMethod;
+        return ruleScript.getTargetMethod();
     }
 
     public Location getTargetLocation() {
-        return targetLocation;
+        return ruleScript.getTargetLocation();
+    }
+
+    /**
+     * retrieve the start line for the rule
+     * @return the start line for the rule
+     */
+    public int getLine()
+    {
+        return ruleScript.getLine();
+    }
+
+    /**
+     * retrieve the name of the file containing this rule
+     * @return the name of the file containing this rule
+     */
+    public String getFile()
+    {
+        return ruleScript.getFile();
     }
 
     public Event getEvent()
@@ -261,10 +284,10 @@ public class Rule
         return loader;
     }
 
-    public static Rule create(String name, String targetClass, String targetMethod, Class<?> helperClass, Location targetLocation, String ruleSpec, int line, String file, ClassLoader loader)
+    public static Rule create(RuleScript ruleScript, Class<?> helperClass, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
-            return new Rule(name, targetClass, targetMethod, helperClass, targetLocation, ruleSpec, line, file, loader);
+            return new Rule(ruleScript, helperClass, loader);
     }
 
     public void setEvent(String eventSpec) throws ParseException, TypeException
@@ -297,6 +320,38 @@ public class Rule
         triggerExceptions = exceptions;
     }
 
+    /**
+     * has this rule been typechecked and/or compiled
+     * @return true if this rule has been typechecked and/or compiled otherwise false
+     */
+    public boolean isChecked()
+    {
+        return checked;
+    }
+
+    /**
+     * has this rule failed to typecheck or compile
+     * @return true if this rule has failed to typecheck or compile otherwise false
+     */
+    public boolean isCheckFailed()
+    {
+        return checkFailed;
+    }
+
+    /**
+     * has this rule been typechecked and compiled without error.
+     * @return true if this rule has been typechecked and compiled without error otherwise false
+     */
+    public boolean isCheckedOk()
+    {
+        return (checked && !checkFailed);
+    }
+
+    /**
+     * typecheck and then compile this rule unless either action has been tried before
+     * @return true if the rule successfully type checks and then compiles under this call or a previous
+     * call or false if either operation has previously failed or fails under this call.
+     */
     private synchronized boolean ensureTypeCheckedCompiled()
     {
         if (checkFailed) {
@@ -304,26 +359,38 @@ public class Rule
         }
 
         if (!checked) {
+            String detail = "";
             try {
                 typeCheck();
                 compile();
+                checked = true;
             } catch (TypeException te) {
-                System.out.println("Rule.ensureTypeCheckedCompiled : error typechecking rule " + getName());
-                te.printStackTrace(System.out);
                 checkFailed = true;
-                return false;
+                StringWriter stringWriter = new StringWriter();
+                PrintWriter writer = new PrintWriter(stringWriter);
+                writer.println("Rule.ensureTypeCheckedCompiled : error type checking rule " + getName());
+                te.printStackTrace(writer);
+                detail = writer.toString();
+                System.out.println(detail);
             } catch (CompileException ce) {
-                System.out.println("Rule.ensureTypeCheckedCompiled : error compiling rule " + getName());
-                ce.printStackTrace(System.out);
                 checkFailed = true;
-                return false;
+                StringWriter stringWriter = new StringWriter();
+                PrintWriter writer = new PrintWriter(stringWriter);
+                writer.println("Rule.ensureTypeCheckedCompiled : error compiling rule " + getName());
+                ce.printStackTrace(writer);
             }
+
+            ruleScript.recordCompile(triggerClass, loader, !checkFailed, detail);
+            return !checkFailed;
         }
-        
+
         return true;
     }
 
-
+    /**
+     * type check this rule
+     * @throws TypeException if the ruele contains type errors
+     */
     public void typeCheck()
             throws TypeException
     {
@@ -344,9 +411,16 @@ public class Rule
         event.typeCheck(Type.VOID);
         condition.typeCheck(Type.Z);
         action.typeCheck(Type.VOID);
-        checked = true;
     }
 
+    /**
+     * install helper class used to execute this rule. this may involve generating a compiled helper class
+     * for the rule and, if compilation to bytecode is enabled, generating bytecode for a method of this class
+     * used to execute the rule binding, condition and action expressions. If the rule employ sthe default helper
+     * without enabling compilation to bytecode then no class need be generated. the installed helper class will
+     * be the predefined class InterpretedHelper.
+     * @throws CompileException if the rule cannot be compiled
+     */
     public void compile()
             throws CompileException
     {
@@ -375,7 +449,7 @@ public class Rule
             throws TypeException
     {
         Type type;
-        // add a binding for the rule so we can call builtin static methods
+        // add a binding for the helper so we can call builtin static methods
         type = typeGroup.create(helperClass.getName());
         Binding ruleBinding = bindings.lookup("$$");
         if (ruleBinding != null) {
@@ -434,6 +508,7 @@ public class Rule
             System.out.println("Rule.execute called for " + key);
         }
 
+        // should not happen -- even if the key is deleted because a rule is updated
         if (rule == null) {
             throw new ExecuteException("Rule.execute : unable to find rule with key " + key);
         }
@@ -512,26 +587,27 @@ public class Rule
     public String getKey()
     {
         String key = getName() + "_" + nextId();
+        this.key = key;
         ruleKeyMap.put(key, this);
         return key;
     }
 
     /**
-     * retrieve the start line for the ruel's parseable text
-     * @return the start line for the ruel's parseable text
+     * return the key under which this rule has been indexed in the rule key map
+     * @return
      */
-    public int getLine()
+    public String lookupKey()
     {
-        return line;
+        return key;
     }
 
+
     /**
-     * retrieve the name of the file containing this rule
-     * @return the name of the file containing this rule
+     * delete any reference to the rule from the rule map
      */
-    public String getFile()
+    public void purge()
     {
-        return file;
+        ruleKeyMap.remove(key);
     }
 
     /**
@@ -568,15 +644,15 @@ public class Rule
     {
         StringWriter stringWriter = new StringWriter();
         stringWriter.write("RULE ");
-        stringWriter.write(name);
+        stringWriter.write(getName());
         stringWriter.write("\n");
         stringWriter.write("CLASS ");
-        stringWriter.write(targetClass);
+        stringWriter.write(getTargetClass());
         stringWriter.write('\n');
         stringWriter.write("METHOD ");
-        stringWriter.write(targetMethod);
+        stringWriter.write(getTargetMethod());
         stringWriter.write('\n');
-        stringWriter.write(targetLocation.toString());
+        stringWriter.write(getTargetLocation().toString());
         stringWriter.write('\n');
         if (event != null) {
             event.writeTo(stringWriter);

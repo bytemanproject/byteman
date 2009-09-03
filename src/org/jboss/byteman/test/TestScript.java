@@ -34,6 +34,7 @@ import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.agent.LocationType;
 import org.jboss.byteman.agent.Location;
+import org.jboss.byteman.agent.RuleScript;
 import org.jboss.byteman.agent.adapter.RuleCheckAdapter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.ClassReader;
@@ -220,7 +221,8 @@ public class TestScript
                         System.out.println("org.jboss.byteman.agent.Transformer : unknown helper class " + targetHelperName + " for rule " + ruleName);
                     }
                 }
-                Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetHelperClass, targetLocation, text, baseline + lineNumber, file, loader);
+                RuleScript ruleScript = new RuleScript(ruleName, targetClassName, targetMethodName, targetHelperName, targetLocation, text, baseline + lineNumber, file);
+                Rule rule = Rule.create(ruleScript, targetHelperClass, loader);
                 System.err.println("TestScript: parsed rule " + rule.getName());
                 System.err.println(rule);
                 

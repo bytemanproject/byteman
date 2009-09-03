@@ -23,8 +23,16 @@
 */
 package org.jboss.byteman.agent;
 
+import org.jboss.byteman.rule.Rule;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.io.StringWriter;
+import java.io.PrintWriter;
+
 /**
- * information about a single rule derived from a rule script
+ * information about a single rule obtained from a rule script including any failed or successful transforms
+ * performed using the rule
  */
 
 public class RuleScript
@@ -35,19 +43,22 @@ public class RuleScript
     private String targetHelper;
     private Location targetLocation;
     private String ruleText;
-    int line;
-    String file;
+    private boolean deleted;
+    private int line;
+    private String file;
+    private List<Transform> transformed;
 
-    RuleScript(String name, String targetClass, String targetMethod, String targetHelper, Location targetLocation, String ruleText, int line, String file)
+    public RuleScript(String name, String targetClass, String targetMethod, String targetHelper, Location targetLocation, String ruleText, int line, String file)
     {
         this.name = name;
         this.targetClass = targetClass;
         this.targetMethod = targetMethod;
         this.targetHelper = targetHelper;
-        this.targetLocation = targetLocation;
+        this.targetLocation = (targetLocation != null ? targetLocation : Location.create(LocationType.ENTRY, ""));
         this.ruleText = ruleText;
         this.line = line;
         this.file = file;
+        this.transformed = null;
     }
 
     public String getName() {
@@ -82,5 +93,129 @@ public class RuleScript
     public String getFile()
     {
         return file;
+    }
+
+    /**
+     * getter for list of transformed applied for this script. must be called synchronized on the script.
+     * @return te list of transforms
+     */
+    public List<Transform> getTransformed()
+    {
+        return transformed;
+    }
+
+    /**
+     * invoked by the retransformer code when a rule is redefined to inhibit further transformations via this script
+     */
+    public synchronized void setDeleted()
+    {
+        deleted = true;
+    }
+
+    /**
+     * record the fact that a trigger call has been successfully installed into bytecode associated with a specific
+     * class and loader and a corresponding rule instance been installed
+     * @param loader
+     * @param internalClassName
+     * @param rule
+     * @return
+     */
+    public synchronized boolean recordTransform(ClassLoader loader, String internalClassName, Rule rule)
+    {
+        return recordTransform(loader, internalClassName, rule, null);
+    }
+
+    /**
+     * record the fact that a trigger call has failed to install into bytecode associated with a specific
+     * class and loader
+     * @param loader the loader of the class being transformed
+     * @param internalClassName the internal name of the class being transformed
+     * @param rule the rule resulting from the parse of the rule text or null if a parse error occurred
+     * @param th throwable generated during the attempt to parse the rule text or inject code at the trigger point
+     * @return
+     */
+    public synchronized boolean recordTransform(ClassLoader loader, String internalClassName, Rule rule, Throwable th)
+    {
+        if (deleted) {
+            return false;
+        }
+
+        addTransform(new Transform(loader, internalClassName, rule, th));
+
+        return true;
+    }
+
+    private void addTransform(Transform transform)
+    {
+        if (transformed == null) {
+            transformed = new ArrayList<Transform>();
+        }
+
+        transformed.add(transform);
+    }
+
+    /**
+     * record the fact that a rule has been compiled wiht or without success
+     * @param triggerClass the name of the trigger class to which the rule is attached
+     * @param loader the classloader of the trigger class
+     * @param successful true if the rule compiled successfully and false if it suffered form parse,
+     * type or compile errors
+     */
+    public synchronized void recordCompile(String triggerClass, ClassLoader loader, boolean successful, String detail)
+    {
+        int count = transformed.size();
+        for (int i =  0; i < count; i++) {
+            Transform transform = transformed.get(i);
+            if (transform.getLoader() == loader) {
+                transform.setCompiled(successful, detail);
+            }
+        }
+    }
+
+    /**
+     * uninstall any rules associated with this script. this is called after marking the script as
+     * deleted and regenerating the methods for any associated transformed class to ensure that it does
+     * not cause a rule trigger call to fail.
+     */
+    public synchronized void purge()
+    {
+        int count = transformed.size();
+        for (int i =  0; i < count; i++) {
+            Transform transform = transformed.get(i);
+            Rule rule = transform.getRule();
+            if (rule != null) {
+                rule.purge();
+            }
+        }
+    }
+
+    public String toString()
+    {
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter writer = new PrintWriter(stringWriter);
+        writeTo(writer);
+        writer.flush();
+        return stringWriter.toString();
+    }
+    
+    public void writeTo(PrintWriter writer)
+    {
+        writer.print("# File ");
+        writer.print(file);
+        writer.print(" line ");
+        writer.println(line);
+        writer.print("RULE ");
+        writer.println(name);
+        writer.print("CLASS ");
+        writer.println(targetClass);
+        writer.print("METHOD ");
+        writer.println(targetMethod);
+        if (targetHelper != null) {
+            writer.print("HELPER ");
+            writer.println(targetHelper);
+        }
+        writer.println(targetLocation.toString());
+        writer.println(ruleText);
+        writer.println("ENDRULE");
     }
 }
