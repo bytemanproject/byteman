@@ -74,7 +74,7 @@
 <!--
     <property name="svnbase" value="https://svn.jboss.org/repos/labs/labs/jbosstm/workspace/adinn/byteman/tags"/>
     <property name="tag" value="trunk"/>
-    <property name="filename" value="1.0.2.SNAPSHOT"/>
+    <property name="filename" value="1.0.3.SNAPSHOT"/>
     <property name="mvn.repositoryId" value="snapshots.jboss.org"/>
     <property name="mvn.url" value="dav:https://snapshots.jboss.org/maven2"/>
 -->
