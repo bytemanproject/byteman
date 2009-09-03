@@ -24,11 +24,9 @@
 package org.jboss.byteman.rule.exception;
 
 /**
- * Created by IntelliJ IDEA.
- * User: adinn
- * Date: 30-Sep-2008
- * Time: 13:37:55
- * To change this template use File | Settings | File Templates.
+ * SPecializaton of ExecuteException used to wrap a client exception generated via a rule THROW action.
+ * A ThrowException is caught by the injected trigger code and unwrapped so that the client exception
+ * can be rethrown from the trigger method.
  */
 public class ThrowException extends ExecuteException
 {
