@@ -36,7 +36,7 @@ RULE test after read trigger 2
 CLASS TestReadWriteAuxiliary
 METHOD testMethod()
 HELPER org.jboss.byteman.tests.helpers.Default
-AFTER READ counter 2
+AFTER READ TestReadWriteAuxiliary.counter 2
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("AFTER READ 2 triggered in TestReadWriteAuxiliary.testMethod : counter == " + $0.counter)
@@ -56,7 +56,7 @@ RULE test after write trigger 2
 CLASS TestReadWriteAuxiliary
 METHOD testMethod()
 HELPER org.jboss.byteman.tests.helpers.Default
-AFTER WRITE counter 2
+AFTER WRITE org.jboss.byteman.tests.auxiliary.TestReadWriteAuxiliary.counter 2
 BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("AFTER WRITE 2 triggered in TestReadWriteAuxiliary.testMethod : counter == " + $0.counter)

@@ -1,6 +1,6 @@
 <!--
   JBoss, Home of Professional Open Source
-  Copyright 2007, Red Hat Middleware LLC, and individual contributors
+  Copyright 2008-9, Red Hat Middleware LLC, and individual contributors
   as indicated by the @author tags.
   See the copyright.txt in the distribution for a full listing
   of individual contributors.
@@ -15,7 +15,7 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
   MA  02110-1301, USA.
 
-  (C) 2008
+  (C) 2008-9
   @author JBoss Inc.
 -->
 
@@ -24,25 +24,7 @@
     <!-- the directory in which your installed app server resides -->
     <property environment="env"/>
 
-    <!-- pick up the asm.org code transform library -->
-    <property name="asm.home" value="${env.HOME}/Download/asm/asm-3.0/output/dist/lib/all"/>
-    <property name="asm.jar" value="asm-all-3.0.jar"/>
-
-    <condition property="jboss.home" value="${env.JBOSS_HOME}">
-      <isset property="env.JBOSS_HOME"/>
-    </condition>
-
-    <fail unless="jboss.home">
-The JBoss installation directory must be specified with the JBOSS_HOME environment variable or the jboss.home property.
-    </fail>
-
-    <condition property="xts.home" value="${env.XTS_HOME}">
-      <isset property="env.XTS_HOME"/>
-    </condition>
-
-    <fail unless="xts.home">
-The XTS installation directory must be specified with the XTS_HOME environment variable or the xts.home property.
-    </fail>
+    <property name="ext.asm.jars" value="asm-all-3.0.jar"/>
 
     <property name="src.dir"           value="src"/>
     <property name="dd.dir"            value="dd"/>
@@ -51,29 +33,11 @@ The XTS installation directory must be specified with the XTS_HOME environment v
     <property name="build.dir"         value="build"/>
     <property name="build.classes.dir" value="${build.dir}/classes"/>
     <property name="build.lib.dir"     value="${build.dir}/lib"/>
+    <property name="htdocs.dir"     value="htdocs"/>
 
     <property name="ext.jflex.jars" value="JFlex.jar"/>
     <property name="ext.javacup.jars" value="javacup.jar"/>
     <property name="ext.javacup.rt.jars" value="javacuprt.jar"/>
-
-    <!-- we need to add the XTS, TS and various jboss jars to the test code path so we can
-    load XTS code -->
-
-    <property name="xts.lib.dir"     value="${xts.home}/lib"/>
-    <property name="xts.sar.dir"     value="${xts.home}/sar"/>
-    <property name="jboss.lib.dir"     value="${jboss.home}/lib"/>
-    <property name="jboss.client.dir"     value="${jboss.home}/client"/>
-    <property name="jboss.common.lib.dir"     value="${jboss.home}/common/lib"/>
-    <property name="jboss.server.deploy.dir"     value="${jboss.home}/server/default/deploy"/>
-
-    <property name="xts.lib.jars" value="ws-c10.jar wscf10.jar wscf.jar ws-t10.jar ws-t.jar wstx11.jar wsas.jar ws-c11.jar wscf11.jar ws-c.jar ws-t11.jar wstx10.jar wstx.jar"/>
-    <property name="xts.sar.jars" value="jbossxts.sar"/>
-    <property name="jboss.lib.jars" value="stax-api.jar"/>
-    <property name="jboss.client.jars" value="jbossall-client.jar"/>
-    <property name="jboss.common.lib.jars" value="jbossjta.jar jbossws-common.jar jbossws-framework.jar jbossws-spi.jar jbossws-native-saaj.jar jbossws-native-jaxws.jar jbossws-native-jaxws-ext.jar jbossws-native-jaxrpc.jar jboss-javaee.jar"/>
-    <property name="jboss.server.deploy.jars" value="jbossws.sar"/>
-
-    <!-- enable debugging of XTS service code -->
 
     <property name="javac.debug" value="on"/>
 
@@ -137,7 +101,7 @@ The XTS installation directory must be specified with the XTS_HOME environment v
     <target name="compile" depends="init">
         <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}">
             <classpath>
-                <pathelement location="${asm.home}/${asm.jar}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.asm.jars}"/>
                 <fileset dir="${ext.lib.dir}" includes="${ext.javacup.jars}"/>
                 <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
             </classpath>
@@ -166,51 +130,37 @@ The XTS installation directory must be specified with the XTS_HOME environment v
         </zip>
     </target>
 
+    <target name="install-src" depends="htdocs">
+        <zip  destfile="${build.dir}/byteman-src.zip">
+            <fileset dir="." includes="README build.xml"/>
+            <fileset dir="${build.dir}" includes="lib/byteman.jar"/>
+            <fileset dir="." includes="src/**/*" excludes="src/**/.svn/**/*"/>
+            <fileset dir="." includes="docs/**" excludes="docs/**/.svn/**/*"/>
+            <fileset dir="." includes="htdocs/**" excludes="docs/**/.svn/**/*"/>
+            <fileset dir="." includes="bin/**" excludes="bin/**/.svn/**/*"/>
+            <fileset dir="." includes="ext/**" excludes="ext/**/.svn/**/*"/>
+            <fileset dir="." includes="dd/**" excludes="dd/**/.svn/**/*"/>
+            <fileset dir="." includes="tests/build.xml"/>
+            <fileset dir="." includes="tests/src/**/*" excludes="tests/src/**/.svn/**/*"/>
+            <fileset dir="." includes="tests/dd/**/*" excludes="tests/sdd/**/.svn/**/*"/>
+        </zip>
+    </target>
+
+   <target name="htdocs">
+       <delete dir="${htdocs.dir}"/>
+       <mkdir dir="${htdocs.dir}"/>
+       <javadoc packagenames="org.jboss.byteman" destdir="${htdocs.dir}" linksource="true" private="true">
+           <classpath>
+               <fileset dir="${ext.lib.dir}" includes="${ext.asm.jars}"/>
+               <fileset dir="${ext.lib.dir}" includes="${ext.javacup.jars}"/>
+               <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
+           </classpath>
+           <fileset dir="${src.dir}" includes="**/*.java"/>
+       </javadoc>
+   </target>
+
    <target name="clean">
        <delete dir="${build.dir}"/>
        <delete dir="${dd.grammar.dir}" includes="*.java *.tokens"/>
     </target>
-
-    <target name="TestScript" depends="jar">
-        <java classname="org.jboss.byteman.test.TestScript" fork="true">
-            <classpath>
-                <fileset dir="${build.lib.dir}" includes="byteman.jar"/>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <!-- xts, jta and jboss as jars-->
-                <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
-                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
-                <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
-                <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
-                <fileset dir="${jboss.common.lib.dir}" includes="${jboss.common.lib.jars}"/>
-                <fileset dir="${jboss.server.deploy.dir}" includes="${jboss.server.deploy.jars}"/>
-            </classpath>
-	    <!-- uncomment this to see parser debug output
-            <jvmarg value="-Dorg.jboss.jbossts.byteman.rule.debug=foo"/>
-	    -->
-	    <arg value="handler.txt"/>
-        </java>
-    </target>
-
-    <target name="TestScriptDebug" depends="jar">
-        <java classname="org.jboss.byteman.test.TestScript" fork="true">
-            <classpath>
-                <fileset dir="${build.lib.dir}" includes="byteman.jar"/>
-                <pathelement location="${asm.home}/${asm.jar}"/>
-                <!-- xts, jta and jboss as jars-->
-                <fileset dir="${xts.lib.dir}" includes="${xts.lib.jars}"/>
-                <fileset dir="${xts.sar.dir}" includes="${xts.sar.jars}"/>
-                <fileset dir="${jboss.lib.dir}" includes="${jboss.lib.jars}"/>
-                <fileset dir="${jboss.client.dir}" includes="${jboss.client.jars}"/>
-                <fileset dir="${jboss.common.lib.dir}" includes="${jboss.common.lib.jars}"/>
-                <fileset dir="${jboss.server.deploy.dir}" includes="${jboss.server.deploy.jars}"/>
-            </classpath>
-            <jvmarg value="-Xdebug"/>
-            <jvmarg value="-Xrunjdwp:transport=dt_socket,server=n,address=5005,suspend=y"/>
-	    <!-- uncomment this to see parser debug output
-            <jvmarg value="-Dorg.jboss.jbossts.byteman.rule.debug=foo"/>
-	    -->
-	    <arg value="handler.txt"/>
-        </java>
-    </target>
-
 </project>

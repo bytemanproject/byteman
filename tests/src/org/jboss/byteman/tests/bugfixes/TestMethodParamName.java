@@ -1,6 +1,6 @@
 /*
 * JBoss, Home of Professional Open Source
-* Copyright 2008, Red Hat Middleware LLC, and individual contributors
+* Copyright 2009, Red Hat Middleware LLC, and individual contributors
 * by the @authors tag. See the copyright.txt in the distribution for a
 * full listing of individual contributors.
 *
@@ -21,24 +21,42 @@
 *
 * @authors Andrew Dinn
 */
-package org.jboss.byteman.rule.exception;
+package org.jboss.byteman.tests.bugfixes;
+
+import org.jboss.byteman.tests.Test;
 
 /**
- * SPecializaton of ExecuteException used to wrap a client exception generated via a rule THROW action.
- * A ThrowException is caught by the injected trigger code and unwrapped so that the client exception
- * can be rethrown from the trigger method.
+ * Test to check that a script can refer to a method parameter by its name as well as using the
+ * $N syntax.
  */
-public class ThrowException extends ExecuteException
+public class TestMethodParamName extends Test
 {
-    private Throwable throwable;
-
-    public ThrowException(Throwable throwable) {
-        super("wrapper for exception created in throw expression", throwable);
-        this.throwable = throwable;
+    public TestMethodParamName()
+    {
+        super(TestMethodParamName.class.getCanonicalName());
     }
 
-    public Throwable getThrowable()
+    public void test()
     {
-        return throwable;
+        try {
+            callWithNamedParams("bar", "baz");
+        } catch (Exception e) {
+            log(e);
+        }
+
+        checkOutput();
+    }
+
+    public void callWithNamedParams(String bar, String baz)
+    {
+        log("inside foo() " + this + " " + bar + " " + baz);
+    }
+
+    @Override
+    public String getExpected() {
+        logExpected("injected foo() " + this + " bar baz");
+        logExpected("inside foo() " + this + " bar baz");
+
+        return super.getExpected();
     }
 }

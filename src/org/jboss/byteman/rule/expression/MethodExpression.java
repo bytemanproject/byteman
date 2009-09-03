@@ -408,6 +408,7 @@ public class MethodExpression extends Expression
             stringWriter.write(".");
         } else if (pathList != null) {
             stringWriter.write(getPath(pathList.length));
+            stringWriter.write(".");
         }
         stringWriter.write(name);
         stringWriter.write("(");

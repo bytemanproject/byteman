@@ -60,6 +60,7 @@ public class Binding extends RuleElement
         this.name = name;
         this.type = (type != null ? type : Type.UNDEFINED);
         this.value = value;
+        this.alias = null;
         // ok, check the name to see what type of binding we have
         if (name.matches("\\$[0-9].*")) {
             // $NNN references the method target or a parameter from 0 upwards
@@ -78,12 +79,16 @@ public class Binding extends RuleElement
             // anything else must be a variable introduced in the BINDS clause
             index = BINDVAR;
         }
-        this.objectArrayIndex = 0;
+        this.callArrayIndex = 0;
     }
 
     public Type typeCheck(Type expected)
             throws TypeException
     {
+        if (alias != null) {
+            return alias.typeCheck(expected);
+        }
+        
         // value can be null if this is a rule method parameter
         if (value != null) {
             // type check the binding expression, using the bound variable's expected if it is known
@@ -112,7 +117,9 @@ public class Binding extends RuleElement
 
     public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
     {
-        if (isBindVar()) {
+        if (alias != null) {
+            alias.compile(mv, currentStackHeights, maxStackHeights);
+        } else if (isBindVar()) {
             int currentStack = currentStackHeights.stackCount;
 
             // push the current helper instance i.e. this -- adds 1 to stack height
@@ -150,6 +157,9 @@ public class Binding extends RuleElement
 
     public Expression getValue()
     {
+        if (alias != null) {
+            return alias.getValue();
+        }
         return value;
     }
 
@@ -163,6 +173,9 @@ public class Binding extends RuleElement
 
     public Type getType()
     {
+        if (alias != null) {
+            return alias.getType();
+        }
         return type;
     }
 
@@ -171,18 +184,24 @@ public class Binding extends RuleElement
         this.type = type;
     }
 
-    public int getObjectArrayIndex()
+    public int getCallArrayIndex()
     {
-        return objectArrayIndex;
+        if (alias != null) {
+            return alias.getCallArrayIndex();
+        }
+        return callArrayIndex;
     }
 
-    public void setObjectArrayIndex(int objectArrayIndex)
+    public void setCallArrayIndex(int callArrayIndex)
     {
-        this.objectArrayIndex = objectArrayIndex;
+        this.callArrayIndex = callArrayIndex;
     }
 
     public int getLocalIndex()
     {
+        if (alias != null) {
+            return alias.getLocalIndex();
+        }
         return localIndex;
     }
 
@@ -257,6 +276,26 @@ public class Binding extends RuleElement
         }
     }
 
+
+    public void aliasTo(Binding alias)
+    {
+        if (this.isLocalVar()) {
+            this.alias = alias;
+        } else {
+            System.out.println("Binding : attempt to alias non-local var " + getName() + " to " + alias.getName());
+        }
+    }
+
+    public boolean isAlias()
+    {
+        return (alias != null);
+    }
+
+    public Binding getAlias()
+    {
+        return alias;
+    }
+
     // special index values for non-positional parameters
 
     private final static int HELPER = -1;
@@ -272,7 +311,8 @@ public class Binding extends RuleElement
     // values for other types  of parameters.
     private int index;
     // the offset into the trigger method Object array of the initial value for this parameter
-    private int objectArrayIndex;
+    private int callArrayIndex;
     // the offset into the stack at which a local var is located
     private int localIndex;
+    private Binding alias; // aliases $x to $n where x is a method parameter name and n its index in the parameter list
 }

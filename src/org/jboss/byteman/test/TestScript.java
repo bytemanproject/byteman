@@ -24,16 +24,25 @@
 package org.jboss.byteman.test;
 
 import org.jboss.byteman.rule.type.TypeHelper;
+import org.jboss.byteman.rule.type.Type;
+import org.jboss.byteman.rule.type.TypeGroup;
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.rule.binding.Bindings;
+import org.jboss.byteman.rule.binding.Binding;
 import org.jboss.byteman.rule.exception.ParseException;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.agent.LocationType;
 import org.jboss.byteman.agent.Location;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.adapter.RuleCheckAdapter;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
@@ -111,11 +120,13 @@ public class TestScript
         int parseErrorCount = 0;
         int typeErrorCount = 0;
         int compileErrorCount = 0;
+        int baseline = 0;
 
         for (String script : ruleScripts) {
             String ruleName = "";
+            String[] lines = script.split("\n");
+            int len = lines.length;
             try {
-                String[] lines = script.split("\n");
                 String targetClassName;
                 String targetMethodName;
                 String targetHelperName = null;
@@ -124,7 +135,6 @@ public class TestScript
                 String text = "";
                 String sepr = "";
                 int idx = 0;
-                int len = lines.length;
                 int lineNumber = 0;
 
                 while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
@@ -211,7 +221,8 @@ public class TestScript
                         System.out.println("org.jboss.byteman.agent.Transformer : unknown helper class " + targetHelperName + " for rule " + ruleName);
                     }
                 }
-                Rule rule = Rule.create(ruleName, targetClassName, targetMethodName, targetHelperClass, targetLocation, text, lineNumber, file, loader);
+                RuleScript ruleScript = new RuleScript(ruleName, targetClassName, targetMethodName, targetHelperName, targetLocation, text, baseline + lineNumber, file);
+                Rule rule = Rule.create(ruleScript, targetHelperClass, loader);
                 System.err.println("TestScript: parsed rule " + rule.getName());
                 System.err.println(rule);
                 
@@ -221,36 +232,9 @@ public class TestScript
                 boolean multiple = false;
                 try {
                     Class targetClass = loader.loadClass(targetClassName);
-                    if (!targetName.equals("<init>")) {
-                        Method[] candidates = targetClass.getDeclaredMethods();
-                        for (Method candidate : candidates) {
-                            String candidateName = candidate.getName();
-                            String candidateDesc = makeDescriptor(candidate);
-                            if (targetName.equals(candidateName)) {
-                                if (targetDesc.equals("") || TypeHelper.equalDescriptors(targetDesc, candidateDesc)) {
-                                    System.err.println("TestScript: checking rule " + ruleName);
-                                    if (found) {
-                                        multiple = true;
-                                        break;
-                                    }
-                                    found = true;
-                                    int access = 0;
-                                    Class<?>[] exceptionClasses = candidate.getExceptionTypes();
-                                    int l = exceptionClasses.length;
-                                    String[] exceptionNames = new String[l];
-                                    for (int i = 0; i < l; i++) {
-                                        exceptionNames[i] = exceptionClasses[i].getCanonicalName();
-                                    }
-                                    if ((candidate.getModifiers() & Modifier.STATIC) != 0) {
-                                        access = Opcodes.ACC_STATIC;
-                                    }
-                                    rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
-                                    rule.typeCheck();
-                                    System.err.println("TestScript: type checked rule " + ruleName);
-                                }
-                            }
-                        }
-                    } else {
+                    if (targetName.equals("<clinit>")) {
+                        System.err.println("TestScript: cannot type check <clinit> rule " + ruleName);
+                    } else if (targetName.equals("<init>")) {
                         Constructor[] constructors = targetClass.getConstructors();
                         for (Constructor constructor : constructors) {
                             String candidateName = constructor.getName();
@@ -274,8 +258,61 @@ public class TestScript
                                         access = Opcodes.ACC_STATIC;
                                     }
                                     rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
-                                    rule.typeCheck();
-                                    System.err.println("TestScript: type checked rule " + ruleName);
+                                    // the param and local var types are normally set by the check adapter but we
+                                    // cannot run that without accessing the byte[] version of the class so we have
+                                    // to install the param types by hand and we cannot check local var types
+                                    int paramErrorCount = installParamTypes(rule, targetClassName, access, candidateName, candidateDesc);
+                                    if (paramErrorCount == 0) {
+                                        rule.typeCheck();
+                                        System.err.println("TestScript: type checked rule " + ruleName);
+                                        System.err.println();
+                                    } else {
+                                        errorCount += paramErrorCount;
+                                        typeErrorCount += paramErrorCount;
+                                        System.err.println("TestScript: failed to type check rule " + ruleName);
+                                        System.err.println();
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Method[] candidates = targetClass.getDeclaredMethods();
+                        for (Method candidate : candidates) {
+                            String candidateName = candidate.getName();
+                            String candidateDesc = makeDescriptor(candidate);
+                            if (targetName.equals(candidateName)) {
+                                if (targetDesc.equals("") || TypeHelper.equalDescriptors(targetDesc, candidateDesc)) {
+                                    System.err.println("TestScript: checking rule " + ruleName);
+                                    if (found) {
+                                        multiple = true;
+                                        break;
+                                    }
+                                    found = true;
+                                    int access = 0;
+                                    Class<?>[] exceptionClasses = candidate.getExceptionTypes();
+                                    int l = exceptionClasses.length;
+                                    String[] exceptionNames = new String[l];
+                                    for (int i = 0; i < l; i++) {
+                                        exceptionNames[i] = exceptionClasses[i].getCanonicalName();
+                                    }
+                                    if ((candidate.getModifiers() & Modifier.STATIC) != 0) {
+                                        access = Opcodes.ACC_STATIC;
+                                    }
+                                    rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
+                                    // the param and local var types are normally set by the check adapter but we
+                                    // cannot run that without accessing the byte[] version of the class so we have
+                                    // to install the param types by hand and we cannot check local var types
+                                    int paramErrorCount = installParamTypes(rule, targetClassName, access, candidateName, candidateDesc);
+                                    if (paramErrorCount == 0) {
+                                        rule.typeCheck();
+                                        System.err.println("TestScript: type checked rule " + ruleName);
+                                        System.err.println();
+                                    } else {
+                                        errorCount += paramErrorCount;
+                                        typeErrorCount += paramErrorCount;
+                                        System.err.println("TestScript: failed to type check rule " + ruleName);
+                                        System.err.println();
+                                    }
                                 }
                             }
                         }
@@ -283,30 +320,38 @@ public class TestScript
                 } catch(ClassNotFoundException cfe) {
                     errorCount++;
                     System.err.println("TestScript: unable to load class " + targetClassName);
+                    System.err.println();
                 }
                 if (!found) {
                     errorCount++;
                     System.err.println("TestScript: no matching method for rule " + ruleName);
+                    System.err.println();
                 } else if (multiple) {
                     errorCount++;
                     System.err.println("TestScript: multiple matching methods for rule " + ruleName);
+                    System.err.println();
                 }
             } catch (ParseException e) {
                 errorCount++;
                 parseErrorCount++;
                 System.err.println("TestScript: parse exception for rule " + ruleName + " : " + e);
                 e.printStackTrace(System.err);
+                System.err.println();
             } catch (TypeException e) {
                 typeErrorCount++;
                 errorCount++;
                 System.err.println("TestScript: type exception for rule " + ruleName + " : " + e);
                 e.printStackTrace(System.err);
+                System.err.println();
             } catch (CompileException e) {
                 compileErrorCount++;
                 errorCount++;
                 System.err.println("TestScript: createHelperAdapter exception for rule " + " : " + ruleName + e);
                 e.printStackTrace(System.err);
+                System.err.println();
             }
+
+            baseline += len;
         }
         if (errorCount != 0) {
             System.err.println("TestScript: " + errorCount + " total errors");
@@ -346,6 +391,42 @@ public class TestScript
         desc += ")";
 
         return desc;
+    }
+
+    public int installParamTypes(Rule rule, String targetClassName, int access, String candidateName, String candidateDesc)
+    {
+        List<String> paramTypes = Type.parseMethodDescriptor(candidateDesc, false);
+        int paramCount = paramTypes.size();
+        int errorCount = 0;
+
+        TypeGroup typegroup = rule.getTypeGroup();
+
+        Bindings bindings = rule.getBindings();
+        Iterator<Binding> iterator = bindings.iterator();
+
+        while (iterator.hasNext()) {
+            Binding binding = iterator.next();
+
+            if (binding.getType() == Type.UNDEFINED) {
+                if (binding.isRecipient()) {
+                    binding.setDescriptor(targetClassName);
+                } else if (binding.isParam()) {
+                    int idx = binding.getIndex();
+                    // n.b. param indices are 1-based so use > here not >=
+                    if (idx > paramCount) {
+                        errorCount++;
+                        System.err.println("TestScript: invalid method parameter reference $" + idx  + " in rule " + rule.getName());
+                    } else {
+                        binding.setDescriptor(paramTypes.get(idx - 1));
+                    }
+                } else if (binding.isLocalVar()) {
+                    errorCount++;
+                    System.err.println("TestScript: cannot typecheck local variable " + binding.getName()  + " in rule " + rule.getName());
+                }
+            }
+        }
+
+        return errorCount;
     }
 
     /**

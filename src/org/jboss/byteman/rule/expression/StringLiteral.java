@@ -44,7 +44,7 @@ public class StringLiteral extends Expression
     {
         super(rule, Type.STRING, token);
 
-        this.text = token.getText();
+        this.text = token.getText().intern();
     }
 
     /**
@@ -88,7 +88,9 @@ public class StringLiteral extends Expression
     }
 
     public void writeTo(StringWriter stringWriter) {
+        stringWriter.write("\"");
         stringWriter.write(text);
+        stringWriter.write("\"");
     }
 
     private String text;

@@ -25,16 +25,11 @@ package org.jboss.byteman.rule.helper;
 
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.exception.ExecuteException;
-import org.jboss.byteman.synchronization.CountDown;
-import org.jboss.byteman.synchronization.Counter;
-import org.jboss.byteman.synchronization.Waiter;
-import org.jboss.byteman.synchronization.Rendezvous;
+import org.jboss.byteman.synchronization.*;
 import org.jboss.byteman.agent.Transformer;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * This is the default helper class which is used to define builtin operations for rules.
@@ -279,7 +274,15 @@ public class Helper
     }
 
     /**
-     * builtin to test add a countdown identified by a specific object and with the specified
+     * alias for createCountDown provided for backwards compatibility
+     */
+    public boolean addCountDown(Object identifier, int count)
+    {
+        return createCountDown(identifier, count);
+    }
+
+    /**
+     * builtin to test create a countdown identified by a specific object and with the specified
      * count. n.b. this builtin checks if a countdown identified by the supplied object is
      * currently installed, returning false if so, otherwise atomically adds the countdown
      * and returns true. This allows the builtin to be used safely in conditions where concurrent
@@ -287,10 +290,10 @@ public class Helper
      * @param identifier an object which uniquely identifies the countdown in question
      * @param count the number of times the countdown needs to be counted down before the
      * countdown operation returns true. e.g. if count is supplied as 2 then the first two
-     * calls to @link{#countdown(Object)} will return false and the third call will return true.
+     * calls to {@link #countDown(Object)} will return false and the third call will return true.
      * @return true if a new countdown is installed, false if one already exists.
      */
-    public boolean addCountDown(Object identifier, int count)
+    public boolean createCountDown(Object identifier, int count)
     {
         synchronized (countDownMap) {
             if (countDownMap.get(identifier) == null) {
@@ -340,7 +343,7 @@ public class Helper
     }
     /**
      * wait for another thread to signal an event with no timeout. see
-     * @link{#waitFor(Object, long)} for details and caveats regarding calling this builtin.
+     * {@link #waitFor(Object, long)} for details and caveats regarding calling this builtin.
      * @param identifier an object used to identify the signal that is to be waited on.
      */
     public void waitFor(Object identifier)
@@ -383,7 +386,7 @@ public class Helper
     /**
      * signal an event identified by the supplied object, causing all waiting threads to resume
      * rule processing and clearing the event. if there are no threads waiting either because
-     * there has been no call to @link{#waitFor} or because some other thread has sent the signal
+     * there has been no call to {@link #waitFor} or because some other thread has sent the signal
      * then this call returns false, otherwise it returns true. This operation is atomic,
      * allowing the builtin to be used in rule conditions.
      * @param identifier an object used to identify the which waiting threads the signal should
@@ -465,7 +468,7 @@ public class Helper
     /**
      * signal an event identified by the suppied object, causing all waiting threads to throw an
      * exception and clearing the event. if there are no objects waiting, either because there has been
-     * no call to @link{#waitFor} or because some other thread has already sent the signal, then this
+     * no call to {@link #waitFor} or because some other thread has already sent the signal, then this
      * call returns false, otherwise it returns true. This operation is atomic, allowing the builtin
      * to be used safely in rule conditions.
      * @param identifier an object used to identify the which waiting threads the signal should
@@ -592,67 +595,158 @@ public class Helper
         if (rendezvous == null || rendezvous.getExpected() != expected) {
             return -1;
         }
-
-        return rendezvous.getArrived();
+        synchronized (rendezvous) {
+            return rendezvous.getArrived();
+        }
     }
 
     /**
-     * meet other threads at a given rendezvous retrunign only when the expected number have arrived
+     * meet other threads at a given rendezvous returning only when the expected number have arrived
      * @param identifier the identifier for the rendezvous
      * @return an ordinal which sorts all parties to the rendezvous in order of arrival from 0 to
      * (expected-1) or -1 if the rendezvous does not exist
      */
     public int rendezvous(Object identifier)
     {
-        // we don't need to (cannot) synch on the map here although the reasoning is subtle
-        // the last thread in will reset the rendezvous if it is rejoinable in which case
-        // it stays in the map anyway. if it is not rejoinable then any thread which finds it in
-        // the map will return -1 if it is calling rendezvous -- i.e. this is the same as if it was
-        // not present. if a thread calls createRendezvous with the same identifier then this might
-        // make a difference but in that case either the rendezvous should be created rejoinable or
-        // the last thread out should be responsible for recreating the rendezvous.
-
         Rendezvous rendezvous = rendezvousMap.get(identifier);
+
         if (rendezvous !=  null) {
-            int result = rendezvous.rendezvous();
-            if (result == rendezvous.getExpected() && !rendezvous.isRejoinable()) {
-                rendezvousMap.remove(identifier);
+            synchronized(rendezvous) {
+                int result = rendezvous.rendezvous();
+                // make sure the rendezvous is removed from the map if required
+                // n.b. this implementation makes sure the remove happens before any thread
+                // successfully passes the rendezvous call
+                if (rendezvous.needsRemove()) {
+                    rendezvousMap.remove(identifier);
+                    rendezvous.setRemoved();
+                }
+
+                return result;
             }
-                
-            return result;
         }
 
         return -1;
     }
 
     /*
-     * hmm, maybe we need this and maybe not
-     *
-     * terminate a rendezvous, waking any threads which are waiting and resetting the arrived count to zero. If the
-     * rendezous is not restartable then it also gets removed from the rendezvous map. All threads waiting inside
-     * a call to rendezvous return result -1;
+     * delete a rendezvous. All threads waiting inside a call to rendezvous return result -1;
      * @param identifier
      * @param expected
-     * @return
-
-    public int resetRendezvous(Object identifier)
-    {
-    }
+     * @return true if the rendezvous was active and deleted and false if it had already been deleted
     */
-
-    /*
-     * hmm, maybe we need this and maybe not
-     *
-     * delete a rendezvous, waking any threads which are waiting and resetting the arrived count to zero. All
-     * threads waiting inside a call to rendezvous return result -1;
-     * @param identifier
-     * @param expected
-     * @return
-    public int deleteRendezvous(Object identifier)
+    public boolean deleteRendezvous(Object identifier, int expected)
     {
+        Rendezvous rendezvous = rendezvousMap.get(identifier);
+        if (rendezvous == null || rendezvous.getExpected() != expected) {
+            return false;
+        }
+        synchronized (rendezvous) {
+            if (rendezvous.delete()) {
+                if (rendezvous.needsRemove()) {
+                    rendezvousMap.remove(identifier);
+                }
+                return true;
+            }
+        }
+        // hmm, completed before we got there
+        return false;
     }
-    */
 
+    public boolean createJoin(Object key, int max)
+    {
+        if (max <= 0) {
+            return false;
+        }
+
+        synchronized(joinerMap) {
+            if (joinerMap.get(key) != null) {
+                return false;
+            }
+            joinerMap.put(key, new Joiner(max));
+        }
+
+        return true;
+    }
+
+    public boolean isJoin(Object key, int max)
+    {
+        synchronized(joinerMap) {
+            Joiner joiner = joinerMap.get(key);
+
+            if (joiner == null || joiner.getMax() != max) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean joinEnlist(Object key)
+    {
+        Joiner joiner;
+        synchronized (joinerMap)
+        {
+            joiner = joinerMap.get(key);
+        }
+
+        if (joiner == null) {
+            return false;
+        }
+
+        Thread current = Thread.currentThread();
+
+        switch (joiner.addChild(current)) {
+            case DUPLICATE:
+            case EXCESS:
+            {
+                // failed to add  child
+                return false;
+            }
+            case ADDED:
+            case FILLED:
+            {
+                // added child but parent was not waiting so leave joiner in the map for parent to find
+                return true;
+            }
+            case DONE:
+            default:
+            {
+                // added child and parent was waiting so remove joiner from map now
+                synchronized (joinerMap) {
+                    joinerMap.remove(joiner);
+                }
+                return true;
+            }
+        }
+    }
+
+    public boolean joinWait(Object key, int count)
+    {
+        Joiner joiner;
+        synchronized (joinerMap)
+        {
+            joiner = joinerMap.get(key);
+        }
+
+        if (joiner == null || joiner.getMax() != count) {
+            return false;
+        }
+
+        Thread current = Thread.currentThread();
+
+        if (joiner.joinChildren(current)) {
+            // successfully joined all child threads so remove joiner form map
+            synchronized (joinerMap) {
+                joinerMap.remove(joiner);
+            }
+            return true;
+        } else {
+            // hmm, another thread must have done the join so leave it do the remove
+            return true;
+        }
+    }
+
+    private static HashMap<Object, Joiner> joinerMap = new HashMap<Object, Joiner>();
 
     // counter support
     /**
@@ -890,4 +984,10 @@ public class Helper
      */
     private static HashMap<Object, Rendezvous> rendezvousMap = new HashMap<Object, Rendezvous>();
 
+    // initialise the trace map so it contains the system  output and error keyed under "out" and "err"
+
+    static {
+        traceMap.put("out", System.out);
+        traceMap.put("err", System.err);
+    }
 }
