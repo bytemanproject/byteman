@@ -58,12 +58,14 @@ public class Transformer implements ClassFileTransformer {
      *
      * @param inst the instrumentation object used to interface to the JVM
      */
-    public Transformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts)
+    public Transformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts, boolean isRedefine)
             throws Exception
     {
         theTransformer = this;
         this.inst = inst;
+        this.isRedefine = isRedefine;
         targetToScriptMap = new HashMap<String, List<RuleScript>>();
+        nameToScriptMap = new HashMap<String, RuleScript>();
 
         Iterator<String> iter = scriptTexts.iterator();
         int scriptIdx = 0;
@@ -77,10 +79,10 @@ public class Transformer implements ClassFileTransformer {
         }
     }
 
-    private List<RuleScript> processScripts(String scriptText, String scriptFile) throws Exception
+    protected List<RuleScript> processScripts(String scriptText, String scriptFile) throws Exception
     {
         List<RuleScript> ruleScripts = new LinkedList<RuleScript>();
-
+        
         if (scriptText != null) {
             // split rules into separate lines
             String[] lines = scriptText.split("\n");
@@ -167,7 +169,23 @@ public class Transformer implements ClassFileTransformer {
         return ruleScripts;
     }
 
-    private void indexScriptByTarget(RuleScript ruleScript)
+    protected void indexScriptByName(RuleScript ruleScript) throws Exception
+    {
+        String name = ruleScript.getName();
+
+        synchronized (nameToScriptMap) {
+            RuleScript old = nameToScriptMap.get(name);
+            if (old != null) {
+                throw new Exception("duplicated rule name " + name +
+                        " at ruleScript " + old.getFile() + " line " + old.getLine() +
+                        " and ruleScript "  + ruleScript.getFile() + " line " + ruleScript.getLine());
+            }
+
+            nameToScriptMap.put(name, ruleScript);
+        }
+    }
+
+    protected void indexScriptByTarget(RuleScript ruleScript)
     {
         String targetClass = ruleScript.getTargetClass();
 
@@ -184,7 +202,7 @@ public class Transformer implements ClassFileTransformer {
         ruleScripts.add(ruleScript);
     }
 
-    private void dumpScript(RuleScript ruleScript)
+    protected void dumpScript(RuleScript ruleScript)
     {
         String file = ruleScript.getFile();
         int line = ruleScript.getLine();
@@ -204,13 +222,14 @@ public class Transformer implements ClassFileTransformer {
 
     private void addScript(RuleScript ruleScript) throws Exception
     {
+        indexScriptByName(ruleScript);
         indexScriptByTarget(ruleScript);
 
         if (isVerbose()) {
             dumpScript(ruleScript);
         }
     }
-    
+
     /**
      * The implementation of this method may transform the supplied class file and
      * return a new replacement class file.
@@ -284,7 +303,7 @@ public class Transformer implements ClassFileTransformer {
         }
 
         // TODO-- reconsider this as it is a bit dodgy as far as security is concerned
-
+        
         if (loader == null) {
             loader = ClassLoader.getSystemClassLoader();
         }
@@ -496,7 +515,7 @@ public class Transformer implements ClassFileTransformer {
      * @param className
      * @return true if a class is located in the byteman package otherwise return false
      */
-    private boolean isBytemanClass(String className)
+    protected boolean isBytemanClass(String className)
     {
         return className.startsWith(BYTEMAN_PACKAGE_PREFIX) && !className.startsWith(BYTEMAN_TEST_PACKAGE_PREFIX);
     }
@@ -551,7 +570,7 @@ public class Transformer implements ClassFileTransformer {
      * @param className
      * @return true if a class is a potential candidate for insertion of event notifications otherwise return false
      */
-    private boolean isTransformable(String className)
+    protected boolean isTransformable(String className)
     {
         /*
          * ok, we are now going to allow any code to be transformed so long as it is not in the java.lang package
@@ -566,14 +585,26 @@ public class Transformer implements ClassFileTransformer {
     /**
      * the instrumentation interface to the JVM
      */
-    private final Instrumentation inst;
+    protected final Instrumentation inst;
 
     /**
-     * a mapping from class names which appear in rule targets to a script object holding the
+     * true if the instrumentor allows redefinition
+     */
+    protected boolean isRedefine;
+
+    /**
+     * a mapping from target class names which appear in rules to a script object holding the
      * rule details
      */
 
-    private final HashMap<String, List<RuleScript>> targetToScriptMap;
+    protected final HashMap<String, List<RuleScript>> targetToScriptMap;
+
+    /**
+     * a mapping from rule names which appear in rules to a script object holding the
+     * rule details
+     */
+
+    protected final HashMap<String, RuleScript> nameToScriptMap;
 
     /**
      *  switch to control verbose output during rule processing

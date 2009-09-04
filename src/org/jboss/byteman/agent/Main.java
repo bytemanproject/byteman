@@ -39,6 +39,8 @@ public class Main {
     public static void premain(String args, Instrumentation inst)
             throws Exception
     {
+        boolean allowRedefine = false;
+
         if (args != null) {
             // args are supplied eparated by ',' characters
             String[] argsArray = args.split(",");
@@ -48,10 +50,13 @@ public class Main {
                     bootJarPaths.add(arg.substring(BOOT_PREFIX.length(), arg.length()));
                 } else if (arg.startsWith(SCRIPT_PREFIX)) {
                     scriptPaths.add(arg.substring(SCRIPT_PREFIX.length(), arg.length()));
+                } else if (arg.startsWith(REDEFINE_PREFIX)) {
+                    String value = arg.substring(REDEFINE_PREFIX.length(), arg.length());
+                    allowRedefine = Boolean.parseBoolean(value);
                 } else {
                     System.err.println("org.jboss.byteman.agent.Main:\n" +
                             "  illegal agent argument : " + arg + "\n" +
-                            "  valid arguments are boot:<path-to-jar> or script:<path-to-scriptr>");
+                            "  valid arguments are boot:<path-to-jar>, script:<path-to-script> or redefine:<true-or-false>");
                 }
             }
         }
@@ -62,7 +67,7 @@ public class Main {
         for (String bootJarPath : bootJarPaths) {
             try {
                 JarFile jarfile = new JarFile(new File(bootJarPath));
-                // inst.appendToBootstrapClassLoaderSearch(jarfile);
+                inst.appendToBootstrapClassLoaderSearch(jarfile);
             } catch (IOException ioe) {
                 System.err.println("org.jboss.byteman.agent.Main: unable to open boot jar file : " + bootJarPath);
                 throw ioe;
@@ -90,7 +95,18 @@ public class Main {
 
         // install an instance of Transformer to instrument the bytecode
 
-        inst.addTransformer(new Transformer(inst, scriptPaths, scripts));
+        boolean isRedefine = inst.isRedefineClassesSupported();
+
+        if (allowRedefine && isRedefine) {
+            System.out.println("Adding retransformer");
+            Retransformer retransformer = new Retransformer(inst, scriptPaths, scripts);
+            inst.addTransformer(retransformer, true);
+            retransformer.installBootScripts();
+        } else {
+            System.out.println("Adding transformer");
+            inst.addTransformer(new Transformer(inst, scriptPaths, scripts, isRedefine), isRedefine);
+        }
+
     }
 
     /**
@@ -103,6 +119,12 @@ public class Main {
      */
 
     private static final String SCRIPT_PREFIX = "script:";
+
+    /**
+     * prefix used to specify transformer type argument for agent
+     */
+
+    private static final String REDEFINE_PREFIX = "redefine:";
 
     /**
      * list of paths to extra bootstrap jars supplied on command line

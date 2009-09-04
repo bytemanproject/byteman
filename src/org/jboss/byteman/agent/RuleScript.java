@@ -96,12 +96,21 @@ public class RuleScript
     }
 
     /**
-     * getter for list of transformed applied for this script. must be called synchronized on the script.
-     * @return te list of transforms
+     * getter for list of transforms applied for this script. must be called synchronized on the script.
+     * @return the list of transforms
      */
     public List<Transform> getTransformed()
     {
         return transformed;
+    }
+
+    /**
+     * return a count of the number of transforms applied for this script. must be called synchronized on the script.
+     * @return the size of the list of transforms
+     */
+    public int getTransformedCount()
+    {
+        return (transformed != null ? transformed.size() : 0);
     }
 
     /**
@@ -154,6 +163,24 @@ public class RuleScript
         transformed.add(transform);
     }
 
+
+    public synchronized boolean hasTransform(Class<?> clazz)
+    {
+        ClassLoader loader = clazz.getClassLoader();
+
+        if (loader == null) {
+            loader = ClassLoader.getSystemClassLoader();
+        }
+
+        int count = getTransformedCount();
+        for (int i =  0; i < count; i++) {
+            Transform transform = transformed.get(i);
+            if (transform.getLoader() == loader) {
+                return true;
+            }
+        }
+        return false;
+    }
     /**
      * record the fact that a rule has been compiled wiht or without success
      * @param triggerClass the name of the trigger class to which the rule is attached
@@ -163,7 +190,7 @@ public class RuleScript
      */
     public synchronized void recordCompile(String triggerClass, ClassLoader loader, boolean successful, String detail)
     {
-        int count = transformed.size();
+        int count = getTransformedCount();
         for (int i =  0; i < count; i++) {
             Transform transform = transformed.get(i);
             if (transform.getLoader() == loader) {

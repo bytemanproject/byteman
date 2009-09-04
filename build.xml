@@ -27,7 +27,9 @@
     <property name="ext.asm.jars" value="asm-all-3.0.jar"/>
 
     <property name="src.dir"           value="src"/>
+    <property name="src.dir.jdk6"           value="srcjdk6"/>
     <property name="dd.dir"            value="dd"/>
+    <property name="dd.dir.jdk6"            value="ddjdk6"/>
     <property name="dd.grammar.dir"    value="${dd.dir}/grammar"/>
     <property name="ext.lib.dir" value="ext"/>
     <property name="build.dir"         value="build"/>
@@ -111,7 +113,7 @@
      <target name="jar" depends="compile">
        <!--
          <unjar src="${ext.lib.dir}/junit.jar" dest="${build.classes.dir}"/>
-	 -->
+         -->
          <unjar src="${ext.lib.dir}/javacuprt.jar" dest="${build.classes.dir}"/>
          <unjar src="${ext.lib.dir}/asm-all-3.0.jar" dest="${build.classes.dir}"/>
          <jar jarfile="${build.lib.dir}/byteman.jar" manifest="${dd.dir}/META-INF/MANIFEST.MF">
@@ -124,7 +126,7 @@
             <fileset dir="${build.dir}" includes="lib/byteman.jar"/>
             <fileset dir="." includes="README"/>
             <fileset dir="." includes="docs/ProgrammersGuide.pdf"/>
-            <fileset dir="." includes="bin/bytemancheck.sh"/>
+            <fileset dir="." includes="bin/bytemancheck.sh" "bin/submit.sh"/>
             <fileset dir="." includes="ext/asm-all-3.0.jar"/>
             <fileset dir="." includes="ext/third_party_licenses.txt"/>
         </zip>
@@ -156,6 +158,7 @@
                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
            </classpath>
            <fileset dir="${src.dir}" includes="**/*.java"/>
+           <fileset dir="${src.dir.jdk6}" includes="**/*.java"/>
        </javadoc>
    </target>
 
