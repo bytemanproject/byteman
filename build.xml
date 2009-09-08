@@ -126,7 +126,7 @@
             <fileset dir="${build.dir}" includes="lib/byteman.jar"/>
             <fileset dir="." includes="README"/>
             <fileset dir="." includes="docs/ProgrammersGuide.pdf"/>
-            <fileset dir="." includes="bin/bytemancheck.sh" "bin/submit.sh"/>
+            <fileset dir="." includes="bin/bytemancheck.sh bin/submit.sh"/>
             <fileset dir="." includes="ext/asm-all-3.0.jar"/>
             <fileset dir="." includes="ext/third_party_licenses.txt"/>
         </zip>
