@@ -120,9 +120,7 @@ public abstract class Location
          * @return the required adapter
          */
         public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            // a line check adapter with line -1 will do the job
-
-            return new LineCheckAdapter(cv, rule, targetClass, targetMethod, -1);
+            return new EntryCheckAdapter(cv, rule, targetClass, targetMethod);
         }
 
         /**
@@ -131,9 +129,7 @@ public abstract class Location
          * @return the required adapter
          */
         public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            // a line adapter with line -1 will do the job
-
-            return new LineTriggerAdapter(cv, rule, targetClass, targetMethod, -1);
+            return new EntryTriggerAdapter(cv, rule, targetClass, targetMethod);
         }
 
         public String toString() {
