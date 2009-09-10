@@ -50,13 +50,17 @@ public class Main {
                     bootJarPaths.add(arg.substring(BOOT_PREFIX.length(), arg.length()));
                 } else if (arg.startsWith(SCRIPT_PREFIX)) {
                     scriptPaths.add(arg.substring(SCRIPT_PREFIX.length(), arg.length()));
+                } else if (arg.startsWith(LISTENER_PREFIX)) {
+                    String value = arg.substring(LISTENER_PREFIX.length(), arg.length());
+                    allowRedefine = Boolean.parseBoolean(value);
                 } else if (arg.startsWith(REDEFINE_PREFIX)) {
+                    // this is only for backwards compatibility -- it is the same as listener
                     String value = arg.substring(REDEFINE_PREFIX.length(), arg.length());
                     allowRedefine = Boolean.parseBoolean(value);
                 } else {
                     System.err.println("org.jboss.byteman.agent.Main:\n" +
                             "  illegal agent argument : " + arg + "\n" +
-                            "  valid arguments are boot:<path-to-jar>, script:<path-to-script> or redefine:<true-or-false>");
+                            "  valid arguments are boot:<path-to-jar>, script:<path-to-script> or listener:<true-or-false>");
                 }
             }
         }
@@ -97,16 +101,23 @@ public class Main {
 
         boolean isRedefine = inst.isRedefineClassesSupported();
 
+        Transformer transformer;
         if (allowRedefine && isRedefine) {
-            System.out.println("Adding retransformer");
-            Retransformer retransformer = new Retransformer(inst, scriptPaths, scripts);
-            inst.addTransformer(retransformer, true);
-            retransformer.installBootScripts();
+            if (Transformer.isVerbose()) {
+                System.out.println("Adding retransformer");
+            }
+            transformer = new Retransformer(inst, scriptPaths, scripts);
         } else {
-            System.out.println("Adding transformer");
-            inst.addTransformer(new Transformer(inst, scriptPaths, scripts, isRedefine), isRedefine);
+            if (Transformer.isVerbose()) {
+                System.out.println("Adding transformer");
+            }
+            transformer = new Transformer(inst, scriptPaths, scripts, isRedefine);
         }
-
+        
+        inst.addTransformer(transformer, true);
+        if (isRedefine) {
+            transformer.installBootScripts();
+        }
     }
 
     /**
@@ -122,6 +133,12 @@ public class Main {
 
     /**
      * prefix used to specify transformer type argument for agent
+     */
+
+    private static final String LISTENER_PREFIX = "listener:";
+
+    /**
+     * for backwards compatibiltiy
      */
 
     private static final String REDEFINE_PREFIX = "redefine:";
