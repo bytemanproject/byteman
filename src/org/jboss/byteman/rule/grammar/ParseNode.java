@@ -328,6 +328,11 @@ public abstract class ParseNode
         public String getText() {
             int tag = getTag();
             switch(tag) {
+                case ARRAY:
+                {
+                    // these occur when we have a type array declaration
+                    return ((ParseNode)child0).getText() + "[]";
+                }
                 case BOOLEAN_LITERAL:
                     return child0.toString();
                 case FLOAT_LITERAL:
@@ -396,7 +401,8 @@ public abstract class ParseNode
             int tag = getTag();
             switch(tag) {
                 case ARRAY:
-                    return ((ParseNode)child0).getText() + "[]";
+                    // these occur when we have an array expression
+                    return ((ParseNode)child0).getText() + "[" + ((ParseNode)child1).getText() + "]";
                 case ASSIGN:
                     return "=";
                 case BIND:

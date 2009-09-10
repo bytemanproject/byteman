@@ -102,6 +102,13 @@ public class TypeGroup {
      */
     public Type create(String name)
     {
+        // check for array types and create the base types first
+        if (name.endsWith("[]")) {
+            String baseName = name.substring(0, name.length() - 2);
+            Type baseType = create(baseName);
+            return createArray(baseType);
+        }
+        
         return create(name, null);
     }
 
@@ -224,7 +231,10 @@ public class TypeGroup {
                 try {
                     // aaarrghh array base type names use dots not slashes bt still need  L...; bracketing
                     String internalName ="[" + baseType.getInternalName(true, false);
-                    arrayClazz = loader.loadClass(internalName);
+                    // need to do this via Class.forname after chnage from 1.5 to 1.6 snookered
+                    // creation of array classes via loader.findClass.
+                    // arrayClazz = loader.loadClass(internalName);
+                    arrayClazz = Class.forName(internalName, false, loader);
                 } catch (ClassNotFoundException e) {
                     // ignore
                 }

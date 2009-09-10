@@ -274,6 +274,8 @@ non terminal ParseNode array_idx;
 
 /* names and paths */
 
+non terminal ParseNode typename;
+non terminal Integer arraydims;
 non terminal ParseNode name;
 non terminal ParseNode simple_name;
 non terminal ParseNode path;
@@ -385,9 +387,27 @@ binding	::=	bind_sym:s ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, sleft, s
 // a bound symbol can optionally be specified to be of a particular type
 
 bind_sym
-	::=	simple_name:var COLON name:type {: RESULT = node(ParseNode.COLON, varleft, varright, var, type); :}
+	::=	simple_name:var COLON typename:type {: RESULT = node(ParseNode.COLON, varleft, varright, var, type); :}
 	|	simple_name:var {: RESULT = var; :}
 	;
+
+// a typename is a simple type or an array type
+typename
+    ::= name:t arraydims:d
+        {:
+            ParseNode tmp = t;
+            for (int i = 0; i < d; i++) {
+                tmp =  node(ParseNode.ARRAY, tleft, tright, tmp);
+            }
+            RESULT = tmp;
+        :}
+    | name:t {: RESULT = t; :}
+    ;
+
+arraydims
+    ::= LSQUARE RSQUARE arraydims:a {: RESULT = a + 1; :}
+    |   LSQUARE RSQUARE  {: RESULT =  1; :}
+    ;
 
 // a condition is simply an expression. it not type-constrained by the grammar.
 // it's easier to do the type checking after parsing  n.b. we always have at
@@ -502,6 +522,8 @@ unary_oper_expr
 array_expr
 	::=	simple_expr:se array_idx_list:ail
 		{: RESULT = node(ParseNode.ARRAY, seleft, seright, se, ail); :}
+	|	simple_name:name array_idx_list:ail
+		{: RESULT = node(ParseNode.ARRAY, nameleft, nameright, name, ail); :}
 	|	field_expr:fe array_idx_list:ail
 		{: RESULT = node(ParseNode.ARRAY, feleft, feright, fe, ail); :}
 	|	meth_expr:me array_idx_list:ail
@@ -509,9 +531,9 @@ array_expr
 	;
 
 array_idx_list
-	::=	array_idx:ai {: RESULT = ai; :}
-	|	array_idx:ai array_idx_list:ail
+	::=	array_idx:ai array_idx_list:ail
 		{: RESULT =  node(ParseNode.SEMI, aileft, airight, ai, ail); :}
+	|   array_idx:ai {: RESULT = ai; :}
 	;
 
 array_idx

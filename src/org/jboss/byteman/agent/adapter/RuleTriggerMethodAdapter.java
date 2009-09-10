@@ -664,7 +664,7 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
             invokeVirtual(Type.getType(PrintStream.class), Method.getMethod("void println(String)"));
         }
         // rethrow an execute exception
-        throwException(EXECUTE_EXCEPTION_TYPE, rule.getName() + " execution exception ");
+        throwException();
 
         super.visitMaxs(maxStack, maxLocals);
 

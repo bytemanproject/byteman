@@ -370,7 +370,7 @@ public class Rule
                 PrintWriter writer = new PrintWriter(stringWriter);
                 writer.println("Rule.ensureTypeCheckedCompiled : error type checking rule " + getName());
                 te.printStackTrace(writer);
-                detail = writer.toString();
+                detail = stringWriter.toString();
                 System.out.println(detail);
             } catch (CompileException ce) {
                 checkFailed = true;
@@ -378,6 +378,8 @@ public class Rule
                 PrintWriter writer = new PrintWriter(stringWriter);
                 writer.println("Rule.ensureTypeCheckedCompiled : error compiling rule " + getName());
                 ce.printStackTrace(writer);
+                detail = stringWriter.toString();
+                System.out.println(detail);
             }
 
             ruleScript.recordCompile(triggerClass, loader, !checkFailed, detail);
@@ -572,7 +574,7 @@ public class Rule
                 throw e;
             } catch (Throwable throwable) {
                 System.out.println(getName() + " : " + throwable);
-                throw new ExecuteException(getName() + " unknnown error : " + throwable, throwable);
+                throw new ExecuteException(getName() + "  : caught " + throwable, throwable);
             }
         }
     }

@@ -870,6 +870,7 @@ public class Type {
                     arrayDepth++;
                     idx++;
                 }
+                break;
                 default:
                     return "void";
             }

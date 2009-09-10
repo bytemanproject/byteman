@@ -288,6 +288,30 @@
             -->
             <test name="org.jboss.byteman.tests.javaops.TestMethod"/>
         </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestArray.txt"/>
+            <!-- uncomment for verbose byteman output
+            <jvmarg value="-Dorg.jboss.byteman.verbose"/>
+            -->
+            <!-- uncomment to dump generated code
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+            -->
+            <!-- uncomment to enable debug
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <!--  set this to debug the rule parser
+            <jvmarg value="-Dorg.jboss.byteman.rule.debug"/>
+            -->
+            <test name="org.jboss.byteman.tests.javaops.TestArray"/>
+        </junit>
     </target>
 
     <target name="tests.javaops.compiled">
@@ -361,6 +385,25 @@
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             -->
             <test name="org.jboss.byteman.tests.javaops.TestMethod"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestArray.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <!-- uncomment to dump generated code
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+            -->
+            <!-- uncomment to enable debug
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            <test name="org.jboss.byteman.tests.javaops.TestArray"/>
+            -->
         </junit>
     </target>
 
