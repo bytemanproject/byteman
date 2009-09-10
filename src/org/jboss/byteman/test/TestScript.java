@@ -120,7 +120,7 @@ public class TestScript
         int parseErrorCount = 0;
         int typeErrorCount = 0;
         int compileErrorCount = 0;
-        int baseline = 0;
+        int baseline = 1;
 
         for (String script : ruleScripts) {
             String ruleName = "";
@@ -334,19 +334,17 @@ public class TestScript
             } catch (ParseException e) {
                 errorCount++;
                 parseErrorCount++;
-                System.err.println("TestScript: parse exception for rule " + ruleName + " : " + e);
+                System.err.println("TestScript: failed to parse rule " + ruleName);
                 e.printStackTrace(System.err);
                 System.err.println();
             } catch (TypeException e) {
                 typeErrorCount++;
                 errorCount++;
-                System.err.println("TestScript: type exception for rule " + ruleName + " : " + e);
                 e.printStackTrace(System.err);
                 System.err.println();
             } catch (CompileException e) {
                 compileErrorCount++;
                 errorCount++;
-                System.err.println("TestScript: createHelperAdapter exception for rule " + " : " + ruleName + e);
                 e.printStackTrace(System.err);
                 System.err.println();
             }

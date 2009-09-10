@@ -262,8 +262,8 @@ Float = {Sign}? {PosFloat}
 \\			{ string.append('\\'); }
 
 /* anything else is an error! */
-\n			{ throw new Error("Newline in string <"+ yytext()+">"); }
-.			{ throw new Error("Illegal character in string <"+ yytext()+">"); }
+\n			{ throw new Error("File " + file + " line " + (yyline + startLine) + " : newline in string"); }
+.			{ throw new Error("File " + file + " line " + (yyline + startLine) + " : illegal character in string <"+ yytext()+">"); }
 }
 
 <QUOTEDIDENT> {
@@ -272,7 +272,7 @@ Float = {Sign}? {PosFloat}
 			  return symbol(sym.IDENTIFIER,
 					string.toString()); }
 /* anything else is an error! */
-{LineTerminator}			{ throw new Error("Newline in quoted identifier <"+ yytext()+">"); }
+{LineTerminator}			{ throw new Error("File " + file + " line " + (yyline + startLine) + " : newline in quoted identifier"); }
 }
 
 <COMMENT> {

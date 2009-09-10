@@ -68,27 +68,6 @@ public class Rule
      */
     private ClassLoader loader;
     /**
-     * the name of the target class for this rule supplied in the rule script
-     */
-    private String targetClass;
-    /**
-     * the name of the triggering method on the target class for this rule supplied in the
-     * rule script
-     */
-    private String targetMethod;
-    /**
-     * the location at which the rule trigger point is attached
-     */
-    private Location targetLocation;
-    /**
-     * the line number for the start of the parseable rule text (the BIND clause)
-     */
-    private int line;
-    /**
-     * the name of the file which contains this rule
-     */
-    private String file;
-    /**
      * the parsed event derived from the script for this rule
      */
     private Event event;
@@ -183,21 +162,30 @@ public class Rule
         triggerDescriptor = null;
         triggerAccess = 0;
         returnType = null;
+        ECAGrammarParser parser = null;
         try {
+            String file = getFile();
             ECATokenLexer lexer = new ECATokenLexer(new StringReader(ruleScript.getRuleText()));
             lexer.setStartLine(getLine());
-            lexer.setFile(getFile());
-            ECAGrammarParser parser = new ECAGrammarParser(lexer);
+            lexer.setFile(file);
+            parser = new ECAGrammarParser(lexer);
             parser.setFile(file);
             Symbol parse = (debugParse ? parser.debug_parse() : parser.parse());
             if (parser.getErrorCount() != 0) {
-                throw new ParseException("org.jboss.byteman.rule.Rule : error parsing rule\n" + ruleScript.getRuleText());
+                String message = "rule " + ruleScript.getName();
+                message += parser.getErrors();
+                throw new ParseException(message);
             }
             ruleTree = (ParseNode) parse.value;
         } catch (ParseException pe) {
             throw pe;
-        } catch (Exception e) {
-            throw new ParseException("org.jboss.byteman.rule.Rule : error parsing rule\n" + ruleScript.getRuleText(), e);
+        } catch (Throwable th) {
+            String message = "rule " + ruleScript.getName();
+            if (parser != null && parser.getErrorCount() != 0) {
+                message += parser.getErrors();
+            }
+            message += "\n" + th.getMessage();
+            throw new ParseException(message);
         }
 
         ParseNode eventTree = (ParseNode)ruleTree.getChild(0);

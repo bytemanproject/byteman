@@ -80,6 +80,7 @@ parser code {:
 
   private String file = "";
   private int errorCount = 0;
+  private StringBuffer errorBuffer = new StringBuffer();
 
   public void setFile(String file)
   {
@@ -89,7 +90,12 @@ parser code {:
   public void error(String message, int line, int col)
   {
         errorCount++;
-        System.out.println(file + " line " + line + " : " + message);
+        errorBuffer.append('\n');
+        errorBuffer.append(file);
+        errorBuffer.append(" line ");
+        errorBuffer.append(line);
+        errorBuffer.append(" : ");
+        errorBuffer.append(message);
   }
 
   /** Report a non fatal error (or warning).  This method takes a message
@@ -116,7 +122,10 @@ parser code {:
   public void error(String message)
   {
         errorCount++;
-        System.out.println(file + " : " + message);
+        errorBuffer.append('\n');
+        errorBuffer.append(file);
+        errorBuffer.append(" : ");
+        errorBuffer.append(message);
   }
 
   public String getFile()
@@ -127,6 +136,11 @@ parser code {:
   public int getErrorCount()
   {
     return errorCount;
+  }
+
+  public String getErrors()
+  {
+    return errorBuffer.toString();
   }
 
   /*. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .*/
@@ -460,13 +474,18 @@ throw_return_expr
 
 expr_list
 	::=	expr:e {: RESULT = e; :}
-	|	expr:e COMMA expr_list:el
+	|   expr:e COMMA expr_list:el
+		{: RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
+	|	expr:e SEMI expr_list:el
 		{: RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
 	|	expr_list_error_invalid_expr:el {: RESULT = el; :}
 	;
 
 expr_list_error_invalid_expr
     ::= error COMMA:c expr_list:el
+		{: error("invalid expression", cleft, cright);
+		   RESULT = node(ParseNode.COMMA, cleft, cright, null, el); :}
+    |   error SEMI :c expr_list:el
 		{: error("invalid expression", cleft, cright);
 		   RESULT = node(ParseNode.COMMA, cleft, cright, null, el); :}
     ;
