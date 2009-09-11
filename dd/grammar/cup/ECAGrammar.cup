@@ -303,8 +303,6 @@ non terminal ParseNode eca_error_in_action;
 non terminal ParseNode ca_error;
 non terminal ParseNode ca_error_in_condition;
 non terminal ParseNode ca_error_in_action;
-non terminal ParseNode action_expr_list_error_invalid_action;
-non terminal ParseNode expr_list_error_invalid_expr;
 
 /* precedences from weakest to tightest binding */
 
@@ -447,14 +445,7 @@ action_expr_list
 	|	expr:e COMMA action_expr_list:ael
 		{: RESULT = node(ParseNode.SEMI, eleft, eright, e, ael); :}
 	|	action_expr:ae {: RESULT = ae; :}
-    |   action_expr_list_error_invalid_action:ael {: RESULT = ael; :}
 	;
-
-action_expr_list_error_invalid_action
-    ::= error action_expr_list:ael
-        {: error("invalid action", aelleft, aelright);
-           RESULT = ael; :}
-    ;
 
 action_expr
 	::=	expr:e {: RESULT = e; :}
@@ -478,17 +469,7 @@ expr_list
 		{: RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
 	|	expr:e SEMI expr_list:el
 		{: RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
-	|	expr_list_error_invalid_expr:el {: RESULT = el; :}
 	;
-
-expr_list_error_invalid_expr
-    ::= error COMMA:c expr_list:el
-		{: error("invalid expression", cleft, cright);
-		   RESULT = node(ParseNode.COMMA, cleft, cright, null, el); :}
-    |   error SEMI :c expr_list:el
-		{: error("invalid expression", cleft, cright);
-		   RESULT = node(ParseNode.COMMA, cleft, cright, null, el); :}
-    ;
 
 expr
     ::= ternary_oper_expr:e {: RESULT = e; :}
@@ -499,6 +480,7 @@ expr
 	|	meth_expr:e {: RESULT = e; :}
 	|	simple_expr:e {: RESULT = e; :}
 	|	simple_name:n {: RESULT = n; :}
+	|   error expr:e2 {: error("missing separator", e2left, e2right); RESULT = e2; :}
 	;
 
 ternary_oper_expr
