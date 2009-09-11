@@ -480,7 +480,7 @@ expr
 	|	meth_expr:e {: RESULT = e; :}
 	|	simple_expr:e {: RESULT = e; :}
 	|	simple_name:n {: RESULT = n; :}
-	|   error expr:e2 {: error("missing separator", e2left, e2right); RESULT = e2; :}
+	|   error:err expr:e {: error("invalid expression", errleft, errright); RESULT = e; :}
 	;
 
 ternary_oper_expr

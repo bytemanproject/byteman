@@ -137,11 +137,13 @@ public class TestScript
                 int idx = 0;
                 int lineNumber = 0;
 
-                while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
+                while (idx < len && (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#"))) {
                     idx++;
-                    if (idx == len) {
-                        throw new ParseException("Rule contains no text :\n" + script);
-                    }
+                }
+                if (idx == len) {
+                    // empty rule -- just skip
+                    baseline += len;
+                    continue;
                 }
                 if (lines[idx].startsWith("RULE ")) {
                     ruleName = lines[idx].substring(5).trim();
