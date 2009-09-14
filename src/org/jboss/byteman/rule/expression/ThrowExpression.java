@@ -279,7 +279,6 @@ public class ThrowExpression extends Expression
             int paramCount = (paramType.getNBytes() > 4 ? 2 : 1);
 
             // track extra storage used after type conversion
-            currentStackHeights.addStackCount(paramCount);
             extraParams += (paramCount);
             arguments.get(i).compile(mv, currentStackHeights, maxStackHeights);
             compileTypeConversion(argType, paramType, mv, currentStackHeights, maxStackHeights);
