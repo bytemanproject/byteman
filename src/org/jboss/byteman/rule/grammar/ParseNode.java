@@ -342,7 +342,7 @@ public abstract class ParseNode
                 case RETURN:
                     return "RETURN";
                 case STRING_LITERAL:
-                    return child0.toString();
+                    return "\"" + ((String)child0) + "\"";
                 case DOLLAR:
                     return ((String)child0);
                 default:

@@ -43,8 +43,9 @@ public class StringLiteral extends Expression
     public StringLiteral(Rule rule, ParseNode token)
     {
         super(rule, Type.STRING, token);
+        String string = ((String)token.getChild(0));
 
-        this.text = token.getText().intern();
+        this.text = string.intern();
     }
 
     /**

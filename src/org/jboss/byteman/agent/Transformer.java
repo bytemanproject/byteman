@@ -243,9 +243,6 @@ public class Transformer implements ClassFileTransformer {
         List<Class<?>> omitted = new LinkedList<Class<?>>();
 
         Class<?>[] loaded = inst.getAllLoadedClasses();
-        if (isVerbose()) {
-            System.out.println("loaded classes size = " + loaded.length);
-        }
 
         for (Class clazz : loaded) {
             String name = clazz.getName();
@@ -264,12 +261,11 @@ public class Transformer implements ClassFileTransformer {
                 List<RuleScript> scripts = targetToScriptMap.get(name);
                 if (scripts != null) {
                     for (RuleScript script : scripts) {
-                        System.out.println("Checking script " + script.getName());
                         if (!script.hasTransform(clazz)) {
                             omitted.add(clazz);
                             found = true;
                             if (isVerbose()) {
-                                System.out.println("Found script for bootstrap class " + clazz.getName());
+                                System.out.println("Retransforming loaded bootstrap class " + clazz.getName());
                             }
                             break;
                         }
@@ -279,12 +275,11 @@ public class Transformer implements ClassFileTransformer {
                     scripts = targetToScriptMap.get(name.substring(lastDot + 1));
                     if (scripts != null) {
                         for (RuleScript script : scripts) {
-                            System.out.println("Checking script " + script.getName());
                             if (!script.hasTransform(clazz)) {
                                 omitted.add(clazz);
                                 found = true;
                                 if (isVerbose()) {
-                                    System.out.println("Found script for bootstrap class " + clazz.getName());
+                                    System.out.println("Retransforming loaded bootstrap class " + clazz.getName());
                                 }
                                 break;
                             }
@@ -511,9 +506,6 @@ public class Transformer implements ClassFileTransformer {
         }
         if (isVerbose()) {
             System.out.println("org.jboss.byteman.agent.Transformer : Inserting trigger event");
-            System.out.println("  class " + handlerClass);
-            System.out.println("  method " + handlerMethod);
-            System.out.println("  " + handlerLocation);
         }
         final Rule rule;
         String ruleName = ruleScript.getName();
