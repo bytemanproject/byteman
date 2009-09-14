@@ -38,10 +38,10 @@ public class Retransformer extends Transformer {
      *
      * @param inst the instrumentation object used to interface to the JVM
      */
-    public Retransformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts)
+    public Retransformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts, boolean isRedefine)
             throws Exception
     {
-        super(inst, scriptPaths, scriptTexts, true);
+        super(inst, scriptPaths, scriptTexts, isRedefine);
         addTransformListener();
     }
 

@@ -25,6 +25,9 @@ package org.jboss.byteman.agent;
 
 
 import java.lang.instrument.Instrumentation;
+import java.lang.instrument.ClassFileTransformer;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.jar.JarFile;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,25 +101,50 @@ public class Main {
         }
 
         // install an instance of Transformer to instrument the bytecode
+        // n.b. this is done with boxing gloves on using explicit class loading and method invocation
+        // via reflection for a GOOD reason. This class (Main) gets laoded by the System class loader.
+        // If we refer to Transformer by name then it also gets loaded va the System class loader.
+        // But if we want to transform a bootstrap class we need Transformer (et al) to be visible
+        // from the bootstrap class loader. That will not happen until after this method has called
+        // inst.appendToBootstrapClassLoaderSearch (see above) to add the byteman jar to the path.
+        // Directly referring to Transformer will giveus two versions of Transformer et al. Not only
+        // does that cause us class mismathc problem it also means that a new done here will not install
+        // the new instance in the static field fo the oneloaded in the bootstrap loader. If instead we
+        // use boxing gloves then the byteman code wil get loaded in the bootstrap loader and its constructor
+        // will be called.
+        //
+        // Of course, if the user does not supply boot:byteman.jar as a -javaagent option then class references
+        // resolve against the system loader and injection into bootstrap classes fails. But that's still ok
+        // because the byteman classes are still only foudn in one place.
 
         boolean isRedefine = inst.isRedefineClassesSupported();
 
-        Transformer transformer;
+        ClassFileTransformer transformer;
+        ClassLoader loader = ClassLoader.getSystemClassLoader();
+        Class transformerClazz;
+
         if (allowRedefine && isRedefine) {
             if (Transformer.isVerbose()) {
                 System.out.println("Adding retransformer");
             }
-            transformer = new Retransformer(inst, scriptPaths, scripts);
+            transformerClazz = loader.loadClass("org.jboss.byteman.agent.Transformer");
+            //transformer = new Retransformer(inst, scriptPaths, scripts, true);
         } else {
             if (Transformer.isVerbose()) {
                 System.out.println("Adding transformer");
             }
-            transformer = new Transformer(inst, scriptPaths, scripts, isRedefine);
+            transformerClazz = loader.loadClass("org.jboss.byteman.agent.Retransformer");
+            //transformer = new Transformer(inst, scriptPaths, scripts, isRedefine);
         }
+
+        Constructor constructor = transformerClazz.getConstructor(Instrumentation.class, List.class, List.class, boolean.class);
+        transformer = (ClassFileTransformer)constructor.newInstance(new Object[] { inst, scriptPaths, scripts, isRedefine});
         
         inst.addTransformer(transformer, true);
         if (isRedefine) {
-            transformer.installBootScripts();
+            Method method = transformerClazz.getMethod("installBootScripts");
+            method.invoke(transformer);
+            //transformer.installBootScripts();
         }
     }
 
