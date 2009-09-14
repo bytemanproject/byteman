@@ -220,7 +220,7 @@ public class TestScript
                     try {
                         targetHelperClass = loader.loadClass(targetHelperName);
                     } catch (ClassNotFoundException e) {
-                        System.out.println("org.jboss.byteman.agent.Transformer : unknown helper class " + targetHelperName + " for rule " + ruleName);
+                        System.out.println("TestScript : unknown helper class " + targetHelperName + " for rule " + ruleName);
                     }
                 }
                 RuleScript ruleScript = new RuleScript(ruleName, targetClassName, targetMethodName, targetHelperName, targetLocation, text, baseline + lineNumber, file);

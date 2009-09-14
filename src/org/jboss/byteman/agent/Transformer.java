@@ -520,15 +520,15 @@ public class Transformer implements ClassFileTransformer {
         try {
             rule = Rule.create(ruleScript, helperClass, loader);
         } catch (ParseException pe) {
-            System.out.println("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + " : " + pe);
+            System.out.println("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + "\n" + pe);
             ruleScript.recordTransform(loader, className, null, pe);
             return targetClassBytes;
         } catch (TypeException te) {
-            System.out.println("org.jboss.byteman.agent.Transformer : error checking rule " + ruleName + " : " + te);
+            System.out.println("org.jboss.byteman.agent.Transformer : error checking rule " + ruleName + "\n" + te);
             ruleScript.recordTransform(loader, className, null, te);
             return targetClassBytes;
         } catch (Throwable th) {
-            System.out.println("org.jboss.byteman.agent.Transformer : error processing rule " + ruleName + " : " + th);
+            System.out.println("org.jboss.byteman.agent.Transformer : error processing rule " + ruleName + "\n" + th);
             ruleScript.recordTransform(loader, className, null, th);
             return targetClassBytes;
         }
@@ -550,7 +550,7 @@ public class Transformer implements ClassFileTransformer {
         try {
             cr.accept(checkAdapter, ClassReader.EXPAND_FRAMES);
         } catch (Throwable th) {
-            System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + rule.getName() + " to class " + className + " " + th);
+            System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + rule.getName() + " to class " + className + "\n" + th);
             th.printStackTrace(System.out);
             ruleScript.recordTransform(loader, className, rule, th);
             return targetClassBytes;
@@ -566,7 +566,7 @@ public class Transformer implements ClassFileTransformer {
             try {
                 cr.accept(adapter, ClassReader.EXPAND_FRAMES);
             } catch (Throwable th) {
-                System.out.println("org.jboss.byteman.agent.Transformer : error injecting trigger for rule " + rule.getName() + " into class " + className + " " +  th);
+                System.out.println("org.jboss.byteman.agent.Transformer : error injecting trigger for rule " + rule.getName() + " into class " + className + "\n" +  th);
                 th.printStackTrace(System.out);
                 ruleScript.recordTransform(loader, className, rule, th);
                 return targetClassBytes;
