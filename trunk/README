@@ -1,0 +1,334 @@
+Byteman 1.0.2 README
+------------------
+
+Byteman supports injection of side effects into Java programs for the
+purpose of tsting application behaviour.
+
+If you have downloaded a binary release then the byteman jar can be found
+in
+
+  lib/byteman.jar
+
+If you have downloaded a source release then type 'ant jar' to build
+the byteman jar. It will be found in
+
+  build/lib/byteman.jar
+
+A summary of how to use Byteman is provided below. For full details of
+the operation of Byteman consult the user guide in
+
+  docs/ProgrammersGuide.pdf
+
+Set up and Execution
+--------------------
+In order to use this library you need to supply JVM with the
+byteman jar as a java agent. This jar implements
+
+  an agent class which monitors bytecode load operations and selects
+  classes which match the compiled rule set as candidates for
+  transformation
+
+  the transformer class which inserts trigger calls to invoke rules
+
+  a rule compiler which translates rules into classes which handle the
+  trigger method calls
+
+The agent is passed to the JVM using the -javaagent option of the java
+command by setting JAVA_OPTS as follows:
+
+export JAVA_OPTS="-javaagent:<...>/byteman.jar=script:<...>myscript.txt"
+
+where the ellipsis <...> is replaced with a suitable path to the jar
+and script files.
+
+The =script:<scriptFile> option to the -javaagent argument tells the
+agent to search <scriptFile> for rules. Multiple scripts may be
+supplied by repeating the =script:<scriptFile> argument separated by a
+','. The agent will parse each script file to identify rules to be
+triggered from methods occurring in application classes.
+
+By default the rule engine executes rule bindings, conditions and
+actions by interpreting the rule parse tree. However, byteman also
+supports compiled execution. If system property
+
+  org.jboss.byteman.compileToBytecode
+
+is set to a non-null value then the rule engine will compile the rule
+bindings, condition and action into Java bytecode which will be
+executed when the rule is triggered (see the user guide for full
+details). For rules which are triggered repeatedly during an
+application run this should significantly mitigate the overheads
+imposed by the rule system.
+
+Calls to builtin method debug normally do not generate output. However
+debug prinotut to System.out can be enabled by setting system property
+on the java command line.
+
+  org.jboss.byteman.debug
+
+If more verbose output is desired then property
+
+  org.jboss.byteman.verbose
+
+can be set. This enables debug output from rule scripts and also
+traces various of the actions performed by the byteman agent.
+
+The agent can be configured to dump transformed byte code by setting
+several Java system properties as shown in the example above:
+
+  org.jboss.byteman.dump.generated.classes
+
+this can be set to any value to enable dumping of generated
+code. Files will be written in a directory tree correspnding to the
+package hierarchy for the associated class.
+
+  org.jboss.byteman.dump.generated.classes.directory
+
+this can be set to a directory below which files will be written. if
+unset files are written to the current working directory of the JVM
+thread executing the transformer code.
+
+Rule Definition
+---------------
+
+The byteman package employs Event Condition Action rules. The
+event component is limited to matching an invocation of a specific
+method when execution reaches a particular location in the method
+body. The event automatically binds the arguments of the trigger
+method at the point where the rule is triggered. It may also compute
+bindings for an optional set of local variables by evaluating a Java
+expression. The condition is an expression with boolean type. The
+action is a sequence of expressions of arbitrary type which are only
+evaluated if the condition is true. Expressions are composed from
+builtin operations, references to static or bound values, method
+invocations and combinations of sub-expressions using the usual set of
+operators. Note that assignment, new operations and throw operations
+are not allowed in expressions.
+
+Rule definitions specify a target class, a target method and a target
+location in the method source code. Locations can be identified by
+various means, includign entry to the method, a specific line number,
+or points where field reads/writes or subordinate method invocations
+occur. The agent code identifies classes and methods at load time
+which match the target class and name and inserts a trigger call at
+the specified location which invokes the rule. When execution reaches
+a trigger point the associated rule is executed and can performs any
+delay, synchronization, trace or other operation appropriate to the
+test. Normally, control returns to the trigger method and execution
+continues by executing the target line.
+
+It is possible for a rule to alter the flow of control. A rule action
+may employ the return builtin to force a return from the triggering
+method at the point where the trigger call was made. If the triggering
+method is is not void then the return expression must include an
+argument whose type is compatible with the method return type. A rule
+action can also invoke a builtin to 'kill' the current thread, by
+throwing a runtime exception. This may not actually kill the thread if
+the trigger method code or one of its callers catches a generic
+exception but it can still be used effectively in many cases. Another
+builtin can be used to signal other waiting threads and cause them to
+'abort'. Finally, a third builtin allows the JVM to be halted. It is
+possible to call arbitrary Java code inside rule actions so the
+opportunites for messing around with control flow extend beyond these
+builtin options.
+
+The target class may be specified with or without a full package
+qualification. If no package is specified then all classes whose
+unqualified name equals the target will be candidiates for rule
+trigger insertion. Note, however, that for safety triggers will not be
+inserted into java.lang or org.jboss.byteman classes.
+
+Class names mentioned in rules are resolved against a candidate
+trigger class and related classes at runtime as they are being loaded
+into a specific class loader. If the type checker cannot resolve the
+declared types of variables, methods and fields mentioned in the rule
+against candidate classes it prints type check errors and disables
+execution of the rule for the class in question. Note that if a class
+is loaded more than once by different class loaders then each version
+of the class may be a candidate for trigger insertion from the same
+rule. Use of unqualified class names (i.e. without package) also
+potentially allows a rule to be applied in more than one case.
+
+Method names may be specified using just the method name or by
+supplying the name and a bracketed list of parameters, optionally
+followed by a return type. If just the name is specified then any
+method with the correct name will be considered as a candidate for
+trigger insertion. Again, this allows the rule to be applied to
+multiple cases (this is only really useful if the line number is -1).
+If a signature is provided then the trigger call will only be inserted
+into a method whose arguments match the signature. The types employed
+in a signature may also omit the package name if desired.
+
+Note that a rule is deliberately defined via a script rather than
+using annotations, especially not annotations on the trigger class.
+Rules refer to the target class and, possibly, classes that it
+references by name only. Defining the rule via annotations on the
+target class implementation would require loading the class before
+having the chance to modify its byte code. Also, the point of using
+rules is so that tests may be rigged up without having to redefine and
+rebuild the test code base.
+
+Rule Events
+-----------
+An event specification comprises a location specification and a set of
+bindings. All location specification declare a target class and target
+method using the syntax
+
+CLASS <classname>
+METHOD <methodname>
+
+Class names may omit the package qualifier in which case the rule will
+apply to any class whose unqualified name matches. The method name may
+also specify or omit a brackted list of comma-separated argument
+types.
+
+Location specifications also include a further qualifier identifying
+where in the target method the trigger point for the rule should be
+located. The simplest location specification is AT ENTRY which locates
+the triggerpoint at the first executable instruction in a the atrget
+method's bytecode (or the first instruction following the superclass
+constructor if the target method is a constructor). The full list of
+qualifiers is
+
+AT ENTRY
+AT EXIT
+AT LINE <number>
+AT READ <fieldname> [<count>]
+AT WRITE <fieldname> [<count>]
+AT INVOKE <methodname>[[signature>] [<count>]
+AT SYNCHRONIZE [<count>]
+AT THROW [<typename>] [<count>]
+
+An event specification also includes a list of bindings for variables
+which can be referenced during evaluaton of the rule condition and
+execution of the rule actions. Bindings are established in the context
+of the target method. By default, the target method arguments are
+pre-bound using the special syntax $0 (for this, when the target
+method is not static) and $1...$N for arguments 1..N of the
+method. The value of local variables in scope at the trigger point may
+be referenced by prefixing the varable name with a dollar sign e.g. if
+the trigger point occurs inside a for loop with loop variable i then
+the loop ndex may be accessed using name $i. Further bindings,
+employing standard alphanumeric names for the bound variables, can be
+established by assigning a name to an expression which may refer to
+previously bound variables or static data. For example,
+
+  'BIND coordinator:Coordinator = $0,
+   recovered:boolean = coordinator.recovered,
+   identifier:String = coordinator.getInstanceIdentifier()'
+
+binds coordinator to the Coordinator instance bound to this in the
+triggering method, binds recovered to the value of its boolean field,
+recovered, and binds identifier to the String returned by invoking
+method getInstanceIdentifier().
+
+The LHS of a binding must be a variable name or a name:type pair. If
+the type is omitted it will be inferred from the RHS where
+possible. The RHS of a binding is a Java expression which can include
+various builtin expressions plus most Java expressions such as static
+or instance field accesses and invocations, array dereferences,
+operator expressions, method invocations, etc (but *not* assignment
+expressions). The RHS of a binding may refer to method argument
+variables, method local variables in scope at the trigger point and
+variables bound in earlier bindings. The RHS may not refer to its own
+LHS variable or later bound variables. Rebinding of variables is not
+permitted.
+
+Rule Conditions
+---------------
+A condition is merely an expression with a boolean result. Expressions
+may be complex using the usual operators plus a few syntactically
+sugared variants. Conditions may also include method invocations and
+references to bound variables. So, for example:
+
+  'engine.isRecovered() AND getCountdown(instanceIdentifier)'
+
+will succeed if engine.isRecovered() returns true and a countdown
+identified by instanceIdentifer is active
+
+  'NOT recovered && countDown(instanceIdentifier)'
+
+will succeed if recovered is false and decrementing the countdown
+identified by instanceIdentifier renders it inactive.
+
+Rule Actions
+------------
+An action is a series of expressions which are either method
+invocations or builtin invocations. Actions may include references to
+bound variables. So, for example,
+
+  'debug("killing prepare attempt"), killThread()'
+
+will print a debug message and abort the target method with a runtime
+exception, killing the therad in normal circumstances
+
+  'debug("terminator X it"), killJVM()'
+
+will print a debug message and cause an immediate halt of the JVM.
+Debug printout must be enabled by setting System property
+
+  org.jboss.byteman.debug
+
+on the java command line.
+
+Expressions
+-----------
+Expressions occuring in rules can employ most of the available Java
+syntax with the notable exception that assignment is only valid at the
+top level in an event binding. Certain restrictions currently apply
+e.g. the recipient of a method invocation must be either a bound
+variable (*not* a dollar variable) or a field reference or series of
+field references via a bound vaiable or a static field reference
+(e.g. foo.meth(), foo.bar.meth, com.arjuna.foo.meth()). These should
+get fixed at some point.
+
+A variety of builtin methods are available. These may be written as
+function calls although internally they are treated as invocations of
+instance methods on an object identified by an implicit bound variable
+$$ of type Rule.Helper. Each time a rule is triggered a Helper
+instance is used to store the table of bindings for any trigger method
+arguments $0, $1 etc, local variables mentioned in the rule and event
+variables explicitly bound by the rule. Every public instance method
+on class Helper is automatically available as a callable function in a
+rule binding, condition or action. For example, Helper defines a
+boolean method debug(String) which prints text to System.out. So, a
+call to debug("call to debug") will result in a call to the helper's
+instance method (n.b. debug always returns true, allowing it to be
+composed in AND conditions as well invoked as an action).
+
+Helper provides other builtins which perform thread synchronization
+operations, manage rule system state which coordinates actions across
+independent rule firings and tarces execution of rules. Methods to
+support rendezvous will be added soon. It is possible to specify per
+rule that an alternative Helper class should be employed, enabling
+test-specific builtin operations to be used where appropriate. This is achieved by adding a line in the format
+
+  HELPER <classname>
+
+before the location specifier (AT XXX) in the rule definition. Any
+public methdos of the supplied class will be available for use as
+builtin methods in the rule body. n.b. it is usually best to supply a
+class which extends the built-in class Helper as this will
+conservatively extend (or possibly override) the default set of
+builtpin operations.
+
+Type Checking Scripts
+---------------------
+Rule scripts may be checked offline by running the bash shell script
+bytemancheck.sh located in the bin directory. See the script header
+for details.
+
+Documentation
+-------------
+For full details of rule syntax the operation of the byteman
+package see the manual in the docs directory.
+
+Copyright
+---------
+See the copyright file in the docs directory for details of the open
+source license under which this code is released. Note that this code
+employs the ObjectWeb ASM package to do bytecode manipulation and the
+JFlex and JavaCUP tokeniser and parser genereators to generate and
+provide runtime support for the rule parser which are also released
+under open source licenses.
+
