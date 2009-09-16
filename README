@@ -1,8 +1,8 @@
-Byteman 1.0.2 README
+Byteman 1.1.1 README
 ------------------
 
 Byteman supports injection of side effects into Java programs for the
-purpose of tsting application behaviour.
+purpose of testing application behaviour.
 
 If you have downloaded a binary release then the byteman jar can be found
 in
@@ -36,16 +36,37 @@ byteman jar as a java agent. This jar implements
 The agent is passed to the JVM using the -javaagent option of the java
 command by setting JAVA_OPTS as follows:
 
-export JAVA_OPTS="-javaagent:<...>/byteman.jar=script:<...>myscript.txt"
+export JAVA_OPTS="-javaagent:<...>/byteman.jar=script:<...>/myscript.txt"
 
 where the ellipsis <...> is replaced with a suitable path to the jar
 and script files.
 
-The =script:<scriptFile> option to the -javaagent argument tells the
+The script:<scriptFile> option following the '=' separator tells the
 agent to search <scriptFile> for rules. Multiple scripts may be
-supplied by repeating the =script:<scriptFile> argument separated by a
-','. The agent will parse each script file to identify rules to be
-triggered from methods occurring in application classes.
+provided by repeating the =script:<scriptFile> argument separated by a
+',' character. The agent parses each of the provided script files to
+identify rules to be triggered from methods occurring in application
+classes.
+
+Two other options may also be employed, once again using a comma '.'
+character to separate them from preceding options.
+
+The option boot:<jarFile> can be provided to install <jarFile> into
+the bootstrap classloader's search path. This can sometimes be useful
+to ensure that classes employed in rule conditions or actions are
+available when compiling rule code. In particular, when injecting
+side effects into JVM runtime classes which are loaded by the bootstrap
+classloader it is necessary to install the byteman jar using this option.
+
+The option listener:true causes the agent to start a listener thread. This
+thread is used to query the loaded rule base, detecting whether rules have
+been successfully parsed, injected, type-checked or compiled It also allows
+to rule scripts to be uploaded during program execution, either to redefine
+previously loaded rules or add new rules. If a dynamic rule (re)definition
+affects an existing loaded class then the class's methods will be redefined
+so as to inject a trigger call for the newly installed rule. Note that when
+usinf this option (and only in this case) it makes sense to omit the
+script option.
 
 By default the rule engine executes rule bindings, conditions and
 actions by interpreting the rule parse tree. However, byteman also
