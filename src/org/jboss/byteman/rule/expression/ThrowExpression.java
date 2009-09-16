@@ -290,7 +290,23 @@ public class ThrowExpression extends Expression
         // modify the stack height to account for the removed exception and params
         currentStackHeights.addStackCount(-(extraParams+1));
 
-        // we should only have the thrown exception on the stack
+        if (currentStackHeights.stackCount != currentStack + expected) {
+            throw new CompileException("ThrowExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
+        }
+        // now create a ThrowException to wrap the user exception
+        // create the thrown exception instance -- adds 1 to stack [UE] --> [UE, THE]
+        exceptionClassName = "org/jboss/byteman/rule/exception/ThrowException";
+        mv.visitTypeInsn(Opcodes.NEW, exceptionClassName);
+        currentStackHeights.addStackCount(1);
+        // copy the ThrowException so we can init it [UE, THE] --> [THE, UE, THE]
+        mv.visitInsn(Opcodes.DUP_X1);
+        currentStackHeights.addStackCount(1);
+        // reverse the order of the top two words  [THE, UE, THE] --> [THE, THE, UE]
+        mv.visitInsn(Opcodes.SWAP);
+        // construct the exception [THE, THE, UE] --> [UE]
+        mv.visitMethodInsn(Opcodes.INVOKESPECIAL, exceptionClassName, "<init>", "(Ljava/lang/Throwable;)V");
+        // we should now have just the ThrowException on the stack
+        currentStackHeights.addStackCount(-2);
         if (currentStackHeights.stackCount != currentStack + expected) {
             throw new CompileException("ThrowExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
         }
