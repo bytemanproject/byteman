@@ -74,7 +74,7 @@
 <!--
     <property name="svnbase" value="https://svn.jboss.org/repos/labs/labs/jbosstm/workspace/adinn/byteman/tags"/>
     <property name="tag" value="trunk"/>
-    <property name="filename" value="1.1.0.SNAPSHOT"/>
+    <property name="filename" value="1.1.1.SNAPSHOT"/>
     <property name="mvn.repositoryId" value="snapshots.jboss.org"/>
     <property name="mvn.url" value="dav:https://snapshots.jboss.org/maven2"/>
 -->
@@ -86,10 +86,10 @@
     <property name="svnbase"
     value="https://svn.jboss.org/repos/labs/labs/jbosstm/workspace/adinn/byteman/tags"/>
     <!-- The tag as it appears under svnbase -->
-    <property name="tag" value="Byteman_1_1_0"/>
+    <property name="tag" value="Byteman_1_1_1"/>
     <!-- The file name base for the user downloadable files. Derive it
     from the tag -->
-    <property name="filename" value="1.1.0"/>
+    <property name="filename" value="1.1.1"/>
     <!-- the location the Byteman web site content svn is checked out to -->
     <property name="cmsdir" value="/home/adinn/jboss/workspace/adinn/byteman/"/>
     <!-- the location the maven repository svn is checked out to.
