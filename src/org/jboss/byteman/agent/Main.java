@@ -127,13 +127,13 @@ public class Main {
             if (Transformer.isVerbose()) {
                 System.out.println("Adding retransformer");
             }
-            transformerClazz = loader.loadClass("org.jboss.byteman.agent.Transformer");
+            transformerClazz = loader.loadClass("org.jboss.byteman.agent.Retransformer");
             //transformer = new Retransformer(inst, scriptPaths, scripts, true);
         } else {
             if (Transformer.isVerbose()) {
                 System.out.println("Adding transformer");
             }
-            transformerClazz = loader.loadClass("org.jboss.byteman.agent.Retransformer");
+            transformerClazz = loader.loadClass("org.jboss.byteman.agent.Transformer");
             //transformer = new Transformer(inst, scriptPaths, scripts, isRedefine);
         }
 
