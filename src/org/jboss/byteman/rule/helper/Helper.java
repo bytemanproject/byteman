@@ -433,8 +433,11 @@ public class Helper
                         // do nothing
                     }
                 }
-                // remove the association between the waiter and the wait map
-                removeWaiter(waiter);
+            }
+
+            // remove the association between the waiter and the wait map
+            synchronized (waitMap) {
+                removeWaiter(identifier);
             }
             return true;
         }
@@ -515,8 +518,10 @@ public class Helper
                         // do nothing
                     }
                 }
-                // remove the association between the waiter and the wait map
-                removeWaiter(waiter);
+            }
+            // remove the association between the waiter and the wait map
+            synchronized (waitMap) {
+                removeWaiter(identifier);
             }
             return true;
         }

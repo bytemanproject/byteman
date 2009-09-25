@@ -63,7 +63,7 @@ public class Waiter
         // if a signalKill was used then we have to throw an exception otherwise we just return
         
         if (killed) {
-            throw new ExecuteException("Waiter.waitFor waiting thread killed for " + waiterFor);
+            throw new ExecuteException("Waiter.waitFor : killed thread waiting for " + waiterFor);
         }
     }
 
@@ -126,4 +126,12 @@ public class Waiter
      */
 
     private boolean waiting;
+
+    /**
+     * getter for signalled flag
+     * @return signalled
+     */
+    public boolean isSignalled() {
+        return signalled;
+    }
 }
