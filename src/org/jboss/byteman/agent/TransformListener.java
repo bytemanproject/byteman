@@ -31,6 +31,9 @@ public class TransformListener extends Thread
             try {
                 theServerSocket = new ServerSocket();
                 theServerSocket.bind(new InetSocketAddress("localhost", DEFAULT_PORT));
+                if (Transformer.isVerbose()) {
+                    System.out.println("TransformListener() : accepting requests on port " + DEFAULT_PORT);
+                }
             } catch (IOException e) {
                 System.out.println("TransformListener() : unexpected exception opening server socket " + e);
                 e.printStackTrace();
@@ -49,6 +52,9 @@ public class TransformListener extends Thread
         if (theTransformListener != null) {
             try {
                 theServerSocket.close();
+                if (Transformer.isVerbose()) {
+                    System.out.println("TransformListener() :  closing port " + DEFAULT_PORT);
+                }
             } catch (IOException e) {
                 // ignore -- the thread should exit anyway
             }
@@ -82,6 +88,9 @@ public class TransformListener extends Thread
                 return;
             }
 
+            if (Transformer.isVerbose()) {
+                System.out.println("TransformListener() : handling connection on port " + socket.getLocalPort());
+            }
             handleConnection(socket);
         }
     }
