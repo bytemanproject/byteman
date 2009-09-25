@@ -56,6 +56,7 @@
     <target name="compile" depends="init">
         <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}">
             <classpath>
+                <pathelement location="${byteman.home}/${byteman.jar}"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
         </javac>
@@ -321,6 +322,7 @@
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
             <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestArithmetic.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <test name="org.jboss.byteman.tests.javaops.TestArithmetic"/>
         </junit>
         <junit fork="true" showoutput="true">
