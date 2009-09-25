@@ -168,7 +168,7 @@ public class ReturnExpression extends Expression
 
     public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
     {
-        Type returnType = (returnValue == null ? Type.VOID : returnValue.getType());
+        Type valueType = (returnValue == null ? Type.VOID : returnValue.getType());
         int currentStack = currentStackHeights.stackCount;
         int expected = 1;
         int extraSlots = 0;
@@ -193,13 +193,17 @@ public class ReturnExpression extends Expression
         // stack any required return value or null -- adds 1 to stack but may use 2 slots
         if (returnValue != null) {
             returnValue.compile(mv, currentStackHeights, maxStackHeights);
-            if (returnType.isPrimitive()) {
+            // we may need to convert from the value type to the return type
+            if (valueType != type) {
+                compileTypeConversion(valueType, type,  mv, currentStackHeights, maxStackHeights);
+            }
+            if (type.isPrimitive()) {
                 // if the intermediate value used 2 words then at the peak we needed an extra stack slot
-                if (returnType.getNBytes() > 4) {
+                if (valueType.getNBytes() > 4) {
                     extraSlots++;
                 }
                 // we need an object not a primitive
-                compileBox(Type.boxType(returnType), mv, currentStackHeights, maxStackHeights);
+                compileBox(Type.boxType(type), mv, currentStackHeights, maxStackHeights);
             }
         } else {
             // just push null
