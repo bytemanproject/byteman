@@ -45,25 +45,32 @@ public class Waiter
 
     public void waitFor(long millisecs)
     {
+        long start = System.currentTimeMillis();
+        long waitFor = millisecs == 0 ? 0 : millisecs;
         synchronized(this) {
             waiting = true;
-            
-            if (!signalled) {
+            while (!signalled && waitFor >= 0){
                 try {
-                    this.wait(millisecs);
+                    this.wait(waitFor);
                 } catch (InterruptedException e) {
                     // ignore
                 }
-            } else {
-                // notify in case a signalling thread was waiting
-                this.notifyAll();
+                
+                if (!signalled)
+                {
+                   waitFor = millisecs == 0 ? 0 : millisecs + start - System.currentTimeMillis();
+                   System.out.println("NOT_SIGNALLED new timeout " + waitFor);
+                }
+            }
+            if (signalled) {
+               // notify in case a signalling thread was waiting
+               this.notifyAll();
             }
         }
         
         // if a signalKill was used then we have to throw an exception otherwise we just return
-        
         if (killed) {
-            throw new ExecuteException("Waiter.waitFor waiting thread killed for " + waiterFor);
+            throw new ExecuteException("Waiter.waitFor : killed thread waiting for " + waiterFor);
         }
     }
 
@@ -126,4 +133,12 @@ public class Waiter
      */
 
     private boolean waiting;
+
+    /**
+     * getter for signalled flag
+     * @return signalled
+     */
+    public boolean isSignalled() {
+        return signalled;
+    }
 }
