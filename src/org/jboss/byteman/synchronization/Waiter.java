@@ -59,7 +59,6 @@ public class Waiter
                 if (!signalled)
                 {
                    waitFor = millisecs == 0 ? 0 : millisecs + start - System.currentTimeMillis();
-                   System.out.println("NOT_SIGNALLED new timeout " + waitFor);
                 }
             }
             if (signalled) {
