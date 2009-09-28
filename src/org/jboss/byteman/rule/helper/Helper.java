@@ -164,6 +164,16 @@ public class Helper
     }
 
     /**
+     * call trace("out, message").
+     * @param message
+     * @return true
+     */
+    public boolean trace(String message)
+    {
+        return trace("out", message);
+    }
+
+    /**
      * write the supplied message to the trace stream identified by identifier, creating a new stream
      * if none exists
      * @param identifier an identifier used subsequently to identify the trace output stream
@@ -189,6 +199,16 @@ public class Helper
         return true;
     }
 
+    /**
+     * call traceln("out", message).
+     * @param message
+     * @return true
+     */
+    public boolean traceln(String message)
+    {
+        return traceln("out", message);
+    }
+    
     /**
      * write the supplied message to the trace stream identified by identifier, creating a new stream
      * if none exists, and append a new line
