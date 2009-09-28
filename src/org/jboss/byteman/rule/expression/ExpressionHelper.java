@@ -54,6 +54,7 @@ public class ExpressionHelper
         //                   (UNARYOP unary_oper expr) |
         //                   (BINOP infix_oper expr exp) |
         //                   (TERNOP simple_expr expr expr)
+        //                   (ARRAY typename)
         //                   (ARRAY expr expr_list)
         //                   (FIELD expr simple_name)
         //                   (METH simple_name expr expr_list)

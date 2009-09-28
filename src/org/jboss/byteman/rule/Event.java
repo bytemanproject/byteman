@@ -221,7 +221,7 @@ public class Event extends RuleElement {
     {
         int tag = varTree.getTag();
 
-        // we expect either (COLON IDENTIFIER IDENTIFIER) or IDENTIFIER
+        // we expect either (COLON IDENTIFIER TYPE) or IDENTIFIER
         switch (tag) {
             case IDENTIFIER:
             {
@@ -233,11 +233,10 @@ public class Event extends RuleElement {
                 ParseNode child1 = (ParseNode)varTree.getChild(1);
                 if (child0.getTag() != IDENTIFIER) {
                     throw new TypeException("Event.createBindings : unexpected token type in variable declaration" + child0.getTag() + " for token " + child0.getText() + child0.getPos());
-                } else if (child1.getTag() != IDENTIFIER) {
+                } else if (child1.getTag() != IDENTIFIER && child1.getTag() != ARRAY) {
                     throw new TypeException("Event.createBindings : unexpected token Type in variable type declaration" + child1.getTag()  + " for token " + child1.getText() + child1.getPos());
                 }
-                String typeName = child1.getText();
-                Type type = getTypeGroup().create(typeName);
+                Type type = getBindingType(child1);
                 if (type == null) {
                     throw new TypeException("Event.createBindings : incompatible type in declaration of variable " + child1.getText() + child1.getPos());
                 }
@@ -246,6 +245,38 @@ public class Event extends RuleElement {
             default:
             {
                 throw new TypeException("Event.createBindings : unexpected token type in binding variable declaration" + tag + " for token " + varTree.getText() + varTree.getPos());
+            }
+        }
+    }
+
+    /**
+     * create and return a type for a binding or return null if the type cannot be created
+     * @param typeTree
+     * @return the binding type or null
+     */
+    private Type getBindingType(ParseNode typeTree)
+    {
+        int tag = typeTree.getTag();
+        // we expect either TYPE = (IDENTIFIER) or (ARRAY TYPE)
+        switch (tag) {
+            case IDENTIFIER:
+            {
+                String typeName = typeTree.getText();
+                return getTypeGroup().create(typeName);
+            }
+            case ARRAY:
+            {
+                ParseNode child0 = (ParseNode)typeTree.getChild(0);
+                Type baseType = getBindingType(child0);
+                if (baseType != null) {
+                    return getTypeGroup().createArray(baseType);
+                } else {
+                    return null;
+                }
+            }
+            default:
+            {
+                return null;
             }
         }
     }

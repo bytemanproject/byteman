@@ -143,7 +143,7 @@ public class ArrayExpression extends Expression
             // make sure the index is an integer
             compileTypeConversion(idxExpr.getType(), Type.I, mv, currentStackHeights, maxStackHeights);
 
-            if (valueType.isObject()) {
+            if (valueType.isObject() || valueType.isArray()) {
                 // compile load object - pops 2 and adds 1
                 mv.visitInsn(Opcodes.AALOAD);
                 expected = 1;
@@ -176,18 +176,16 @@ public class ArrayExpression extends Expression
                 mv.visitInsn(Opcodes.DALOAD);
                 expected = 2;
             }
-            currentStackHeights.addStackCount(-2);
+            currentStackHeights.addStackCount(expected - 2);
             if (iterator.hasNext()) {
                 assert valueType.isArray();
                 valueType =valueType.getBaseType();
             }
         }
-        // the last value for expected is how many bytes extra should be on the stack
-        currentStackHeights.addStackCount(expected);
 
         // check stack height
         if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("ArrayExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+            throw new CompileException("ArrayExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
         }
 
         // we needed room for an aray and an index or for a one or two word result

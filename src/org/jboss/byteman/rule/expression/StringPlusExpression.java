@@ -33,6 +33,7 @@ import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Label;
 
 /**
  * A binary string concatenation operator expression
@@ -60,7 +61,7 @@ public class StringPlusExpression extends BinaryOperExpression
         Object value1 = getOperand(0).interpret(helper);
         Object value2 = getOperand(1).interpret(helper);
         String string1 = value1.toString();
-        String string2 = value2.toString();
+        String string2 = (value2 == null ? "null" : value2.toString());
         return string1 + string2;
     }
 
@@ -72,7 +73,9 @@ public class StringPlusExpression extends BinaryOperExpression
         int currentStack = currentStackHeights.stackCount;
         int expected = 2;
 
-        // compile and type convert each operand
+        // compile and type convert each operand n.b. the type conversion will ensure that
+        // null operands are replaced with "null"
+        
         oper0.compile(mv, currentStackHeights, maxStackHeights);
         compileTypeConversion(oper0.getType(), type, mv, currentStackHeights, maxStackHeights);
         oper1.compile(mv, currentStackHeights, maxStackHeights);
@@ -82,6 +85,7 @@ public class StringPlusExpression extends BinaryOperExpression
         // by employing a StringBuffer but for now we will just evaluate the left and right operand and
         // then call concat to join them
         // add two strings leaving one string
+
         expected = 1;
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "concat", "(Ljava/lang/String;)Ljava/lang/String;");
 

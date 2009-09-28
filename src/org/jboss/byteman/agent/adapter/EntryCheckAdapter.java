@@ -29,12 +29,11 @@ import org.jboss.byteman.rule.Rule;
 /**
  * asm Adapter class used to check that the target method for a rule exists in a class
  */
-public class LineCheckAdapter extends RuleCheckAdapter
+public class EntryCheckAdapter extends RuleCheckAdapter
 {
-    public LineCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod, int targetLine)
+    public EntryCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod)
     {
         super(cv, rule, targetClass, targetMethod);
-        this.targetLine = targetLine;
     }
 
     public MethodVisitor visitMethod(
@@ -46,7 +45,7 @@ public class LineCheckAdapter extends RuleCheckAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
-            return new LineCheckMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
+            return new EntryCheckMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
         }
 
         return mv;
@@ -56,7 +55,7 @@ public class LineCheckAdapter extends RuleCheckAdapter
      * a method visitor used to add a rule event trigger call to a method
      */
 
-    private class LineCheckMethodAdapter extends RuleCheckMethodAdapter
+    private class EntryCheckMethodAdapter extends RuleCheckMethodAdapter
     {
         private int access;
         private String name;
@@ -64,7 +63,7 @@ public class LineCheckAdapter extends RuleCheckAdapter
         private String signature;
         private String[] exceptions;
 
-        LineCheckMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        EntryCheckMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
             super(mv, rule, access, name, descriptor);
             this.access = access;
@@ -72,16 +71,11 @@ public class LineCheckAdapter extends RuleCheckAdapter
             this.descriptor = descriptor;
             this.signature = signature;
             this.exceptions = exceptions;
-            visitedLine = false;
         }
 
-        public void visitLineNumber(final int line, final Label start) {
-            if (!visitedLine && (targetLine <= line)) {
-                // the relevant line occurs in the called method
-                visitedLine = true;
-                setTriggerPoint();
-            }
-            super.visitLineNumber(line, start);
+        public void visitCode() {
+            // any instruction counts as a trigger point
+            setTriggerPoint();
         }
 
         public void visitEnd()
@@ -92,7 +86,4 @@ public class LineCheckAdapter extends RuleCheckAdapter
             super.visitEnd();
         }
     }
-
-    private int targetLine;
-    private boolean visitedLine;
 }

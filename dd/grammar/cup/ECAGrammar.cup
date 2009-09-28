@@ -80,43 +80,65 @@ parser code {:
 
   private String file = "";
   private int errorCount = 0;
+  private StringBuffer errorBuffer = new StringBuffer();
 
   public void setFile(String file)
   {
     this.file = file;
   }
 
-  public void error(String message, int line, int col)
-  {
-        errorCount++;
-        System.out.println(file + " line " + line + " : " + message);
-  }
-
-  /** Report a non fatal error (or warning).  This method takes a message
-   *  string and an additional object (to be used by specializations
-   *  implemented in subclasses).  Here in the base class a very simple
-   *  implementation is provided which simply prints the message to
-   *  System.err.
+  /**
+   * Called by the parser when it detects a syntax error. This is overridden so
+   * that it does nothing. Instead the parser relies upon explicit calls to routine
+   * error(String) or error(String, int line, int column) which store details of
+   * synatx errors into an error buffer for retrieval after the parse call completes.
    *
    * @param message an error message.
    * @param info    an extra object reserved for use by specialized subclasses.
    */
+
   public void report_error(String message, Object info)
   {
-      /*
-      if (info instanceof Symbol) {
-          Symbol sym = (Symbol)info;
-          System.err.println(message + " at line " + sym.left +  " character " + sym.right);
-      } else {
-          System.err.println(message);
+  }
+
+  /**
+   * Called by the parser when it is unable to recover from one or more syntax errors
+   *
+   * @param cur_token the token current at the point in the token stream where the recovery
+   * process fails
+   */
+
+  public void unrecovered_syntax_error(Symbol cur_token)
+  {
+      int line = cur_token.left;
+      errorCount++;
+      errorBuffer.append('\n');
+      errorBuffer.append(file);
+      if (line >= 0) {
+          errorBuffer.append(" line ");
+          errorBuffer.append(cur_token.left);
       }
-      */
+      errorBuffer.append(" : unable to recover from previous errors");
   }
 
   public void error(String message)
   {
         errorCount++;
-        System.out.println(file + " : " + message);
+        errorBuffer.append('\n');
+        errorBuffer.append(file);
+        errorBuffer.append(" : ");
+        errorBuffer.append(message);
+  }
+
+  public void error(String message, int line, int col)
+  {
+        errorCount++;
+        errorBuffer.append('\n');
+        errorBuffer.append(file);
+        errorBuffer.append(" line ");
+        errorBuffer.append(line);
+        errorBuffer.append(" : ");
+        errorBuffer.append(message);
   }
 
   public String getFile()
@@ -127,6 +149,11 @@ parser code {:
   public int getErrorCount()
   {
     return errorCount;
+  }
+
+  public String getErrors()
+  {
+    return errorBuffer.toString();
   }
 
   /*. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .*/
@@ -274,6 +301,8 @@ non terminal ParseNode array_idx;
 
 /* names and paths */
 
+non terminal ParseNode typename;
+non terminal Integer arraydims;
 non terminal ParseNode name;
 non terminal ParseNode simple_name;
 non terminal ParseNode path;
@@ -287,8 +316,6 @@ non terminal ParseNode eca_error_in_action;
 non terminal ParseNode ca_error;
 non terminal ParseNode ca_error_in_condition;
 non terminal ParseNode ca_error_in_action;
-non terminal ParseNode action_expr_list_error_invalid_action;
-non terminal ParseNode expr_list_error_invalid_expr;
 
 /* precedences from weakest to tightest binding */
 
@@ -385,9 +412,27 @@ binding	::=	bind_sym:s ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, sleft, s
 // a bound symbol can optionally be specified to be of a particular type
 
 bind_sym
-	::=	simple_name:var COLON name:type {: RESULT = node(ParseNode.COLON, varleft, varright, var, type); :}
+	::=	simple_name:var COLON typename:type {: RESULT = node(ParseNode.COLON, varleft, varright, var, type); :}
 	|	simple_name:var {: RESULT = var; :}
 	;
+
+// a typename is a simple type or an array type
+typename
+    ::= name:t arraydims:d
+        {:
+            ParseNode tmp = t;
+            for (int i = 0; i < d; i++) {
+                tmp =  node(ParseNode.ARRAY, tleft, tright, tmp);
+            }
+            RESULT = tmp;
+        :}
+    | name:t {: RESULT = t; :}
+    ;
+
+arraydims
+    ::= LSQUARE RSQUARE arraydims:a {: RESULT = a + 1; :}
+    |   LSQUARE RSQUARE  {: RESULT =  1; :}
+    ;
 
 // a condition is simply an expression. it not type-constrained by the grammar.
 // it's easier to do the type checking after parsing  n.b. we always have at
@@ -413,14 +458,7 @@ action_expr_list
 	|	expr:e COMMA action_expr_list:ael
 		{: RESULT = node(ParseNode.SEMI, eleft, eright, e, ael); :}
 	|	action_expr:ae {: RESULT = ae; :}
-    |   action_expr_list_error_invalid_action:ael {: RESULT = ael; :}
 	;
-
-action_expr_list_error_invalid_action
-    ::= error action_expr_list:ael
-        {: error("invalid action", aelleft, aelright);
-           RESULT = ael; :}
-    ;
 
 action_expr
 	::=	expr:e {: RESULT = e; :}
@@ -440,16 +478,11 @@ throw_return_expr
 
 expr_list
 	::=	expr:e {: RESULT = e; :}
-	|	expr:e COMMA expr_list:el
+	|   expr:e COMMA expr_list:el
 		{: RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
-	|	expr_list_error_invalid_expr:el {: RESULT = el; :}
+	|	expr:e SEMI expr_list:el
+		{: RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
 	;
-
-expr_list_error_invalid_expr
-    ::= error COMMA:c expr_list:el
-		{: error("invalid expression", cleft, cright);
-		   RESULT = node(ParseNode.COMMA, cleft, cright, null, el); :}
-    ;
 
 expr
     ::= ternary_oper_expr:e {: RESULT = e; :}
@@ -460,6 +493,7 @@ expr
 	|	meth_expr:e {: RESULT = e; :}
 	|	simple_expr:e {: RESULT = e; :}
 	|	simple_name:n {: RESULT = n; :}
+	|   error:err expr:e {: error("invalid expression", errleft, errright); RESULT = e; :}
 	;
 
 ternary_oper_expr
@@ -502,6 +536,8 @@ unary_oper_expr
 array_expr
 	::=	simple_expr:se array_idx_list:ail
 		{: RESULT = node(ParseNode.ARRAY, seleft, seright, se, ail); :}
+	|	simple_name:name array_idx_list:ail
+		{: RESULT = node(ParseNode.ARRAY, nameleft, nameright, name, ail); :}
 	|	field_expr:fe array_idx_list:ail
 		{: RESULT = node(ParseNode.ARRAY, feleft, feright, fe, ail); :}
 	|	meth_expr:me array_idx_list:ail
@@ -509,9 +545,9 @@ array_expr
 	;
 
 array_idx_list
-	::=	array_idx:ai {: RESULT = ai; :}
-	|	array_idx:ai array_idx_list:ail
+	::=	array_idx:ai array_idx_list:ail
 		{: RESULT =  node(ParseNode.SEMI, aileft, airight, ai, ail); :}
+	|   array_idx:ai {: RESULT = ai; :}
 	;
 
 array_idx

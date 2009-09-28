@@ -33,6 +33,7 @@ import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Label;
 
 import java.io.StringWriter;
 
@@ -204,8 +205,20 @@ public abstract class RuleElement {
     {
         assert toType == Type.STRING;
         if (fromType.isObject() || fromType.isArray()) {
-            // use the toString method
+            // use the toString method if the object is non null otherwise just replace it with null
+            Label elseLabel = new Label();
+            Label endLabel = new Label();
+            // if (object == null)
+            mv.visitInsn(Opcodes.DUP);
+            mv.visitJumpInsn(Opcodes.IFNONNULL, elseLabel);
+            // then string = "null"
+            mv.visitInsn(Opcodes.POP);
+            mv.visitLdcInsn("null");
+            mv.visitJumpInsn(Opcodes.GOTO, endLabel);
+            // else string = object.toString()
+            mv.visitLabel(elseLabel);
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Object", "toString", "()Ljava/lang/String;");
+            mv.visitLabel(endLabel);
         } else if (fromType == Type.Z) {
             // use the toString method
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Boolean", "toString", "(Z)Ljava/lang/String;");
