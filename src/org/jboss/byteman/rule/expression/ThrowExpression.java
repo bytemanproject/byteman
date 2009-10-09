@@ -101,7 +101,7 @@ public class ThrowExpression extends Expression
 
         type = Type.dereference(typeGroup.create(typeName));
 
-        if (type.isUndefined()) {
+        if (type == null || type.isUndefined()) {
             throw new TypeException("ThrowExpression.typeCheck : unknown exception type " + typeName + getPos());
         }
 
@@ -153,11 +153,11 @@ public class ThrowExpression extends Expression
         }
 
         if (candidates.isEmpty()) {
-            throw new TypeException("ThrowExpression.typeCheck : invalid method for target class " + typeName + getPos());
+            throw new TypeException("ThrowExpression.typeCheck : invalid constructor for target class " + typeName + getPos());
         }
 
         if (candidates.size() > 1) {
-            throw new TypeException("ThrowExpression.typeCheck : ambiguous method signature for target class " + typeName + getPos());
+            throw new TypeException("ThrowExpression.typeCheck : ambiguous constructor signature for target class " + typeName + getPos());
         }
 
         constructor = candidates.get(0);
@@ -340,7 +340,7 @@ public class ThrowExpression extends Expression
     }
 
     public void writeTo(StringWriter stringWriter) {
-        stringWriter.write("throw " + type.getName() + "(");
+        stringWriter.write("throw " + (type != null ? type.getName() : typeName) + "(");
         for (Expression argument : arguments) {
             argument.writeTo(stringWriter);
         }
