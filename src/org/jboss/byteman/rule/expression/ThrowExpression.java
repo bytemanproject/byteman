@@ -340,9 +340,18 @@ public class ThrowExpression extends Expression
     }
 
     public void writeTo(StringWriter stringWriter) {
-        stringWriter.write("throw " + (type != null ? type.getName() : typeName) + "(");
+        stringWriter.write("throw ");
+        if (type == null || Type.UNDEFINED == type) {
+            stringWriter.write(typeName);
+        } else {
+            stringWriter.write(type.getName());
+        }
+        String separator = "";
+        stringWriter.write("(");
         for (Expression argument : arguments) {
+            stringWriter.write(separator);
             argument.writeTo(stringWriter);
+            separator = ",";
         }
         stringWriter.write(")");
 
