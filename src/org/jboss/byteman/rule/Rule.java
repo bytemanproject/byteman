@@ -35,7 +35,6 @@ import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.helper.Helper;
 import org.jboss.byteman.rule.helper.InterpretedHelper;
 import org.jboss.byteman.agent.Location;
-import org.jboss.byteman.agent.LocationType;
 import org.jboss.byteman.agent.Transformer;
 import org.jboss.byteman.agent.RuleScript;
 import org.objectweb.asm.Opcodes;
@@ -339,11 +338,11 @@ public class Rule
      * disable triggering of rules inside the current thread
      * @return true if triggering was previously enabled and false if it was already disabled
      */
-    public boolean disableTriggers()
+    public static boolean disableTriggers()
     {
-        Rule enabledRule = recursionGuard.get();
-        if (enabledRule == null) {
-            recursionGuard.set(this);
+        Boolean enabled = isEnabled.get();
+        if (enabled == null) {
+            isEnabled.set(Boolean.FALSE);
             return true;
         }
 
@@ -354,30 +353,24 @@ public class Rule
      * enable triggering of rules inside the current thread
      * @return true if triggering was previously enabled and false if it was already disabled
      */
-    public boolean enableTriggers()
+    public static boolean enableTriggers()
     {
-        Rule enabledRule = recursionGuard.get();
-        if (enabledRule == null) {
-            return true;
-        } else {
-            recursionGuard.remove();
-            return true;
+        Boolean enabled = isEnabled.get();
+        if (enabled != null) {
+            isEnabled.remove();
+            return false;
         }
+
+        return true;
     }
 
     /**
      * check if triggering of rules is enabled inside the current thread
      * @return true if triggering is enabled and false if it is disabled
      */
-    public boolean isTriggeringEnabled()
+    public static boolean isTriggeringEnabled()
     {
-        Rule enabledRule = recursionGuard.get();
-        if (enabledRule == null) {
-            return true;
-        } else {
-            recursionGuard.remove();
-            return true;
-        }
+        return isEnabled.get() == null;
     }
 
     /**
@@ -394,9 +387,10 @@ public class Rule
         if (!checked) {
             // ensure we don't trigger any code inside the type check or compile
             // n.b. we may still allow recursive triggering while executing
-            boolean triggerEnabled = disableTriggers();
+            boolean triggerEnabled = false;
             String detail = "";
             try {
+                triggerEnabled = disableTriggers();
                 typeCheck();
                 compile();
                 checked = true;
@@ -546,9 +540,9 @@ public class Rule
      */
     public static void execute(String key, Object recipient, Object[] args) throws ExecuteException
     {
-        Rule inTypeCheckCompile = recursionGuard.get();
-        if (inTypeCheckCompile != null) {
-            // we don't trigger code while we are doing ruel type checking or compilation
+        boolean enabled = isTriggeringEnabled();
+        if (!enabled) {
+            // we don't trigger code while we are doing rule housekeeping
             return;
         }
         Rule rule = ruleKeyMap.get(key);
@@ -746,7 +740,15 @@ public class Rule
     {
         return helperClass;
     }
-    
+
+    /**
+     * flag true if debugging of rule parsing is desired and false if it should not be performed
+     */
     private static boolean debugParse = (System.getProperty("org.jboss.byteman.rule.debug") != null ? true : false);
-    private static ThreadLocal<Rule> recursionGuard = new ThreadLocal<Rule>();
+
+    /**
+     * Thread local holding a per thread Boolean which is true if triggering is disabled and false if triggering is
+     * enabled
+     */
+    private static ThreadLocal<Boolean> isEnabled = new ThreadLocal<Boolean>();
 }

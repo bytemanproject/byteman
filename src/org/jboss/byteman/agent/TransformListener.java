@@ -1,6 +1,7 @@
 package org.jboss.byteman.agent;
 
 import org.jboss.byteman.agent.Retransformer;
+import org.jboss.byteman.rule.Rule;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -49,6 +50,11 @@ public class TransformListener extends Thread
 
     public static synchronized boolean terminate()
     {
+        // we don't want the listener shutdown to be aborted because of triggered rules
+        boolean enabled = true;
+        try {
+        enabled = Rule.disableTriggers();
+
         if (theTransformListener != null) {
             try {
                 theServerSocket.close();
@@ -69,10 +75,19 @@ public class TransformListener extends Thread
         }
 
         return true;
+        } finally {
+            if (enabled) {
+                Rule.disableTriggers();
+            }
+        }
     }
 
     public void run()
     {
+        // we don't want to see any triggers in the listener thread
+        
+        Rule.disableTriggers();
+
         while (true) {
             if (theServerSocket.isClosed()) {
                 return;

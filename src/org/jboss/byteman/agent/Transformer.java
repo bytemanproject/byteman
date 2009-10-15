@@ -45,13 +45,6 @@ import java.io.File;
  */
 public class Transformer implements ClassFileTransformer {
 
-    private static Transformer theTransformer = null;
-
-    public static Transformer getTheTransformer()
-    {
-        return theTransformer;
-    }
-
     /**
      * constructor allowing this transformer to be provided with access to the JVM's instrumentation
      * implementation
@@ -61,7 +54,6 @@ public class Transformer implements ClassFileTransformer {
     public Transformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts, boolean isRedefine)
             throws Exception
     {
-        theTransformer = this;
         this.inst = inst;
         this.isRedefine = isRedefine;
         targetToScriptMap = new HashMap<String, List<RuleScript>>();
@@ -237,6 +229,11 @@ public class Transformer implements ClassFileTransformer {
 
     public void installBootScripts() throws Exception
     {
+        boolean enabled = true;
+        try {
+        enabled = Rule.disableTriggers();
+
+
         // check for scrips which apply to classes already loaded during bootstrap and retransform those classes
         // so that rule triggers are injected
 
@@ -294,6 +291,11 @@ public class Transformer implements ClassFileTransformer {
         if (!omitted.isEmpty()) {
             Class<?>[] transformedArray = new Class<?>[omitted.size()];
             inst.retransformClasses(omitted.toArray(transformedArray));
+        }
+        } finally {
+            if (enabled) {
+                Rule.enableTriggers();
+            }
         }
     }
 
@@ -360,6 +362,10 @@ public class Transformer implements ClassFileTransformer {
                             byte[] classfileBuffer)
             throws IllegalClassFormatException
     {
+        boolean enabled = true;
+        try {
+        enabled = Rule.disableTriggers();
+
         byte[] newBuffer = classfileBuffer;
         // we only transform certain classes -- we do allow bootstrap classes whose loader is null
         // but we exclude byteman classes and java.lang classes
@@ -420,6 +426,11 @@ public class Transformer implements ClassFileTransformer {
             return newBuffer;
         } else {
             return null;
+        }
+        } finally {
+            if (enabled) {
+                Rule.enableTriggers();
+            }
         }
     }
 
@@ -729,19 +740,19 @@ public class Transformer implements ClassFileTransformer {
         }
     }
 
-    public void maybeDumpClass(String fullName, byte[] bytes)
+    public static void maybeDumpClass(String fullName, byte[] bytes)
     {
         if (dumpGeneratedClasses) {
             dumpClass(fullName, bytes);
         }
     }
 
-    private void dumpClass(String fullName, byte[] bytes)
+    private static void dumpClass(String fullName, byte[] bytes)
     {
         dumpClass(fullName, bytes, null);
     }
 
-    private void dumpClass(String fullName, byte[] bytes, byte[] oldBytes)
+    private static void dumpClass(String fullName, byte[] bytes, byte[] oldBytes)
     {
         int dotIdx = fullName.lastIndexOf('.');
 
@@ -776,7 +787,7 @@ public class Transformer implements ClassFileTransformer {
         }
     }
 
-    private boolean ensureDumpDirectory(String fileName)
+    private static boolean ensureDumpDirectory(String fileName)
     {
         File file = new File(fileName);
         if (file.exists()) {

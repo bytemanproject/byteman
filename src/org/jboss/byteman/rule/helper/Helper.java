@@ -914,9 +914,9 @@ public class Helper
     public void setTriggering(boolean enabled)
     {
         if (enabled) {
-            rule.enableTriggers();
+            Rule.enableTriggers();
         } else {
-            rule.disableTriggers();
+            Rule.disableTriggers();
         }
     }
 
