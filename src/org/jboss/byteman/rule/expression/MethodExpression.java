@@ -29,6 +29,7 @@ import org.jboss.byteman.rule.binding.Binding;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
+import org.jboss.byteman.rule.exception.ThrowException;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
@@ -42,6 +43,7 @@ import java.util.ArrayList;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * an expression which identifies a method invocation
@@ -262,6 +264,13 @@ public class MethodExpression extends Expression
             }
 
             return method.invoke(recipientValue, argValues);
+        } catch (InvocationTargetException e) {
+            Throwable th = e.getCause();
+            if (th instanceof ExecuteException) {
+                throw (ExecuteException)th;
+            } else {
+                throw new ExecuteException("MethodExpression.interpret : exception invoking method " + token.getText() + getPos(), th);
+            }
         } catch (ExecuteException e) {
             throw e;
         } catch (Exception e) {
