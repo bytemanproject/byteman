@@ -72,7 +72,7 @@
        <delete dir="${build.dir}"/>
     </target>
 
-    <target name="tests" depends="jar, tests.location, tests.location.compiled, tests.javaops, tests.javaops.compiled, tests.bugfixes, tests.bugfixes.compiled"/>
+    <target name="tests" depends="jar, tests.location, tests.location.compiled, tests.javaops, tests.javaops.compiled, tests.misc, tests.misc.compiled, tests.bugfixes, tests.bugfixes.compiled"/>
 
     <target name="tests.location">
         <junit fork="true" showoutput="true">
@@ -416,6 +416,41 @@
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             -->
             <test name="org.jboss.byteman.tests.javaops.TestArray"/>
+        </junit>
+    </target>
+
+    <target name="tests.misc">
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestRecursiveTriggers.txt"/>
+            <!--
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <test name="org.jboss.byteman.tests.misc.TestRecursiveTriggers"/>
+        </junit>
+    </target>
+
+    <target name="tests.misc.compiled">
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestRecursiveTriggers.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <!--
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <test name="org.jboss.byteman.tests.misc.TestRecursiveTriggers"/>
         </junit>
     </target>
 

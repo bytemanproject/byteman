@@ -907,6 +907,20 @@ public class Helper
     }
 
     /**
+     * enable or disable recursive triggering of rules by subsequent operations performed during binding,
+     * testing or firing of the current rule in the current thread.
+     * @param enabled true if triggering should be enabled or false if it should be disabled
+     */
+    public void setTriggering(boolean enabled)
+    {
+        if (enabled) {
+            rule.enableTriggers();
+        } else {
+            rule.disableTriggers();
+        }
+    }
+
+    /**
      * return a unique name for the trigger point associated with this rule. n.b. a single rule may
      * give rise to more than one trigger point if the rule applies to several methods with the same
      * name or to several classes with the same (package unqualified) name, or even to several
