@@ -30,7 +30,7 @@ BASE=${0%*bin/bytemancheck.sh}
 # the binary release puts byteman jar in lib while source puts it in
 # build/lib so add both paths to the classpath just in case
 CP=${BASE}lib/byteman.jar
-CP=${BASE}build/lib/byteman.jar
+CP=${BASE}build/lib/byteman.jar:${CP}
 # hmm. the asm code should be bundled in the byteman jar?
 CP=${CP}:${BASE}ext/asm-all-3.0.jar
 # incluide application classes upplied via -cp flag
