@@ -165,16 +165,14 @@ public class Transformer implements ClassFileTransformer {
     {
         String name = ruleScript.getName();
 
-        synchronized (nameToScriptMap) {
-            RuleScript old = nameToScriptMap.get(name);
-            if (old != null) {
-                throw new Exception("duplicated rule name " + name +
-                        " at ruleScript " + old.getFile() + " line " + old.getLine() +
-                        " and ruleScript "  + ruleScript.getFile() + " line " + ruleScript.getLine());
-            }
-
-            nameToScriptMap.put(name, ruleScript);
+        RuleScript old = nameToScriptMap.get(name);
+        if (old != null) {
+            throw new Exception("duplicated rule name " + name +
+                    " at ruleScript " + old.getFile() + " line " + old.getLine() +
+                    " and ruleScript "  + ruleScript.getFile() + " line " + ruleScript.getLine());
         }
+
+        nameToScriptMap.put(name, ruleScript);
     }
 
     protected void indexScriptByTarget(RuleScript ruleScript)
@@ -581,6 +579,45 @@ public class Transformer implements ClassFileTransformer {
     }
 
     /**
+     * disable triggering of rules inside the current thread
+     * @return true if triggering was previously enabled and false if it was already disabled
+     */
+    public static boolean disableTriggers()
+    {
+        Boolean enabled = isEnabled.get();
+        if (enabled == null) {
+            isEnabled.set(Boolean.FALSE);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * enable triggering of rules inside the current thread
+     * @return true if triggering was previously enabled and false if it was already disabled
+     */
+    public static boolean enableTriggers()
+    {
+        Boolean enabled = isEnabled.get();
+        if (enabled != null) {
+            isEnabled.remove();
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * check if triggering of rules is enabled inside the current thread
+     * @return true if triggering is enabled and false if it is disabled
+     */
+    public static boolean isTriggeringEnabled()
+    {
+        return isEnabled.get() == null;
+    }
+
+    /**
      * test whether a class with a given name is located in the byteman package
      * @param className
      * @return true if a class is located in the byteman package otherwise return false
@@ -786,4 +823,9 @@ public class Transformer implements ClassFileTransformer {
             return file.mkdirs();
         }
     }
+    /**
+     * Thread local holding a per thread Boolean which is true if triggering is disabled and false if triggering is
+     * enabled
+     */
+    private static ThreadLocal<Boolean> isEnabled = new ThreadLocal<Boolean>();
 }

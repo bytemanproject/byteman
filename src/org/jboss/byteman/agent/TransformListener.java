@@ -77,7 +77,7 @@ public class TransformListener extends Thread
         return true;
         } finally {
             if (enabled) {
-                Rule.disableTriggers();
+                Rule.enableTriggers();
             }
         }
     }
@@ -144,7 +144,7 @@ public class TransformListener extends Thread
             return;
         }
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(is));
+p        BufferedReader in = new BufferedReader(new InputStreamReader(is));
         PrintWriter out = new PrintWriter(new OutputStreamWriter(os));
 
         String line = null;
@@ -162,12 +162,17 @@ public class TransformListener extends Thread
                 out.println("OK");
             } else if (line.equals("LOAD")) {
                 loadScripts(in, out);
+            } else if (line.equals("DELETE")) {
+                deleteScripts(in, out);
             } else if (line.equals("LIST")) {
                 listScripts(in, out);
+            } else if (line.equals("DELETEALL")) {
+                purgeScripts(in, out);
             } else {
                 out.println("ERROR");
                 out.println("Unexpected command " + line);
                 out.println("OK");
+                out.flush();
             }
         } catch (Exception e) {
             System.out.println("TransformListener.run : exception " + e + " processing command " + line);
@@ -182,6 +187,16 @@ public class TransformListener extends Thread
     }
 
     private void loadScripts(BufferedReader in, PrintWriter out) throws IOException
+    {
+        handleScripts(in, out, false);
+    }
+
+    private void deleteScripts(BufferedReader in, PrintWriter out) throws IOException
+    {
+        handleScripts(in, out, true);
+    }
+
+    private void handleScripts(BufferedReader in, PrintWriter out, boolean doDelete) throws IOException
     {
         List<String> scripts = new LinkedList<String>();
         List<String> scriptNames = new LinkedList<String>();
@@ -211,8 +226,9 @@ public class TransformListener extends Thread
         }
 
         line = in.readLine();
-        
-        if (!line.equals("ENDLOAD")) {
+
+        if ((doDelete && !line.equals("ENDDELETE")) ||
+                (!doDelete && !line.equals("ENDLOAD"))) {
             out.append("ERROR ");
             out.append("Unexpected end of line reading script " + scriptName + "\n");
             out.println("OK");
@@ -221,7 +237,11 @@ public class TransformListener extends Thread
         }
 
         try {
-            retransformer.installScript(scripts, scriptNames);
+            if (doDelete) {
+                retransformer.removeScripts(scripts, out);
+            } else {
+                retransformer.installScript(scripts, scriptNames, out);
+            }
             out.println("OK");
             out.flush();
         } catch (Exception e) {
@@ -232,6 +252,13 @@ public class TransformListener extends Thread
             out.println("OK");
             out.flush();
         }
+    }
+
+    private void purgeScripts(BufferedReader in, PrintWriter out) throws Exception
+    {
+        retransformer.removeScripts(null, out);
+        out.println("OK");
+        out.flush();
     }
 
     private void listScripts(BufferedReader in, PrintWriter out) throws Exception

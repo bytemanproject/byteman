@@ -22,8 +22,13 @@
 # @authors Andrew Dinn
 #
 # shell script which submits a request to the Byteman agent listener
+# either to list, install or uninstall rule scripts
 #
-# usage: submit [script1 . . . scriptN]
+# usage: submit [-l|-u] [script1 . . . scriptN]
+#   -l (default) install rules in script1 . . . scriptN
+       with no args list all installed rules
+#   -u uninstall rules in script1 . . . scriptN
+       with no args uninstall all installed rules
 #
 # use the root of the path to this file to locate the byteman jar
 BASE=${0%*bin/submit.sh}
@@ -34,29 +39,7 @@ CP=${BASE}build/lib/byteman.jar
 # hmm. the asm code should be bundled in the byteman jar?
 CP=${CP}:${BASE}ext/asm-all-3.0.jar
 
-SCRIPT_OPTS=""
-
-if [ $# -gt 0 -a ${1#-*} != ${1} ]; then
-   echo "${1#-*} ${1}"
-   echo "usage: submit [script1 . . . scriptN]"
-   exit
-fi
-
-error=0
-while [ $# -ne 0 ]
-do
-  if [ ! -f $1 -o ! -r $1 ] ; then
-    echo "$1 is not a readable file";
-    error=1
-  fi
-  FILES="${FILES} $1";
-  shift
-done
-
-if [ $error -ne 0 ] ; then
-  exit
-fi
-
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
+# Submit class will validate arguments
 
-java ${BYTEMAN_JAVA_OPTS} -classpath ${CP} org.jboss.byteman.agent.submit.Submit $FILES
+java ${BYTEMAN_JAVA_OPTS} -classpath ${CP} org.jboss.byteman.agent.submit.Submit $*

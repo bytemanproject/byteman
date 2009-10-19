@@ -206,16 +206,18 @@ public class RuleScript
      */
     public synchronized void purge()
     {
-        int count = transformed.size();
-        for (int i =  0; i < count; i++) {
-            Transform transform = transformed.get(i);
-            Rule rule = transform.getRule();
-            if (rule != null) {
-                rule.purge();
+        if (transformed != null) {
+            int count = transformed.size();
+            for (int i =  0; i < count; i++) {
+                Transform transform = transformed.get(i);
+                Rule rule = transform.getRule();
+                if (rule != null) {
+                    rule.purge();
+                }
             }
         }
     }
-
+    
     public String toString()
     {
         StringWriter stringWriter = new StringWriter();

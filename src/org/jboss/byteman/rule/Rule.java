@@ -340,13 +340,7 @@ public class Rule
      */
     public static boolean disableTriggers()
     {
-        Boolean enabled = isEnabled.get();
-        if (enabled == null) {
-            isEnabled.set(Boolean.FALSE);
-            return true;
-        }
-
-        return false;
+        return Transformer.disableTriggers();
     }
 
     /**
@@ -355,13 +349,7 @@ public class Rule
      */
     public static boolean enableTriggers()
     {
-        Boolean enabled = isEnabled.get();
-        if (enabled != null) {
-            isEnabled.remove();
-            return false;
-        }
-
-        return true;
+        return Transformer.enableTriggers();
     }
 
     /**
@@ -370,7 +358,7 @@ public class Rule
      */
     public static boolean isTriggeringEnabled()
     {
-        return isEnabled.get() == null;
+        return Transformer.isTriggeringEnabled();
     }
 
     /**
@@ -745,10 +733,4 @@ public class Rule
      * flag true if debugging of rule parsing is desired and false if it should not be performed
      */
     private static boolean debugParse = (System.getProperty("org.jboss.byteman.rule.debug") != null ? true : false);
-
-    /**
-     * Thread local holding a per thread Boolean which is true if triggering is disabled and false if triggering is
-     * enabled
-     */
-    private static ThreadLocal<Boolean> isEnabled = new ThreadLocal<Boolean>();
 }
