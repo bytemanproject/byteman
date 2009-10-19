@@ -229,11 +229,6 @@ public class Transformer implements ClassFileTransformer {
 
     public void installBootScripts() throws Exception
     {
-        boolean enabled = true;
-        try {
-        enabled = Rule.disableTriggers();
-
-
         // check for scrips which apply to classes already loaded during bootstrap and retransform those classes
         // so that rule triggers are injected
 
@@ -291,11 +286,6 @@ public class Transformer implements ClassFileTransformer {
         if (!omitted.isEmpty()) {
             Class<?>[] transformedArray = new Class<?>[omitted.size()];
             inst.retransformClasses(omitted.toArray(transformedArray));
-        }
-        } finally {
-            if (enabled) {
-                Rule.enableTriggers();
-            }
         }
     }
 
