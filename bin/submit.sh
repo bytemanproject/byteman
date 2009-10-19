@@ -26,9 +26,9 @@
 #
 # usage: submit [-l|-u] [script1 . . . scriptN]
 #   -l (default) install rules in script1 . . . scriptN
-       with no args list all installed rules
+#      with no args list all installed rules
 #   -u uninstall rules in script1 . . . scriptN
-       with no args uninstall all installed rules
+#      with no args uninstall all installed rules
 #
 # use the root of the path to this file to locate the byteman jar
 BASE=${0%*bin/submit.sh}
