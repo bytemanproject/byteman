@@ -25,14 +25,31 @@
 #
 # usage: bytemancheck -cp classpath script1 . . . scriptN
 #
+# use BYTEMAN_HOME to locate installed byteman release
+if [ -z "$BYTEMAN_HOME" ]; then
 # use the root of the path to this file to locate the byteman jar
-BASE=${0%*bin/bytemancheck.sh}
+    BYTEMAN_HOME=${0%*/bin/bmjava.sh}
+# allow for rename to plain bmjava
+    if [ "$BYTEMAN_HOME" == "$0" ]; then
+	BYTEMAN_HOME=${0%*/bin/bmjava}
+    fi
+    if [ "$BYTEMAN_HOME" == "$0" ]; then
+	echo "Unable to find byteman home"
+	exit
+    fi
+fi
+
 # the binary release puts byteman jar in lib while source puts it in
 # build/lib so add both paths to the classpath just in case
-CP=${BASE}lib/byteman.jar
-CP=${BASE}build/lib/byteman.jar:${CP}
-# hmm. the asm code should be bundled in the byteman jar?
-CP=${CP}:${BASE}ext/asm-all-3.0.jar
+if [ -r ${BYTEMAN_HOME}/lib/byteman.jar ]; then
+    BYTEMAN_JAR=${BYTEMAN_HOME}/lib/byteman.jar
+elif [ -r ${BYTEMAN_HOME}/build/lib/byteman.jar ]; then
+    BYTEMAN_JAR=${BYTEMAN_HOME}/build/lib/byteman.jar
+else
+    echo "Cannot locate byteman jar"
+    exit
+fi
+CP=${BYTEMAN_JAR}
 # incluide application classes upplied via -cp flag
 if [ "$1" == "-cp" ] ; then
   CP=${CP}:$2
