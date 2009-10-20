@@ -24,11 +24,15 @@
 # shell script which submits a request to the Byteman agent listener
 # either to list, install or uninstall rule scripts
 #
-# usage: submit [-l|-u] [script1 . . . scriptN]
+# usage: submit [-l|-u] [script1 . . . scriptN] | [-b | -s] bootjar1 . . .
 #   -l (default) install rules in script1 . . . scriptN
-#      with no args list all installed rules
+#      with no scripts list all installed rules
 #   -u uninstall rules in script1 . . . scriptN
-#      with no args uninstall all installed rules
+#      with no scripts uninstall all installed rules
+#
+#   -b install jar files bootjar1 etc into bootstrap classpath
+#
+#   -s install jar files bootjar1 etc into system classpath
 #
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then
