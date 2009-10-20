@@ -53,14 +53,14 @@
 usage()
 {
 cat <<EOF
-usage: bmjava [-r rulescript | -b bootjar | -s sysjar | -nl | -nb ]* [--] javaargs
+usage: bmjava [-l rulescript | -b bootjar | -s sysjar | -nl | -nb ]* [--] javaargs
 
 terms enclosed between [ ] are optional
 terms separated by | are alternatives
 a * means zero or more occurences
 
-  -r  pass the file whose name follows this flag to the agent as
-      a rule script
+  -l  pass the file whose name follows this flag to the agent as
+      a rule script to be loaded during startup
 
   -b  pass the file whose name follows this flag to the agent as
       a jar to be added to the bootstrap classpath
@@ -122,7 +122,7 @@ BYTEMAN_BOOT_JAR=1
 echo "\$# == $#" 
 while [ $# -ge 1 -a "${1#-*}" != "$1" ]
 do
-    if [ "$1" == "-r" -a $# -ge 2 ]; then
+    if [ "$1" == "-l" -a $# -ge 2 ]; then
 	if [ -r "$2" ]; then
 	    AGENT_OPTS="${AGENT_OPTS},script:$2"
 	    shift;
@@ -150,14 +150,17 @@ do
 	    exit
 	fi
     elif [ "$1" == "-nl" ]; then
-	LISTENER=0
-	shift;
+	    LISTENER=0
+	    shift;
     elif [ "$1" == "-nb" ]; then
-	BYTEMAN_BOOT_JAR=0
-	shift;
+	    BYTEMAN_BOOT_JAR=0
+	    shift;
     elif [ "$1" == "--" ]; then
-	shift;
-	break;
+	    shift;
+	    break;
+	else
+	    # unrecognised option -- must be start of javaargs
+	    break
     fi
 done
 
