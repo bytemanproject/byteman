@@ -25,6 +25,7 @@ package org.jboss.byteman.agent;
 
 import java.lang.instrument.Instrumentation;
 import java.util.*;
+import java.util.jar.JarFile;
 import java.io.PrintWriter;
 
 /**
@@ -316,6 +317,17 @@ public class Retransformer extends Transformer {
         for (RuleScript ruleScript : toBeRemoved) {
             ruleScript.purge();
             out.println("uninstall RULE " + ruleScript.getName());
+        }
+    }
+
+    public void appendJarFile(PrintWriter out, JarFile jarfile, boolean isBoot) throws Exception
+    {
+        if (isBoot) {
+            inst.appendToBootstrapClassLoaderSearch(jarfile);
+            out.println("append boot jar " + jarfile.getName());
+        } else {
+            inst.appendToSystemClassLoaderSearch(jarfile);
+            out.println("append sys jar " + jarfile.getName());
         }
     }
 }

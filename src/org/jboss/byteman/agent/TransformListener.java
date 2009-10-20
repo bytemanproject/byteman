@@ -9,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.io.*;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.jar.JarFile;
 
 /**
  * a socket based listener class which reads scripts from stdin and installs them in the current runtime
@@ -144,7 +145,7 @@ public class TransformListener extends Thread
             return;
         }
 
-p        BufferedReader in = new BufferedReader(new InputStreamReader(is));
+        BufferedReader in = new BufferedReader(new InputStreamReader(is));
         PrintWriter out = new PrintWriter(new OutputStreamWriter(os));
 
         String line = null;
@@ -160,6 +161,10 @@ p        BufferedReader in = new BufferedReader(new InputStreamReader(is));
                 out.println("ERROR");
                 out.println("Expecting input command");
                 out.println("OK");
+            } else if (line.equals("BOOT")) {
+                loadJars(in, out, true);
+            } else if (line.equals("SYS")) {
+                loadJars(in, out, false);
             } else if (line.equals("LOAD")) {
                 loadScripts(in, out);
             } else if (line.equals("DELETE")) {
@@ -189,6 +194,30 @@ p        BufferedReader in = new BufferedReader(new InputStreamReader(is));
     private void loadScripts(BufferedReader in, PrintWriter out) throws IOException
     {
         handleScripts(in, out, false);
+    }
+
+    private void loadJars(BufferedReader in, PrintWriter out, boolean isBoot) throws IOException
+    {
+        String line = in.readLine().trim();
+        while (line != null && !line.equals("ENDBOOT")) {
+            try {
+                JarFile jarfile = new JarFile(new File(line));
+                retransformer.appendJarFile(out, jarfile, isBoot);
+            } catch (Exception e) {
+                out.append("EXCEPTION ");
+                out.append("Unable to add jar file " + line + "\n");
+                out.append(e.toString());
+                out.append("\n");
+                e.printStackTrace(out);
+            }
+            line = in.readLine().trim();
+        }
+        if (line == null || !line.equals("ENDBOOT")) {
+            out.append("ERROR\n");
+            out.append("Unexpected end of line reading boot jars\n");
+        }
+        out.println("OK");
+        out.flush();
     }
 
     private void deleteScripts(BufferedReader in, PrintWriter out) throws IOException
@@ -242,16 +271,14 @@ p        BufferedReader in = new BufferedReader(new InputStreamReader(is));
             } else {
                 retransformer.installScript(scripts, scriptNames, out);
             }
-            out.println("OK");
-            out.flush();
         } catch (Exception e) {
             out.append("EXCEPTION ");
             out.append(e.toString());
             out.append('\n');
             e.printStackTrace(out);
-            out.println("OK");
-            out.flush();
         }
+        out.println("OK");
+        out.flush();
     }
 
     private void purgeScripts(BufferedReader in, PrintWriter out) throws Exception
