@@ -1,6 +1,7 @@
 package org.jboss.byteman.agent;
 
 import org.jboss.byteman.agent.Retransformer;
+import org.jboss.byteman.rule.Rule;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -8,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.io.*;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.jar.JarFile;
 
 /**
  * a socket based listener class which reads scripts from stdin and installs them in the current runtime
@@ -31,6 +33,9 @@ public class TransformListener extends Thread
             try {
                 theServerSocket = new ServerSocket();
                 theServerSocket.bind(new InetSocketAddress("localhost", DEFAULT_PORT));
+                if (Transformer.isVerbose()) {
+                    System.out.println("TransformListener() : accepting requests on port " + DEFAULT_PORT);
+                }
             } catch (IOException e) {
                 System.out.println("TransformListener() : unexpected exception opening server socket " + e);
                 e.printStackTrace();
@@ -46,9 +51,17 @@ public class TransformListener extends Thread
 
     public static synchronized boolean terminate()
     {
+        // we don't want the listener shutdown to be aborted because of triggered rules
+        boolean enabled = true;
+        try {
+        enabled = Rule.disableTriggers();
+
         if (theTransformListener != null) {
             try {
                 theServerSocket.close();
+                if (Transformer.isVerbose()) {
+                    System.out.println("TransformListener() :  closing port " + DEFAULT_PORT);
+                }
             } catch (IOException e) {
                 // ignore -- the thread should exit anyway
             }
@@ -63,10 +76,19 @@ public class TransformListener extends Thread
         }
 
         return true;
+        } finally {
+            if (enabled) {
+                Rule.enableTriggers();
+            }
+        }
     }
 
     public void run()
     {
+        // we don't want to see any triggers in the listener thread
+        
+        Rule.disableTriggers();
+
         while (true) {
             if (theServerSocket.isClosed()) {
                 return;
@@ -82,6 +104,9 @@ public class TransformListener extends Thread
                 return;
             }
 
+            if (Transformer.isVerbose()) {
+                System.out.println("TransformListener() : handling connection on port " + socket.getLocalPort());
+            }
             handleConnection(socket);
         }
     }
@@ -136,14 +161,23 @@ public class TransformListener extends Thread
                 out.println("ERROR");
                 out.println("Expecting input command");
                 out.println("OK");
+            } else if (line.equals("BOOT")) {
+                loadJars(in, out, true);
+            } else if (line.equals("SYS")) {
+                loadJars(in, out, false);
             } else if (line.equals("LOAD")) {
                 loadScripts(in, out);
+            } else if (line.equals("DELETE")) {
+                deleteScripts(in, out);
             } else if (line.equals("LIST")) {
                 listScripts(in, out);
+            } else if (line.equals("DELETEALL")) {
+                purgeScripts(in, out);
             } else {
                 out.println("ERROR");
                 out.println("Unexpected command " + line);
                 out.println("OK");
+                out.flush();
             }
         } catch (Exception e) {
             System.out.println("TransformListener.run : exception " + e + " processing command " + line);
@@ -158,6 +192,40 @@ public class TransformListener extends Thread
     }
 
     private void loadScripts(BufferedReader in, PrintWriter out) throws IOException
+    {
+        handleScripts(in, out, false);
+    }
+
+    private void loadJars(BufferedReader in, PrintWriter out, boolean isBoot) throws IOException
+    {
+        String line = in.readLine().trim();
+        while (line != null && !line.equals("ENDBOOT")) {
+            try {
+                JarFile jarfile = new JarFile(new File(line));
+                retransformer.appendJarFile(out, jarfile, isBoot);
+            } catch (Exception e) {
+                out.append("EXCEPTION ");
+                out.append("Unable to add jar file " + line + "\n");
+                out.append(e.toString());
+                out.append("\n");
+                e.printStackTrace(out);
+            }
+            line = in.readLine().trim();
+        }
+        if (line == null || !line.equals("ENDBOOT")) {
+            out.append("ERROR\n");
+            out.append("Unexpected end of line reading boot jars\n");
+        }
+        out.println("OK");
+        out.flush();
+    }
+
+    private void deleteScripts(BufferedReader in, PrintWriter out) throws IOException
+    {
+        handleScripts(in, out, true);
+    }
+
+    private void handleScripts(BufferedReader in, PrintWriter out, boolean doDelete) throws IOException
     {
         List<String> scripts = new LinkedList<String>();
         List<String> scriptNames = new LinkedList<String>();
@@ -187,8 +255,9 @@ public class TransformListener extends Thread
         }
 
         line = in.readLine();
-        
-        if (!line.equals("ENDLOAD")) {
+
+        if ((doDelete && !line.equals("ENDDELETE")) ||
+                (!doDelete && !line.equals("ENDLOAD"))) {
             out.append("ERROR ");
             out.append("Unexpected end of line reading script " + scriptName + "\n");
             out.println("OK");
@@ -197,17 +266,26 @@ public class TransformListener extends Thread
         }
 
         try {
-            retransformer.installScript(scripts, scriptNames);
-            out.println("OK");
-            out.flush();
+            if (doDelete) {
+                retransformer.removeScripts(scripts, out);
+            } else {
+                retransformer.installScript(scripts, scriptNames, out);
+            }
         } catch (Exception e) {
             out.append("EXCEPTION ");
             out.append(e.toString());
             out.append('\n');
             e.printStackTrace(out);
-            out.println("OK");
-            out.flush();
         }
+        out.println("OK");
+        out.flush();
+    }
+
+    private void purgeScripts(BufferedReader in, PrintWriter out) throws Exception
+    {
+        retransformer.removeScripts(null, out);
+        out.println("OK");
+        out.flush();
     }
 
     private void listScripts(BufferedReader in, PrintWriter out) throws Exception

@@ -72,9 +72,9 @@
             http://www.jboss.org/community/docs/DOC-11381 -->
 
 <!--
-    <property name="svnbase" value="https://svn.jboss.org/repos/labs/labs/jbosstm/workspace/adinn/byteman/tags"/>
+    <property name="svnbase" value="https://svn.jboss.org/repos/labs/labs/jbosstm/workspace/adinn/byteman"/>
     <property name="tag" value="trunk"/>
-    <property name="filename" value="1.1.0.SNAPSHOT"/>
+    <property name="filename" value="1.1.1.SNAPSHOT"/>
     <property name="mvn.repositoryId" value="snapshots.jboss.org"/>
     <property name="mvn.url" value="dav:https://snapshots.jboss.org/maven2"/>
 -->
@@ -86,10 +86,10 @@
     <property name="svnbase"
     value="https://svn.jboss.org/repos/labs/labs/jbosstm/workspace/adinn/byteman/tags"/>
     <!-- The tag as it appears under svnbase -->
-    <property name="tag" value="Byteman_1_1_0"/>
+    <property name="tag" value="Byteman_1_1_1"/>
     <!-- The file name base for the user downloadable files. Derive it
     from the tag -->
-    <property name="filename" value="1.1.0"/>
+    <property name="filename" value="1.1.1"/>
     <!-- the location the Byteman web site content svn is checked out to -->
     <property name="cmsdir" value="/home/adinn/jboss/workspace/adinn/byteman/"/>
     <!-- the location the maven repository svn is checked out to.
@@ -103,6 +103,7 @@
 
     <target name="init">
         <tstamp/>
+        <delete dir="${workdir}"/>
         <mkdir dir="${workdir}"/>
     </target>
 
@@ -116,20 +117,13 @@
 
         <!-- package the byteman source release (all src tree) -->
         <delete file="${workdir}/byteman-${filename}-src.zip"/>
+
         <zip basedir="${workdir}" destfile="${workdir}/byteman-${filename}-src.zip"
              includes="${tag}/**"/>
-
-        <!-- build the binary release -->
-        <delete dir="${workdir}/build"/>
-        <mkdir dir="${workdir}/build"/>
-        <unzip src="${workdir}/byteman-${filename}-src.zip" dest="${workdir}/build"/>
-        <ant dir="${workdir}/build/${tag}" antfile="build.xml" target="install">
+        <!-- build the src and binary release zips -->
+        <ant dir="${workdir}/${tag}" antfile="build.xml" target="zip">
             <property name="tag" value="${tag}"/>
         </ant>
-
-        <!-- package the binary release -->
-	<delete file="${workdir}/build/${tag}/build/byteman-${filename}.zip"/>
-        <copy toFile="${workdir}/byteman-${filename}.zip" file="${workdir}/build/${tag}/build/byteman.zip"/>
     </target>
 
     <!-- copy the release into the cms svn tree (http://www.jboss.org/jbosstm web site content) -->

@@ -35,7 +35,6 @@ import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.helper.Helper;
 import org.jboss.byteman.rule.helper.InterpretedHelper;
 import org.jboss.byteman.agent.Location;
-import org.jboss.byteman.agent.LocationType;
 import org.jboss.byteman.agent.Transformer;
 import org.jboss.byteman.agent.RuleScript;
 import org.objectweb.asm.Opcodes;
@@ -261,7 +260,7 @@ public class Rule
     public Type getReturnType()
     {
         return returnType;
-    }
+    }                                                                                     
 
     /**
      * get the class loader of the target class for the rule
@@ -336,6 +335,33 @@ public class Rule
     }
 
     /**
+     * disable triggering of rules inside the current thread
+     * @return true if triggering was previously enabled and false if it was already disabled
+     */
+    public static boolean disableTriggers()
+    {
+        return Transformer.disableTriggers();
+    }
+
+    /**
+     * enable triggering of rules inside the current thread
+     * @return true if triggering was previously enabled and false if it was already disabled
+     */
+    public static boolean enableTriggers()
+    {
+        return Transformer.enableTriggers();
+    }
+
+    /**
+     * check if triggering of rules is enabled inside the current thread
+     * @return true if triggering is enabled and false if it is disabled
+     */
+    public static boolean isTriggeringEnabled()
+    {
+        return Transformer.isTriggeringEnabled();
+    }
+
+    /**
      * typecheck and then compile this rule unless either action has been tried before
      * @return true if the rule successfully type checks and then compiles under this call or a previous
      * call or false if either operation has previously failed or fails under this call.
@@ -347,8 +373,12 @@ public class Rule
         }
 
         if (!checked) {
+            // ensure we don't trigger any code inside the type check or compile
+            // n.b. we may still allow recursive triggering while executing
+            boolean triggerEnabled = false;
             String detail = "";
             try {
+                triggerEnabled = disableTriggers();
                 typeCheck();
                 compile();
                 checked = true;
@@ -368,6 +398,11 @@ public class Rule
                 ce.printStackTrace(writer);
                 detail = stringWriter.toString();
                 System.out.println(detail);
+            } finally {
+                // be sure to return the status quo
+                if (triggerEnabled) {
+                    enableTriggers();
+                }
             }
 
             ruleScript.recordCompile(triggerClass, loader, !checkFailed, detail);
@@ -493,6 +528,11 @@ public class Rule
      */
     public static void execute(String key, Object recipient, Object[] args) throws ExecuteException
     {
+        boolean enabled = isTriggeringEnabled();
+        if (!enabled) {
+            // we don't trigger code while we are doing rule housekeeping
+            return;
+        }
         Rule rule = ruleKeyMap.get(key);
         if (Transformer.isVerbose()) {
             System.out.println("Rule.execute called for " + key);
@@ -563,6 +603,9 @@ public class Rule
             } catch (Throwable throwable) {
                 System.out.println(getName() + " : " + throwable);
                 throw new ExecuteException(getName() + "  : caught " + throwable, throwable);
+            } finally {
+                // restore the status quo -- we must have been enabled if we got to this method
+                enableTriggers();
             }
         }
     }
@@ -685,6 +728,9 @@ public class Rule
     {
         return helperClass;
     }
-    
+
+    /**
+     * flag true if debugging of rule parsing is desired and false if it should not be performed
+     */
     private static boolean debugParse = (System.getProperty("org.jboss.byteman.rule.debug") != null ? true : false);
 }

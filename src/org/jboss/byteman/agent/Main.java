@@ -47,10 +47,14 @@ public class Main {
         if (args != null) {
             // args are supplied eparated by ',' characters
             String[] argsArray = args.split(",");
-            // the only args we accept are extra jar files to be added to the boot path or scanned for rules
+            // we accept extra jar files to be added to the boot/sys classpaths
+            // script files to be scanned for rules
+            // listener flag which implies use of a retransformer
             for (String arg : argsArray) {
                 if (arg.startsWith(BOOT_PREFIX)) {
                     bootJarPaths.add(arg.substring(BOOT_PREFIX.length(), arg.length()));
+                } else if (arg.startsWith(SYS_PREFIX)) {
+                    sysJarPaths.add(arg.substring(SYS_PREFIX.length(), arg.length()));
                 } else if (arg.startsWith(SCRIPT_PREFIX)) {
                     scriptPaths.add(arg.substring(SCRIPT_PREFIX.length(), arg.length()));
                 } else if (arg.startsWith(LISTENER_PREFIX)) {
@@ -63,13 +67,12 @@ public class Main {
                 } else {
                     System.err.println("org.jboss.byteman.agent.Main:\n" +
                             "  illegal agent argument : " + arg + "\n" +
-                            "  valid arguments are boot:<path-to-jar>, script:<path-to-script> or listener:<true-or-false>");
+                            "  valid arguments are boot:<path-to-jar>, sys:<path-to-jar>, script:<path-to-script> or listener:<true-or-false>");
                 }
             }
         }
 
         // add any boot jars to the boot class path
-        // TODO can only do this when we get to 1.6
 
         for (String bootJarPath : bootJarPaths) {
             try {
@@ -77,6 +80,18 @@ public class Main {
                 inst.appendToBootstrapClassLoaderSearch(jarfile);
             } catch (IOException ioe) {
                 System.err.println("org.jboss.byteman.agent.Main: unable to open boot jar file : " + bootJarPath);
+                throw ioe;
+            }
+        }
+
+        // add any sys jars to the system class path
+
+        for (String sysJarPath : sysJarPaths) {
+            try {
+                JarFile jarfile = new JarFile(new File(sysJarPath));
+                inst.appendToSystemClassLoaderSearch(jarfile);
+            } catch (IOException ioe) {
+                System.err.println("org.jboss.byteman.agent.Main: unable to open system jar file : " + sysJarPath);
                 throw ioe;
             }
         }
@@ -127,13 +142,13 @@ public class Main {
             if (Transformer.isVerbose()) {
                 System.out.println("Adding retransformer");
             }
-            transformerClazz = loader.loadClass("org.jboss.byteman.agent.Transformer");
+            transformerClazz = loader.loadClass("org.jboss.byteman.agent.Retransformer");
             //transformer = new Retransformer(inst, scriptPaths, scripts, true);
         } else {
             if (Transformer.isVerbose()) {
                 System.out.println("Adding transformer");
             }
-            transformerClazz = loader.loadClass("org.jboss.byteman.agent.Retransformer");
+            transformerClazz = loader.loadClass("org.jboss.byteman.agent.Transformer");
             //transformer = new Transformer(inst, scriptPaths, scripts, isRedefine);
         }
 
@@ -152,6 +167,11 @@ public class Main {
      * prefix used to specify boot jar argument for agent
      */
     private static final String BOOT_PREFIX = "boot:";
+
+    /**
+     * prefix used to specify system jar argument for agent
+     */
+    private static final String SYS_PREFIX = "sys:";
 
     /**
      * prefix used to specify script argument for agent
@@ -175,6 +195,11 @@ public class Main {
      * list of paths to extra bootstrap jars supplied on command line
      */
     private static List<String> bootJarPaths = new ArrayList<String>();
+
+    /**
+     * list of paths to extra system jars supplied on command line
+     */
+    private static List<String> sysJarPaths = new ArrayList<String>();
 
     /**
      * list of paths to script files supplied on command line

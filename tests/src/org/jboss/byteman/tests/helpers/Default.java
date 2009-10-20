@@ -24,12 +24,19 @@
 package org.jboss.byteman.tests.helpers;
 
 import org.jboss.byteman.tests.Test;
+import org.jboss.byteman.rule.helper.Helper;
+import org.jboss.byteman.rule.Rule;
 
 /**
  * default helper used in byteman unit tests providing simple logging capability
  */
-public class Default
+public class Default extends Helper
 {
+    public Default(Rule rule)
+    {
+        super(rule);
+    }
+    
     public void log(String message)
     {
         System.out.println(message);

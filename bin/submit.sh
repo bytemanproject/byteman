@@ -22,41 +22,43 @@
 # @authors Andrew Dinn
 #
 # shell script which submits a request to the Byteman agent listener
+# either to list, install or uninstall rule scripts
 #
-# usage: submit [script1 . . . scriptN]
+# usage: submit [-l|-u] [script1 . . . scriptN] | [-b | -s] bootjar1 . . .
+#   -l (default) install rules in script1 . . . scriptN
+#      with no scripts list all installed rules
+#   -u uninstall rules in script1 . . . scriptN
+#      with no scripts uninstall all installed rules
 #
+#   -b install jar files bootjar1 etc into bootstrap classpath
+#
+#   -s install jar files bootjar1 etc into system classpath
+#
+# use BYTEMAN_HOME to locate installed byteman release
+if [ -z "$BYTEMAN_HOME" ]; then
 # use the root of the path to this file to locate the byteman jar
-BASE=${0%*bin/submit.sh}
+    BYTEMAN_HOME=${0%*/bin/bmjava.sh}
+# allow for rename to plain bmjava
+    if [ "$BYTEMAN_HOME" == "$0" ]; then
+	BYTEMAN_HOME=${0%*/bin/bmjava}
+    fi
+    if [ "$BYTEMAN_HOME" == "$0" ]; then
+	echo "Unable to find byteman home"
+	exit
+    fi
+fi
+
 # the binary release puts byteman jar in lib while source puts it in
 # build/lib so add both paths to the classpath just in case
-CP=${BASE}lib/byteman.jar
-CP=${BASE}build/lib/byteman.jar
-# hmm. the asm code should be bundled in the byteman jar?
-CP=${CP}:${BASE}ext/asm-all-3.0.jar
-
-SCRIPT_OPTS=""
-
-if [ $# -gt 0 -a ${1#-*} != ${1} ]; then
-   echo "${1#-*} ${1}"
-   echo "usage: submit [script1 . . . scriptN]"
-   exit
+if [ -r ${BYTEMAN_HOME}/lib/byteman.jar ]; then
+    BYTEMAN_JAR=${BYTEMAN_HOME}/lib/byteman.jar
+elif [ -r ${BYTEMAN_HOME}/build/lib/byteman.jar ]; then
+    BYTEMAN_JAR=${BYTEMAN_HOME}/build/lib/byteman.jar
+else
+    echo "Cannot locate byteman jar"
+    exit
 fi
-
-error=0
-while [ $# -ne 0 ]
-do
-  if [ ! -f $1 -o ! -r $1 ] ; then
-    echo "$1 is not a readable file";
-    error=1
-  fi
-  FILES="${FILES} $1";
-  shift
-done
-
-if [ $error -ne 0 ] ; then
-  exit
-fi
-
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
+# Submit class will validate arguments
 
-java ${BYTEMAN_JAVA_OPTS} -classpath ${CP} org.jboss.byteman.agent.submit.Submit $FILES
+java ${BYTEMAN_JAVA_OPTS} -classpath ${BYTEMAN_JAR} org.jboss.byteman.agent.submit.Submit $*

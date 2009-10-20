@@ -1,0 +1,111 @@
+########################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2009, Red Hat Middleware LLC, and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+# FileMonitor
+#
+# A byteman script which prints a stack trace whenever a file input or
+# output stream is created from a File instance or subsequently closed.
+#
+# to use ths script to trace execution of java program org.my.App execute
+#
+#  -- set the directory in which byteman has been installed
+#  BYTEMAN_HOME= ...
+#
+#   -- identify the samples jar to the boot path
+#   SAMPLE_JAR=${BYTEMAN_HOME}/sample/lib/byteman-sample.jar
+#
+#   -- identify this script
+#   SCRIPT={BYTEMAN_HOME}/sample/scripts/FileMonitor.txt
+#
+#  ${BYTEMAN_HOME}/bin/bmjava.sh -l $SCRIPT -b $SAMPLE_JAR org.my.App
+#
+
+########################################################################
+#
+# Rule to trace create of file input stream from File
+#
+
+RULE FileMonitor trace FileInputStream create from File
+CLASS java.io.FileInputStream
+METHOD <init>(java.io.File)
+HELPER org.jboss.byteman.sample.helper.StackTraceHelper
+AT RETURN
+IF TRUE
+DO traceStack("*** Opened " + $1.getPath() + " for read in thread " + Thread.currentThread().getName() + "\n")
+ENDRULE
+
+########################################################################
+#
+# Rule to trace close of file input stream close
+#
+
+RULE FileMonitor trace FileInputStream close
+CLASS java.io.FileInputStream
+METHOD close
+HELPER org.jboss.byteman.sample.helper.StackTraceHelper
+AT RETURN
+IF TRUE
+DO traceStack("*** Closed " + $0 + " in thread " + Thread.currentThread().getName() + "\n")
+ENDRULE
+
+########################################################################
+#
+# Rule to trace create of file output stream from File
+#
+
+RULE FileMonitor trace FileOutputStream create from File
+CLASS java.io.FileOutputStream
+METHOD <init>(java.io.File)
+HELPER org.jboss.byteman.sample.helper.StackTraceHelper
+AT RETURN
+IF TRUE
+DO traceStack("*** Opened " + $1.getPath() + " for write in thread " + Thread.currentThread().getName() + "\n")
+ENDRULE
+
+########################################################################
+#
+# Rule to trace create of file output stream from String
+#
+
+RULE FileMonitor trace FileOutputStream create from String
+CLASS java.io.FileOutputStream
+METHOD <init>(String, boolean)
+HELPER org.jboss.byteman.sample.helper.StackTraceHelper
+AT RETURN
+IF TRUE
+DO traceStack("*** Opened " + $1 + " for " + ($2 ? "write" : "append") +" in thread " + Thread.currentThread().getName() + "\n")
+ENDRULE
+
+########################################################################
+#
+# Rule to trace close of file output
+#
+
+RULE FileMonitor trace FileOutputStream close
+CLASS java.io.FileOutputStream
+METHOD <init>(String, boolean)
+HELPER org.jboss.byteman.sample.helper.StackTraceHelper
+AT RETURN
+IF TRUE
+DO traceStack("*** Closed " + $0 + " in thread " + Thread.currentThread().getName() + "\n")
+ENDRULE

@@ -283,8 +283,8 @@ public class ArithmeticExpression extends BinaryOperExpression
         operand0.compile(mv, currentStackHeights, maxStackHeights);
         // do any required type conversion
         compileTypeConversion(type0, type, mv, currentStackHeights, maxStackHeights);
-        // compile lhs -- it adds 1 or 2 to the stack height
-        currentStackHeights.addStackCount((type0.getNBytes() > 4 ? 2 : 1));
+        // compile rhs -- it adds 1 or 2 to the stack height
+        operand1.compile(mv, currentStackHeights, maxStackHeights);
         // do any required type conversion
         compileTypeConversion(type1, type, mv, currentStackHeights, maxStackHeights);
 
@@ -419,7 +419,7 @@ public class ArithmeticExpression extends BinaryOperExpression
 
         // check stack heights
         if (currentStackHeights.stackCount != currentStack + expectedStack) {
-            throw new CompileException("ArithmeticExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expectedStack);
+            throw new CompileException("ArithmeticExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expectedStack));
         }
 
         // we needed room for 2 * expectedStack extra values on the stack -- make sure we got it

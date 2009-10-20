@@ -26,20 +26,39 @@
 
     <property name="ext.asm.jars" value="asm-all-3.0.jar"/>
 
+    <!-- locations for inputs ot build process-->
     <property name="src.dir"           value="src"/>
-    <property name="src.dir.jdk6"           value="srcjdk6"/>
+    <property name="bin.src.dir"       value="bin"/>
+    <property name="docs.src.dir"      value="docs"/>
     <property name="dd.dir"            value="dd"/>
-    <property name="dd.dir.jdk6"            value="ddjdk6"/>
     <property name="dd.grammar.dir"    value="${dd.dir}/grammar"/>
-    <property name="ext.lib.dir" value="ext"/>
+    <property name="ext.lib.dir"       value="ext"/>
+    <property name="tests.dir"         value="tests"/>
+    <property name="tests.src.dir"     value="${tests.dir}/src"/>
+    <property name="tests.dd.dir"      value="${tests.dir}/dd"/>
+
+    <!-- locations of intermediate build products -->
+
     <property name="build.dir"         value="build"/>
     <property name="build.classes.dir" value="${build.dir}/classes"/>
     <property name="build.lib.dir"     value="${build.dir}/lib"/>
-    <property name="htdocs.dir"     value="htdocs"/>
+    <property name="htdocs.dir"        value="htdocs"/>
+
+    <!-- location of installed build products -->
+    <property name="install.dir" value="install"/>
+    <property name="install.lib.dir" value="${install.dir}/lib"/>
+    <property name="install.bin.dir" value="${install.dir}/bin"/>
+    <property name="install.docs.dir" value="${install.dir}/docs"/>
+
+    <!-- names of specific input and output products -->
 
     <property name="ext.jflex.jars" value="JFlex.jar"/>
     <property name="ext.javacup.jars" value="javacup.jar"/>
     <property name="ext.javacup.rt.jars" value="javacuprt.jar"/>
+    <property name="byteman.jar" value="byteman.jar"/>
+    <property name="byteman.bin.scripts" value="bytemancheck.sh submit.sh bmjava.sh"/>
+    <property name="byteman.doc.files" value="ProgrammersGuide.pdf"/>
+    <property name="manifest.file" value="${dd.dir}/META-INF/MANIFEST.MF"/>
 
     <property name="javac.debug" value="on"/>
 
@@ -116,54 +135,79 @@
          -->
          <unjar src="${ext.lib.dir}/javacuprt.jar" dest="${build.classes.dir}"/>
          <unjar src="${ext.lib.dir}/asm-all-3.0.jar" dest="${build.classes.dir}"/>
-         <jar jarfile="${build.lib.dir}/byteman.jar" manifest="${dd.dir}/META-INF/MANIFEST.MF">
+         <jar jarfile="${build.lib.dir}/${byteman.jar}" manifest="${manifest.file}">
              <fileset dir="${build.classes.dir}" includes="**/*"/>
          </jar>
     </target>
 
-    <target name="install" depends="jar">
-        <zip  destfile="${build.dir}/byteman.zip">
-            <fileset dir="${build.dir}" includes="lib/byteman.jar"/>
-            <fileset dir="." includes="README"/>
-            <fileset dir="." includes="docs/ProgrammersGuide.pdf"/>
-            <fileset dir="." includes="bin/bytemancheck.sh bin/submit.sh"/>
-            <fileset dir="." includes="ext/asm-all-3.0.jar"/>
-            <fileset dir="." includes="ext/third_party_licenses.txt"/>
+    <!-- installation targets -->
+    <target  name="init-install">
+        <delete dir="${install.dir}"/>
+        <mkdir dir="${install.dir}"/>
+        <mkdir dir="${install.lib.dir}"/>
+        <mkdir dir="${install.bin.dir}"/>
+        <mkdir dir="${install.docs.dir}"/>
+    </target>
+
+    <target name="local-install">
+        <copy todir="${install.lib.dir}">
+            <fileset dir="${build.lib.dir}" includes="${byteman.jar}"/>
+        </copy>
+        <copy todir="${install.bin.dir}">
+            <fileset dir="${bin.src.dir}" includes="${byteman.bin.scripts}"/>
+        </copy>
+        <copy todir="${install.docs.dir}">
+            <fileset dir="${docs.src.dir}" includes="${byteman.doc.files}"/>
+        </copy>
+    </target>
+
+    <!-- target to make and install samples in samples directory -->
+    <target name="sample-install">
+        <ant dir="sample" target="install"/>
+    </target>
+
+    <target name="install" depends="jar, init-install, local-install, sample-install">
+    </target>
+
+    <!-- target for use by build-release-pkgs script n.b. this assumes it is being run in a clean
+         source tree under tags obtained using svn export. -->
+    <target name="zip" depends="install">
+        <zip destfile="${build.dir}/byteman.zip">
+            <fileset  dir="${install.dir}" includes="**/*"/>
+        </zip>
+        <zip destfile="${build.dir}/byteman-src.zip">
+            <fileset  dir="${install.dir}" includes="**/*"/>
+            <fileset  dir="." includes="${src.dir}/**/*"/>
+            <fileset  dir="." includes="${dd.dir}/**/*"/>
+            <fileset  dir="." includes="${docs.src.dir}/**/*"/>
+            <fileset  dir="." includes="${htdocs.dir}/**/*"/>
+            <fileset  dir="." includes="${bin.src.dir}/**/*"/>
+            <fileset  dir="." includes="${ext.lib.dir}/**/*"/>
+            <fileset  dir="." includes="${tests.src.dir}/**/*"/>
+            <fileset  dir="." includes="${tests.dd.dir}/**/*"/>
         </zip>
     </target>
 
-    <target name="install-src" depends="htdocs">
-        <zip  destfile="${build.dir}/byteman-src.zip">
-            <fileset dir="." includes="README build.xml"/>
-            <fileset dir="${build.dir}" includes="lib/byteman.jar"/>
-            <fileset dir="." includes="src/**/*" excludes="src/**/.svn/**/*"/>
-            <fileset dir="." includes="docs/**" excludes="docs/**/.svn/**/*"/>
-            <fileset dir="." includes="htdocs/**" excludes="docs/**/.svn/**/*"/>
-            <fileset dir="." includes="bin/**" excludes="bin/**/.svn/**/*"/>
-            <fileset dir="." includes="ext/**" excludes="ext/**/.svn/**/*"/>
-            <fileset dir="." includes="dd/**" excludes="dd/**/.svn/**/*"/>
-            <fileset dir="." includes="tests/build.xml"/>
-            <fileset dir="." includes="tests/src/**/*" excludes="tests/src/**/.svn/**/*"/>
-            <fileset dir="." includes="tests/dd/**/*" excludes="tests/sdd/**/.svn/**/*"/>
-        </zip>
-    </target>
-
+    <!-- target to make htdocs for byteman code -->
    <target name="htdocs">
        <delete dir="${htdocs.dir}"/>
        <mkdir dir="${htdocs.dir}"/>
-       <javadoc packagenames="org.jboss.byteman" destdir="${htdocs.dir}" linksource="true" private="true">
+       <javadoc packagenames="org.jboss.byteman" destdir="${htdocs.dir}" private="true">
            <classpath>
                <fileset dir="${ext.lib.dir}" includes="${ext.asm.jars}"/>
                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.jars}"/>
                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
            </classpath>
            <fileset dir="${src.dir}" includes="**/*.java"/>
-           <fileset dir="${src.dir.jdk6}" includes="**/*.java"/>
        </javadoc>
    </target>
 
-   <target name="clean">
-       <delete dir="${build.dir}"/>
-       <delete dir="${dd.grammar.dir}" includes="*.java *.tokens"/>
-    </target>
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dd.grammar.dir}" includes="*.java *.tokens"/>
+     </target>
+
+    <target name="spotless" depends="clean">
+        <delete dir="${install.dir}"/>
+     </target>
 </project>

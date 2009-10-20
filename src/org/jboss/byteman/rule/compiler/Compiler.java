@@ -74,7 +74,7 @@ public class Compiler implements Opcodes
                 byte[] classBytes = compileBytes(rule, helperClass, helperName, compiledHelperName, compileToBytecode);
                 String externalName = compiledHelperName.replaceAll("/", ".");
                 // dump the compiled class bytes if required
-                Transformer.getTheTransformer().maybeDumpClass(externalName, classBytes);
+                Transformer.maybeDumpClass(externalName, classBytes);
                 // ensure the class is loaded
                 // think we need to load the generated helper using the class loader of the trigger class
                 ClassLoader loader = rule.getLoader();

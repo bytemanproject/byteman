@@ -164,6 +164,16 @@ public class Helper
     }
 
     /**
+     * call trace("out, message").
+     * @param message
+     * @return true
+     */
+    public boolean trace(String message)
+    {
+        return trace("out", message);
+    }
+
+    /**
      * write the supplied message to the trace stream identified by identifier, creating a new stream
      * if none exists
      * @param identifier an identifier used subsequently to identify the trace output stream
@@ -189,6 +199,16 @@ public class Helper
         return true;
     }
 
+    /**
+     * call traceln("out", message).
+     * @param message
+     * @return true
+     */
+    public boolean traceln(String message)
+    {
+        return traceln("out", message);
+    }
+    
     /**
      * write the supplied message to the trace stream identified by identifier, creating a new stream
      * if none exists, and append a new line
@@ -433,8 +453,11 @@ public class Helper
                         // do nothing
                     }
                 }
-                // remove the association between the waiter and the wait map
-                removeWaiter(waiter);
+            }
+
+            // remove the association between the waiter and the wait map
+            synchronized (waitMap) {
+                removeWaiter(identifier);
             }
             return true;
         }
@@ -515,8 +538,10 @@ public class Helper
                         // do nothing
                     }
                 }
-                // remove the association between the waiter and the wait map
-                removeWaiter(waiter);
+            }
+            // remove the association between the waiter and the wait map
+            synchronized (waitMap) {
+                removeWaiter(identifier);
             }
             return true;
         }
@@ -879,6 +904,20 @@ public class Helper
     public void killJVM(int exitCode)
     {
         java.lang.Runtime.getRuntime().halt(-1);
+    }
+
+    /**
+     * enable or disable recursive triggering of rules by subsequent operations performed during binding,
+     * testing or firing of the current rule in the current thread.
+     * @param enabled true if triggering should be enabled or false if it should be disabled
+     */
+    public void setTriggering(boolean enabled)
+    {
+        if (enabled) {
+            Rule.enableTriggers();
+        } else {
+            Rule.disableTriggers();
+        }
     }
 
     /**
