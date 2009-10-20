@@ -53,7 +53,7 @@
 usage()
 {
 cat <<EOF
-usage: bmjava [-l rulescript | -b bootjar | -s sysjar | -nl | -nb ]* [--] javaargs
+usage: bmjava [-l rulescript | -b bootjar | -s sysjar | -nl | -nb | -nj ]* [--] javaargs
 
 terms enclosed between [ ] are optional
 terms separated by | are alternatives
@@ -72,6 +72,8 @@ a * means zero or more occurences
 
   -nb  do not add the byteman jar to the bootstrap classpath (it is
        added by default)
+
+  -nj  do not inject into java.lang classes (it is enabled by default)
 
   --  optional separator to distinguish trailing arguments
 
@@ -115,11 +117,11 @@ AGENT_OPTS=""
 # default is to use listener and add byteman jar to bootstrap classpath
 LISTENER=1
 BYTEMAN_BOOT_JAR=1
+INJECT_JAVA_LANG=1
 
 # hmm. the asm code should be bundled in the byteman jar?
 #CP=${CP}:${BYTEMAN_HOME}/ext/asm-all-3.0.jar
 
-echo "\$# == $#" 
 while [ $# -ge 1 -a "${1#-*}" != "$1" ]
 do
     if [ "$1" == "-l" -a $# -ge 2 ]; then
@@ -155,6 +157,9 @@ do
     elif [ "$1" == "-nb" ]; then
 	    BYTEMAN_BOOT_JAR=0
 	    shift;
+    elif [ "$1" == "-nj" ]; then
+	    INJECT_JAVA_LANG=0
+	    shift;
     elif [ "$1" == "--" ]; then
 	    shift;
 	    break;
@@ -174,9 +179,15 @@ else
     AGENT_OPTS="listener:false$AGENT_OPTS"
 fi
 
+if [ $INJECT_JAVA_LANG -eq 1 ]; then
+    INJECT_JAVA_LANG_OPTS="-Dorg.jboss.byteman.quodlibet"
+else
+    INJECT_JAVA_LANG_OPTS=""
+fi
+
 AGENT_ARGUMENT=${AGENT_PREFIX}=${AGENT_OPTS}
 
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 
-exec java ${BYTEMAN_JAVA_OPTS} ${AGENT_ARGUMENT} $*
+exec java ${BYTEMAN_JAVA_OPTS} ${AGENT_ARGUMENT} ${INJECT_JAVA_LANG_OPTS} $*
 
