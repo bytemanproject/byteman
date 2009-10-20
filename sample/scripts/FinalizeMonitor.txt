@@ -23,33 +23,20 @@
 #
 # FinalizeMonitor
 #
-# A byteman script which tarecs calls to Object.finalize().
+# A byteman script which traces calls to Object.finalize().
 #
-# In order for this to run successfully the byteman jar and the byteman
-# samples jar need to be added to the bootstrap classpath using the
-# boot option to the -javaagent JVM command line argument. The script may
-# be loaded either at JVM startup, as shown below, or submitted dynamically
-# via the byteman listener (this requires use of the listener:true option)
-#
-# to use ths script with java program org.my.App execute the following commands
+# to use ths script to trace execution of java program org.my.App execute
 #
 #  -- set the directory in which byteman has been installed
 #  BYTEMAN_HOME= ...
 #
-#   -- we need to add byteman jar and samples jar to the boot path
-#   BYTEMAN_JAR=${BYTEMAN_HOME}/lib/byteman.jar
-#   SAMPLE_JAR=${BYTEMAN_HOME}/sample/lib/byteman-samples.jar
+#   -- identify the samples jar to the boot path
+#   SAMPLE_JAR=${BYTEMAN_HOME}/sample/lib/byteman-sample.jar
 #
 #   -- identify this script
 #   SCRIPT={BYTEMAN_HOME}/sample/scripts/FinalizeMonitor.txt
 #
-#   -- setting this property enables transformation of java.lang classes!
-#   ALLOW_JAVA_LANG=-Dorg.jboss.byteman.quodlibet
-#
-#   -- compose the javaagent options and pass to the java command
-#   BYTEMAN_OPTS=-javaagent:${BYTEMAN_JAR}=script:${SCRIPT},boot:${BYTEMAN_JAR},boot:${SAMPLE_JAR}
-#   java ${ALLOW_JAVA_LANG} ${BYTEMAN_OPTS} org.my.App
-#
+#  ${BYTEMAN_HOME}/bin/bmjava.sh -l $SCRIPT -b $SAMPLE_JAR org.my.App
 #
 
 ########################################################################
