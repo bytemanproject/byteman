@@ -81,7 +81,7 @@ public class StackTraceHelper extends Helper
         int i = start;
         // find the trigger method frame above the rule engine entry point
         // we should see two calls to rule.execute()
-        for (i = 0; i < limit; i++) {
+        for (; i < limit; i++) {
             String fullName = stack[i].getClassName() + "." + stack[i].getMethodName();
             if (fullName.matches(pattern)) {
                 return i;
