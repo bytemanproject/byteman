@@ -120,10 +120,13 @@
 
         <zip basedir="${workdir}" destfile="${workdir}/byteman-${filename}-src.zip"
              includes="${tag}/**"/>
-        <!-- build the src and binary release zips -->
+        <!-- build the binary release -->
+        <delete file="${workdir}/byteman-${filename}.zip"/>
         <ant dir="${workdir}/${tag}" antfile="build.xml" target="zip">
             <property name="tag" value="${tag}"/>
         </ant>
+        <copy tofile="${workdir}/byteman-${filename}.zip" file="${workdir}/${tag}/build/byteman.zip">
+        </copy>
     </target>
 
     <!-- copy the release into the cms svn tree (http://www.jboss.org/jbosstm web site content) -->
