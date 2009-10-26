@@ -100,10 +100,6 @@ public class Main {
 
         for (String scriptPath : scriptPaths) {
             try {
-//                if (Transformer.isVerbose()) {
-//                    System.out.println("processing script file " + scriptPath);
-//                }
-
                 FileInputStream fis = new FileInputStream(scriptPath);
                 byte[] bytes = new byte[fis.available()];
                 fis.read(bytes);
@@ -139,15 +135,9 @@ public class Main {
         Class transformerClazz;
 
         if (allowRedefine && isRedefine) {
-//            if (Transformer.isVerbose()) {
-//                System.out.println("Adding retransformer");
-//            }
             transformerClazz = loader.loadClass("org.jboss.byteman.agent.Retransformer");
             //transformer = new Retransformer(inst, scriptPaths, scripts, true);
         } else {
-//            if (Transformer.isVerbose()) {
-//                System.out.println("Adding transformer");
-//            }
             transformerClazz = loader.loadClass("org.jboss.byteman.agent.Transformer");
             //transformer = new Transformer(inst, scriptPaths, scripts, isRedefine);
         }
