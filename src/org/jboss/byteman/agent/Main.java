@@ -55,6 +55,14 @@ public class Main {
                     bootJarPaths.add(arg.substring(BOOT_PREFIX.length(), arg.length()));
                 } else if (arg.startsWith(SYS_PREFIX)) {
                     sysJarPaths.add(arg.substring(SYS_PREFIX.length(), arg.length()));
+                } else if (arg.startsWith(ADDRESS_PREFIX)) {
+                    hostname = arg.substring(ADDRESS_PREFIX.length(), arg.length());
+                } else if (arg.startsWith(PORT_PREFIX)) {
+                    try {
+                        port = Integer.valueOf(arg.substring(PORT_PREFIX.length(), arg.length()));
+                    } catch (Exception e) {
+                        System.err.println("Invalid port specified [" + arg + "]. Cause: " + e);
+                    }
                 } else if (arg.startsWith(SCRIPT_PREFIX)) {
                     scriptPaths.add(arg.substring(SCRIPT_PREFIX.length(), arg.length()));
                 } else if (arg.startsWith(LISTENER_PREFIX)) {
@@ -137,14 +145,15 @@ public class Main {
         if (allowRedefine && isRedefine) {
             transformerClazz = loader.loadClass("org.jboss.byteman.agent.Retransformer");
             //transformer = new Retransformer(inst, scriptPaths, scripts, true);
+            Constructor constructor = transformerClazz.getConstructor(Instrumentation.class, List.class, List.class, boolean.class, String.class, Integer.class);
+            transformer = (ClassFileTransformer)constructor.newInstance(new Object[] { inst, scriptPaths, scripts, isRedefine, hostname, port});
         } else {
             transformerClazz = loader.loadClass("org.jboss.byteman.agent.Transformer");
             //transformer = new Transformer(inst, scriptPaths, scripts, isRedefine);
+            Constructor constructor = transformerClazz.getConstructor(Instrumentation.class, List.class, List.class, boolean.class);
+            transformer = (ClassFileTransformer)constructor.newInstance(new Object[] { inst, scriptPaths, scripts, isRedefine});
         }
 
-        Constructor constructor = transformerClazz.getConstructor(Instrumentation.class, List.class, List.class, boolean.class);
-        transformer = (ClassFileTransformer)constructor.newInstance(new Object[] { inst, scriptPaths, scripts, isRedefine});
-        
         inst.addTransformer(transformer, true);
         if (isRedefine) {
             Method method = transformerClazz.getMethod("installBootScripts");
@@ -153,6 +162,16 @@ public class Main {
         }
     }
 
+    /**
+     * prefix used to specify port argument for agent
+     */
+    private static final String PORT_PREFIX = "port:";
+
+    /**
+     * prefix used to specify bind address argument for agent
+     */
+    private static final String ADDRESS_PREFIX = "address:";
+    
     /**
      * prefix used to specify boot jar argument for agent
      */
@@ -200,4 +219,14 @@ public class Main {
      * list of scripts read from script files
      */
     private static List<String> scripts = new ArrayList<String>();
+    
+    /**
+     * The hostname to bind the listener to, supplied on the command line (optional argument)
+     */
+    private static String hostname = null;
+    
+    /**
+     * The port that the listener will listen to, supplied on the command line (optional argument)
+     */
+    private static Integer port = null;
 }

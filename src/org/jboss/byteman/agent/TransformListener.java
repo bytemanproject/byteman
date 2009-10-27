@@ -17,6 +17,7 @@ import java.util.jar.JarFile;
 public class TransformListener extends Thread
 {
     public static int DEFAULT_PORT = 9091;
+    public static String DEFAULT_HOST = "localhost";
     private static TransformListener theTransformListener = null;
     private static ServerSocket theServerSocket;
     private Retransformer retransformer;
@@ -27,14 +28,20 @@ public class TransformListener extends Thread
         setDaemon(true);        
     }
 
-    public static synchronized boolean initialize(Retransformer retransformer)
+    public static synchronized boolean initialize(Retransformer retransformer, String hostname, Integer port)
     {
         if (theTransformListener == null) {
             try {
+                if (hostname == null) {
+                    hostname = DEFAULT_HOST;
+                }
+                if (port == null) {
+                    port = Integer.valueOf(DEFAULT_PORT);
+                }
                 theServerSocket = new ServerSocket();
-                theServerSocket.bind(new InetSocketAddress("localhost", DEFAULT_PORT));
+                theServerSocket.bind(new InetSocketAddress(hostname, port.intValue()));
                 if (Transformer.isVerbose()) {
-                    System.out.println("TransformListener() : accepting requests on port " + DEFAULT_PORT);
+                    System.out.println("TransformListener() : accepting requests on " + hostname + ":" + port);
                 }
             } catch (IOException e) {
                 System.out.println("TransformListener() : unexpected exception opening server socket " + e);
@@ -198,8 +205,9 @@ public class TransformListener extends Thread
 
     private void loadJars(BufferedReader in, PrintWriter out, boolean isBoot) throws IOException
     {
+        final String endMarker = (isBoot) ? "ENDBOOT" : "ENDSYS";
         String line = in.readLine().trim();
-        while (line != null && !line.equals("ENDBOOT")) {
+        while (line != null && !line.equals(endMarker)) {
             try {
                 JarFile jarfile = new JarFile(new File(line));
                 retransformer.appendJarFile(out, jarfile, isBoot);
@@ -212,9 +220,9 @@ public class TransformListener extends Thread
             }
             line = in.readLine().trim();
         }
-        if (line == null || !line.equals("ENDBOOT")) {
+        if (line == null || !line.equals(endMarker)) {
             out.append("ERROR\n");
-            out.append("Unexpected end of line reading boot jars\n");
+            out.append("Unexpected end of line reading " + ((isBoot) ? "boot" : "system") + " jars\n");
         }
         out.println("OK");
         out.flush();

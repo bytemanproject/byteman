@@ -56,6 +56,7 @@
     <property name="ext.javacup.jars" value="javacup.jar"/>
     <property name="ext.javacup.rt.jars" value="javacuprt.jar"/>
     <property name="byteman.jar" value="byteman.jar"/>
+    <property name="byteman-submit.jar" value="byteman-submit.jar"/>
     <property name="byteman.bin.scripts" value="bytemancheck.sh submit.sh bmjava.sh"/>
     <property name="byteman.doc.files" value="ProgrammersGuide.pdf"/>
     <property name="manifest.file" value="${dd.dir}/META-INF/MANIFEST.MF"/>
@@ -101,16 +102,16 @@
                 <fileset dir="${ext.lib.dir}" includes="${ext.javacup.jars}"/>
                 <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
             </classpath>
-	    <arg value="-package"/>
-	    <arg value="org.jboss.byteman.rule.grammar"/>
+            <arg value="-package"/>
+            <arg value="org.jboss.byteman.rule.grammar"/>
             <arg value="-parser" />
             <arg value="ECAGrammarParser" />
             <arg value="-nonterms"/>
             <arg value="${dd.grammar.dir}/cup/ECAGrammar.cup"/>
         </java>
-	<delete file="${src.dir}/org/jboss/byteman/rule/grammar/ECATokenLexer.java"/>
-	<delete file="${src.dir}/org/jboss/byteman/rule/grammar/ECAGrammarParser.java"/>
-	<delete file="${src.dir}/org/jboss/byteman/rule/grammar/sym.java"/>
+        <delete file="${src.dir}/org/jboss/byteman/rule/grammar/ECATokenLexer.java"/>
+        <delete file="${src.dir}/org/jboss/byteman/rule/grammar/ECAGrammarParser.java"/>
+        <delete file="${src.dir}/org/jboss/byteman/rule/grammar/sym.java"/>
         <move file="${dd.grammar.dir}/flex/ECATokenLexer.java"
             tofile="${src.dir}/org/jboss/byteman/rule/grammar/ECATokenLexer.java"/>
         <move file="ECAGrammarParser.java"
@@ -129,14 +130,20 @@
         </javac>
     </target>
 
-     <target name="jar" depends="compile">
-       <!--
+    <target name="jar" depends="compile">
+        <!--
          <unjar src="${ext.lib.dir}/junit.jar" dest="${build.classes.dir}"/>
          -->
          <unjar src="${ext.lib.dir}/javacuprt.jar" dest="${build.classes.dir}"/>
          <unjar src="${ext.lib.dir}/asm-all-3.0.jar" dest="${build.classes.dir}"/>
          <jar jarfile="${build.lib.dir}/${byteman.jar}" manifest="${manifest.file}">
              <fileset dir="${build.classes.dir}" includes="**/*"/>
+         </jar>
+         <jar jarfile="${build.lib.dir}/${byteman-submit.jar}">
+             <fileset dir="${build.classes.dir}" includes="**/Submit*.class"/>
+             <manifest>
+                 <attribute name="Main-Class" value="org.jboss.byteman.agent.submit.Submit"/>
+             </manifest>
          </jar>
     </target>
 
@@ -152,6 +159,9 @@
     <target name="local-install">
         <copy todir="${install.lib.dir}">
             <fileset dir="${build.lib.dir}" includes="${byteman.jar}"/>
+        </copy>
+        <copy todir="${install.lib.dir}">
+            <fileset dir="${build.lib.dir}" includes="${byteman-submit.jar}"/>
         </copy>
         <copy todir="${install.bin.dir}">
             <fileset dir="${bin.src.dir}" includes="${byteman.bin.scripts}"/>
@@ -205,9 +215,11 @@
     <target name="clean">
         <delete dir="${build.dir}"/>
         <delete dir="${dd.grammar.dir}" includes="*.java *.tokens"/>
+        <ant dir="sample" target="clean"/>
      </target>
 
     <target name="spotless" depends="clean">
         <delete dir="${install.dir}"/>
+        <ant dir="sample" target="spotless"/>
      </target>
 </project>

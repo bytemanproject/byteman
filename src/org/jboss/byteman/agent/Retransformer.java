@@ -39,11 +39,11 @@ public class Retransformer extends Transformer {
      *
      * @param inst the instrumentation object used to interface to the JVM
      */
-    public Retransformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts, boolean isRedefine)
+    public Retransformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts, boolean isRedefine, String hostname, Integer port)
             throws Exception
     {
         super(inst, scriptPaths, scriptTexts, isRedefine);
-        addTransformListener();
+        addTransformListener(hostname, port);
     }
 
     protected void installScript(List<String> scriptTexts, List<String> scriptNames, PrintWriter out) throws Exception
@@ -190,9 +190,9 @@ public class Retransformer extends Transformer {
         }
     }
 
-    private void addTransformListener()
+    private void addTransformListener(String hostname, Integer port)
     {
-        TransformListener.initialize(this);
+        TransformListener.initialize(this, hostname, port);
     }
 
     public void removeScripts(List<String> scriptTexts, PrintWriter out) throws Exception
