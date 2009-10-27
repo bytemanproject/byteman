@@ -24,7 +24,14 @@
 # shell script which starts a java program with the byteman
 # agent installed
 #
-# usage: bmjava [-r rulescript | -b bootjar | -s sysjar | -nl | -nb ]* [--] javaargs
+# usage: bmjava [-p port] [-h host] \
+#          [-r rulescript | -b bootjar | -s sysjar | -nl | -nb ]* [--] javaargs
+#   -p use the number which follows as the port when opening the listener
+#      socket
+#
+#   -h use the string which follows as the host name when opening
+#      the listener socket
+#
 #   -r pass the file whose name follows this flag to the agent as
 #      a rule script
 #
@@ -53,11 +60,17 @@
 usage()
 {
 cat <<EOF
-usage: bmjava [-l rulescript | -b bootjar | -s sysjar | -nl | -nb | -nj ]* [--] javaargs
+usage: bmjava  [-p port] [-h host] [-l rulescript | -b bootjar | -s sysjar | -nl | -nb | -nj ]* [--] javaargs
 
 terms enclosed between [ ] are optional
 terms separated by | are alternatives
 a * means zero or more occurences
+
+   -p use the number which follows as the port when opening the
+      listener socket (default is 9091)
+
+   -h use the string which follows as the host name when opening
+      the listener socket (default is localhost)
 
   -l  pass the file whose name follows this flag to the agent as
       a rule script to be loaded during startup
@@ -118,6 +131,8 @@ AGENT_OPTS=""
 LISTENER=1
 BYTEMAN_BOOT_JAR=1
 INJECT_JAVA_LANG=1
+PORT=
+HOST=
 
 # hmm. the asm code should be bundled in the byteman jar?
 #CP=${CP}:${BYTEMAN_HOME}/ext/asm-all-3.0.jar
@@ -151,6 +166,14 @@ do
 	    echo "Cannot read system jar $2"
 	    exit
 	fi
+    elif [ "$1" == "-p" -a $# -ge 2 ]; then
+	    PORT=$2
+	    shift;
+	    shift;
+    elif [ "$1" == "-h" -a $# -ge 2 ]; then
+	    HOST=$2
+	    shift;
+	    shift;
     elif [ "$1" == "-nl" ]; then
 	    LISTENER=0
 	    shift;
@@ -163,9 +186,9 @@ do
     elif [ "$1" == "--" ]; then
 	    shift;
 	    break;
-	else
-	    # unrecognised option -- must be start of javaargs
-	    break
+    else
+        # unrecognised option -- must be start of javaargs
+	break
     fi
 done
 
@@ -174,8 +197,23 @@ if [ $BYTEMAN_BOOT_JAR -eq 1 ]; then
 fi
 
 if [ $LISTENER -eq 1 ]; then
+    if [ "$PORT" != "" ]; then
+	AGENT_OPTS=${AGENT_OPTS},port:${PORT}
+    fi
+    if [ "$HOST" != "" ]; then
+	AGENT_OPTS=${AGENT_OPTS},address:${HOST}
+    fi
     AGENT_OPTS="listener:true$AGENT_OPTS"
 else
+    if [ "$PORT" != "" ]; then
+	echo "incompatible opions -p and -nl"
+	exit 1
+    fi
+    if [ "$HOST" != "" ]; then
+	AGENT_OPTS=${AGENT_OPTS},host:${HOST}
+  	echo "incompatible opions -h and -nl"
+	exit 1
+  fi
     AGENT_OPTS="listener:false$AGENT_OPTS"
 fi
 

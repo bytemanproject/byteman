@@ -24,7 +24,10 @@
 # shell script which submits a request to the Byteman agent listener
 # either to list, install or uninstall rule scripts
 #
-# usage: submit [-l|-u] [script1 . . . scriptN] | [-b | -s] bootjar1 . . .
+# usage: submit [-p port] [-h host] [-l|-u] [script1 . . . scriptN]
+#        submit [-p port] [-h host] [-b | -s] bootjar1 . . .
+#   -p specifies the listener port (default 9091)
+#   -h specifies the listener host name (default localhost)
 #   -l (default) install rules in script1 . . . scriptN
 #      with no scripts list all installed rules
 #   -u uninstall rules in script1 . . . scriptN
