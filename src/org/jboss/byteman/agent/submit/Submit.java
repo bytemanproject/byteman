@@ -92,11 +92,7 @@ public class Submit
      *             if the request failed
      */
     public String deleteAllRules() throws Exception {
-        Comm comm = new Comm(address, port);
-        comm.println("DELETEALL");
-        String results = comm.readResponse();
-        comm.close();
-        return results;
+        return submitRequest("DELETEALL\n");
     }
 
     /**
@@ -108,11 +104,7 @@ public class Submit
      *             if the request failed
      */
     public String listAllRules() throws Exception {
-        Comm comm = new Comm(address, port);
-        comm.println("LIST");
-        String results = comm.readResponse();
-        comm.close();
-        return results;
+        return submitRequest("LIST\n");
     }
 
     /**
@@ -140,11 +132,7 @@ public class Submit
         }
         str.append("ENDBOOT\n");
 
-        Comm comm = new Comm(this.address, this.port);
-        comm.print(str.toString());
-        String results = comm.readResponse();
-        comm.close();
-        return results;
+        return submitRequest(str.toString());
     }
 
     /**
@@ -172,11 +160,7 @@ public class Submit
         }
         str.append("ENDSYS\n");
 
-        Comm comm = new Comm(this.address, this.port);
-        comm.print(str.toString());
-        String results = comm.readResponse();
-        comm.close();
-        return results;
+        return submitRequest(str.toString());
     }
 
     /**
@@ -228,12 +212,7 @@ public class Submit
         }
         str.append("ENDLOAD\n");
 
-        Comm comm = new Comm(this.address, this.port);
-        comm.print(str.toString());
-        String results = comm.readResponse();
-        comm.close();
-        return results;
-
+        return submitRequest(str.toString());
     }
 
     /**
@@ -287,12 +266,29 @@ public class Submit
         }
         str.append("ENDDELETE\n");
 
-        Comm comm = new Comm(this.address, this.port);
-        comm.print(str.toString());
-        String results = comm.readResponse();
-        comm.close();
-        return results;
+        return submitRequest(str.toString());
+    }
 
+    /**
+     * Submits the generic request string to the Byteman agent for processing.
+     * 
+     * @param request
+     *            the request to submit
+     * 
+     * @return the response that the Byteman agent replied with
+     * 
+     * @throws Exception
+     *             if the request failed
+     */
+    public String submitRequest(String request) throws Exception {
+        Comm comm = new Comm(this.address, this.port);
+        try {
+            comm.print(request);
+            String results = comm.readResponse();
+            return results;
+        } finally {
+            comm.close();
+        }
     }
 
     private Map<String, String> getRulesFromRuleFiles(List<String> filePaths) throws Exception {
