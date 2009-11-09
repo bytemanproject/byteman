@@ -104,7 +104,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
             Method method = Method.getMethod("void execute(String, Object, Object[])");
             // we are at the relevant line in the method -- so add a trigger call here
             if (Transformer.isVerbose()) {
-                System.out.println("AccessTriggerMethodAdapter.visitLineNumber : inserting trigger for " + rule.getName());
+                System.out.println("EntryTriggerMethodAdapter.injectTriggerPoint : inserting trigger for " + rule.getName());
             }
             startLabel = newLabel();
             endLabel = newLabel();
