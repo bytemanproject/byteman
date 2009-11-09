@@ -128,6 +128,7 @@ public class TestScript
             int len = lines.length;
             try {
                 String targetClassName;
+                boolean isInterface = false;
                 String targetMethodName;
                 String targetHelperName = null;
                 LocationType locationType = null;
@@ -160,7 +161,11 @@ public class TestScript
                 if (lines[idx].startsWith("CLASS ")) {
                     targetClassName = lines[idx].substring(6).trim();
                     idx++;
-                } else {
+                } else if (lines[idx].startsWith("INTERFACE ")) {
+                    targetClassName = lines[idx].substring(10).trim();
+                    isInterface = true;
+                    idx++;
+                }  else {
                     throw new ParseException("CLASS should follow RULE :\n" + lines[idx]) ;
                 }
                 while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
@@ -223,11 +228,16 @@ public class TestScript
                         System.out.println("TestScript : unknown helper class " + targetHelperName + " for rule " + ruleName);
                     }
                 }
-                RuleScript ruleScript = new RuleScript(ruleName, targetClassName, targetMethodName, targetHelperName, targetLocation, text, baseline + lineNumber, file);
+                RuleScript ruleScript = new RuleScript(ruleName, targetClassName, isInterface, targetMethodName, targetHelperName, targetLocation, text, baseline + lineNumber, file);
                 Rule rule = Rule.create(ruleScript, targetHelperClass, loader);
                 System.err.println("TestScript: parsed rule " + rule.getName());
                 System.err.println(rule);
                 
+                if (isInterface) {
+                    System.err.println("TestScript: cannot type check interface rule " + ruleName);
+                    continue;
+                }
+
                 String targetName = TypeHelper.parseMethodName(targetMethodName);
                 String targetDesc = TypeHelper.parseMethodDescriptor(targetMethodName);
                 boolean found = false;

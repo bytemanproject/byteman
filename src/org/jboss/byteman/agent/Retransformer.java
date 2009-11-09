@@ -84,26 +84,26 @@ public class Retransformer extends Transformer {
             // remove any old scripts and install the new ones to ensure that
             // automatic loads do the right thing
 
-            synchronized(targetToScriptMap) {
-                List<RuleScript> list = targetToScriptMap.get(className);
+            synchronized(targetClassToScriptMap) {
+                List<RuleScript> list = targetClassToScriptMap.get(className);
                 if (list != null) {
                     if (previous != null) {
                         list.remove(previous);
                     }
                 } else {
                     list = new ArrayList<RuleScript>();
-                    targetToScriptMap.put(className, list);
+                    targetClassToScriptMap.put(className, list);
                 }
                 list.add(ruleScript);
                 if (baseName != null) {
-                    list = targetToScriptMap.get(baseName);
+                    list = targetClassToScriptMap.get(baseName);
                     if (list != null) {
                         if (previous != null) {
                             list.remove(previous);
                         }
                     } else {
                         list = new ArrayList<RuleScript>();
-                        targetToScriptMap.put(baseName, list);
+                        targetClassToScriptMap.put(baseName, list);
                     }
                 }
             }
@@ -248,20 +248,20 @@ public class Retransformer extends Transformer {
 
             ruleScript.setDeleted();
             
-            synchronized(targetToScriptMap) {
-                List<RuleScript> list = targetToScriptMap.get(targetClassName);
+            synchronized(targetClassToScriptMap) {
+                List<RuleScript> list = targetClassToScriptMap.get(targetClassName);
                 if (list != null) {
                     list.remove(ruleScript);
                     if (list.isEmpty()) {
-                        targetToScriptMap.remove(targetClassName);
+                        targetClassToScriptMap.remove(targetClassName);
                     }
                 }
                 if (baseName != null) {
-                    list = targetToScriptMap.get(baseName);
+                    list = targetClassToScriptMap.get(baseName);
                     if (list != null) {
                         list.remove(ruleScript);
                         if (list.isEmpty()) {
-                            targetToScriptMap.remove(baseName);
+                            targetClassToScriptMap.remove(baseName);
                         }
                     }
                 }

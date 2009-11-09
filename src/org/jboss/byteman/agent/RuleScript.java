@@ -39,6 +39,7 @@ public class RuleScript
 {
     private String name;
     private String targetClass;
+    private boolean isInterface;
     private String targetMethod;
     private String targetHelper;
     private Location targetLocation;
@@ -50,8 +51,14 @@ public class RuleScript
 
     public RuleScript(String name, String targetClass, String targetMethod, String targetHelper, Location targetLocation, String ruleText, int line, String file)
     {
+        this(name, targetClass, false, targetMethod, targetHelper, targetLocation, ruleText, line, file);
+    }
+    
+    public RuleScript(String name, String targetClass, boolean isInterface, String targetMethod, String targetHelper, Location targetLocation, String ruleText, int line, String file)
+    {
         this.name = name;
         this.targetClass = targetClass;
+        this.isInterface =  isInterface;
         this.targetMethod = targetMethod;
         this.targetHelper = targetHelper;
         this.targetLocation = (targetLocation != null ? targetLocation : Location.create(LocationType.ENTRY, ""));
@@ -67,6 +74,10 @@ public class RuleScript
 
     public String getTargetClass() {
         return targetClass;
+    }
+
+    public boolean isInterface() {
+        return isInterface;
     }
 
     public String getTargetHelper() {
@@ -235,7 +246,11 @@ public class RuleScript
         writer.println(line);
         writer.print("RULE ");
         writer.println(name);
-        writer.print("CLASS ");
+        if (isInterface) {
+            writer.print("INTERFACE ");
+        } else {
+            writer.print("CLASS ");
+        }
         writer.println(targetClass);
         writer.print("METHOD ");
         writer.println(targetMethod);

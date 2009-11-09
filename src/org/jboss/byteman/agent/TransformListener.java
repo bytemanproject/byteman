@@ -61,7 +61,7 @@ public class TransformListener extends Thread
         // we don't want the listener shutdown to be aborted because of triggered rules
         boolean enabled = true;
         try {
-        enabled = Rule.disableTriggers();
+        enabled = Rule.disableTriggersInternal();
 
         if (theTransformListener != null) {
             try {
@@ -85,7 +85,7 @@ public class TransformListener extends Thread
         return true;
         } finally {
             if (enabled) {
-                Rule.enableTriggers();
+                Rule.enableTriggersInternal();
             }
         }
     }
@@ -94,7 +94,7 @@ public class TransformListener extends Thread
     {
         // we don't want to see any triggers in the listener thread
         
-        Rule.disableTriggers();
+        Rule.disableTriggersInternal();
 
         while (true) {
             if (theServerSocket.isClosed()) {
