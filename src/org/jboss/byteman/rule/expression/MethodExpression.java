@@ -29,7 +29,6 @@ import org.jboss.byteman.rule.binding.Binding;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
-import org.jboss.byteman.rule.exception.ThrowException;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
@@ -263,6 +262,10 @@ public class MethodExpression extends Expression
                 argValues[i] = arguments.get(i).interpret(helper);
             }
 
+            // we have to enable triggers whenever we call out to a method in case it contians a trigger point
+            // TODO - do we do this if the method is a built-in? i.e. if the target is an instance of the helper class
+            // TODO - this breaks the user disable option so fix it!
+            Rule.enableTriggersInternal();
             return method.invoke(recipientValue, argValues);
         } catch (InvocationTargetException e) {
             Throwable th = e.getCause();
@@ -275,6 +278,9 @@ public class MethodExpression extends Expression
             throw e;
         } catch (Exception e) {
             throw new ExecuteException("MethodExpression.interpret : exception invoking method " + token.getText() + getPos(), e);
+        } finally {
+            // disable triggers again
+            Rule.disableTriggersInternal();
         }
     }
 
@@ -303,9 +309,18 @@ public class MethodExpression extends Expression
             extraParams += (paramType.getNBytes() > 4 ? 2 : 1);
         }
 
-        String ownerName = Type.internalName(method.getDeclaringClass());
+        // enable triggering before we call the method
+        // this temporarily adds an extra value to the stack so we need to check the stack height
+        mv.visitMethodInsn(Opcodes.INVOKESTATIC, "org/jboss/byteman/rule/Rule", "enableTriggersInternal", "()Z");
+        mv.visitInsn(Opcodes.POP);
+        if (maxStackHeights.stackCount == currentStackHeights.stackCount) {
+            maxStackHeights.stackCount++;
+        }
 
         // ok, now just call the method -- removes extraParams words
+
+        String ownerName = Type.internalName(method.getDeclaringClass());
+
         if (recipient == null) {
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, ownerName, method.getName(), getDescriptor());
         } else if (recipient.getClass().isInterface()) {
@@ -313,6 +328,13 @@ public class MethodExpression extends Expression
         } else {
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, ownerName, method.getName(), getDescriptor());
         }
+
+        // now disable triggering again
+        // this temporarily adds an extra value to the stack but cannot increase the max height
+        
+        mv.visitMethodInsn(Opcodes.INVOKESTATIC, "org/jboss/byteman/rule/Rule", "disableTriggersInternal", "()Z");
+        mv.visitInsn(Opcodes.POP);
+
         // no need for type conversion as return type was derived from method
         if (type.getNBytes() > 4) {
             expected = 2;

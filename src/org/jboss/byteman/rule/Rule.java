@@ -335,21 +335,49 @@ public class Rule
     }
 
     /**
-     * disable triggering of rules inside the current thread
+     * disable triggering of rules inside the current thread. this is the version called internally
+     * after returning from a method call in a rule binding, condition or action.
+     * @return true if triggering was previously enabled and false if it was already disabled
+     */
+    public static boolean disableTriggersInternal()
+    {
+        return Transformer.disableTriggers(false);
+    }
+
+    /**
+     * enable triggering of rules inside the current thread n.b. this is called internally by the rule
+     * engine before it executes a method call in a rule binding, condition or action. it will not
+     * enable triggers if they have been switched off by an earlier call to userDisableTriggers.
+     * @return true if triggering was previously enabled and false if it was already disabled
+     */
+    public static boolean enableTriggersInternal()
+    {
+        return Transformer.enableTriggers(false);
+    }
+
+    /**
+     * disable triggering of rules inside the current thread. this is the version which should be
+     * called from a Helper class to ensure that subsequent method invocatiosn during execution of
+     * the current rule bindings, condition or action do not recursively trigger rules. It ensures
+     * that subsequent calls to enableTriggers have no effect. The effect lasts until the end of
+     * processing for the current rule when resetTriggers is called.
      * @return true if triggering was previously enabled and false if it was already disabled
      */
     public static boolean disableTriggers()
     {
-        return Transformer.disableTriggers();
+        return Transformer.disableTriggers(true);
     }
 
     /**
-     * enable triggering of rules inside the current thread
+     * enable triggering of rules inside the current thread. this is called internally by the rule
+     * engine after rule execution has completed. it will re-enable triggers even if they have been
+     * switched off by an earlier call to userDisableTriggers. It is also called by the default helper
+     * to reverse the effect of calling userDisableTriggers.
      * @return true if triggering was previously enabled and false if it was already disabled
      */
     public static boolean enableTriggers()
     {
-        return Transformer.enableTriggers();
+        return Transformer.enableTriggers(true);
     }
 
     /**
@@ -378,7 +406,6 @@ public class Rule
             boolean triggerEnabled = false;
             String detail = "";
             try {
-                triggerEnabled = disableTriggers();
                 typeCheck();
                 compile();
                 checked = true;
@@ -398,11 +425,6 @@ public class Rule
                 ce.printStackTrace(writer);
                 detail = stringWriter.toString();
                 System.out.println(detail);
-            } finally {
-                // be sure to return the status quo
-                if (triggerEnabled) {
-                    enableTriggers();
-                }
             }
 
             ruleScript.recordCompile(triggerClass, loader, !checkFailed, detail);
@@ -533,6 +555,12 @@ public class Rule
             // we don't trigger code while we are doing rule housekeeping
             return;
         }
+
+        // disable triggering until we get into actual rule code
+        
+        disableTriggersInternal();
+
+        try {
         Rule rule = ruleKeyMap.get(key);
         if (Transformer.isVerbose()) {
             System.out.println("Rule.execute called for " + key);
@@ -544,6 +572,10 @@ public class Rule
         }
 
         rule.execute(recipient, args);
+        } finally {
+            // restore the status quo -- we must have been enabled if we got to this method
+            enableTriggers();
+        }            
     }
 
     /**
@@ -603,9 +635,6 @@ public class Rule
             } catch (Throwable throwable) {
                 System.out.println(getName() + " : " + throwable);
                 throw new ExecuteException(getName() + "  : caught " + throwable, throwable);
-            } finally {
-                // restore the status quo -- we must have been enabled if we got to this method
-                enableTriggers();
             }
         }
     }
