@@ -56,7 +56,7 @@ public class Retransformer extends Transformer {
             String scriptText = scriptTexts.get(i);
             String scriptName = scriptNames.get(i);
 
-            List<RuleScript> ruleScripts = processScripts(scriptText, scriptName);
+            List<RuleScript> ruleScripts = scriptRepository.processScripts(scriptText, scriptName);
             toBeAdded.addAll(ruleScripts);
         }
 
@@ -71,46 +71,16 @@ public class Retransformer extends Transformer {
 
             RuleScript previous;
 
-            previous = nameToScriptMap.get(name);
+            previous = scriptRepository.addScript(ruleScript);
             if (previous != null) {
-                out.println("redefining rule " + name);
+                out.println("redefine rule " + name);
                 toBeRemoved.add(previous);
-                previous.setDeleted();
             } else {
                 out.println("install rule " + name);
             }
-            nameToScriptMap.put(name, ruleScript);
-
-            // remove any old scripts and install the new ones to ensure that
-            // automatic loads do the right thing
-
-            synchronized(targetClassToScriptMap) {
-                List<RuleScript> list = targetClassToScriptMap.get(className);
-                if (list != null) {
-                    if (previous != null) {
-                        list.remove(previous);
-                    }
-                } else {
-                    list = new ArrayList<RuleScript>();
-                    targetClassToScriptMap.put(className, list);
-                }
-                list.add(ruleScript);
-                if (baseName != null) {
-                    list = targetClassToScriptMap.get(baseName);
-                    if (list != null) {
-                        if (previous != null) {
-                            list.remove(previous);
-                        }
-                    } else {
-                        list = new ArrayList<RuleScript>();
-                        targetClassToScriptMap.put(baseName, list);
-                    }
-                }
-            }
         }
 
-
-        // ok, now that we have updated the maps we need to find all classes which match the scripts and
+        // ok, now that we have updated the indexes we need to find all classes which match the scripts and
         // retransform them
 
         // list all class names for the to be aded and to be removed scripts
@@ -168,7 +138,7 @@ public class Retransformer extends Transformer {
 
     protected void listScripts(PrintWriter out)  throws Exception
     {
-        Iterator<RuleScript> iterator = nameToScriptMap.values().iterator();
+        Iterator<RuleScript> iterator = scriptRepository.currentRules().iterator();
 
         if (!iterator.hasNext()) {
             out.println("no rules installed");
@@ -197,9 +167,10 @@ public class Retransformer extends Transformer {
 
     public void removeScripts(List<String> scriptTexts, PrintWriter out) throws Exception
     {
-        List<RuleScript> toBeRemoved = new LinkedList<RuleScript>();
+        List<RuleScript> toBeRemoved;
 
         if (scriptTexts != null) {
+            toBeRemoved = new LinkedList<RuleScript>();
             int length = scriptTexts.size();
             for (int i = 0; i < length ; i++) {
                 String scriptText = scriptTexts.get(i);
@@ -208,7 +179,7 @@ public class Retransformer extends Transformer {
                     String line = lines[j].trim();
                     if (line.startsWith("RULE ")) {
                         String name = line.substring(5).trim();
-                        RuleScript ruleScript = nameToScriptMap.get(name);
+                        RuleScript ruleScript = scriptRepository.scriptForRuleName(name);
                         if (ruleScript ==  null) {
                             out.print("ERROR failed to find loaded rule with name ");
                             out.println(name);
@@ -222,7 +193,7 @@ public class Retransformer extends Transformer {
                 }
             }
         } else {
-            toBeRemoved.addAll(nameToScriptMap.values());
+            toBeRemoved = scriptRepository.currentRules();
         }
 
         if (toBeRemoved.isEmpty()) {
@@ -231,40 +202,8 @@ public class Retransformer extends Transformer {
         }
         
         for (RuleScript ruleScript : toBeRemoved) {
-            String name = ruleScript.getName();
-            String targetClassName = ruleScript.getTargetClass();
-            String baseName = null;
-            int lastDotIdx = targetClassName.lastIndexOf('.');
-            if (lastDotIdx >= 0) {
-                baseName = targetClassName.substring(lastDotIdx + 1);
-            }
-
-            // update the name to script map to remove the entry for this rule
-
-            nameToScriptMap.remove(name);
-            
-            // invalidate the script first then delete it from the target map
-            // so it is no longer used to do any transformatuion of classes
-
-            ruleScript.setDeleted();
-            
-            synchronized(targetClassToScriptMap) {
-                List<RuleScript> list = targetClassToScriptMap.get(targetClassName);
-                if (list != null) {
-                    list.remove(ruleScript);
-                    if (list.isEmpty()) {
-                        targetClassToScriptMap.remove(targetClassName);
-                    }
-                }
-                if (baseName != null) {
-                    list = targetClassToScriptMap.get(baseName);
-                    if (list != null) {
-                        list.remove(ruleScript);
-                        if (list.isEmpty()) {
-                            targetClassToScriptMap.remove(baseName);
-                        }
-                    }
-                }
+            if (scriptRepository.removeScript(ruleScript) != ruleScript) {
+                out.println("ERROR remove failed to find script " + ruleScript.getName());
             }
         }
 

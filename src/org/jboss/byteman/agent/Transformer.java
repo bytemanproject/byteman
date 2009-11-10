@@ -36,7 +36,6 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.File;
@@ -57,151 +56,36 @@ public class Transformer implements ClassFileTransformer {
     {
         this.inst = inst;
         this.isRedefine = isRedefine;
-        targetClassToScriptMap = new ConcurrentHashMap<String, List<RuleScript>>();
-        targetInterfaceToScriptMap = new ConcurrentHashMap<String, List<RuleScript>>();
-        nameToScriptMap = new ConcurrentHashMap<String, RuleScript>();
+        scriptRepository = new ScriptRepository();
 
         Iterator<String> iter = scriptTexts.iterator();
         int scriptIdx = 0;
         while (iter.hasNext()) {
             String scriptText = iter.next();
             String file = scriptPaths.get(scriptIdx);
-            List<RuleScript> ruleScripts = processScripts(scriptText, file);
+            List<RuleScript> ruleScripts = scriptRepository.processScripts(scriptText, file);
             for (RuleScript ruleScript : ruleScripts) {
-                addScript(ruleScript);
-            }
-        }
-    }
-
-    protected List<RuleScript> processScripts(String scriptText, String scriptFile) throws Exception
-    {
-        List<RuleScript> ruleScripts = new LinkedList<RuleScript>();
-        
-        if (scriptText != null) {
-            // split rules into separate lines
-            String[] lines = scriptText.split("\n");
-            List<String> rules = new ArrayList<String>();
-            String nextRule = "";
-            String sepr = "";
-            String name = null;
-            String targetClass = null;
-            String targetMethod = null;
-            String targetHelper = null;
-            LocationType locationType = null;
-            Location targetLocation = null;
-            boolean isInterface = false;
-            int lineNumber = 0;
-            int startNumber = -1;
-            int maxLines = lines.length;
-            boolean inRule = false;
-            for (String line : lines) {
-                line = line.trim();
-                lineNumber++;
-                if (line.startsWith("#")) {
-                    if (inRule) {
-                        // add a blank line in place of the comment so the line numbers
-                        // are reported consistently during parsing
-                        nextRule += sepr;
-                        sepr = "\n";
-                    } // else { // just drop comment line }
-                } else if (line.startsWith("RULE ")) {
-                    inRule = true;
-                    name = line.substring(5).trim();
-                    if (name.equals("")) {
-                        throw new Exception("org.jboss.byteman.agent.Transformer : RULE with no name at line " + lineNumber + " in script " + scriptFile);
-                    }
-                } else if (!inRule) {
-                    if (!line.equals("")) {
-                        throw new Exception("org.jboss.byteman.agent.Transformer : invalid text outside of RULE/ENDRULE " + "at line " + lineNumber + " in script " + scriptFile);
-                    }
-                } else if (line.startsWith("CLASS ")) {
-                    targetClass = line.substring(6).trim();
-                } else if (line.startsWith("INTERFACE ")) {
-                    targetClass = line.substring(10).trim();
-                    isInterface = true;
-                } else if (line.startsWith("METHOD ")) {
-                    targetMethod = line.substring(7).trim();
-                } else if (line.startsWith("HELPER ")) {
-                    targetHelper = line.substring(7).trim();
-                } else if ((locationType = LocationType.type(line)) != null) {
-                    String parameters = LocationType.parameterText(line);
-                    targetLocation = Location.create(locationType, parameters);
-                    if (targetLocation == null) {
-                        throw new Exception("org.jboss.byteman.agent.Transformer : invalid target location at line " + lineNumber + " in script " + scriptFile);
-                    }
-                } else if (line.startsWith("ENDRULE")) {
-                    if (name == null) {
-                        throw new Exception("org.jboss.byteman.agent.Transformer : no matching RULE for ENDRULE at line " + lineNumber + " in script " + scriptFile);
-                    } else if (targetClass == null) {
-                        throw new Exception("org.jboss.byteman.agent.Transformer : no CLASS for RULE  " + name + " in script " + scriptFile);
-                    } else if (targetMethod == null) {
-                        throw new Exception("org.jboss.byteman.agent.Transformer : no METHOD for RULE  " + name + " in script " + scriptFile);
-                    } else {
-                        if (targetLocation == null) {
-                            targetLocation = Location.create(LocationType.ENTRY, "");
-                        }
-                        ruleScripts.add(new RuleScript(name, targetClass, isInterface, targetMethod, targetHelper, targetLocation, nextRule, startNumber, scriptFile));
-                    }
-                    name = null;
-                    targetClass = null;
-                    targetMethod = null;
-                    targetLocation = null;
-                    nextRule = "";
-                    sepr = "";
-                    inRule = false;
-                    // reset start nuuber so we pick up the next rule text line
-                    startNumber = -1;
-                } else if (lineNumber == maxLines && !nextRule.trim().equals("")) {
-                    throw new Exception("org.jboss.byteman.agent.Transformer : no matching ENDRULE for RULE " + name + " in script " + scriptFile);
+                String name = ruleScript.getName();
+                RuleScript previous = scriptRepository.scriptForRuleName(name);
+                if (previous == null) {
+                    scriptRepository.addScript(ruleScript);
                 } else {
-                    // this is a line of rule text - see if it is the first one
-                    if (startNumber < 0) {
-                        startNumber = lineNumber;
-                    }
-                    nextRule += sepr + line;
-                    sepr = "\n";
+                    StringBuffer buffer = new StringBuffer();
+                    buffer.append("Transformer : duplicate script name ");
+                    buffer.append(name);
+                    buffer.append("in file ");
+                    buffer.append(ruleScript.getFile());
+                    buffer.append("  line ");
+                    buffer.append(ruleScript.getLine());
+                    buffer.append("\n previously defined in file ");
+                    buffer.append(previous.getFile());
+                    buffer.append("  line ");
+                    buffer.append(previous.getLine());
+                    Exception ex = new Exception(buffer.toString());
+                    throw ex;
                 }
             }
         }
-
-        return ruleScripts;
-    }
-
-    protected void indexScriptByName(RuleScript ruleScript) throws Exception
-    {
-        String name = ruleScript.getName();
-
-        RuleScript old = nameToScriptMap.get(name);
-        if (old != null) {
-            throw new Exception("duplicated rule name " + name +
-                    " at ruleScript " + old.getFile() + " line " + old.getLine() +
-                    " and ruleScript "  + ruleScript.getFile() + " line " + ruleScript.getLine());
-        }
-
-        nameToScriptMap.put(name, ruleScript);
-    }
-
-    protected void indexScriptByTarget(RuleScript ruleScript)
-    {
-        String targetClass = ruleScript.getTargetClass();
-
-        List<RuleScript> ruleScripts;
-        Map<String, List<RuleScript>> targetMap;
-        if (ruleScript.isInterface()) {
-            targetMap = targetInterfaceToScriptMap;
-        } else {
-            targetMap = targetClassToScriptMap;
-        }
-
-        synchronized (targetMap) {
-            ruleScripts = targetMap.get(targetClass);
-            if (ruleScripts == null) {
-                ruleScripts = new ArrayList<RuleScript>();
-                targetMap.put(targetClass, ruleScripts);
-            }
-        }
-
-        ruleScripts.add(ruleScript);
     }
 
     protected void dumpScript(RuleScript ruleScript)
@@ -226,37 +110,31 @@ public class Transformer implements ClassFileTransformer {
         System.out.println("ENDRULE");
     }
 
-    private void addScript(RuleScript ruleScript) throws Exception
-    {
-        indexScriptByName(ruleScript);
-        indexScriptByTarget(ruleScript);
-
-        if (isVerbose()) {
-            dumpScript(ruleScript);
-        }
-    }
-
-    private boolean isTransformed(Class clazz, String name, Map<String, List<RuleScript>> map)
+    private boolean isTransformed(Class clazz, String name, boolean isInterface)
     {
         if (isBytemanClass(name) || !isTransformable(name)) {
             return false;
         }
 
         boolean found = false;
-        synchronized(map) {
-            List<RuleScript> scripts = map.get(name);
-            if (scripts != null) {
-                for (RuleScript script : scripts) {
-                    if (!script.hasTransform(clazz)) {
-                        found = true;
-                        if (isVerbose()) {
-                            System.out.println("Retransforming loaded bootstrap class " + clazz.getName());
-                        }
-                        break;
+        List<RuleScript> scripts;
+        if (isInterface) {
+            scripts = scriptRepository.scriptsForInterfaceName(name);
+        } else {
+            scripts = scriptRepository.scriptsForClassName(name);
+        }
+        if (scripts != null) {
+            for (RuleScript script : scripts) {
+                if (!script.hasTransform(clazz)) {
+                    found = true;
+                    if (isVerbose()) {
+                        System.out.println("Retransforming loaded bootstrap class " + clazz.getName());
                     }
+                    break;
                 }
             }
         }
+
         return found;
     }
     /**
@@ -266,7 +144,7 @@ public class Transformer implements ClassFileTransformer {
 
     public void installBootScripts() throws Exception
     {
-        // check for scrips which apply to classes already loaded during bootstrap and retransform those classes
+        // check for scripts which apply to classes already loaded during bootstrap and retransform those classes
         // so that rule triggers are injected
 
         List<Class<?>> omitted = new LinkedList<Class<?>>();
@@ -277,41 +155,41 @@ public class Transformer implements ClassFileTransformer {
             String name = clazz.getName();
             int lastDot = name.lastIndexOf('.');
 
+            // we don't actually transform interfaces only their implementing classes
+
+            if (clazz.isInterface()) {
+                continue;
+            }
+
             if (isBytemanClass(name) || !isTransformable(name)) {
                 continue;
             }
 
-            boolean found = isTransformed(clazz, name, targetClassToScriptMap);
-            if (found) {
+            if (scriptRepository.scriptsForClassName(name) != null) {
                 omitted.add(clazz);
                 continue;
             }
 
-            if (lastDot >= 0) {
-                found = isTransformed(clazz, name.substring(lastDot + 1), targetClassToScriptMap);
-                if (found) {
-                    omitted.add(clazz);
-                    continue;
-                }
+            if (lastDot >= 0 && scriptRepository.scriptsForClassName(name.substring(lastDot + 1)) != null) {
+                omitted.add(clazz);
+                continue;
             }
 
-            // ok, now see if we ned to inject voa any interfaces that the class implements
+            // ok, now see if we ned to inject via any interfaces that the class implements
 
             Class[] interfaces = clazz.getInterfaces();
 
-            for (int i =  0; !found && i < interfaces.length; i++) {
+            for (int i =  0; i < interfaces.length; i++) {
                 Class interfaze = interfaces[i];
                 name = interfaze.getName();
-                found = isTransformed(clazz, name, targetInterfaceToScriptMap);
-                if (found) {
+                if (scriptRepository.scriptsForInterfaceName(name) != null) {
                     omitted.add(clazz);
-                    continue;
-                }
-                lastDot = name.lastIndexOf('.');
-                if (lastDot >= 0) {
-                    found = isTransformed(clazz, name.substring(lastDot + 1), targetInterfaceToScriptMap);
-                    if (found) {
+                    break;
+                } else {
+                    lastDot = name.lastIndexOf('.');
+                    if (lastDot >= 0 && scriptRepository.scriptsForInterfaceName(name.substring(lastDot + 1)) != null) {
                         omitted.add(clazz);
+                        break;
                     }
                 }
             }
@@ -414,17 +292,16 @@ public class Transformer implements ClassFileTransformer {
 
             // TODO -- there are almost certainly concurrency issues to deal with here if rules are being loaded/unloaded
 
-            newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalName, targetClassToScriptMap);
+            newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalName, false);
 
             if (dotIdx > 0) {
-                newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalName.substring(dotIdx + 1), targetClassToScriptMap);
+                newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalName.substring(dotIdx + 1), false);
             }
 
-            // only do this if we have interface rules as it is expensive -- identifying the interfaces costs
-            // create of a class reader and adapter and scan of the class to get the interface list. we have
-            // to do this even when there are no interfaces.
+            // only do this if we have interface rules as it is expensive.  identifying the interfaces costs
+            // i) create of a class reader and adapter and ii) scan of the class to get the interface list.
             
-            if (!targetInterfaceToScriptMap.isEmpty()) {
+            if (!scriptRepository.checkInterfaces()) {
                 // now we need to do the same for any interface scripts
                 // n.b. resist the temptation to call classBeingRedefined.getInterfaces() as this will
                 // cause the class to be resolved, losing any changes we install
@@ -434,10 +311,10 @@ public class Transformer implements ClassFileTransformer {
                 for (int i = 0; i < interfaceNames.length; i++) {
                     String interfaceName = interfaceNames[i];
                     String internalInterfaceName = TypeHelper.internalizeClass(interfaceName);
-                    newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalInterfaceName, targetInterfaceToScriptMap);
+                    newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalInterfaceName, true);
                     dotIdx = internalInterfaceName.lastIndexOf('.');
                     if (dotIdx >= 0) {
-                        newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalInterfaceName.substring(dotIdx + 1), targetInterfaceToScriptMap);
+                        newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalInterfaceName.substring(dotIdx + 1), true);
                     }
                 }
             }
@@ -458,9 +335,15 @@ public class Transformer implements ClassFileTransformer {
         }
     }
 
-    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, Class classBeingRedefined, String key, Map<String, List<RuleScript>> map)
+    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, Class classBeingRedefined, String key, boolean isInterface)
     {
-        List<RuleScript> ruleScripts = map.get(key);
+        List<RuleScript> ruleScripts;
+
+        if (isInterface) {
+            ruleScripts = scriptRepository.scriptsForInterfaceName(key);
+        } else {
+            ruleScripts = scriptRepository.scriptsForClassName(key);
+        }
         byte[] newBuffer = buffer;
 
         if (ruleScripts != null) {
@@ -469,8 +352,19 @@ public class Transformer implements ClassFileTransformer {
             }
             for (RuleScript ruleScript : ruleScripts) {
                 try {
-                   newBuffer = transform(ruleScript, loader, name, classBeingRedefined, newBuffer);
+                    // only do the transform if the script has not been deleted
+                    synchronized (ruleScript) {
+                        if (!ruleScript.isDeleted()) {
+                            newBuffer = transform(ruleScript, loader, name, classBeingRedefined, newBuffer);
+                        }
+                    }
                 } catch (Throwable th) {
+                    // yeeeurgh I know this looks ugly with no rethrow but it is appropriate
+                    // we do not want to pass on any errors or runtime exceptions
+                    // if a transform fails then we should still allow the load to continue
+                    // with whatever other transforms succeed. we tarce the throwable to
+                    // System.err just to ensure it can be seen.
+
                     System.err.println("Transformer.transform : caught throwable " + th);
                     th.printStackTrace(System.err);
                 }
@@ -492,19 +386,9 @@ public class Transformer implements ClassFileTransformer {
     private static final String BYTEMAN_TEST_PACKAGE_PREFIX = "org.jboss.byteman.tests.";
 
     /**
-     * prefix for com.arjuna package
-     */
-    private static final String COM_ARJUNA_PACKAGE_PREFIX = "com.arjuna.";
-
-    /**
      * prefix for org.jboss package
      */
     private static final String JAVA_LANG_PACKAGE_PREFIX = "java.lang.";
-
-    /**
-     * prefix for org.jboss package
-     */
-    private static final String ORG_JBOSS_PACKAGE_PREFIX = "org.jboss.";
 
     /**
      * system property set (to any value) in order to switch on dumping of generated bytecode to .class files
@@ -528,11 +412,17 @@ public class Transformer implements ClassFileTransformer {
      */
 
     public static final String DEBUG = BYTEMAN_PACKAGE_PREFIX + "debug";
+
+    /**
+     * retained for compatibility
+     */
+    public static final String COMPILE_TO_BYTECODE_COMPATIBILITY = BYTEMAN_PACKAGE_PREFIX + "compileToBytecode";
+
     /**
      * system property set (to any value) in order to switch on compilation of rules and left unset
      * if rules are to be interpreted.
      */
-    public static final String COMPILE_TO_BYTECODE = BYTEMAN_PACKAGE_PREFIX + "compileToBytecode";
+    public static final String COMPILE_TO_BYTECODE = BYTEMAN_PACKAGE_PREFIX + "compile.to.bytecode";
 
     /**
      * system property set (to any value) in order to switch on dumping of generated bytecode to .class files
@@ -542,7 +432,12 @@ public class Transformer implements ClassFileTransformer {
     /**
      * system property set to true in order to enable transform of java.lang classes
      */
-    public static final String QUODLIBET = BYTEMAN_PACKAGE_PREFIX + "quodlibet";
+    public static final String TRANSFORM_ALL = BYTEMAN_PACKAGE_PREFIX + "transform.all";
+
+    /**
+     * retained for compatibility
+     */
+    public static final String TRANFORM_ALL_COMPATIBILITY = BYTEMAN_PACKAGE_PREFIX + "quodlibet";
 
     /* implementation */
 
@@ -808,11 +703,10 @@ public class Transformer implements ClassFileTransformer {
     protected boolean isTransformable(String className)
     {
         /*
-         * ok, we are now going to allow any code to be transformed so long as it is not in the java.lang package
-        return (className.startsWith(COM_ARJUNA_PACKAGE_PREFIX) || className.startsWith(ORG_JBOSS_PACKAGE_PREFIX));
-        */
+         * java.lang is normally excluded but we can make an exception if asked
+         */
         if (className.startsWith(JAVA_LANG_PACKAGE_PREFIX)) {
-            return quodlibet;
+            return transformAll;
         }
 
         return true;
@@ -832,21 +726,7 @@ public class Transformer implements ClassFileTransformer {
      * rule details
      */
 
-    protected final Map<String, List<RuleScript>> targetClassToScriptMap;
-
-    /**
-     * a mapping from target interface names which appear in rules to a script object holding the
-     * rule details
-     */
-
-    protected final Map<String, List<RuleScript>> targetInterfaceToScriptMap;
-
-    /**
-     * a mapping from rule names which appear in rules to a script object holding the
-     * rule details
-     */
-
-    protected final Map<String, RuleScript> nameToScriptMap;
+    protected final ScriptRepository scriptRepository;
 
     /**
      *  switch to control verbose output during rule processing
@@ -869,9 +749,11 @@ public class Transformer implements ClassFileTransformer {
     private final static boolean debug = (System.getProperty(DEBUG) != null);
 
     /**
-     *  switch to control whether rules are compiled ot bytecode or not
+     *  switch to control whether rules are compiled to bytecode or not
      */
-    private final static boolean compileToBytecode = (System.getProperty(COMPILE_TO_BYTECODE) != null);
+    private final static boolean compileToBytecode =
+            (System.getProperty(COMPILE_TO_BYTECODE) != null ||
+                    System.getProperty(COMPILE_TO_BYTECODE_COMPATIBILITY) != null);
 
     /**
      *  switch to control dumping of generated bytecode to .class files
@@ -886,7 +768,8 @@ public class Transformer implements ClassFileTransformer {
     /**
      *  switch to control whether transformations will be applied to java.lang.* classes
      */
-    private final static boolean quodlibet = (System.getProperty(QUODLIBET) != null);
+    private final static boolean transformAll =
+            (System.getProperty(TRANSFORM_ALL) != null || System.getProperty(TRANFORM_ALL_COMPATIBILITY) != null);
 
     static {
         String userDir = System.getProperty(DUMP_GENERATED_CLASSES_DIR);

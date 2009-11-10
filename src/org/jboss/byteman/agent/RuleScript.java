@@ -125,11 +125,27 @@ public class RuleScript
     }
 
     /**
-     * invoked by the retransformer code when a rule is redefined to inhibit further transformations via this script
+     * invoked by the scriptmanager when a rule is redefined to inhibit further transformations via this script
+     * @return the previous setting of deleted
      */
-    public synchronized void setDeleted()
+    public synchronized boolean setDeleted()
     {
-        deleted = true;
+        if (!deleted) {
+            deleted = true;
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * called when indexing a script to ensure that it has not already been deleted. it must only be called
+     * when synchronized on the script. This avoids a race where a script can be added by thread A, deleted by
+     * thread B, unindexed -- unsuccessfully -- by thread B then indexed by thread A
+     * @return the previosu setting of deleted
+     */
+    public boolean isDeleted()
+    {
+        return deleted;
     }
 
     /**
