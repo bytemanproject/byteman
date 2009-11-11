@@ -301,7 +301,7 @@ public class Transformer implements ClassFileTransformer {
             // only do this if we have interface rules as it is expensive.  identifying the interfaces costs
             // i) create of a class reader and adapter and ii) scan of the class to get the interface list.
             
-            if (!scriptRepository.checkInterfaces()) {
+            if (scriptRepository.checkInterfaces()) {
                 // now we need to do the same for any interface scripts
                 // n.b. resist the temptation to call classBeingRedefined.getInterfaces() as this will
                 // cause the class to be resolved, losing any changes we install

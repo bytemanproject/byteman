@@ -86,18 +86,31 @@ public class Retransformer extends Transformer {
         // list all class names for the to be aded and to be removed scripts
 
         List<String> affectedClassNames = new LinkedList<String>();
+        List<String> affectedInterfaceNames = new LinkedList<String>();
 
         for (RuleScript ruleScript : toBeAdded) {
             String targetClassName = ruleScript.getTargetClass();
-            if (!affectedClassNames.contains(targetClassName)) {
-                affectedClassNames.add(targetClassName);
+            if (ruleScript.isInterface()) {
+                if (!affectedInterfaceNames.contains(targetClassName)) {
+                    affectedInterfaceNames.add(targetClassName);
+                }
+            } else {
+                if (!affectedClassNames.contains(targetClassName)) {
+                    affectedClassNames.add(targetClassName);
+                }
             }
         }
 
         for (RuleScript ruleScript : toBeRemoved) {
             String targetClassName = ruleScript.getTargetClass();
-            if (!affectedClassNames.contains(targetClassName)) {
-                affectedClassNames.add(targetClassName);
+            if (ruleScript.isInterface()) {
+                if (!affectedInterfaceNames.contains(targetClassName)) {
+                    affectedInterfaceNames.add(targetClassName);
+                }
+            } else {
+                if (!affectedClassNames.contains(targetClassName)) {
+                    affectedClassNames.add(targetClassName);
+                }
             }
         }
 
@@ -113,11 +126,26 @@ public class Retransformer extends Transformer {
                 continue;
             }
 
-            // TODO only retransform classes for which rules have been added or removed
             if (affectedClassNames.contains(name)) {
                 transformed.add(clazz);
             } else if (lastDot >= 0 && affectedClassNames.contains(name.substring(lastDot+1))) {
                 transformed.add(clazz);
+            } else if (!affectedInterfaceNames.isEmpty()) {
+                // ok, see if we are affected by any interface rules
+                Class[] interfaces = clazz.getInterfaces();
+                for (int i = 0; i < interfaces.length; i++) {
+                    Class interfaze = interfaces[i];
+                    name = interfaze.getName();
+                    lastDot = name.lastIndexOf('.');
+
+                    if (affectedInterfaceNames.contains(name)) {
+                        transformed.add(clazz);
+                        break;
+                    } else if (lastDot >= 0 && affectedInterfaceNames.contains(name.substring(lastDot+1))) {
+                        transformed.add(clazz);
+                        break;
+                    }
+                }
             }
         }
 

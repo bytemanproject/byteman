@@ -566,9 +566,12 @@ public class Rule
             System.out.println("Rule.execute called for " + key);
         }
 
-        // should not happen -- even if the key is deleted because a rule is updated
+        // if the key is no longer present it just means the rule has been decommissioned so return
         if (rule == null) {
-            throw new ExecuteException("Rule.execute : unable to find rule with key " + key);
+            if (Transformer.isVerbose()) {
+                System.out.println("Rule.execute for decommissioned key " + key);
+            }
+            return;
         }
 
         rule.execute(recipient, args);
