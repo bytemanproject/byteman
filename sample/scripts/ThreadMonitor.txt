@@ -60,9 +60,9 @@ ENDRULE
 
 RULE ThreadMonitor trace start
 CLASS java.lang.Thread
-METHOD start
+METHOD start()
 HELPER org.jboss.byteman.sample.helper.ThreadMonitorHelper
-AT EXIT
+AT ENTRY
 IF TRUE
 DO traceStart($0)
 ENDRULE
@@ -74,9 +74,23 @@ ENDRULE
 
 RULE ThreadMonitor trace exit
 CLASS java.lang.Thread
-METHOD exit
+METHOD exit()
 HELPER org.jboss.byteman.sample.helper.ThreadMonitorHelper
 AT ENTRY
 IF TRUE
 DO traceExit($0)
+ENDRULE
+
+########################################################################
+#
+# Interface rule to trace calls to implementations of Runnable.run
+#
+
+RULE ThreadMonitor trace Runnable run
+INTERFACE java.lang.Runnable
+METHOD run()
+HELPER org.jboss.byteman.sample.helper.ThreadMonitorHelper
+AT ENTRY
+IF TRUE
+DO traceRun($0)
 ENDRULE

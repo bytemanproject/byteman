@@ -161,4 +161,57 @@ public class ThreadMonitorHelper extends StackTraceHelper
 
         trace(key, buffer.toString());
     }
+
+    /**
+     * trace run of the supplied Runnable to System.out
+     *
+     * this should only be triggered from a call to an implementation of java.lang.Runnable.run"
+     *
+     * @param runnable the runnable being run
+     */
+    public void traceRun(Runnable runnable)
+    {
+        traceRun(runnable, "out");
+    }
+
+    /**
+     * trace start of the supplied thread to the trace stream identified by key
+     *
+     * this should only be triggered from the call an implementation of java.lang.Runnable.run"
+     *
+     * @param runnable the runnable being run
+     * @param key an object identifying the trace stream to which output should be generated
+     */
+    public void traceRun(Runnable runnable, Object key)
+    {
+        StringBuffer buffer = new StringBuffer();
+        int l = stack.length;
+        int t = triggerIndex();
+        if (t < 0) {
+            return;
+        }
+
+        int i = matchIndex(".*run", t, l);
+        if (i < 0) {
+            // illegal usage
+            traceStack("ThreadMonitorHelper.traceRun : should only be triggered below Runnable.run\n", key);
+            return;
+        }
+
+        if (runnable instanceof Thread) {
+            Thread thread = (Thread) runnable;
+            buffer.append("*** Thread run ");
+            buffer.append(thread.getName());
+            buffer.append(" ");
+        } else {
+            buffer.append("*** Runnable run ");            
+        }
+        buffer.append(runnable.getClass().getCanonicalName());
+        buffer.append('\n');
+        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+
+        buffer.append("    at ");
+        printlnFrame(buffer, i);
+        trace(key, buffer.toString());
+    }
 }

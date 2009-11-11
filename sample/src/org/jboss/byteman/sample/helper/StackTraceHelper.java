@@ -135,10 +135,15 @@ public class StackTraceHelper extends Helper
         buffer.append(frame.getClassName());
         buffer.append(".");
         buffer.append(frame.getMethodName());
-        buffer.append(" at ");
-        buffer.append(frame.getFileName());
-        buffer.append(":");
-        buffer.append(frame.getLineNumber());
+        String fileName = frame.getFileName();
+        if (fileName != null) {
+            buffer.append(" at ");
+            buffer.append(fileName);
+            buffer.append(":");
+            buffer.append(frame.getLineNumber());
+        } else {
+            buffer.append(" (Unknown Source)");
+        }
     }
 
     /**
