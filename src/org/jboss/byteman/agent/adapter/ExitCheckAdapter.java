@@ -51,7 +51,7 @@ public class ExitCheckAdapter extends RuleCheckAdapter
         final String[] exceptions)
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if (matchTargetMethod(name, desc)) {
+        if ((access & Opcodes.ACC_ABSTRACT) == 0 && matchTargetMethod(name, desc)) {
             return new ExitCheckMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
         }
 
