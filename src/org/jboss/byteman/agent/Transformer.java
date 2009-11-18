@@ -56,7 +56,7 @@ public class Transformer implements ClassFileTransformer {
     {
         this.inst = inst;
         this.isRedefine = isRedefine;
-        scriptRepository = new ScriptRepository();
+        scriptRepository = new ScriptRepository(skipOverrideRules());
 
         Iterator<String> iter = scriptTexts.iterator();
         int scriptIdx = 0;
@@ -86,56 +86,6 @@ public class Transformer implements ClassFileTransformer {
                 }
             }
         }
-    }
-
-    protected void dumpScript(RuleScript ruleScript)
-    {
-        String file = ruleScript.getFile();
-        int line = ruleScript.getLine();
-        if (file != null) {
-            System.out.println("# " + file + " line " + line);
-        }
-        System.out.println("RULE " + ruleScript.getName());
-        if (ruleScript.isInterface()) {
-            System.out.println("INTERFACE " + ruleScript.getTargetClass());
-        } else {
-            System.out.println("CLASS " + ruleScript.getTargetClass());
-        }
-        System.out.println("METHOD " + ruleScript.getTargetMethod());
-        if (ruleScript.getTargetHelper() != null) {
-            System.out.println("HELPER " + ruleScript.getTargetHelper());
-        }
-        System.out.println(ruleScript.getTargetLocation());
-        System.out.println(ruleScript.getRuleText());
-        System.out.println("ENDRULE");
-    }
-
-    private boolean isTransformed(Class clazz, String name, boolean isInterface)
-    {
-        if (isBytemanClass(name) || !isTransformable(name)) {
-            return false;
-        }
-
-        boolean found = false;
-        List<RuleScript> scripts;
-        if (isInterface) {
-            scripts = scriptRepository.scriptsForInterfaceName(name);
-        } else {
-            scripts = scriptRepository.scriptsForClassName(name);
-        }
-        if (scripts != null) {
-            for (RuleScript script : scripts) {
-                if (!script.hasTransform(clazz)) {
-                    found = true;
-                    if (isVerbose()) {
-                        System.out.println("Retransforming loaded bootstrap class " + clazz.getName());
-                    }
-                    break;
-                }
-            }
-        }
-
-        return found;
     }
 
     /**
@@ -174,40 +124,6 @@ public class Transformer implements ClassFileTransformer {
             }
             inst.retransformClasses(transformedArray);
         }
-    }
-
-    /**
-     * check whether a class should not be considered for transformation
-     * @param clazz the class to check
-     * @return true if clazz should not be considered for transformation otherwise false
-     */
-    protected boolean isSkipClass(Class<?> clazz)
-    {
-        if (!inst.isModifiableClass(clazz)) {
-            return true;
-        }
-
-        // we can safely skip array classes, interfaces and primitive classes
-
-        if (clazz.isArray()) {
-            return true;
-        }
-
-        if (clazz.isInterface()) {
-            return true;
-        }
-
-        if (clazz.isPrimitive()) {
-            return true;
-        }
-
-        String name = clazz.getName();
-
-        if (isBytemanClass(name) || !isTransformable(name)) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -337,47 +253,51 @@ public class Transformer implements ClassFileTransformer {
                 }
             }
 
-            // ok, now find the superclass for this class and check the superclass chain
+            // checking supers is expensive so we obey the switch which disables it
+            
+            if (!skipOverrideRules()) {
+                // ok, now find the superclass for this class and check the superclass chain
 
-            String superName = TypeHelper.internalizeClass(checker.getSuper());
-            Class superClazz = null;
+                String superName = TypeHelper.internalizeClass(checker.getSuper());
+                Class superClazz = null;
 
-            if (superName != null) {
-                try {
-                    superClazz = loader.loadClass(superName);
-                } catch (ClassNotFoundException e) {
-                    // should not happen!
-                    // TODO - what happens when the bytecode is for class Object? is the supername null? or ""?
-                    System.err.println("Transformer.transform : error looking up superclass!");
-                    e.printStackTrace(System.err);
-                }
-            }
-
-            while (superClazz != null) {
-                newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, superName, false, true);
-                dotIdx = superName.lastIndexOf('.');
-                if (dotIdx > 0) {
-                    newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, superName.substring(dotIdx + 1), false, true);
-                }
-
-                // ok, now check any interfaces implemented by the superclass
-                Class[] interfaces = superClazz.getInterfaces();
-
-                for (int i = 0; i < interfaces.length; i++) {
-                    // TODO -- do we ever find that a super declares an interface also declared by its subclass
-                    // TODO -- we probably don't want to inject twice in such cases so we ought to remember whether
-                    // TODO -- we have seen an interface before
-                    String interfaceName = interfaces[i].getName();
-                    newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, interfaceName, false, true);
-                    dotIdx = interfaceName.lastIndexOf('.');
-                    if (dotIdx >= 0) {
-                        newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, interfaceName.substring(dotIdx + 1), false, true);
+                if (superName != null) {
+                    try {
+                        superClazz = loader.loadClass(superName);
+                    } catch (ClassNotFoundException e) {
+                        // should not happen!
+                        // TODO - what happens when the bytecode is for class Object? is the supername null? or ""?
+                        System.err.println("Transformer.transform : error looking up superclass!");
+                        e.printStackTrace(System.err);
                     }
                 }
 
-                superClazz = superClazz.getSuperclass();
-                if (superClazz != null) {
-                    superName = superClazz.getName();
+                while (superClazz != null) {
+                    newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, superName, false, true);
+                    dotIdx = superName.lastIndexOf('.');
+                    if (dotIdx > 0) {
+                        newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, superName.substring(dotIdx + 1), false, true);
+                    }
+
+                    // ok, now check any interfaces implemented by the superclass
+                    Class[] interfaces = superClazz.getInterfaces();
+
+                    for (int i = 0; i < interfaces.length; i++) {
+                        // TODO -- do we ever find that a super declares an interface also declared by its subclass
+                        // TODO -- we probably don't want to inject twice in such cases so we ought to remember whether
+                        // TODO -- we have seen an interface before
+                        String interfaceName = interfaces[i].getName();
+                        newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, interfaceName, false, true);
+                        dotIdx = interfaceName.lastIndexOf('.');
+                        if (dotIdx >= 0) {
+                            newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, interfaceName.substring(dotIdx + 1), false, true);
+                        }
+                    }
+
+                    superClazz = superClazz.getSuperclass();
+                    if (superClazz != null) {
+                        superName = superClazz.getName();
+                    }
                 }
             }
 
@@ -397,69 +317,22 @@ public class Transformer implements ClassFileTransformer {
         }
     }
 
-    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, Class classBeingRedefined, String key, boolean isInterface)
-    {
-        return tryTransform(buffer, name, loader, classBeingRedefined, key, isInterface, false);
-    }
-
-    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, Class classBeingRedefined, String key, boolean isInterface, boolean isOverride)
-    {
-        List<RuleScript> ruleScripts;
-
-        if (isInterface) {
-            ruleScripts = scriptRepository.scriptsForInterfaceName(key);
-        } else {
-            ruleScripts = scriptRepository.scriptsForClassName(key);
-        }
-        byte[] newBuffer = buffer;
-
-        if (ruleScripts != null) {
-//            if (isVerbose()) {
-//                System.out.println("tryTransform : " + name + " for " + key);
-//            }
-            for (RuleScript ruleScript : ruleScripts) {
-                try {
-                    // we only transform via isOverride rules if isOverride is true
-                    // we tarsnform via any matchign rules if isOverride is false
-                    if (!isOverride || ruleScript.isOverride()) {
-                        // only do the transform if the script has not been deleted
-                        synchronized (ruleScript) {
-                            if (!ruleScript.isDeleted()) {
-                                newBuffer = transform(ruleScript, loader, name, classBeingRedefined, newBuffer);
-                            }
-                        }
-                    }
-                } catch (Throwable th) {
-                    // yeeeurgh I know this looks ugly with no rethrow but it is appropriate
-                    // we do not want to pass on any errors or runtime exceptions
-                    // if a transform fails then we should still allow the load to continue
-                    // with whatever other transforms succeed. we tarce the throwable to
-                    // System.err just to ensure it can be seen.
-
-                    System.err.println("Transformer.transform : caught throwable " + th);
-                    th.printStackTrace(System.err);
-                }
-            }
-        }
-        return newBuffer;
-    }
-
     /* switches controlling behaviour of transformer */
 
     /**
      * prefix for byteman package
      */
-    private static final String BYTEMAN_PACKAGE_PREFIX = "org.jboss.byteman.";
+    public static final String BYTEMAN_PACKAGE_PREFIX = "org.jboss.byteman.";
 
     /**
      * prefix for byteman test package
      */
-    private static final String BYTEMAN_TEST_PACKAGE_PREFIX = "org.jboss.byteman.tests.";
+    public static final String BYTEMAN_TEST_PACKAGE_PREFIX = "org.jboss.byteman.tests.";
 
     /**
      * prefix for org.jboss package
      */
-    private static final String JAVA_LANG_PACKAGE_PREFIX = "java.lang.";
+    public static final String JAVA_LANG_PACKAGE_PREFIX = "java.lang.";
 
     /**
      * system property set (to any value) in order to switch on dumping of generated bytecode to .class files
@@ -501,6 +374,11 @@ public class Transformer implements ClassFileTransformer {
     public static final String DUMP_GENERATED_CLASSES = BYTEMAN_PACKAGE_PREFIX + "dump.generated.classes";
 
     /**
+     * system property identifying directory in which to dump generated bytecode .class files
+     */
+    public static final String DUMP_GENERATED_CLASSES_DIR = BYTEMAN_PACKAGE_PREFIX + "dump.generated.classes.directory";
+
+    /**
      * system property set to true in order to enable transform of java.lang classes
      */
     public static final String TRANSFORM_ALL = BYTEMAN_PACKAGE_PREFIX + "transform.all";
@@ -510,12 +388,136 @@ public class Transformer implements ClassFileTransformer {
      */
     public static final String TRANFORM_ALL_COMPATIBILITY = BYTEMAN_PACKAGE_PREFIX + "quodlibet";
 
-    /* implementation */
+    /**
+     * system property which turns off injection into overriding methods
+     */
+    public static final String SKIP_OVERRIDE_RULES = BYTEMAN_PACKAGE_PREFIX + "skip.override.rules";
+
 
     /**
-     * system property identifying directory in which to dump generated bytecode .class files
+     * disable triggering of rules inside the current thread
+     * @return true if triggering was previously enabled and false if it was already disabled
      */
-    public static final String DUMP_GENERATED_CLASSES_DIR = BYTEMAN_PACKAGE_PREFIX + "dump.generated.classes.directory";
+    public static boolean disableTriggers(boolean isUser)
+    {
+        Integer enabled = isEnabled.get();
+        if (enabled == ENABLED) {
+            isEnabled.set((isUser ? DISABLED_USER : DISABLED));
+
+            return true;
+        }
+        if (enabled == DISABLED && isUser) {
+            isEnabled.set(DISABLED_USER);
+        }
+
+        return false;
+    }
+
+    /**
+     * enable triggering of rules inside the current thread
+     * @return true if triggering was previously enabled and false if it was already disabled
+     */
+    public static boolean enableTriggers(boolean isReset)
+    {
+        Integer enabled = isEnabled.get();
+        if (enabled == ENABLED) {
+            return true;
+        }
+
+        if (isReset || enabled == DISABLED) {
+            isEnabled.set(ENABLED);
+        }
+
+        return false;
+    }
+
+    /**
+     * check if triggering of rules is enabled inside the current thread
+     * @return true if triggering is enabled and false if it is disabled
+     */
+    public static boolean isTriggeringEnabled()
+    {
+        return isEnabled.get() == ENABLED;
+    }
+
+    /**
+     * check whether verbose mode for rule processing is enabled or disabled
+     * @return true if verbose mode is enabled etherwise false
+     */
+    public static boolean isVerbose()
+    {
+        return verbose;
+    }
+
+    /**
+     * check whether dumping of the control flow graph for the trigger class is enabled
+     * @return true if dumping is enabled etherwise false
+     */
+    public static boolean isDumpCFG()
+    {
+        return dumpCFG;
+    }
+
+    /**
+     * check whether dumping of the control flow graph for the trigger class during construction is enabled
+     * @return true if dumping is enabled etherwise false
+     */
+    public static boolean isDumpCFGPartial()
+    {
+        return dumpCFGPartial;
+    }
+
+    /**
+     * check whether debug mode for rule processing is enabled or disabled
+     * @return true if debug mode is enabled or verbose mode is enabled otherwise false
+     */
+    public static boolean isDebug()
+    {
+        return debug || verbose;
+    }
+
+    /**
+     * check whether compilation of rules is enabled or disabled
+     * @return true if compilation of rules is enabled etherwise false
+     */
+    public static boolean isCompileToBytecode()
+    {
+        return compileToBytecode;
+    }
+
+    /**
+     * check whether compilation of rules is enabled or disabled
+     * @return true if compilation of rules is enabled etherwise false
+     */
+    public static boolean skipOverrideRules()
+    {
+        return skipOverrideRules;
+    }
+
+    /**
+     * test whether a class with a given name is a potential candidate for insertion of event notifications
+     * @param className
+     * @return true if a class is a potential candidate for insertion of event notifications otherwise return false
+     */
+    protected boolean isTransformable(String className)
+    {
+        /*
+         * java.lang is normally excluded but we can make an exception if asked
+         */
+        if (className.startsWith(JAVA_LANG_PACKAGE_PREFIX)) {
+            return transformAll;
+        }
+
+        return true;
+    }
+    public static void maybeDumpClass(String fullName, byte[] bytes)
+    {
+        if (dumpGeneratedClasses) {
+            dumpClass(fullName, bytes);
+        }
+    }
+
+    /* implementation */
 
     protected byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
     {
@@ -554,7 +556,7 @@ public class Transformer implements ClassFileTransformer {
             return targetClassBytes;
         }
 
-        // ok, we have a rule with a matchingclass and a candidiate method and location
+        // ok, we have a rule with a matching class and a candidate method and location
         // we need to see if the class has a matching method and, if so, add a call to
         // execute the rule when we hit the relevant line
 
@@ -604,6 +606,137 @@ public class Transformer implements ClassFileTransformer {
         }
 
         return targetClassBytes;
+    }
+
+    /**
+     * check whether a class should not be considered for transformation
+     * @param clazz the class to check
+     * @return true if clazz should not be considered for transformation otherwise false
+     */
+    protected boolean isSkipClass(Class<?> clazz)
+    {
+        if (!inst.isModifiableClass(clazz)) {
+            return true;
+        }
+
+        // we can safely skip array classes, interfaces and primitive classes
+
+        if (clazz.isArray()) {
+            return true;
+        }
+
+        if (clazz.isInterface()) {
+            return true;
+        }
+
+        if (clazz.isPrimitive()) {
+            return true;
+        }
+
+        String name = clazz.getName();
+
+        if (isBytemanClass(name) || !isTransformable(name)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, Class classBeingRedefined, String key, boolean isInterface)
+    {
+        return tryTransform(buffer, name, loader, classBeingRedefined, key, isInterface, false);
+    }
+
+    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, Class classBeingRedefined, String key, boolean isInterface, boolean isOverride)
+    {
+        List<RuleScript> ruleScripts;
+
+        if (isInterface) {
+            ruleScripts = scriptRepository.scriptsForInterfaceName(key);
+        } else {
+            ruleScripts = scriptRepository.scriptsForClassName(key);
+        }
+        byte[] newBuffer = buffer;
+
+        if (ruleScripts != null) {
+//            if (isVerbose()) {
+//                System.out.println("tryTransform : " + name + " for " + key);
+//            }
+            for (RuleScript ruleScript : ruleScripts) {
+                try {
+                    // we only transform via isOverride rules if isOverride is true
+                    // we tarsnform via any matchign rules if isOverride is false
+                    if (!isOverride || ruleScript.isOverride()) {
+                        // only do the transform if the script has not been deleted
+                        synchronized (ruleScript) {
+                            if (!ruleScript.isDeleted()) {
+                                newBuffer = transform(ruleScript, loader, name, classBeingRedefined, newBuffer);
+                            }
+                        }
+                    }
+                } catch (Throwable th) {
+                    // yeeeurgh I know this looks ugly with no rethrow but it is appropriate
+                    // we do not want to pass on any errors or runtime exceptions
+                    // if a transform fails then we should still allow the load to continue
+                    // with whatever other transforms succeed. we tarce the throwable to
+                    // System.err just to ensure it can be seen.
+
+                    System.err.println("Transformer.transform : caught throwable " + th);
+                    th.printStackTrace(System.err);
+                }
+            }
+        }
+        return newBuffer;
+    }
+
+    protected void dumpScript(RuleScript ruleScript)
+    {
+        String file = ruleScript.getFile();
+        int line = ruleScript.getLine();
+        if (file != null) {
+            System.out.println("# " + file + " line " + line);
+        }
+        System.out.println("RULE " + ruleScript.getName());
+        if (ruleScript.isInterface()) {
+            System.out.println("INTERFACE " + ruleScript.getTargetClass());
+        } else {
+            System.out.println("CLASS " + ruleScript.getTargetClass());
+        }
+        System.out.println("METHOD " + ruleScript.getTargetMethod());
+        if (ruleScript.getTargetHelper() != null) {
+            System.out.println("HELPER " + ruleScript.getTargetHelper());
+        }
+        System.out.println(ruleScript.getTargetLocation());
+        System.out.println(ruleScript.getRuleText());
+        System.out.println("ENDRULE");
+    }
+
+    private boolean isTransformed(Class clazz, String name, boolean isInterface)
+    {
+        if (isBytemanClass(name) || !isTransformable(name)) {
+            return false;
+        }
+
+        boolean found = false;
+        List<RuleScript> scripts;
+        if (isInterface) {
+            scripts = scriptRepository.scriptsForInterfaceName(name);
+        } else {
+            scripts = scriptRepository.scriptsForClassName(name);
+        }
+        if (scripts != null) {
+            for (RuleScript script : scripts) {
+                if (!script.hasTransform(clazz)) {
+                    found = true;
+                    if (isVerbose()) {
+                        System.out.println("Retransforming loaded bootstrap class " + clazz.getName());
+                    }
+                    break;
+                }
+            }
+        }
+
+        return found;
     }
 
     /**
@@ -713,52 +846,6 @@ public class Transformer implements ClassFileTransformer {
     }
 
     /**
-     * disable triggering of rules inside the current thread
-     * @return true if triggering was previously enabled and false if it was already disabled
-     */
-    public static boolean disableTriggers(boolean isUser)
-    {
-        Integer enabled = isEnabled.get();
-        if (enabled == ENABLED) {
-            isEnabled.set((isUser ? DISABLED_USER : DISABLED));
-
-            return true;
-        }
-        if (enabled == DISABLED && isUser) {
-            isEnabled.set(DISABLED_USER);
-        }
-        
-        return false;
-    }
-
-    /**
-     * enable triggering of rules inside the current thread
-     * @return true if triggering was previously enabled and false if it was already disabled
-     */
-    public static boolean enableTriggers(boolean isReset)
-    {
-        Integer enabled = isEnabled.get();
-        if (enabled == ENABLED) {
-            return true;
-        }
-
-        if (isReset || enabled == DISABLED) {
-            isEnabled.set(ENABLED);
-        }
-        
-        return false;
-    }
-
-    /**
-     * check if triggering of rules is enabled inside the current thread
-     * @return true if triggering is enabled and false if it is disabled
-     */
-    public static boolean isTriggeringEnabled()
-    {
-        return isEnabled.get() == ENABLED;
-    }
-
-    /**
      * test whether a class with a given name is located in the byteman package
      * @param className
      * @return true if a class is located in the byteman package otherwise return false
@@ -768,67 +855,6 @@ public class Transformer implements ClassFileTransformer {
         return className.startsWith(BYTEMAN_PACKAGE_PREFIX) && !className.startsWith(BYTEMAN_TEST_PACKAGE_PREFIX);
     }
 
-    /**
-     * check whether verbose mode for rule processing is enabled or disabled
-     * @return true if verbose mode is enabled etherwise false
-     */
-    public static boolean isVerbose()
-    {
-        return verbose;
-    }
-
-    /**
-     * check whether dumping of the control flow graph for the trigger class is enabled
-     * @return true if dumping is enabled etherwise false
-     */
-    public static boolean isDumpCFG()
-    {
-        return dumpCFG;
-    }
-
-    /**
-     * check whether dumping of the control flow graph for the trigger class during construction is enabled
-     * @return true if dumping is enabled etherwise false
-     */
-    public static boolean isDumpCFGPartial()
-    {
-        return dumpCFGPartial;
-    }
-
-    /**
-     * check whether debug mode for rule processing is enabled or disabled
-     * @return true if debug mode is enabled or verbose mode is enabled otherwise false
-     */
-    public static boolean isDebug()
-    {
-        return debug || verbose;
-    }
-
-    /**
-     * check whether compilation of rules is enabled or disabled
-     * @return true if compilation of rules is enabled etherwise false
-     */
-    public static boolean isCompileToBytecode()
-    {
-        return compileToBytecode;
-    }
-
-    /**
-     * test whether a class with a given name is a potential candidate for insertion of event notifications
-     * @param className
-     * @return true if a class is a potential candidate for insertion of event notifications otherwise return false
-     */
-    protected boolean isTransformable(String className)
-    {
-        /*
-         * java.lang is normally excluded but we can make an exception if asked
-         */
-        if (className.startsWith(JAVA_LANG_PACKAGE_PREFIX)) {
-            return transformAll;
-        }
-
-        return true;
-    }
     /**
      * the instrumentation interface to the JVM
      */
@@ -874,6 +900,11 @@ public class Transformer implements ClassFileTransformer {
                     System.getProperty(COMPILE_TO_BYTECODE_COMPATIBILITY) != null);
 
     /**
+     *  switch to control whether rules are injected into overriding methods
+     */
+    private final static boolean skipOverrideRules =(System.getProperty(SKIP_OVERRIDE_RULES) != null);
+
+    /**
      *  switch to control dumping of generated bytecode to .class files
      */
     private final static boolean dumpGeneratedClasses = (System.getProperty(DUMP_GENERATED_CLASSES) != null);
@@ -900,13 +931,6 @@ public class Transformer implements ClassFileTransformer {
             }
         } else {
             dumpGeneratedClassesDir =  ".";
-        }
-    }
-
-    public static void maybeDumpClass(String fullName, byte[] bytes)
-    {
-        if (dumpGeneratedClasses) {
-            dumpClass(fullName, bytes);
         }
     }
 

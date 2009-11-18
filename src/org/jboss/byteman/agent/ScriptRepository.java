@@ -10,11 +10,12 @@ import java.lang.instrument.Instrumentation;
  */
 public class ScriptRepository
 {
-    public ScriptRepository()
+    public ScriptRepository(boolean skipOverrideRules)
     {
         targetClassIndex = new HashMap<String, List<RuleScript>>();
         targetInterfaceIndex = new HashMap<String, List<RuleScript>>();
         ruleNameIndex = new HashMap<String, RuleScript>();
+        this.skipOverrideRules = skipOverrideRules;
     }
 
     /**
@@ -137,6 +138,12 @@ public class ScriptRepository
     {
         String name = script.getName();
         RuleScript previous = null;
+
+        // sanity check override rule setting and print warning if necessary
+
+        if (skipOverrideRules && script.isOverride()) {
+            System.err.println("ScriptRepository.addScript : injection into overriding methods disabled but found override rule " + script.getName());
+        }
 
         // insert the script by name, invalidating any old script
 
@@ -330,6 +337,10 @@ public class ScriptRepository
                         }
                     }
                 }
+            }
+
+            if (skipOverrideRules) {
+                return false;
             }
 
             nextClazz = nextClazz.getSuperclass();
@@ -537,6 +548,13 @@ public class ScriptRepository
      */
 
     private final Map<String, RuleScript> ruleNameIndex;
+
+    /**
+     * a flag derived from the transformer which enables us to avoid testing superclass rules for
+     * matches if it is set
+     */
+
+    private final boolean skipOverrideRules;
 
     /**
      * see if we need to do any transformation of interfaces

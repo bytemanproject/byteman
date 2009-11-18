@@ -99,7 +99,7 @@ public class Retransformer extends Transformer {
 
         // for added scripts we have to transform anything which might be a match
 
-        ScriptRepository tmpRepository = new ScriptRepository();
+        ScriptRepository tmpRepository = new ScriptRepository(skipOverrideRules());
         for (RuleScript ruleScript : toBeAdded) {
             tmpRepository.addScript(ruleScript);
         }
