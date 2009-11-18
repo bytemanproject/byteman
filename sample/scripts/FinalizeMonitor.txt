@@ -41,13 +41,15 @@
 
 ########################################################################
 #
-# Rule to trace calls to Object.finalize()
+# Rule to trace calls to Object.finalize() or any overriding
+# implementations in subclasses of Object.
 #
 
 RULE FinalizeMonitor trace finalize
-CLASS java.lang.Object
+CLASS ^java.lang.Object
 METHOD finalize
+HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT RETURN
 IF TRUE
-DO traceln("finalizing " + $0)
+DO traceStack("finalizing " + $0, 1)
 ENDRULE

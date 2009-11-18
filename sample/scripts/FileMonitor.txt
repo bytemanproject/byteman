@@ -51,7 +51,7 @@ METHOD <init>(java.io.File)
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT RETURN
 IF TRUE
-DO traceStack("*** Opened " + $1.getPath() + " for read in thread " + Thread.currentThread().getName() + "\n")
+DO traceStack("*** Opened " + $1.getPath() + " for read in thread " + Thread.currentThread().getName() + "\n", 10)
 ENDRULE
 
 ########################################################################
@@ -65,7 +65,7 @@ METHOD close
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT RETURN
 IF TRUE
-DO traceStack("*** Closed " + $0 + " in thread " + Thread.currentThread().getName() + "\n")
+DO traceStack("*** Closed " + $0 + " in thread " + Thread.currentThread().getName() + "\n", 10)
 ENDRULE
 
 ########################################################################
@@ -79,7 +79,7 @@ METHOD <init>(java.io.File)
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT RETURN
 IF TRUE
-DO traceStack("*** Opened " + $1.getPath() + " for write in thread " + Thread.currentThread().getName() + "\n")
+DO traceStack("*** Opened " + $1.getPath() + " for write in thread " + Thread.currentThread().getName() + "\n", 10)
 ENDRULE
 
 ########################################################################
@@ -93,7 +93,7 @@ METHOD <init>(String, boolean)
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT RETURN
 IF TRUE
-DO traceStack("*** Opened " + $1 + " for " + ($2 ? "write" : "append") +" in thread " + Thread.currentThread().getName() + "\n")
+DO traceStack("*** Opened " + $1 + " for " + ($2 ? "write" : "append") +" in thread " + Thread.currentThread().getName() + "\n", 10)
 ENDRULE
 
 ########################################################################
@@ -107,5 +107,5 @@ METHOD <init>(String, boolean)
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT RETURN
 IF TRUE
-DO traceStack("*** Closed " + $0 + " in thread " + Thread.currentThread().getName() + "\n")
+DO traceStack("*** Closed " + $0 + " in thread " + Thread.currentThread().getName() + "\n", 10)
 ENDRULE

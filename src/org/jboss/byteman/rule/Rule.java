@@ -144,13 +144,13 @@ public class Rule
 
     private String key;
 
-    private Rule(RuleScript ruleScript, Class<?> helperClass, ClassLoader loader)
+    private Rule(RuleScript ruleScript, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
         ParseNode ruleTree;
 
         this.ruleScript = ruleScript;
-        this.helperClass = (helperClass != null ? helperClass : Helper.class);
+        this.helperClass = null;
         this.loader = loader;
 
         typeGroup = new TypeGroup(loader);
@@ -271,10 +271,10 @@ public class Rule
         return loader;
     }
 
-    public static Rule create(RuleScript ruleScript, Class<?> helperClass, ClassLoader loader)
+    public static Rule create(RuleScript ruleScript, ClassLoader loader)
             throws ParseException, TypeException, CompileException
     {
-            return new Rule(ruleScript, helperClass, loader);
+            return new Rule(ruleScript, loader);
     }
 
     public void setEvent(String eventSpec) throws ParseException, TypeException
@@ -441,6 +441,18 @@ public class Rule
     public void typeCheck()
             throws TypeException
     {
+        String helperName = ruleScript.getTargetHelper();
+        
+        // ensure that we have a valid helper class
+        if (helperName != null) {
+            try {
+                helperClass = loader.loadClass(helperName);
+            } catch (ClassNotFoundException e) {
+                throw new TypeException("Rule.typecheck : unknown helper class " + helperName + " for rule " + getName());
+            }
+        } else {
+            helperClass = Helper.class;
+        }
         if (triggerExceptions != null) {
             // ensure that the type group includes the exception types
             typeGroup.addExceptionTypes(triggerExceptions);

@@ -102,7 +102,7 @@ ENDRULE
 
 RULE ServerSocket trace bind
 CLASS java.net.ServerSocket
-METHOD bind(SocketAddress, int)
+METHOD ^bind(SocketAddress, int)
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
@@ -116,7 +116,7 @@ ENDRULE
 
 RULE ServerSocket trace accept
 CLASS java.net.ServerSocket
-METHOD accept()
+METHOD ^accept()
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
@@ -132,7 +132,7 @@ ENDRULE
 
 RULE ServerSocket trace close
 CLASS java.net.ServerSocket
-METHOD close
+METHOD ^close
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT CALL close
 IF TRUE
@@ -236,28 +236,28 @@ ENDRULE
 # Rule to trace socket bind for Sun's socket impl
 #
 
-RULE Socket trace bind  for Sun's socket impl
-CLASS sun.nio.ch.ServerSocketChannelImpl
-METHOD bind(SocketAddress)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
-AT EXIT
-IF TRUE
-DO traceStack("*** bind for Sun's socket impl " + $0, 15)
-ENDRULE
+# RULE Socket trace bind  for Sun's socket impl
+# CLASS sun.nio.ch.ServerSocketChannelImpl
+# METHOD bind(SocketAddress)
+# HELPER org.jboss.byteman.sample.helper.StackTraceHelper
+# AT EXIT
+# IF TRUE
+# DO traceStack("*** bind for Sun's socket impl " + $0, 15)
+# ENDRULE
 
 ########################################################################
 #
 # Rule to trace socket connect for Sun's socket impl
 #
 
-RULE Socket trace connect for Sun's socket impl
-CLASS sun.nio.ch.ServerSocketChannelImpl
-METHOD connect(SocketAddress, int)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
-AT EXIT
-IF TRUE
-DO traceStack("*** connect for Sun's socket impl " + $0, 15)
-ENDRULE
+# RULE Socket trace connect for Sun's socket impl
+# CLASS sun.nio.ch.ServerSocketChannelImpl
+# METHOD connect(SocketAddress, int)
+# HELPER org.jboss.byteman.sample.helper.StackTraceHelper
+# AT EXIT
+# IF TRUE
+# DO traceStack("*** connect for Sun's socket impl " + $0, 15)
+# ENDRULE
 
 ########################################################################
 #
@@ -266,11 +266,11 @@ ENDRULE
 # the AT CALL close location means we do not trace calls to already closed sockets
 #
 
-RULE Socket trace close for Sun's socket impl
-CLASS sun.nio.ch.ServerSocketChannelImpl
-METHOD close()
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
-AT CALL close
-IF TRUE
-DO traceStack("*** close for Sun's socket impl " + $0, 15)
-ENDRULE
+# RULE Socket trace close for Sun's socket impl
+# CLASS sun.nio.ch.ServerSocketChannelImpl
+# METHOD close()
+# HELPER org.jboss.byteman.sample.helper.StackTraceHelper
+# AT CALL close
+# IF TRUE
+# DO traceStack("*** close for Sun's socket impl " + $0, 15)
+# ENDRULE

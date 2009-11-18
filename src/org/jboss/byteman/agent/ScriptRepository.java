@@ -2,6 +2,8 @@ package org.jboss.byteman.agent;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.lang.reflect.Method;
+import java.lang.instrument.Instrumentation;
 
 /**
  * Class to manage indexing and lookup of rule scripts by rule name and by either class or interface name
@@ -39,6 +41,7 @@ public class ScriptRepository
             LocationType locationType = null;
             Location targetLocation = null;
             boolean isInterface = false;
+            boolean isOverride = false;
             int lineNumber = 0;
             int startNumber = -1;
             int maxLines = lines.length;
@@ -65,9 +68,17 @@ public class ScriptRepository
                     }
                 } else if (line.startsWith("CLASS ")) {
                     targetClass = line.substring(6).trim();
+                    if (targetClass.startsWith("^")) {
+                        isOverride = true;
+                        targetClass = targetClass.substring(1).trim();
+                    }
                 } else if (line.startsWith("INTERFACE ")) {
                     targetClass = line.substring(10).trim();
                     isInterface = true;
+                    if (targetClass.startsWith("^")) {
+                        isOverride = true;
+                        targetClass = targetClass.substring(1).trim();
+                    }
                 } else if (line.startsWith("METHOD ")) {
                     targetMethod = line.substring(7).trim();
                 } else if (line.startsWith("HELPER ")) {
@@ -79,17 +90,17 @@ public class ScriptRepository
                         throw new Exception("org.jboss.byteman.agent.Transformer : invalid target location at line " + lineNumber + " in script " + scriptFile);
                     }
                 } else if (line.startsWith("ENDRULE")) {
-                    if (name == null) {
+                    if (name == null || "".equals(name)) {
                         throw new Exception("org.jboss.byteman.agent.Transformer : no matching RULE for ENDRULE at line " + lineNumber + " in script " + scriptFile);
-                    } else if (targetClass == null) {
+                    } else if (targetClass == null || "".equals(targetClass)) {
                         throw new Exception("org.jboss.byteman.agent.Transformer : no CLASS for RULE  " + name + " in script " + scriptFile);
-                    } else if (targetMethod == null) {
+                    } else if (targetMethod == null || "".equals(targetMethod)) {
                         throw new Exception("org.jboss.byteman.agent.Transformer : no METHOD for RULE  " + name + " in script " + scriptFile);
                     } else {
                         if (targetLocation == null) {
                             targetLocation = Location.create(LocationType.ENTRY, "");
                         }
-                        ruleScripts.add(new RuleScript(name, targetClass, isInterface, targetMethod, targetHelper, targetLocation, nextRule, startNumber, scriptFile));
+                        ruleScripts.add(new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetLocation, nextRule, startNumber, scriptFile));
                     }
                     name = null;
                     targetClass = null;
@@ -186,7 +197,7 @@ public class ScriptRepository
         synchronized (ruleNameIndex) {
             current = ruleNameIndex.get(name);
             if (current == script) {
-                ruleNameIndex.remove(current);
+                ruleNameIndex.remove(current.getName());
                 boolean isDeleted = current.setDeleted();
                 if (isDeleted) {
                     // it is some other thread's responsibility to remove the script
@@ -272,12 +283,118 @@ public class ScriptRepository
     }
 
     /**
+     * return true if there is a rule which applies to the supplied class otherwise false
+     * @param clazz
+     * @return
+     * @throws Exception
+     */
+
+    public boolean matchClass(Class<?> clazz) throws Exception
+    {
+        // see if we have any scripts for the class or its supers
+        Class nextClazz = clazz;
+        boolean isOverride = false;
+
+        while (nextClazz != null) {
+            String name = nextClazz.getName();
+
+            if (matchTarget(name, clazz, false, isOverride)) {
+                return true;
+            }
+
+            int lastDot = name.lastIndexOf('.');
+
+            if (lastDot >= 0) {
+                if (matchTarget(name.substring(lastDot + 1), clazz, false, isOverride)) {
+                    return true;
+                }
+            }
+
+            // ok, now see if we need to inject via any interfaces that the class implements
+
+            if (checkInterfaces()) {
+                Class[] interfaces = nextClazz.getInterfaces();
+                boolean found = false;
+
+                for (int i =  0; i < interfaces.length; i++) {
+                    Class interfaze = interfaces[i];
+                    name = interfaze.getName();
+                    if (matchTarget(name, clazz, true, isOverride)) {
+                        return true;
+                    } else {
+                        lastDot = name.lastIndexOf('.');
+                        if (lastDot >= 0) {
+                            if (matchTarget(name.substring(lastDot + 1), clazz, true, isOverride)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            nextClazz = nextClazz.getSuperclass();
+            isOverride = true;
+        }
+
+        return false;
+    }
+
+    /**
      * return a list containing all the currently installed rule scripts.
      * @return
      */
     public List<RuleScript> currentRules()
     {
         return new ArrayList(ruleNameIndex.values());
+    }
+
+    /**
+     * return true if there are any scripts indexed under name which meet the required matching conditions
+     * @param name the name under which the scripts are indexed
+     * @param clazz a class which should be checked for a method whose name matches the script method name
+     * @param isInterface true if we are interested in matching interface rules false if we are interested in
+     * matching class rules
+     * @param isOverride true if we are only interested in rules which apply to overriding methods false
+     * if we are happy with any rule
+     * @return
+     */
+    private boolean matchTarget(String name, Class<?> clazz, boolean isInterface, boolean isOverride) {
+        Map<String, List<RuleScript>> index = (isInterface ? targetInterfaceIndex : targetClassIndex);
+        synchronized (index) {
+            List<RuleScript> ruleScripts = index.get(name);
+            if (ruleScripts != null) {
+                for (RuleScript ruleScript: ruleScripts) {
+                    if (isOverride && !ruleScript.isOverride()) {
+                        continue;
+                    }
+                    String methodName = ruleScript.getTargetMethod();
+                    int signaturePos = methodName.indexOf("(");
+                    if (signaturePos > 0) {
+                        methodName = methodName.substring(0, signaturePos).trim();
+                    }
+                    if (methodName == "<init>" || methodName == "<clinit>") {
+                        // every class has some sort of constructor so accept it
+                        return true;
+                    }
+                    // this filters out cases where the class does not have a method with the correct name
+                    try {
+                        Method[] declaredMethods = clazz.getDeclaredMethods();
+                        for (int i = 0; i < declaredMethods.length; i++) {
+                            Method method = declaredMethods[i];
+                            if (method.getName().equals(methodName)) {
+                                return true;
+                            }
+                        }
+                    } catch (NoClassDefFoundError e) {
+                        // we cam sometimes get an Error thrown if the class we are lookingb up has unresolved
+                        // refernces ot a non-existent class. don't really know why such classes turn up
+                        // in the inst allLoaddedClasses list but they do.
+                        // ignore
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**

@@ -39,11 +39,11 @@ public class Retransformer extends Transformer {
      *
      * @param inst the instrumentation object used to interface to the JVM
      */
-    public Retransformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts, boolean isRedefine, String hostname, Integer port)
+    public Retransformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts, boolean isRedefine)
             throws Exception
     {
         super(inst, scriptPaths, scriptTexts, isRedefine);
-        addTransformListener(hostname, port);
+        //addTransformListener(hostname, port);
     }
 
     protected void installScript(List<String> scriptTexts, List<String> scriptNames, PrintWriter out) throws Exception
@@ -85,77 +85,54 @@ public class Retransformer extends Transformer {
 
         // list all class names for the to be aded and to be removed scripts
 
-        List<String> affectedClassNames = new LinkedList<String>();
-        List<String> affectedInterfaceNames = new LinkedList<String>();
-
-        for (RuleScript ruleScript : toBeAdded) {
-            String targetClassName = ruleScript.getTargetClass();
-            if (ruleScript.isInterface()) {
-                if (!affectedInterfaceNames.contains(targetClassName)) {
-                    affectedInterfaceNames.add(targetClassName);
-                }
-            } else {
-                if (!affectedClassNames.contains(targetClassName)) {
-                    affectedClassNames.add(targetClassName);
-                }
-            }
-        }
+        List<String> deletedClassNames = new LinkedList<String>();
 
         for (RuleScript ruleScript : toBeRemoved) {
-            String targetClassName = ruleScript.getTargetClass();
-            if (ruleScript.isInterface()) {
-                if (!affectedInterfaceNames.contains(targetClassName)) {
-                    affectedInterfaceNames.add(targetClassName);
-                }
-            } else {
-                if (!affectedClassNames.contains(targetClassName)) {
-                    affectedClassNames.add(targetClassName);
+            List<Transform> transforms = ruleScript.getTransformed();
+            for (Transform transform : transforms) {
+                String className = transform.getInternalClassName();
+                if (!deletedClassNames.contains(className)) {
+                    deletedClassNames.add(className);
                 }
             }
         }
 
-        // now look for loaded classes whose names are in the list
+        // for added scripts we have to transform anything which might be a match
+
+        ScriptRepository tmpRepository = new ScriptRepository();
+        for (RuleScript ruleScript : toBeAdded) {
+            tmpRepository.addScript(ruleScript);
+        }
+
+        // now look for loaded classes whose names are in the deleted list or which match added rules
 
         List<Class<?>> transformed = new LinkedList<Class<?>>();
 
         for (Class clazz : inst.getAllLoadedClasses()) {
-            String name = clazz.getName();
-            int lastDot = name.lastIndexOf('.');
-
-            if (isBytemanClass(name) || !isTransformable(name)) {
+            if (isSkipClass(clazz)) {
                 continue;
             }
-
-            if (affectedClassNames.contains(name)) {
+            if (deletedClassNames.contains(clazz.getName())) {
                 transformed.add(clazz);
-            } else if (lastDot >= 0 && affectedClassNames.contains(name.substring(lastDot+1))) {
-                transformed.add(clazz);
-            } else if (!affectedInterfaceNames.isEmpty()) {
-                // ok, see if we are affected by any interface rules
-                Class[] interfaces = clazz.getInterfaces();
-                for (int i = 0; i < interfaces.length; i++) {
-                    Class interfaze = interfaces[i];
-                    name = interfaze.getName();
-                    lastDot = name.lastIndexOf('.');
-
-                    if (affectedInterfaceNames.contains(name)) {
-                        transformed.add(clazz);
-                        break;
-                    } else if (lastDot >= 0 && affectedInterfaceNames.contains(name.substring(lastDot+1))) {
-                        transformed.add(clazz);
-                        break;
-                    }
-                }
+            } else if (tmpRepository.matchClass(clazz)) {
+                    transformed.add(clazz);
             }
         }
-
         // retransform all classes whose rules have changed
 
         if (!transformed.isEmpty()) {
             Class<?>[] transformedArray = new Class<?>[transformed.size()];
-            inst.retransformClasses(transformed.toArray(transformedArray));
+            transformed.toArray(transformedArray);
+            if (Transformer.isVerbose()) {
+                for (int i = 0; i < transformed.size(); i++) {
+                    System.out.println("retransforming " + transformedArray[i].getName());
+                }
+            }
+            synchronized(this) {
+                inst.retransformClasses(transformedArray);
+            }
         }
-
+        
         // now we can safely purge keys for all deleted scripts
 
         for (RuleScript ruleScript : toBeRemoved) {
@@ -163,6 +140,30 @@ public class Retransformer extends Transformer {
         }
     }
 
+    protected void collectAffectedNames(List<RuleScript> ruleScripts, List<String> classList, List<String> interfaceList,
+                                   List<String> superClassList, List<String> superInterfaceList)
+    {
+
+        for (RuleScript ruleScript : ruleScripts) {
+            String targetClassName = ruleScript.getTargetClass();
+            boolean isOverride = ruleScript.isOverride();
+            if (ruleScript.isInterface()) {
+                if (!interfaceList.contains(targetClassName)) {
+                    interfaceList.add(targetClassName);
+                    if (isOverride) {
+                        superInterfaceList.add(targetClassName);
+                    }
+                }
+            } else {
+                if (!classList.contains(targetClassName)) {
+                    classList.add(targetClassName);
+                    if (isOverride) {
+                        superClassList.add(targetClassName);
+                    }
+                }
+            }
+        }
+    }
 
     protected void listScripts(PrintWriter out)  throws Exception
     {
@@ -188,7 +189,7 @@ public class Retransformer extends Transformer {
         }
     }
 
-    private void addTransformListener(String hostname, Integer port)
+    public void addTransformListener(String hostname, Integer port)
     {
         TransformListener.initialize(this, hostname, port);
     }
@@ -235,37 +236,34 @@ public class Retransformer extends Transformer {
             }
         }
 
-        // ok, now that we have updated the maps we need to find all classes which match the scripts and
-        // retransform them
+        // ok, now that we have updated the maps and deleted the scripts
+        // we need to find all classes which were transformed by
+        // the scripts and retransform them
 
-        // list all class names for the to be removed scripts
-
-        List<String> affectedClassNames = new LinkedList<String>();
-
-        for (RuleScript ruleScript : toBeRemoved) {
-            String targetClassName = ruleScript.getTargetClass();
-            if (!affectedClassNames.contains(targetClassName)) {
-                affectedClassNames.add(targetClassName);
-            }
-        }
 
         // now look for loaded classes whose names are in the list
 
         List<Class<?>> transformed = new LinkedList<Class<?>>();
+        List<String> deletedClassNames = new LinkedList<String>();
+
+        for (RuleScript ruleScript : toBeRemoved) {
+            List<Transform> transforms = ruleScript.getTransformed();
+            if (transforms != null) {
+                for (Transform transform : transforms) {
+                    String className = transform.getInternalClassName();
+                    if (!deletedClassNames.contains(className)) {
+                        deletedClassNames.add(className);
+                    }
+                }
+            }
+        }
 
         for (Class clazz : inst.getAllLoadedClasses()) {
-            String name = clazz.getName();
-            int lastDot = name.lastIndexOf('.');
-
-            if (isBytemanClass(name) || !isTransformable(name)) {
+            if (isSkipClass(clazz)) {
                 continue;
             }
 
-            // retransform if this class has been affected by the delete
-
-            if (affectedClassNames.contains(name)) {
-                transformed.add(clazz);
-            } else if (lastDot >= 0 && affectedClassNames.contains(name.substring(lastDot+1))) {
+            if (deletedClassNames.contains(clazz.getName())) {
                 transformed.add(clazz);
             }
         }
@@ -274,7 +272,15 @@ public class Retransformer extends Transformer {
 
         if (!transformed.isEmpty()) {
             Class<?>[] transformedArray = new Class<?>[transformed.size()];
-            inst.retransformClasses(transformed.toArray(transformedArray));
+            transformed.toArray(transformedArray);
+            if (Transformer.isVerbose()) {
+                for (int i = 0; i < transformed.size(); i++) {
+                    System.out.println("retransforming " + transformedArray[i].getName());
+                }
+            }
+            synchronized(inst) {
+                inst.retransformClasses(transformedArray);
+            }
         }
 
         // now we can safely purge keys for all the deleted scripts -- we need to do this

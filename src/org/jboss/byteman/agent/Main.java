@@ -34,6 +34,7 @@ import java.util.List;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
+import java.net.Socket;
 
 /**
  * agent class supplied at JVM startup to install byteman package bytecode transformer
@@ -103,6 +104,10 @@ public class Main {
                 throw ioe;
             }
         }
+        // create a socket so we can be sure it is loaded before the transformer gets cerated. otherwise
+        // we seem to hit a deadlock when trying to instrument socket
+
+        Socket dummy = new Socket();
 
         // look up rules in any script files
 
@@ -145,8 +150,8 @@ public class Main {
         if (allowRedefine && isRedefine) {
             transformerClazz = loader.loadClass("org.jboss.byteman.agent.Retransformer");
             //transformer = new Retransformer(inst, scriptPaths, scripts, true);
-            Constructor constructor = transformerClazz.getConstructor(Instrumentation.class, List.class, List.class, boolean.class, String.class, Integer.class);
-            transformer = (ClassFileTransformer)constructor.newInstance(new Object[] { inst, scriptPaths, scripts, isRedefine, hostname, port});
+            Constructor constructor = transformerClazz.getConstructor(Instrumentation.class, List.class, List.class, boolean.class);
+            transformer = (ClassFileTransformer)constructor.newInstance(new Object[] { inst, scriptPaths, scripts, isRedefine});
         } else {
             transformerClazz = loader.loadClass("org.jboss.byteman.agent.Transformer");
             //transformer = new Transformer(inst, scriptPaths, scripts, isRedefine);
@@ -155,8 +160,16 @@ public class Main {
         }
 
         inst.addTransformer(transformer, true);
+        
+        if (allowRedefine && isRedefine) {
+            Method method = transformerClazz.getMethod("addTransformListener", String.class, Integer.class);
+            method.invoke(transformer, hostname, port);
+        }
+
         if (isRedefine) {
-            Method method = transformerClazz.getMethod("installBootScripts");
+            Method method;
+
+            method = transformerClazz.getMethod("installBootScripts");
             method.invoke(transformer);
             //transformer.installBootScripts();
         }

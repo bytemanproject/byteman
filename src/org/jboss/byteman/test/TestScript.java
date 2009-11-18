@@ -129,6 +129,7 @@ public class TestScript
             try {
                 String targetClassName;
                 boolean isInterface = false;
+                boolean isOverride = false;
                 String targetMethodName;
                 String targetHelperName = null;
                 LocationType locationType = null;
@@ -161,10 +162,18 @@ public class TestScript
                 if (lines[idx].startsWith("CLASS ")) {
                     targetClassName = lines[idx].substring(6).trim();
                     idx++;
+                    if (targetClassName.startsWith("^")) {
+                        isOverride = true;
+                        targetClassName = targetClassName.substring(1).trim();
+                    }
                 } else if (lines[idx].startsWith("INTERFACE ")) {
                     targetClassName = lines[idx].substring(10).trim();
                     isInterface = true;
                     idx++;
+                    if (targetClassName.startsWith("^")) {
+                        isOverride = true;
+                        targetClassName = targetClassName.substring(1).trim();
+                    }
                 }  else {
                     throw new ParseException("CLASS should follow RULE :\n" + lines[idx]) ;
                 }
@@ -228,8 +237,8 @@ public class TestScript
                         System.out.println("TestScript : unknown helper class " + targetHelperName + " for rule " + ruleName);
                     }
                 }
-                RuleScript ruleScript = new RuleScript(ruleName, targetClassName, isInterface, targetMethodName, targetHelperName, targetLocation, text, baseline + lineNumber, file);
-                Rule rule = Rule.create(ruleScript, targetHelperClass, loader);
+                RuleScript ruleScript = new RuleScript(ruleName, targetClassName, isInterface, isOverride, targetMethodName, targetHelperName, targetLocation, text, baseline + lineNumber, file);
+                Rule rule = Rule.create(ruleScript, loader);
                 System.err.println("TestScript: parsed rule " + rule.getName());
                 System.err.println(rule);
                 

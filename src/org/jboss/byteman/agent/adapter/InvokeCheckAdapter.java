@@ -51,7 +51,7 @@ public class InvokeCheckAdapter extends RuleCheckAdapter
         final String[] exceptions)
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if ((access & Opcodes.ACC_ABSTRACT) == 0 && matchTargetMethod(name, desc)) {
+        if ((access & (Opcodes.ACC_ABSTRACT|Opcodes.ACC_SYNTHETIC)) == 0 && matchTargetMethod(name, desc)) {
             return new InvokeCheckMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
         }
 

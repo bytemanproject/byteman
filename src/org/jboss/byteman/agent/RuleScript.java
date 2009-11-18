@@ -37,28 +37,82 @@ import java.io.PrintWriter;
 
 public class RuleScript
 {
+    /**
+     * the name of the rule from which this scritp is derived
+     */
     private String name;
+    /**
+     * the name supplied in the CLASS or INTERFACE clause of the rule identifying which class(es)
+     * triggers should be injected into
+     */
     private String targetClass;
+    /**
+     * true if the target is an interface or false if the target is a class, in the former case the
+     * rule should be injected into methods of classes which implement the interface.
+     */
     private boolean isInterface;
+    /**
+     * the name of the method of the target class or interface into which the rule should be injected
+     */
     private String targetMethod;
+    /**
+     * true if the rule should be injected into overriding implementations of the target method false
+     * if it should only be injected into the implementation defined by the target class or, in the
+     * case of an interface rule, by the class directly implementing the target interface
+     */
+    private boolean isOverride;
+    /**
+     * the name of a class whose public instance methods define the built-in methods available for use
+     * in the rule body
+     */
     private String targetHelper;
+    /**
+     * identifies the location in the method if the trigger point at which the rule code should be injected.
+     * note that for an AT EXIT rule there may be multiple trigger points.
+     */
     private Location targetLocation;
+    /**
+     * the text of the rule's BIND IF and DO clauses which are parsed using a grammar based parser
+     */
     private String ruleText;
+    /**
+     * this is set to true if the rule is dynamically deleted or updated so as to inhibit execution of
+     * trigger code between the delete/update and recompilation/reinstatement of the affected bytecode.
+     */
     private boolean deleted;
+    /**
+     * the line number at which the rule text starts
+     */
     private int line;
+    /**
+     * the name of the file from which the rule has been loaded, if defined, or some suitable dummy string if it
+     * was noti obtained from a file
+     */
     private String file;
+    /**
+     * a list of records identifying contexts in which the rule has been applied.
+     */
     private List<Transform> transformed;
 
-    public RuleScript(String name, String targetClass, String targetMethod, String targetHelper, Location targetLocation, String ruleText, int line, String file)
-    {
-        this(name, targetClass, false, targetMethod, targetHelper, targetLocation, ruleText, line, file);
-    }
-    
-    public RuleScript(String name, String targetClass, boolean isInterface, String targetMethod, String targetHelper, Location targetLocation, String ruleText, int line, String file)
+    /**
+     * standard constructor for a rule
+     * @param name
+     * @param targetClass
+     * @param isInterface
+     * @param isOverride
+     * @param targetMethod
+     * @param targetHelper
+     * @param targetLocation
+     * @param ruleText
+     * @param line
+     * @param file
+     */
+    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, Location targetLocation, String ruleText, int line, String file)
     {
         this.name = name;
         this.targetClass = targetClass;
         this.isInterface =  isInterface;
+        this.isOverride = isOverride;
         this.targetMethod = targetMethod;
         this.targetHelper = targetHelper;
         this.targetLocation = (targetLocation != null ? targetLocation : Location.create(LocationType.ENTRY, ""));
@@ -86,6 +140,10 @@ public class RuleScript
 
     public String getTargetMethod() {
         return targetMethod;
+    }
+
+    public boolean isOverride() {
+        return isOverride;
     }
 
     public Location getTargetLocation() {
@@ -190,7 +248,13 @@ public class RuleScript
         transformed.add(transform);
     }
 
-
+    /**
+     * check whether a rule has been used to transform a specific class. this can be used when
+     * rules are redefined to decide whether or not a class needs to be retransformed. Note that
+     * it must only be called after the script has been deleted by calling setDeleted.
+     * @param clazz the class for which a transform is being sought.
+     * @return true if the class has been transformed using this script otherwise false.
+     */
     public synchronized boolean hasTransform(Class<?> clazz)
     {
         ClassLoader loader = clazz.getClassLoader();
@@ -209,10 +273,10 @@ public class RuleScript
         return false;
     }
     /**
-     * record the fact that a rule has been compiled wiht or without success
+     * record the fact that a rule has been compiled with or without success
      * @param triggerClass the name of the trigger class to which the rule is attached
      * @param loader the classloader of the trigger class
-     * @param successful true if the rule compiled successfully and false if it suffered form parse,
+     * @param successful true if the rule compiled successfully and false if it suffered from parse,
      * type or compile errors
      */
     public synchronized void recordCompile(String triggerClass, ClassLoader loader, boolean successful, String detail)
@@ -266,6 +330,9 @@ public class RuleScript
             writer.print("INTERFACE ");
         } else {
             writer.print("CLASS ");
+        }
+        if (isOverride) {
+            writer.print("^");
         }
         writer.println(targetClass);
         writer.print("METHOD ");

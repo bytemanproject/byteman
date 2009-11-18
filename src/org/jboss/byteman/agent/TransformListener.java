@@ -114,7 +114,16 @@ public class TransformListener extends Thread
             if (Transformer.isVerbose()) {
                 System.out.println("TransformListener() : handling connection on port " + socket.getLocalPort());
             }
-            handleConnection(socket);
+            try {
+                handleConnection(socket);
+            } catch (Exception e) {
+                System.out.println("TransformListener() : error handling connection on port " + socket.getLocalPort());
+                try {
+                    socket.close();
+                } catch (IOException e1) {
+                    // do nothing
+                }
+            }
         }
     }
 

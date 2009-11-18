@@ -137,6 +137,7 @@ public class Transformer implements ClassFileTransformer {
 
         return found;
     }
+
     /**
      * ensure that scripts which apply to classes loaded before registering the transformer get
      * are installed by retransforming the relevant classes
@@ -147,60 +148,66 @@ public class Transformer implements ClassFileTransformer {
         // check for scripts which apply to classes already loaded during bootstrap and retransform those classes
         // so that rule triggers are injected
 
-        List<Class<?>> omitted = new LinkedList<Class<?>>();
+        List<Class<?>> transformed = new LinkedList<Class<?>>();
 
         Class<?>[] loaded = inst.getAllLoadedClasses();
 
         for (Class clazz : loaded) {
-            String name = clazz.getName();
-            int lastDot = name.lastIndexOf('.');
 
-            // we don't actually transform interfaces only their implementing classes
-
-            if (clazz.isInterface()) {
+            if (isSkipClass(clazz)) {
                 continue;
             }
 
-            if (isBytemanClass(name) || !isTransformable(name)) {
-                continue;
-            }
-
-            if (scriptRepository.scriptsForClassName(name) != null) {
-                omitted.add(clazz);
-                continue;
-            }
-
-            if (lastDot >= 0 && scriptRepository.scriptsForClassName(name.substring(lastDot + 1)) != null) {
-                omitted.add(clazz);
-                continue;
-            }
-
-            // ok, now see if we ned to inject via any interfaces that the class implements
-
-            Class[] interfaces = clazz.getInterfaces();
-
-            for (int i =  0; i < interfaces.length; i++) {
-                Class interfaze = interfaces[i];
-                name = interfaze.getName();
-                if (scriptRepository.scriptsForInterfaceName(name) != null) {
-                    omitted.add(clazz);
-                    break;
-                } else {
-                    lastDot = name.lastIndexOf('.');
-                    if (lastDot >= 0 && scriptRepository.scriptsForInterfaceName(name.substring(lastDot + 1)) != null) {
-                        omitted.add(clazz);
-                        break;
-                    }
-                }
+            if (scriptRepository.matchClass(clazz)) {
+                transformed.add(clazz);
             }
         }
-
         // retransform all classes for which we found untransformed rules
 
-        if (!omitted.isEmpty()) {
-            Class<?>[] transformedArray = new Class<?>[omitted.size()];
-            inst.retransformClasses(omitted.toArray(transformedArray));
+        if (!transformed.isEmpty()) {
+            Class<?>[] transformedArray = new Class<?>[transformed.size()];
+            transformed.toArray(transformedArray);
+            if (Transformer.isVerbose()) {
+                for (int i = 0; i < transformed.size(); i++) {
+                    System.out.println("retransforming " + transformedArray[i].getName());
+                }
+            }
+            inst.retransformClasses(transformedArray);
         }
+    }
+
+    /**
+     * check whether a class should not be considered for transformation
+     * @param clazz the class to check
+     * @return true if clazz should not be considered for transformation otherwise false
+     */
+    protected boolean isSkipClass(Class<?> clazz)
+    {
+        if (!inst.isModifiableClass(clazz)) {
+            return true;
+        }
+
+        // we can safely skip array classes, interfaces and primitive classes
+
+        if (clazz.isArray()) {
+            return true;
+        }
+
+        if (clazz.isInterface()) {
+            return true;
+        }
+
+        if (clazz.isPrimitive()) {
+            return true;
+        }
+
+        String name = clazz.getName();
+
+        if (isBytemanClass(name) || !isTransformable(name)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -279,7 +286,19 @@ public class Transformer implements ClassFileTransformer {
                 return null;
             }
 
-            int dotIdx = internalName.lastIndexOf('.');
+            // we will need the super class name any outer class name and the name of the interfaces the class implements
+
+            ClassChecker checker = new ClassChecker(newBuffer);
+
+            if (checker.isInterface()) {
+                return null;
+            }
+
+            if (checker.getOuterClass() != null) {
+                // we don't transform inner classes for now
+                // TODO -- see if we can match and transform inner classes via the outer class
+                return null;
+            }
 
             // TODO-- reconsider this as it is a bit dodgy as far as security is concerned
         
@@ -294,19 +313,18 @@ public class Transformer implements ClassFileTransformer {
 
             newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalName, false);
 
+            int dotIdx = internalName.lastIndexOf('.');
+
             if (dotIdx > 0) {
                 newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalName.substring(dotIdx + 1), false);
             }
 
-            // only do this if we have interface rules as it is expensive.  identifying the interfaces costs
-            // i) create of a class reader and adapter and ii) scan of the class to get the interface list.
-            
             if (scriptRepository.checkInterfaces()) {
                 // now we need to do the same for any interface scripts
                 // n.b. resist the temptation to call classBeingRedefined.getInterfaces() as this will
                 // cause the class to be resolved, losing any changes we install
 
-                String[] interfaceNames = getInterfaces(newBuffer);
+                String[] interfaceNames = checker.getInterfaces();
 
                 for (int i = 0; i < interfaceNames.length; i++) {
                     String interfaceName = interfaceNames[i];
@@ -316,6 +334,50 @@ public class Transformer implements ClassFileTransformer {
                     if (dotIdx >= 0) {
                         newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalInterfaceName.substring(dotIdx + 1), true);
                     }
+                }
+            }
+
+            // ok, now find the superclass for this class and check the superclass chain
+
+            String superName = TypeHelper.internalizeClass(checker.getSuper());
+            Class superClazz = null;
+
+            if (superName != null) {
+                try {
+                    superClazz = loader.loadClass(superName);
+                } catch (ClassNotFoundException e) {
+                    // should not happen!
+                    // TODO - what happens when the bytecode is for class Object? is the supername null? or ""?
+                    System.err.println("Transformer.transform : error looking up superclass!");
+                    e.printStackTrace(System.err);
+                }
+            }
+
+            while (superClazz != null) {
+                newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, superName, false, true);
+                dotIdx = superName.lastIndexOf('.');
+                if (dotIdx > 0) {
+                    newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, superName.substring(dotIdx + 1), false, true);
+                }
+
+                // ok, now check any interfaces implemented by the superclass
+                Class[] interfaces = superClazz.getInterfaces();
+
+                for (int i = 0; i < interfaces.length; i++) {
+                    // TODO -- do we ever find that a super declares an interface also declared by its subclass
+                    // TODO -- we probably don't want to inject twice in such cases so we ought to remember whether
+                    // TODO -- we have seen an interface before
+                    String interfaceName = interfaces[i].getName();
+                    newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, interfaceName, false, true);
+                    dotIdx = interfaceName.lastIndexOf('.');
+                    if (dotIdx >= 0) {
+                        newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, interfaceName.substring(dotIdx + 1), false, true);
+                    }
+                }
+
+                superClazz = superClazz.getSuperclass();
+                if (superClazz != null) {
+                    superName = superClazz.getName();
                 }
             }
 
@@ -337,6 +399,11 @@ public class Transformer implements ClassFileTransformer {
 
     private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, Class classBeingRedefined, String key, boolean isInterface)
     {
+        return tryTransform(buffer, name, loader, classBeingRedefined, key, isInterface, false);
+    }
+
+    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, Class classBeingRedefined, String key, boolean isInterface, boolean isOverride)
+    {
         List<RuleScript> ruleScripts;
 
         if (isInterface) {
@@ -347,15 +414,19 @@ public class Transformer implements ClassFileTransformer {
         byte[] newBuffer = buffer;
 
         if (ruleScripts != null) {
-            if (isVerbose()) {
-                System.out.println("tryTransform : " + name + " for " + key);
-            }
+//            if (isVerbose()) {
+//                System.out.println("tryTransform : " + name + " for " + key);
+//            }
             for (RuleScript ruleScript : ruleScripts) {
                 try {
-                    // only do the transform if the script has not been deleted
-                    synchronized (ruleScript) {
-                        if (!ruleScript.isDeleted()) {
-                            newBuffer = transform(ruleScript, loader, name, classBeingRedefined, newBuffer);
+                    // we only transform via isOverride rules if isOverride is true
+                    // we tarsnform via any matchign rules if isOverride is false
+                    if (!isOverride || ruleScript.isOverride()) {
+                        // only do the transform if the script has not been deleted
+                        synchronized (ruleScript) {
+                            if (!ruleScript.isDeleted()) {
+                                newBuffer = transform(ruleScript, loader, name, classBeingRedefined, newBuffer);
+                            }
                         }
                     }
                 } catch (Throwable th) {
@@ -448,25 +519,27 @@ public class Transformer implements ClassFileTransformer {
 
     protected byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
     {
-        final String handlerClass = ruleScript.getTargetClass();
         final String handlerMethod = ruleScript.getTargetMethod();
-        final String helperName = ruleScript.getTargetHelper();
         final Location handlerLocation = ruleScript.getTargetLocation();
-        Class helperClass = null;
-        if (helperName != null) {
-            try {
-                helperClass = loader.loadClass(helperName);
-            } catch (ClassNotFoundException e) {
-                System.out.println("org.jboss.byteman.agent.Transformer : unknown helper class " + helperName + " for rule " + ruleScript.getName());
-            }
-        }
-        if (isVerbose()) {
-            System.out.println("org.jboss.byteman.agent.Transformer : Inserting trigger event");
-        }
+        /**
+         * we cannot afford to lookup the helper class at this point because that involves valling a synchronized
+         * method on loader while we are synchronized on the transformer. That is no problem if the transform request
+         * has itself been initiated under a load but it presents a potential deadlock when the transform request
+         * occurs under Instrumentation.retransformClasses(). So, we have to install the helper name and defer
+         * checking for the helper until type check time when the rule is first executed
+         */
+//        Class helperClass = null;
+//        if (helperName != null) {
+//            try {
+//                helperClass = loader.loadClass(helperName);
+//            } catch (ClassNotFoundException e) {
+//                System.out.println("org.jboss.byteman.agent.Transformer : unknown helper class " + helperName + " for rule " + ruleScript.getName());
+//            }
+//        }
         final Rule rule;
         String ruleName = ruleScript.getName();
         try {
-            rule = Rule.create(ruleScript, helperClass, loader);
+            rule = Rule.create(ruleScript, loader);
         } catch (ParseException pe) {
             System.out.println("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + "\n" + pe);
             ruleScript.recordTransform(loader, className, null, pe);
@@ -479,9 +552,6 @@ public class Transformer implements ClassFileTransformer {
             System.out.println("org.jboss.byteman.agent.Transformer : error processing rule " + ruleName + "\n" + th);
             ruleScript.recordTransform(loader, className, null, th);
             return targetClassBytes;
-        }
-        if (isVerbose()) {
-            System.out.println(rule);
         }
 
         // ok, we have a rule with a matchingclass and a candidiate method and location
@@ -505,6 +575,9 @@ public class Transformer implements ClassFileTransformer {
         }
         // only insert the rule trigger call if there is a suitable location in the target method
         if (checkAdapter.isVisitOk()) {
+            if (isVerbose()) {
+                System.out.println("org.jboss.byteman.agent.Transformer : possible trigger for rule " + rule.getName() + " in class " + className);
+            }
             cr = new ClassReader(targetClassBytes);
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             // PrintWriter pw = new PrintWriter(System.out);
@@ -523,6 +596,9 @@ public class Transformer implements ClassFileTransformer {
 
             if (ruleScript.recordTransform(loader, className, rule)) {
                 // hand back the transformed byte code
+                if (isVerbose()) {
+                    System.out.println("org.jboss.byteman.agent.Transformer : inserted trigger for " + rule.getName() + " in class " + className);
+                }
                 return cw.toByteArray();
             }
         }
@@ -531,13 +607,30 @@ public class Transformer implements ClassFileTransformer {
     }
 
     /**
-     * a simple adapter used to scan a class's bytecode definition for list of names of the interfaces it
-     * implements directly
+     * a simple adapter used to scan a class's bytecode definition for the name of its superclass, its enclosing
+     * class and the interfaces it implements directly
      */
     
-    private class InterfaceCheckAdapter implements ClassVisitor
+    private static class ClassCheckAdapter implements ClassVisitor
     {
+        private boolean isInterface = false;
         private String[] interfaces = null;
+        private String superName = null;
+        private String outerClass = null;
+
+        public boolean isInterface() {
+            return isInterface;
+        }
+
+        public String getSuper()
+        {
+            return superName;
+        }
+
+        public String getOuterClass()
+        {
+            return outerClass;
+        }
 
         public String[] getInterfaces()
         {
@@ -545,7 +638,9 @@ public class Transformer implements ClassFileTransformer {
         }
 
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+            this.isInterface = (access & Opcodes.ACC_INTERFACE) != 0;
             this.interfaces = interfaces;
+            this.superName = superName;
         }
 
         public void visitSource(String source, String debug) {
@@ -553,7 +648,7 @@ public class Transformer implements ClassFileTransformer {
         }
 
         public void visitOuterClass(String owner, String name, String desc) {
-            // do nothimg
+            outerClass = owner;
         }
 
         public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
@@ -582,18 +677,41 @@ public class Transformer implements ClassFileTransformer {
     }
 
     /**
-     * return an array containing the names of all interfaces implemented by a class defined via bytecode
-     * @param buffer the bytecode defining the class
-     * @return an array containing the names of all interfaces implemented by a class
+     * a private class which can be used to derive the super and interfaces of a class from its defining bytecode
      */
-    private String[] getInterfaces(byte[] buffer)
+    private static class ClassChecker
     {
-        // run a pass over the bytecode to identify the interfaces
-        ClassReader cr = new ClassReader(buffer);
-        InterfaceCheckAdapter adapter = new InterfaceCheckAdapter();
-        cr.accept(adapter, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
-        return adapter.getInterfaces();
+        ClassCheckAdapter adapter;
+
+        public ClassChecker(byte[] buffer)
+        {
+            // run a pass over the bytecode to identify the interfaces
+            ClassReader cr = new ClassReader(buffer);
+            adapter = new ClassCheckAdapter();
+            cr.accept(adapter, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+        }
+
+        public boolean isInterface()
+        {
+            return adapter.isInterface();
+        }
+
+        public String getSuper()
+        {
+            return adapter.getSuper();
+        }
+
+        public String getOuterClass()
+        {
+            return adapter.getOuterClass();
+        }
+
+        public String[] getInterfaces()
+        {
+            return adapter.getInterfaces();
+        }
     }
+
     /**
      * disable triggering of rules inside the current thread
      * @return true if triggering was previously enabled and false if it was already disabled
