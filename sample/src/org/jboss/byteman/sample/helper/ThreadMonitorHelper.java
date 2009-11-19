@@ -205,6 +205,8 @@ public class ThreadMonitorHelper extends StackTraceHelper
             buffer.append(" ");
         } else {
             buffer.append("*** Runnable run ");            
+            buffer.append(runnable.toString());
+            buffer.append(" ");
         }
         buffer.append(runnable.getClass().getCanonicalName());
         buffer.append('\n');

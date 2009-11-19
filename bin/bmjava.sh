@@ -218,7 +218,7 @@ else
 fi
 
 if [ $INJECT_JAVA_LANG -eq 1 ]; then
-    INJECT_JAVA_LANG_OPTS="-Dorg.jboss.byteman.quodlibet"
+    INJECT_JAVA_LANG_OPTS="-Dorg.jboss.byteman.transform.all"
 else
     INJECT_JAVA_LANG_OPTS=""
 fi
