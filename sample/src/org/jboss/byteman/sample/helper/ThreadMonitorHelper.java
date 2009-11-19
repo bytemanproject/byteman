@@ -212,7 +212,7 @@ public class ThreadMonitorHelper extends StackTraceHelper
         buffer.append('\n');
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
 
-        buffer.append("    at ");
+        buffer.append("    from ");
         printlnFrame(buffer, i);
         trace(key, buffer.toString());
     }
