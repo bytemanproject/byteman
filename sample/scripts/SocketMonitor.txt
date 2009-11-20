@@ -198,7 +198,7 @@ ENDRULE
 
 RULE Socket trace bind
 CLASS java.net.Socket
-METHOD bind(SocketAddress)
+METHOD ^bind(SocketAddress)
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
@@ -212,7 +212,7 @@ ENDRULE
 
 RULE Socket trace connect
 CLASS java.net.Socket
-METHOD connect(SocketAddress, int)
+METHOD ^connect(SocketAddress, int)
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
@@ -228,59 +228,9 @@ ENDRULE
 
 RULE Socket trace close
 CLASS java.net.Socket
-METHOD close()
+METHOD ^close()
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT CALL close
 IF TRUE
 DO traceStack("*** close " + $0, 15)
 ENDRULE
-
-########################################################################
-#
-# The Sun code overrides the standard socket methdos without calling
-# super() so we need to add special case rules for the overriding
-# methods.
-
-########################################################################
-#
-# Rule to trace socket bind for Sun's socket impl
-#
-
-# RULE Socket trace bind  for Sun's socket impl
-# CLASS sun.nio.ch.ServerSocketChannelImpl
-# METHOD bind(SocketAddress)
-# HELPER org.jboss.byteman.sample.helper.StackTraceHelper
-# AT EXIT
-# IF TRUE
-# DO traceStack("*** bind for Sun's socket impl " + $0, 15)
-# ENDRULE
-
-########################################################################
-#
-# Rule to trace socket connect for Sun's socket impl
-#
-
-# RULE Socket trace connect for Sun's socket impl
-# CLASS sun.nio.ch.ServerSocketChannelImpl
-# METHOD connect(SocketAddress, int)
-# HELPER org.jboss.byteman.sample.helper.StackTraceHelper
-# AT EXIT
-# IF TRUE
-# DO traceStack("*** connect for Sun's socket impl " + $0, 15)
-# ENDRULE
-
-########################################################################
-#
-# Rule to trace socket close for Sun's socket impl
-#
-# the AT CALL close location means we do not trace calls to already closed sockets
-#
-
-# RULE Socket trace close for Sun's socket impl
-# CLASS sun.nio.ch.ServerSocketChannelImpl
-# METHOD close()
-# HELPER org.jboss.byteman.sample.helper.StackTraceHelper
-# AT CALL close
-# IF TRUE
-# DO traceStack("*** close for Sun's socket impl " + $0, 15)
-# ENDRULE
