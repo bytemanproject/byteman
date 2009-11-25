@@ -111,8 +111,8 @@ ENDRULE
 #
 
 RULE ServerSocket trace bind
-CLASS java.net.ServerSocket
-METHOD ^bind(SocketAddress, int)
+CLASS ^java.net.ServerSocket
+METHOD bind(SocketAddress, int)
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
@@ -125,8 +125,8 @@ ENDRULE
 #
 
 RULE ServerSocket trace accept
-CLASS java.net.ServerSocket
-METHOD ^accept()
+CLASS ^java.net.ServerSocket
+METHOD accept()
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
@@ -141,8 +141,8 @@ ENDRULE
 #
 
 RULE ServerSocket trace close
-CLASS java.net.ServerSocket
-METHOD ^close
+CLASS ^java.net.ServerSocket
+METHOD close
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT CALL close
 IF TRUE
@@ -197,8 +197,8 @@ ENDRULE
 #
 
 RULE Socket trace bind
-CLASS java.net.Socket
-METHOD ^bind(SocketAddress)
+CLASS ^java.net.Socket
+METHOD bind(SocketAddress)
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
@@ -211,8 +211,8 @@ ENDRULE
 #
 
 RULE Socket trace connect
-CLASS java.net.Socket
-METHOD ^connect(SocketAddress, int)
+CLASS ^java.net.Socket
+METHOD connect(SocketAddress, int)
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
@@ -227,8 +227,8 @@ ENDRULE
 #
 
 RULE Socket trace close
-CLASS java.net.Socket
-METHOD ^close()
+CLASS ^java.net.Socket
+METHOD close()
 HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT CALL close
 IF TRUE
