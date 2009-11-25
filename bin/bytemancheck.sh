@@ -23,7 +23,7 @@
 #
 # shell script which type checks a byteman rule set
 #
-# usage: bytemancheck -cp classpath script1 . . . scriptN
+# usage: bytemancheck [-cp classpath]* [-v] script1 . . . scriptN
 #
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then
@@ -50,24 +50,31 @@ else
     exit
 fi
 CP=${BYTEMAN_JAR}
-# incluide application classes upplied via -cp flag
-if [ "$1" == "-cp" ] ; then
-  CP=${CP}:$2
-  shift
-  shift
-fi
+VERBOSE=""
+# include application classes upplied via -cp flag and check for -v flag
+while [ $# -ne 0 -a ${1#-*} != ${1} ]; 
+do
+  if [ "$1" == "-cp" ] ; then
+    CP=${CP}:$2
+    shift
+    shift
+  elif [ "$1" == "-v" ] ; then
+    VERBOSE="-v"
+    shift
+  else
+    echo "usage: bytemancheck [-cp classpath]* [-v] script1 . . . scriptN"
+    exit
+  fi
+done
+
 
 SCRIPT_OPTS=""
 
 if [ $# -eq 0 ] ; then
-   echo "usage: bytemancheck -cp classpath script1 . . . scriptN"
+   echo "usage: bytemancheck [-cp classpath]* [-v] script1 . . . scriptN"
    exit
 fi
 
-if [ ${1#-*} != ${1} ]; then
-   echo "usage: bytemancheck -cp classpath script1 . . . scriptN"
-   exit
-fi
 error=0
 while [ $# -ne 0 ]
 do
@@ -85,4 +92,4 @@ fi
 
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 
-java ${BYTEMAN_JAVA_OPTS} -classpath ${CP} org.jboss.byteman.test.TestScript $FILES
+java ${BYTEMAN_JAVA_OPTS} -classpath ${CP} org.jboss.byteman.test.TestScript $VERBOSE $FILES

@@ -519,7 +519,7 @@ public class Transformer implements ClassFileTransformer {
 
     /* implementation */
 
-    protected byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
+    public byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
     {
         final String handlerMethod = ruleScript.getTargetMethod();
         final Location handlerLocation = ruleScript.getTargetLocation();

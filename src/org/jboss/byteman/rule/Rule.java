@@ -222,6 +222,16 @@ public class Rule
         return ruleScript.getTargetLocation();
     }
 
+    public boolean isOverride()
+    {
+        return ruleScript.isOverride();
+    }
+
+    public boolean isInterface()
+    {
+        return ruleScript.isInterface();
+    }
+
     /**
      * retrieve the start line for the rule
      * @return the start line for the rule
@@ -723,7 +733,14 @@ public class Rule
         stringWriter.write("RULE ");
         stringWriter.write(getName());
         stringWriter.write("\n");
-        stringWriter.write("CLASS ");
+        if (isInterface()) {
+            stringWriter.write("INTERFACE ");
+        } else {
+            stringWriter.write("CLASS ");
+        }
+        if (isOverride()) {
+            stringWriter.write("^");
+        }
         stringWriter.write(getTargetClass());
         stringWriter.write('\n');
         stringWriter.write("METHOD ");

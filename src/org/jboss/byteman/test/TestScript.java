@@ -32,13 +32,8 @@ import org.jboss.byteman.rule.binding.Binding;
 import org.jboss.byteman.rule.exception.ParseException;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.CompileException;
-import org.jboss.byteman.agent.LocationType;
-import org.jboss.byteman.agent.Location;
-import org.jboss.byteman.agent.RuleScript;
-import org.jboss.byteman.agent.adapter.RuleCheckAdapter;
+import org.jboss.byteman.agent.*;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -46,6 +41,7 @@ import java.util.Iterator;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Constructor;
@@ -59,319 +55,252 @@ import java.lang.reflect.Constructor;
  */
 public class TestScript
 {
+
     public static void main(String[] args)
     {
         if (args.length == 0 || args[0].equals("-h")) {
-            System.out.println("usage : java org.jboss.byteman.TestScript [scriptfile1 ...]");
+            System.out.println("usage : java org.jboss.byteman.TestScript [-v] scriptfile1 ...");
+            System.out.println("        -v display parsed rules");
             System.out.println("        n.b. place the byteman jar and classes mentioned in the ");
             System.out.println("        scripts in the classpath");
             return;
         }
-        TestScript testScript = new TestScript();
-        testScript.testScript(args);
+        int start =  0;
+        boolean verbose = false;
+        if (args[0].equals("-v")) {
+            start = 1;
+            verbose  = true;
+        }
+        TestScript testScript = new TestScript(verbose);
+        testScript.testScript(args, start);
     }
 
-    public void testScript(String[] scriptFiles)
+    public void testScript(String[] files, int firstFile)
     {
-        for (String script : scriptFiles) {
+        List<String> ruleTexts = new ArrayList<String>();
+        List<String> ruleFiles = new ArrayList<String>();
+        for (int i = firstFile; i < files.length; i++) {
+            String file = files[i];
             try {
-                FileInputStream fis = new FileInputStream(new File(script));
-                System.out.println("checking rules in " + script);
-                List<String> rules = processRules(fis);
-                checkRules(rules, script);
+                FileInputStream fis = new FileInputStream(new File(file));
+                int max = fis.available();
+                int read;
+                int count;
+                byte[] bytes = new byte[max];
+                count = fis.read(bytes);
+                read = count;
+                while (count > 0 && read < max) {
+                    count = fis.read(bytes, read, max - read);
+                }
+                if (read < max) {
+                    System.err.println("TestScript: unable to read full contents of file : " + file);
+                }
+                String ruleText = new String(bytes);
+                ruleTexts.add(ruleText);
+                ruleFiles.add(file);
             } catch (IOException ioe) {
-                System.err.println("TestScript: unable to open rule script file : " + script);
+                System.err.println("TestScript: unable to open file : " + file);
             }
         }
+        checkRules(ruleTexts, ruleFiles);
     }
 
 
 
-    private List<String> processRules(FileInputStream stream)
-            throws IOException
-    {
-        List<String> rules = new ArrayList<String>();
-
-        byte[] bytes = new byte[stream.available()];
-        stream.read(bytes);
-        String text = new String(bytes);
-        String[] lines = text.split("\n");
-        int length = lines.length;
-        StringBuffer buffer = new StringBuffer();
-        for (int i = 0; i < length; i++) {
-            buffer.append(lines[i]);
-            buffer.append("\n");
-            if (lines[i].trim().equals("ENDRULE")) {
-                rules.add(buffer.toString());
-                buffer = new StringBuffer();
-            }
-        }
-        if (buffer.length() > 0) {
-            rules.add(buffer.toString());
-        }
-
-        return rules;
-    }
-
-    private void checkRules(List<String> ruleScripts, String file)
+    private void checkRules(List<String> ruleTexts, List<String> ruleFiles)
     {
         ClassLoader loader = getClass().getClassLoader();
-        int errorCount = 0;
-        int parseErrorCount = 0;
-        int typeErrorCount = 0;
-        int compileErrorCount = 0;
-        int baseline = 1;
 
-        for (String script : ruleScripts) {
-            String ruleName = "";
-            String[] lines = script.split("\n");
-            int len = lines.length;
+        ScriptRepository repository = new ScriptRepository(false);
+        List<RuleScript> allScripts = new ArrayList<RuleScript>();
+        Iterator<String> textsIter = ruleTexts.iterator();
+        Iterator<String> filesIter = ruleFiles.iterator();
+
+        // use a repository to process each file and provide us with a set of
+        // rule scripts for checking
+        
+        while (textsIter.hasNext()) {
+            String ruleText = textsIter.next();
+            String ruleFile = filesIter.next();
+            List<RuleScript> ruleScripts = null;
             try {
-                String targetClassName;
-                boolean isInterface = false;
-                boolean isOverride = false;
-                String targetMethodName;
-                String targetHelperName = null;
-                LocationType locationType = null;
-                Location targetLocation = null;
-                String text = "";
-                String sepr = "";
-                int idx = 0;
-                int lineNumber = 0;
-
-                while (idx < len && (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#"))) {
-                    idx++;
-                }
-                if (idx == len) {
-                    // empty rule -- just skip
-                    baseline += len;
-                    continue;
-                }
-                if (lines[idx].startsWith("RULE ")) {
-                    ruleName = lines[idx].substring(5).trim();
-                    idx++;
-                } else {
-                    throw new ParseException("Rule should start with RULE :\n" + lines[idx]);
-                }
-                while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
-                    idx++;
-                    if (idx == len) {
-                        throw new ParseException("Rule does not specify CLASS :\n" + script);
-                    }
-                }
-                if (lines[idx].startsWith("CLASS ")) {
-                    targetClassName = lines[idx].substring(6).trim();
-                    idx++;
-                    if (targetClassName.startsWith("^")) {
-                        isOverride = true;
-                        targetClassName = targetClassName.substring(1).trim();
-                    }
-                } else if (lines[idx].startsWith("INTERFACE ")) {
-                    targetClassName = lines[idx].substring(10).trim();
-                    isInterface = true;
-                    idx++;
-                    if (targetClassName.startsWith("^")) {
-                        isOverride = true;
-                        targetClassName = targetClassName.substring(1).trim();
-                    }
-                }  else {
-                    throw new ParseException("CLASS should follow RULE :\n" + lines[idx]) ;
-                }
-                while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
-                    idx++;
-                    if (idx == len) {
-                        throw new ParseException("Rule does not specify METHOD\n: " + script);
-                    }
-                }
-                if (lines[idx].startsWith("METHOD ")) {
-                    targetMethodName = lines[idx].substring(7).trim();
-                    idx++;
-                } else {
-                    throw new ParseException("METHOD should follow CLASS :\n" + lines[idx]) ;
-                }
-                while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
-                    idx++;
-                    if (idx == len) {
-                        throw new ParseException("Rule is incomplete :\n" + script);
-                    }
-                }
-                if (lines[idx].startsWith("HELPER ")) {
-                    targetHelperName = lines[idx].substring(7).trim();
-                    idx++;
-                    while (lines[idx].trim().equals("") || lines[idx].trim().startsWith("#")) {
-                        idx++;
-                        if (idx == len) {
-                            throw new ParseException("Rule is incomplete :\n" + script);
-                        }
-                    }
-                }
-                locationType = LocationType.type(lines[idx]);
-                if (locationType != null) {
-                    String parameters = LocationType.parameterText(lines[idx]);
-                    targetLocation = Location.create(locationType, parameters);
-                    if (targetLocation == null) {
-                        throw new ParseException("Invalid parameters for location specifier\n" + locationType.specifierText() + " in rule " + ruleName);
-                    }
-                    idx++;
-                }
-                lineNumber = idx;
-                for (;idx < len; idx++) {
-                    if (lines[idx].trim().startsWith("#")) {
-                        lines[idx] = "";
-                    }
-                    if (lines[idx].trim().equals("ENDRULE")) {
-                        break;
-                    }
-                    text += sepr + lines[idx];
-                    sepr = "\n";
-                }
-                if (idx == len) {
-                    throw new ParseException("Missing ENDRULE :\n" + script);
-                }
-
-                Class targetHelperClass = null;
-                if (targetHelperName != null) {
-                    try {
-                        targetHelperClass = loader.loadClass(targetHelperName);
-                    } catch (ClassNotFoundException e) {
-                        System.out.println("TestScript : unknown helper class " + targetHelperName + " for rule " + ruleName);
-                    }
-                }
-                RuleScript ruleScript = new RuleScript(ruleName, targetClassName, isInterface, isOverride, targetMethodName, targetHelperName, targetLocation, text, baseline + lineNumber, file);
-                Rule rule = Rule.create(ruleScript, loader);
-                System.err.println("TestScript: parsed rule " + rule.getName());
-                System.err.println(rule);
-                
-                if (isInterface) {
-                    System.err.println("TestScript: cannot type check interface rule " + ruleName);
-                    continue;
-                }
-
-                String targetName = TypeHelper.parseMethodName(targetMethodName);
-                String targetDesc = TypeHelper.parseMethodDescriptor(targetMethodName);
-                boolean found = false;
-                boolean multiple = false;
-                try {
-                    Class targetClass = loader.loadClass(targetClassName);
-                    if (targetName.equals("<clinit>")) {
-                        System.err.println("TestScript: cannot type check <clinit> rule " + ruleName);
-                    } else if (targetName.equals("<init>")) {
-                        Constructor[] constructors = targetClass.getConstructors();
-                        for (Constructor constructor : constructors) {
-                            String candidateName = constructor.getName();
-                            String candidateDesc = makeDescriptor(constructor);
-                            if (targetName.equals("<init>")) {
-                                if (targetDesc.equals("") || TypeHelper.equalDescriptors(targetDesc, candidateDesc)) {
-                                    System.err.println("TestScript: checking rule " + ruleName);
-                                    if (found) {
-                                        multiple = true;
-                                        break;
-                                    }
-                                    found = true;
-                                    int access = 0;
-                                    Class<?>[] exceptionClasses = constructor.getExceptionTypes();
-                                    int l = exceptionClasses.length;
-                                    String[] exceptionNames = new String[l];
-                                    for (int i = 0; i < l; i++) {
-                                        exceptionNames[i] = exceptionClasses[i].getCanonicalName();
-                                    }
-                                    if ((constructor.getModifiers() & Modifier.STATIC) != 0) {
-                                        access = Opcodes.ACC_STATIC;
-                                    }
-                                    rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
-                                    // the param and local var types are normally set by the check adapter but we
-                                    // cannot run that without accessing the byte[] version of the class so we have
-                                    // to install the param types by hand and we cannot check local var types
-                                    int paramErrorCount = installParamTypes(rule, targetClassName, access, candidateName, candidateDesc);
-                                    if (paramErrorCount == 0) {
-                                        rule.typeCheck();
-                                        System.err.println("TestScript: type checked rule " + ruleName);
-                                        System.err.println();
-                                    } else {
-                                        errorCount += paramErrorCount;
-                                        typeErrorCount += paramErrorCount;
-                                        System.err.println("TestScript: failed to type check rule " + ruleName);
-                                        System.err.println();
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        Method[] candidates = targetClass.getDeclaredMethods();
-                        for (Method candidate : candidates) {
-                            String candidateName = candidate.getName();
-                            String candidateDesc = makeDescriptor(candidate);
-                            if (targetName.equals(candidateName)) {
-                                if (targetDesc.equals("") || TypeHelper.equalDescriptors(targetDesc, candidateDesc)) {
-                                    System.err.println("TestScript: checking rule " + ruleName);
-                                    if (found) {
-                                        multiple = true;
-                                        break;
-                                    }
-                                    found = true;
-                                    int access = 0;
-                                    Class<?>[] exceptionClasses = candidate.getExceptionTypes();
-                                    int l = exceptionClasses.length;
-                                    String[] exceptionNames = new String[l];
-                                    for (int i = 0; i < l; i++) {
-                                        exceptionNames[i] = exceptionClasses[i].getCanonicalName();
-                                    }
-                                    if ((candidate.getModifiers() & Modifier.STATIC) != 0) {
-                                        access = Opcodes.ACC_STATIC;
-                                    }
-                                    rule.setTypeInfo(targetClassName, access, candidateName, candidateDesc, exceptionNames);
-                                    // the param and local var types are normally set by the check adapter but we
-                                    // cannot run that without accessing the byte[] version of the class so we have
-                                    // to install the param types by hand and we cannot check local var types
-                                    int paramErrorCount = installParamTypes(rule, targetClassName, access, candidateName, candidateDesc);
-                                    if (paramErrorCount == 0) {
-                                        rule.typeCheck();
-                                        System.err.println("TestScript: type checked rule " + ruleName);
-                                        System.err.println();
-                                    } else {
-                                        errorCount += paramErrorCount;
-                                        typeErrorCount += paramErrorCount;
-                                        System.err.println("TestScript: failed to type check rule " + ruleName);
-                                        System.err.println();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch(ClassNotFoundException cfe) {
-                    errorCount++;
-                    System.err.println("TestScript: unable to load class " + targetClassName);
-                    System.err.println();
-                }
-                if (!found) {
-                    errorCount++;
-                    System.err.println("TestScript: no matching method for rule " + ruleName);
-                    System.err.println();
-                } else if (multiple) {
-                    errorCount++;
-                    System.err.println("TestScript: multiple matching methods for rule " + ruleName);
-                    System.err.println();
-                }
-            } catch (ParseException e) {
+                ruleScripts = repository.processScripts(ruleText, ruleFile);
+                allScripts.addAll(ruleScripts);
+            } catch (Exception e) {
+                System.out.println("TestScript : Error processing rule file " + ruleFile + " : " + e);
                 errorCount++;
-                parseErrorCount++;
-                System.err.println("TestScript: failed to parse rule " + ruleName);
-                e.printStackTrace(System.err);
-                System.err.println();
-            } catch (TypeException e) {
-                typeErrorCount++;
+            }
+        }
+
+        // ok, now check each of the rules individually
+
+        // these empty lists are used each time  we create a transformer
+        List<String> emptyInitialTexts = new ArrayList<String>();
+        List<String> emptyInitialFiles = new ArrayList<String>();
+
+        for (RuleScript script : allScripts) {
+
+            // first see if we can locate the bytecode for the class mentioned in the rule
+
+            String targetClassName = script.getTargetClass();
+            Class targetClass = null;
+            try {
+                targetClass = loader.loadClass(targetClassName);
+            } catch (ClassNotFoundException e) {
+                System.out.println("TestScript : Could not load class " + targetClassName + " declared in rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                 errorCount++;
-                e.printStackTrace(System.err);
-                System.err.println();
-            } catch (CompileException e) {
-                compileErrorCount++;
-                errorCount++;
-                e.printStackTrace(System.err);
-                System.err.println();
+                continue;
             }
 
-            baseline += len;
+            // make sure it is the right type of class
+            if (script.isInterface() && !targetClass.isInterface()) {
+                System.out.println("TestScript : found class instead of interface for rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                errorCount++;
+                continue;
+            }
+
+            if (!script.isInterface() && targetClass.isInterface()) {
+                System.out.println("TestScript : found interface instead of class for rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                errorCount++;
+                continue;
+            }
+
+            // if this is a class rule then we can actually try the transform
+            // assuming we can find the associated bytecode
+            if (!script.isInterface()) {
+                String resourceName = targetClass.getName().replace(".", "/") + ".class";
+                byte[] bytes = null;
+                try {
+                    InputStream stream = loader.getResourceAsStream(resourceName);
+                    int max = stream.available();
+                    bytes = new byte[max];
+                    int count = stream.read(bytes);
+                    int read = count;
+                    while (count > 0 && read < max) {
+                        count = stream.read(bytes, read, max - read);
+                        read += count;
+                    }
+                    if (read < max) {
+                        System.out.println("TestScript : Could not load bytecode for class " + targetClassName + " declared in rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                        System.out.println();
+                        errorCount++;
+                        continue;
+                    }
+                } catch (Exception e) {
+                    System.out.println("TestScript : Could not load bytecode for class " + targetClassName + " declared in rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                    System.out.println();
+                    errorCount++;
+                    continue;
+                }
+
+                // now try to transform the bytecode and see if we get any errors
+                // we use a different transformer each time so the rules don't interfere with each other
+
+                Transformer transformer = null;
+                try {
+                    transformer = new Transformer(null, emptyInitialTexts, emptyInitialFiles, false);
+                } catch (Exception e) {
+                    // will not happen!
+                }
+
+                // ok, we try transforming the actual class mentioned in the rule -- this may be an interface
+                // or an abstract class so we may not get any results out of the transform
+
+                bytes = transformer.transform(script, loader, targetClassName, targetClass, bytes);
+            }
+
+            // see if we have a record of any transform
+            if (script.hasTransform(targetClass)) {
+                Transform transform = script.getTransformed().get(0);
+                Throwable throwable = transform.getThrowable();
+
+                if (throwable != null) {
+                    errorCount++;
+                    if (throwable  instanceof ParseException) {
+                        System.out.println("TestScript : Failed to parse rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                        System.out.println();
+                        parseErrorCount++;
+                    } else if (throwable instanceof TypeException) {
+                        System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                        System.out.println();
+                        typeErrorCount++;
+                    } else {
+                        System.out.println("TestScript : Error transforming class " + targetClassName + " using  rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                        System.out.println();
+                    }
+                    throwable.printStackTrace(System.out);
+                    System.out.println();
+                    continue;
+                }
+
+                Rule rule = transform.getRule();
+
+                System.out.println("parsed rule \"" + script.getName() + "\"");
+                if (verbose) {
+                    System.out.println("# File " + script.getFile() + " line " + script.getLine());
+                    System.out.println(rule);
+                }
+
+                // ok, now see if we can type check the rule
+
+                try {
+                    rule.typeCheck();
+                } catch (TypeException te) {
+                    System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                    typeErrorCount++;
+                    te.printStackTrace(System.out);
+                    System.out.println();
+                    continue;
+                }
+
+                if (script.isOverride()) {
+                    System.out.println("type checked overriding rule \"" + script.getName() + "\" against method in declared class");
+                } else {
+                    System.out.println("type checked rule \"" + script.getName() + "\"");
+                }
+                System.out.println();
+            } else if (targetClass.isInterface() || script.isOverride()) {
+                // ok, not necessarily a surprise - let's see if we can create a rule and parse/type check it
+                final Rule rule;
+                try {
+                    rule = Rule.create(script, loader);
+                } catch (ParseException pe) {
+                    System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                    parseErrorCount++;
+                    errorCount++;
+                    pe.printStackTrace(System.out);
+                    System.out.println();
+                    continue;
+                } catch (TypeException te) {
+                    System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                    typeErrorCount++;
+                    errorCount++;
+                    te.printStackTrace(System.out);
+                    System.out.println();
+                    continue;
+                } catch (Throwable th) {
+                    System.out.println("TestScript : Failed to process rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                    errorCount++;
+                    th.printStackTrace(System.out);
+                    System.out.println();
+                    continue;
+                }
+
+                System.out.println("parsed rule \"" + script.getName() + "\"");
+                if (verbose) {
+                    System.out.println("# File " + script.getFile() + " line " + script.getLine());
+                    System.out.println(rule);
+                }
+                // ok, we need to see if we can generate the required type info to drive the type check process
+
+                typeCheckAgainstMethodDeclaration(rule, script, targetClass, loader);
+            } else {
+                System.out.println("TestScript : Failed to transform class " + targetClassName + " using rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                System.out.println();
+                errorCount++;
+            }
         }
+        
         if (errorCount != 0) {
             System.err.println("TestScript: " + errorCount + " total errors");
             System.err.println("            " + parseErrorCount + " parse errors");
@@ -379,6 +308,108 @@ public class TestScript
 
         } else {
             System.err.println("TestScript: no errors");
+        }
+    }
+
+    /**
+     * method called to deal with interface rules or with overriding rules which fail to match a method of the
+     * declared class.
+     * @param rule
+     * @param script
+     * @param targetClass
+     * @param loader
+     * @return
+     */
+    private void typeCheckAgainstMethodDeclaration(Rule rule, RuleScript script, Class targetClass, ClassLoader loader)
+    {
+        // ok, we have a rule wich cannot be used to transform its declared class, either because
+        // it applies to an interface or it can inject into overriding methods but does not
+        // apply to the parent method. so we need to find a candidate method for the rule and
+        // then see if we can use it to set up the type info needed to type check the rule
+
+        String targetMethodName =  script.getTargetMethod();
+        String targetName = TypeHelper.parseMethodName(targetMethodName);
+        String targetDesc = TypeHelper.parseMethodDescriptor(targetMethodName);
+
+        if (targetName == "<clinit>") {
+            System.err.println("TestScript: cannot type check <clinit> rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+            System.err.println();
+            return;
+        }
+        if (targetMethodName == "<init>") {
+            // oops this is an error one way or another. firstly constructor rules don't make sense for either
+            if (script.isInterface()) {
+                System.err.println("TestScript: invalid target method <init> for interface rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                System.err.println();
+                return;
+            } else {
+                System.err.println("TestScript: invalid target method <init> for overriding rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                System.err.println();
+                return;
+            }
+        } else {
+            // ok, search the class's methods for any method which matches
+            Method[] candidates = targetClass.getDeclaredMethods();
+            int matchCount = 0;
+            for (Method candidate : candidates) {
+                String candidateName = candidate.getName();
+                String candidateDesc = makeDescriptor(candidate);
+                if (targetName.equals(candidateName) &&
+                        (targetDesc.equals("") || TypeHelper.equalDescriptors(targetDesc, candidateDesc))) {
+                    matchCount++;
+                    if (matchCount > 1) {
+                        // we need a new copy of the rule
+
+                        try {
+                            rule = Rule.create(script, loader);
+                        } catch (ParseException e) {
+                            // will not happen
+                        } catch (TypeException e) {
+                            // will not happen
+                        } catch (CompileException e) {
+                            // will not happen
+                        }
+                    }
+                    int access = 0;
+                    Class<?>[] exceptionClasses = candidate.getExceptionTypes();
+                    int l = exceptionClasses.length;
+                    String[] exceptionNames = new String[l];
+                    for (int i = 0; i < l; i++) {
+                        exceptionNames[i] = exceptionClasses[i].getCanonicalName();
+                    }
+                    if ((candidate.getModifiers() & Modifier.STATIC) != 0) {
+                        access = Opcodes.ACC_STATIC;
+                    }
+
+                    rule.setTypeInfo(targetClass.getName(), access, candidateName, candidateDesc, exceptionNames);
+                    // we can set param types this way but we cannot verify mention of local variables
+                    // since we don't have an implementation
+
+                    int paramErrorCount = installParamTypes(rule, targetClass.getName(), access, candidateName, candidateDesc);
+                    if (paramErrorCount == 0) {
+                        try {
+                            rule.typeCheck();
+                        } catch (TypeException te) {
+                            System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                            typeErrorCount++;
+                            te.printStackTrace(System.out);
+                            System.out.println();
+                            return;
+                        }
+                        if (script.isInterface()) {
+                            System.err.println("type checked interface rule \"" + script.getName() + "\" against method declaration");
+                        } else {
+                            System.err.println("TestScript: type checked overriding rule \"" + script.getName() + "\" against method declaration");
+                        }
+                        System.err.println();
+                    } else {
+                        errorCount += paramErrorCount;
+                        typeErrorCount += paramErrorCount;
+                        System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                        System.err.println();
+                    }
+                }
+            }
         }
     }
 
@@ -434,13 +465,13 @@ public class TestScript
                     // n.b. param indices are 1-based so use > here not >=
                     if (idx > paramCount) {
                         errorCount++;
-                        System.err.println("TestScript: invalid method parameter reference $" + idx  + " in rule " + rule.getName());
+                        System.err.println("TestScript: invalid method parameter reference $" + idx  + " in rule \"" + rule.getName() + "\"");
                     } else {
                         binding.setDescriptor(paramTypes.get(idx - 1));
                     }
                 } else if (binding.isLocalVar()) {
                     errorCount++;
-                    System.err.println("TestScript: cannot typecheck local variable " + binding.getName()  + " in rule " + rule.getName());
+                    System.err.println("TestScript: cannot typecheck local variable " + binding.getName()  + " in rule \"" + rule.getName() + "\"");
                 }
             }
         }
@@ -448,9 +479,16 @@ public class TestScript
         return errorCount;
     }
 
-    /**
-     * suffix found on end of .class files (doh :-)
-     */
+    private TestScript(boolean verbose)
+    {
+        errorCount = 0;
+        parseErrorCount = 0;
+        typeErrorCount =  0;
+        this.verbose = verbose;
+    }
 
-    private static final String CLASS_FILE_SUFFIX = ".class";
+    private int errorCount;
+    private int parseErrorCount;
+    private int typeErrorCount;
+    boolean verbose;
 }

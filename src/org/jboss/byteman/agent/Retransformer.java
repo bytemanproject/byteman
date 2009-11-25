@@ -46,7 +46,7 @@ public class Retransformer extends Transformer {
         //addTransformListener(hostname, port);
     }
 
-    protected void installScript(List<String> scriptTexts, List<String> scriptNames, PrintWriter out) throws Exception
+    public void installScript(List<String> scriptTexts, List<String> scriptNames, PrintWriter out) throws Exception
     {
         int length = scriptTexts.size();
         List<RuleScript> toBeAdded = new LinkedList<RuleScript>();
