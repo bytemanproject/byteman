@@ -42,7 +42,7 @@ public class ConditionalEvalExpression extends TernaryOperExpression
 {
     public ConditionalEvalExpression(Rule rule, Type type, ParseNode token, Expression cond, Expression if_expr, Expression else_expr)
     {
-        super(rule, TERNARY, type, token, cond, if_expr, else_expr);
+        super(rule, COND, type, token, cond, if_expr, else_expr);
     }
 
     public Type typeCheck(Type expected) throws TypeException {
