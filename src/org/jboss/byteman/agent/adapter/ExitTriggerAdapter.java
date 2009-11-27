@@ -68,24 +68,9 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
 
     private class ExitTriggerMethodAdapter extends RuleTriggerMethodAdapter
     {
-        private int access;
-        private String name;
-        private String descriptor;
-        private String signature;
-        private String[] exceptions;
-        private Vector<Label> startLabels;
-        private Vector<Label> endLabels;
-
         ExitTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor);
-            this.access = access;
-            this.name = name;
-            this.descriptor = descriptor;
-            this.signature = signature;
-            this.exceptions = exceptions;
-            startLabels = new Vector<Label>();
-            endLabels = new Vector<Label>();
+            super(mv, rule, targetClass, access, name, descriptor, signature, exceptions);
         }
 
         /**
@@ -147,29 +132,7 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
                 case Opcodes.DRETURN: // 2 before n/a after
                 {
                     if (!inhibit) {
-                        // ok to insert a rule trigger as this is not one of our inserted return instructions
-                        rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
-                        String key = rule.getKey();
-                        Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.Rule"));
-                        Method method = Method.getMethod("void execute(String, Object, Object[])");
-                        // we are at the relevant line in the method -- so add a trigger call here
-                        if (Transformer.isVerbose()) {
-                            System.out.println("ExitTriggerMethodAdapter.visitInsn : inserting trigger for " + rule.getName());
-                        }
-                        Label startLabel = newLabel();
-                        Label endLabel = newLabel();
-                        startLabels.add(startLabel);
-                        endLabels.add(endLabel);
-                        visitTriggerStart(startLabel);
-                        push(key);
-                        if ((access & Opcodes.ACC_STATIC) == 0) {
-                            loadThis();
-                        } else {
-                            push((Type)null);
-                        }
-                        doArgLoad();
-                        invokeStatic(ruleType, method);
-                        visitTriggerEnd(endLabel);
+                        injectTriggerPoint();
                     }
                 }
                 break;

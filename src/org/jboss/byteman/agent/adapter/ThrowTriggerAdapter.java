@@ -39,7 +39,6 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
         super(cv, rule, targetClass, targetMethod);
         this.exceptionClass = exceptionClass;
         this.count = count;
-        this.visitedCount = 0;
     }
 
     public MethodVisitor visitMethod(
@@ -70,24 +69,11 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
          * flag used by subclass to avoid inserting trigger until after super constructor has been called
          */
         protected boolean latched;
-        private int access;
-        private String name;
-        private String descriptor;
-        private String signature;
-        private String[] exceptions;
-        private Label startLabel;
-        private Label endLabel;
+        private int visitedCount;
 
         ThrowTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor);
-            this.access = access;
-            this.name = name;
-            this.descriptor = descriptor;
-            this.signature = signature;
-            this.exceptions = exceptions;
-            startLabel = null;
-            endLabel = null;
+            super(mv, rule, targetClass, access, name, descriptor, signature, exceptions);
             visitedCount = 0;
             latched = false;
         }
@@ -102,26 +88,7 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
                     if (!inRethrowHandler()) {
                         visitedCount++;
                         if (!latched && visitedCount == count) {
-                            rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
-                            String key = rule.getKey();
-                            Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.Rule"));
-                            Method method = Method.getMethod("void execute(String, Object, Object[])");
-                            // we are at the relevant line in the method -- so add a trigger call here
-                            if (Transformer.isVerbose()) {
-                                System.out.println("ThrowTriggerMethodAdapter.visitInsn : inserting trigger for " + rule.getName());
-                            }
-                            startLabel = newLabel();
-                            endLabel = newLabel();
-                            visitTriggerStart(startLabel);
-                            push(key);
-                            if ((access & Opcodes.ACC_STATIC) == 0) {
-                                loadThis();
-                            } else {
-                                push((Type)null);
-                            }
-                            doArgLoad();
-                            invokeStatic(ruleType, method);
-                            visitTriggerEnd(endLabel);
+                            injectTriggerPoint();
                         }
                     }
                 }
@@ -162,5 +129,4 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
 
     private String exceptionClass;
     private int count;
-    private int visitedCount;
 }

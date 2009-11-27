@@ -43,11 +43,14 @@ import java.io.PrintStream;
  */
 public class RuleTriggerMethodAdapter extends RuleMethodAdapter
 {
-    RuleTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor)
+    RuleTriggerMethodAdapter(MethodVisitor mv, Rule rule, String targetClass, int access, String name, String descriptor, String signature, String[] exceptions)
     {
         super(mv, rule, access, name, descriptor);
+        this.targetClass = targetClass;
         this.access = access;
         this.descriptor = descriptor;
+        this.signature = signature;
+        this.exceptions = exceptions;
         this.callArrayBindings = new ArrayList<Binding>();
         this.returnType = Type.getReturnType(descriptor);
         this.argumentTypes = Type.getArgumentTypes(descriptor);
@@ -237,8 +240,16 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         return cfg.inRethrowHandler();
     }
 
+    protected String getMethodName()
+    {
+        return name + TypeHelper.internalizeDescriptor(descriptor);
+    }
+
+    private String targetClass;
     private int access;
     private String descriptor;
+    private String signature;
+    protected String[] exceptions;
     private Type returnType;
     private Type[] argumentTypes;
     private int[] argLocalIndices;
@@ -678,5 +689,34 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         super.visitEnd();
         // trash the current label
         cfg.visitEnd();
+    }
+
+    /**
+         * inject the rule trigger code
+     */
+    protected void injectTriggerPoint()
+    {
+        // we need to set this here to avoid recursive re-entry into inject routine
+
+        rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
+        String key = rule.getKey();
+        Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.Rule"));
+        Method method = Method.getMethod("void execute(String, Object, Object[])");
+        // we are at the relevant line in the method -- so add a trigger call here
+        if (Transformer.isVerbose()) {
+            System.out.println("RuleTriggerMethodAdapter.injectTriggerPoint : inserting trigger into method " + getMethodName() + " for rule " + rule.getName());
+        }
+        Label startLabel = newLabel();
+        Label endLabel = newLabel();
+        visitTriggerStart(startLabel);
+        push(key);
+        if ((access & Opcodes.ACC_STATIC) == 0) {
+            loadThis();
+        } else {
+            push((Type)null);
+        }
+        doArgLoad();
+        invokeStatic(ruleType, method);
+        visitTriggerEnd(endLabel);
     }
 }

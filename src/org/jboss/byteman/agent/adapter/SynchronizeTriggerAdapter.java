@@ -37,12 +37,8 @@ public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
     public SynchronizeTriggerAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod, int count, boolean whenComplete)
     {
         super(cv, rule, targetClass, targetMethod);
-        this.calledClass = calledClass;
-        this.calledMethodName = calledMethodName;
-        this.calledMethodDescriptor = calledMethodDescriptor;
         this.count = count;
         this.whenComplete = whenComplete;
-        this.visitedCount = 0;
     }
 
     public MethodVisitor visitMethod(
@@ -66,24 +62,11 @@ public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
 
     private class SynchronizeTriggerMethodAdapter extends RuleTriggerMethodAdapter
     {
-        private int access;
-        private String name;
-        private String descriptor;
-        private String signature;
-        private String[] exceptions;
-        private Label startLabel;
-        private Label endLabel;
+        private int visitedCount;
 
         SynchronizeTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor);
-            this.access = access;
-            this.name = name;
-            this.descriptor = descriptor;
-            this.signature = signature;
-            this.exceptions = exceptions;
-            startLabel = null;
-            endLabel = null;
+            super(mv, rule, targetClass, access, name, descriptor, signature, exceptions);
             visitedCount = 0;
         }
 
@@ -99,26 +82,7 @@ public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
                 // a relevant invocation occurs in the called method
                 visitedCount++;
                 if (visitedCount == count) {
-                    rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
-                    String key = rule.getKey();
-                    Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.Rule"));
-                    Method method = Method.getMethod("void execute(String, Object, Object[])");
-                    // we are at the relevant line in the method -- so add a trigger call here
-                    if (Transformer.isVerbose()) {
-                        System.out.println("SynchronizeTriggerMethodAdapter.visitMethodInsn : inserting trigger for " + rule.getName());
-                    }
-                    startLabel = newLabel();
-                    endLabel = newLabel();
-                    visitTriggerStart(startLabel);
-                    push(key);
-                    if ((access & Opcodes.ACC_STATIC) == 0) {
-                        loadThis();
-                    } else {
-                        push((Type)null);
-                    }
-                    doArgLoad();
-                    invokeStatic(ruleType, method);
-                    visitTriggerEnd(endLabel);
+                    injectTriggerPoint();
                 }
             }
             if (!whenComplete) {
@@ -127,11 +91,6 @@ public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
         }
     }
 
-    private String calledClass;
-    private String calledMethodName;
-    private String calledMethodDescriptor;
     private int count;
     private boolean whenComplete;
-
-    private int visitedCount;
 }

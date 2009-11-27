@@ -65,26 +65,12 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
 
     private class LineTriggerMethodAdapter extends RuleTriggerMethodAdapter
     {
-        private int access;
-        private String name;
-        private String descriptor;
-        private String signature;
-        private String[] exceptions;
-        private Label startLabel;
-        private Label endLabel;
         protected boolean unlatched;
 
         LineTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor);
-            this.access = access;
-            this.name = name;
-            this.descriptor = descriptor;
-            this.signature = signature;
-            this.exceptions = exceptions;
+            super(mv, rule, targetClass, access, name, descriptor, signature, exceptions);
             this.unlatched = true;  // subclass can manipulate this to postponne visit
-            startLabel = null;
-            endLabel = null;
         }
 
         // somewhere we need to add a catch exception block
@@ -92,27 +78,7 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
 
         public void visitLineNumber(final int line, final Label start) {
             if (unlatched && !visitedLine && (targetLine <= line)) {
-                rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
-                String key = rule.getKey();
-                Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.Rule"));
-                Method method = Method.getMethod("void execute(String, Object, Object[])");
-                // we are at the relevant line in the method -- so add a trigger call here
-                if (Transformer.isVerbose()) {
-                    System.out.println("LineTriggerMethodAdapter.visitLineNumber : inserting trigger for " + rule.getName());
-                }
-                startLabel = newLabel();
-                endLabel = newLabel();
-                visitTriggerStart(startLabel);
-                push(key);
-                if ((access & Opcodes.ACC_STATIC) == 0) {
-                    loadThis();
-                } else {
-                    push((Type)null);
-                }
-                doArgLoad();
-                invokeStatic(ruleType, method);
-                visitTriggerEnd(endLabel);
-                visitedLine = true;
+                injectTriggerPoint();
             }
             super.visitLineNumber(line, start);
         }

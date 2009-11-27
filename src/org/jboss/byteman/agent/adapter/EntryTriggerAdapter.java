@@ -63,13 +63,6 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
 
     private class EntryTriggerMethodAdapter extends RuleTriggerMethodAdapter
     {
-        private int access;
-        private String name;
-        private String descriptor;
-        private String signature;
-        private String[] exceptions;
-        private Label startLabel;
-        private Label endLabel;
         protected boolean unlatched;
         /**
          * flag which says whether a trigger has been injected into this method
@@ -78,46 +71,9 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
 
         EntryTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor);
-            this.access = access;
-            this.name = name;
-            this.descriptor = descriptor;
-            this.signature = signature;
-            this.exceptions = exceptions;
+            super(mv, rule, targetClass, access, name, descriptor, signature, exceptions);
             this.unlatched = true;  // subclass can manipulate this to postponne visit
-            startLabel = null;
-            endLabel = null;
             visited = false;
-        }
-
-        /**
-         * inject the rule trigger code
-         */
-        private void injectTriggerPoint()
-        {
-            // we need to set this here to avoid recursive re-entry into inject routine
-
-            visited = true;
-            rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
-            String key = rule.getKey();
-            Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.Rule"));
-            Method method = Method.getMethod("void execute(String, Object, Object[])");
-            // we are at the relevant line in the method -- so add a trigger call here
-            if (Transformer.isVerbose()) {
-                System.out.println("EntryTriggerMethodAdapter.injectTriggerPoint : inserting trigger for " + rule.getName());
-            }
-            startLabel = newLabel();
-            endLabel = newLabel();
-            visitTriggerStart(startLabel);
-            push(key);
-            if ((access & Opcodes.ACC_STATIC) == 0) {
-                loadThis();
-            } else {
-                push((Type)null);
-            }
-            doArgLoad();
-            invokeStatic(ruleType, method);
-            visitTriggerEnd(endLabel);
         }
 
         // we need to override each visitXXXINsn operation so we see each instruction being generated. we
@@ -126,6 +82,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         @Override
         public void visitInsn(int opcode) {
             if (unlatched && !visited) {
+                visited = true;
                 injectTriggerPoint();
             }
             super.visitInsn(opcode);
@@ -134,6 +91,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         @Override
         public void visitIincInsn(int var, int increment) {
             if (unlatched && !visited) {
+                visited = true;
                 injectTriggerPoint();
             }
             super.visitIincInsn(var, increment);
@@ -142,6 +100,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         @Override
         public void visitIntInsn(int opcode, int operand) {
             if (unlatched && !visited) {
+                visited = true;
                 injectTriggerPoint();
             }
             super.visitIntInsn(opcode, operand);
@@ -150,6 +109,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         @Override
         public void visitLdcInsn(Object cst) {
             if (unlatched && !visited) {
+                visited = true;
                 injectTriggerPoint();
             }
             super.visitLdcInsn(cst);
@@ -158,6 +118,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         @Override
         public void visitVarInsn(int opcode, int var) {
             if (unlatched && !visited) {
+                visited = true;
                 injectTriggerPoint();
             }
             super.visitVarInsn(opcode, var);
@@ -166,6 +127,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         @Override
         public void visitTypeInsn(int opcode, String desc) {
             if (unlatched && !visited) {
+                visited = true;
                 injectTriggerPoint();
             }
             super.visitTypeInsn(opcode, desc);
@@ -174,6 +136,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         @Override
         public void visitFieldInsn(int opcode, String owner, String name, String desc) {
             if (unlatched && !visited) {
+                visited = true;
                 injectTriggerPoint();
             }
             super.visitFieldInsn(opcode, owner, name, desc);
@@ -182,6 +145,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc) {
             if (unlatched && !visited) {
+                visited = true;
                 injectTriggerPoint();
             }
             super.visitMethodInsn(opcode, owner, name, desc);
@@ -190,6 +154,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         @Override
         public void visitJumpInsn(int opcode, Label label) {
             if (unlatched && !visited) {
+                visited = true;
                 injectTriggerPoint();
             }
             super.visitJumpInsn(opcode, label);
@@ -198,6 +163,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         @Override
         public void visitTableSwitchInsn(int min, int max, Label dflt, Label[] labels) {
             if (unlatched && !visited) {
+                visited = true;
                 injectTriggerPoint();
             }
             super.visitTableSwitchInsn(min, max, dflt, labels);
@@ -206,6 +172,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         @Override
         public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
             if (unlatched && !visited) {
+                visited = true;
                 injectTriggerPoint();
             }
             super.visitLookupSwitchInsn(dflt, keys, labels);
@@ -214,6 +181,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         @Override
         public void visitMultiANewArrayInsn(String desc, int dims) {
             if (unlatched && !visited) {
+                visited = true;
                 injectTriggerPoint();
             }
             super.visitMultiANewArrayInsn(desc, dims);
