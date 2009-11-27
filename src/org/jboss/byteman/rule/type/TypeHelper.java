@@ -275,20 +275,34 @@ public class TypeHelper {
     /**
      * convert a method descriptor from the form used to represent it externally to canonical form
      *
-     * @param desc the method descriptor which must be trimmed of any surrounding white space
-     * @return an internalised form for the descriptor
+     * @param desc the method descriptor which must be trimmed of any surrounding white space and start with "(".
+     * it must end either with ")" or with ") " followed by an exernalized return type
+     * @return an internalised form for the descriptor, possibly followed by a space and externalized return type
      */
     public static String internalizeDescriptor(String desc)
     {
         StringBuffer buffer = new StringBuffer();
         String sepr = "";
-        buffer.append("(");
+        int argStart = desc.indexOf('(');
+        int argEnd = desc.indexOf(')');
         int max = desc.length();
+        if (argStart < 0 || argEnd < 0) {
+            return "(???)";
+        }
         int arrayCount = 0;
+        boolean addSepr = false;
 
-        for (int idx = 0; idx < max;) {
-            buffer.append(sepr);
+        buffer.append("(");
+
+        for (int idx = argStart + 1; idx < max;) {
             char next = desc.charAt(idx);
+            if (addSepr) {
+                while (arrayCount > 0) {
+                    buffer.append("[]");
+                }
+                buffer.append(sepr);
+            }
+            addSepr = true;
             switch(next) {
                 case 'B':
                 {
@@ -329,15 +343,25 @@ public class TypeHelper {
                 {
                     buffer.append("double");
                 }
+                case 'V':
+                {
+                    buffer.append("void");
+                }
                 break;
                 case 'L':
                 {
                     int tailIdx = idx+1;
-                    while (tailIdx < max && desc.charAt(tailIdx) != ';') {
+                    while (tailIdx < max) {
+                        char tailChar = desc.charAt(tailIdx);
+                        if (tailChar == ';') {
+                            break;
+                        }
+                        if (tailChar == '/')
+                        {
+                            tailChar = '.';
+                        }
+                        buffer.append(tailChar);
                         tailIdx++;
-                    }
-                    if (tailIdx < max) {
-                        buffer.append(desc.substring(idx + 1, tailIdx));
                     }
                     idx = tailIdx;
                 }
@@ -345,19 +369,33 @@ public class TypeHelper {
                 case '[':
                 {
                     arrayCount++;
+                    addSepr = false;
                 }
                 break;
-            }
-            if (next != '[') {
-                while (arrayCount > 0) {
-                    buffer.append("[]");
-                    arrayCount--;
+                case ')':
+                {
+                    if (idx == argEnd - 1) {
+                        buffer.append(")");
+                    } else {
+                        // leave room for return type
+                        buffer.append(") ");
+                    }
+                    addSepr = false;
+                }
+                break;
+                default:
+                {
+                    addSepr = false;
                 }
             }
             idx++;
-            sepr = ",";
+            if (idx < argEnd) {
+                sepr = ",";
+            } else {
+                sepr = "";
+            }
         }
-        
+
         return buffer.toString();
     }
 
