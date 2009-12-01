@@ -24,7 +24,6 @@
 package org.jboss.byteman.agent;
 
 import org.objectweb.asm.ClassVisitor;
-import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.agent.adapter.*;
 
@@ -77,14 +76,14 @@ public abstract class Location
      * matches this location
      * @return the required adapter
      */
-    public abstract RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod);
+    public abstract RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext);
 
     /**
      * return an adapter which can be used to insert a trigger call in a method containing a trigger point whose
      * position matches this location
      * @return the required adapter
      */
-    public abstract RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod);
+    public abstract RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext);
 
     /**
      * flag indicating that a field access location refers to field READ operations
@@ -119,8 +118,8 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            return new EntryCheckAdapter(cv, rule, targetClass, targetMethod);
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new EntryCheckAdapter(cv, transformContext);
         }
 
         /**
@@ -128,8 +127,8 @@ public abstract class Location
          * position matches this location
          * @return the required adapter
          */
-        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            return new EntryTriggerAdapter(cv, rule, targetClass, targetMethod);
+        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new EntryTriggerAdapter(cv, transformContext);
         }
 
         public String toString() {
@@ -176,8 +175,8 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            return new LineCheckAdapter(cv, rule, targetClass, targetMethod, targetLine);
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new LineCheckAdapter(cv, transformContext, targetLine);
         }
 
         /**
@@ -185,8 +184,8 @@ public abstract class Location
          * position matches this location
          * @return the required adapter
          */
-        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            return new LineTriggerAdapter(cv, rule, targetClass,targetMethod, targetLine);
+        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new LineTriggerAdapter(cv, transformContext, targetLine);
         }
 
         public String toString() {
@@ -296,8 +295,8 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            return new AccessCheckAdapter(cv, rule, targetClass, targetMethod, typeName, fieldName, flags, count);
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new AccessCheckAdapter(cv, transformContext, typeName, fieldName, flags, count);
         }
 
         /**
@@ -305,8 +304,8 @@ public abstract class Location
          * position matches this location
          * @return the required adapter
          */
-        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            return new AccessTriggerAdapter(cv, rule, targetClass, targetMethod, typeName, fieldName, flags, count, whenComplete);
+        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new AccessTriggerAdapter(cv, transformContext, typeName, fieldName, flags, count, whenComplete);
         }
 
         public String toString() {
@@ -459,8 +458,8 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            return new InvokeCheckAdapter(cv, rule, targetClass, targetMethod, typeName, methodName, signature, count);
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new InvokeCheckAdapter(cv, transformContext, typeName, methodName, signature, count);
         }
 
         /**
@@ -468,8 +467,8 @@ public abstract class Location
          * position matches this location
          * @return the required adapter
          */
-        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            return new InvokeTriggerAdapter(cv, rule, targetClass, targetMethod, typeName, methodName, signature, count, whenComplete);
+        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new InvokeTriggerAdapter(cv, transformContext, typeName, methodName, signature, count, whenComplete);
         }
 
         public String toString() {
@@ -558,8 +557,8 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            return new SynchronizeCheckAdapter(cv, rule, targetClass, targetMethod, count);
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new SynchronizeCheckAdapter(cv, transformContext, count);
         }
 
         /**
@@ -567,8 +566,8 @@ public abstract class Location
          * position matches this location
          * @return the required adapter
          */
-        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            return new SynchronizeTriggerAdapter(cv, rule, targetClass, targetMethod, count, whenComplete);
+        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new SynchronizeTriggerAdapter(cv, transformContext, count, whenComplete);
         }
 
         public String toString() {
@@ -662,8 +661,8 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            return new ThrowCheckAdapter(cv, rule, targetClass, targetMethod, typeName, count);
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new ThrowCheckAdapter(cv, transformContext, typeName, count);
         }
 
         /**
@@ -671,8 +670,8 @@ public abstract class Location
          * position matches this location
          * @return the required adapter
          */
-        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-            return new ThrowTriggerAdapter(cv, rule, targetClass, targetMethod, typeName, count);
+        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new ThrowTriggerAdapter(cv, transformContext, typeName, count);
         }
 
         public String toString() {
@@ -708,10 +707,10 @@ public abstract class Location
          * matches this location
          * @return the required adapter
          */
-        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
             // a line check adapter with line -1 will do the job
 
-            return new ExitCheckAdapter(cv, rule, targetClass, targetMethod);
+            return new ExitCheckAdapter(cv, transformContext);
         }
 
         /**
@@ -719,10 +718,10 @@ public abstract class Location
          * position matches this location
          * @return the required adapter
          */
-        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
+        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
             // a line adapter with line -1 will do the job
 
-            return new ExitTriggerAdapter(cv, rule, targetClass, targetMethod);
+            return new ExitTriggerAdapter(cv, transformContext);
         }
 
         public String toString() {

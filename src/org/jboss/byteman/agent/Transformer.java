@@ -521,7 +521,7 @@ public class Transformer implements ClassFileTransformer {
 
     public byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
     {
-        final String handlerMethod = ruleScript.getTargetMethod();
+        final String targetMethodSpec = ruleScript.getTargetMethod();
         final Location handlerLocation = ruleScript.getTargetLocation();
         /**
          * we cannot afford to lookup the helper class at this point because that involves valling a synchronized
@@ -538,73 +538,71 @@ public class Transformer implements ClassFileTransformer {
 //                System.out.println("org.jboss.byteman.agent.Transformer : unknown helper class " + helperName + " for rule " + ruleScript.getName());
 //            }
 //        }
-        final Rule rule;
+
+        TransformContext transformContext = new TransformContext(ruleScript, className, targetMethodSpec, loader);
         String ruleName = ruleScript.getName();
         try {
-            rule = Rule.create(ruleScript, loader);
+            transformContext.parseRule();
         } catch (ParseException pe) {
             System.out.println("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + "\n" + pe);
-            ruleScript.recordTransform(loader, className, null, pe);
             return targetClassBytes;
         } catch (TypeException te) {
-            System.out.println("org.jboss.byteman.agent.Transformer : error checking rule " + ruleName + "\n" + te);
-            ruleScript.recordTransform(loader, className, null, te);
+            System.out.println("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + "\n" + te);
             return targetClassBytes;
         } catch (Throwable th) {
-            System.out.println("org.jboss.byteman.agent.Transformer : error processing rule " + ruleName + "\n" + th);
-            ruleScript.recordTransform(loader, className, null, th);
+            System.out.println("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + "\n" + th);
             return targetClassBytes;
         }
 
         // ok, we have a rule with a matching class and a candidate method and location
-        // we need to see if the class has a matching method and, if so, add a call to
+        // we need to see if the class has a matching method/location and, if so, add a call to
         // execute the rule when we hit the relevant line
+
+        // there may be more than one matching method. if so we need to associate a separate Rule instance with
+        // each transformed method because we bind the argument/local vars using types specific to that method
+        // so we
 
         ClassReader cr = new ClassReader(targetClassBytes);
         // need to provide a real writer here so that labels get resolved
         ClassWriter dummy = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        RuleCheckAdapter checkAdapter = handlerLocation.getRuleCheckAdapter(dummy, rule, className, handlerMethod);
-        // PrintWriter pw = new PrintWriter(System.out);
-        // ClassVisitor traceAdapter = new TraceClassVisitor(cw, pw);
-        // RuleCheckAdapter adapter = handlerLocation.getRuleCheckAdapter(traceAdapter, rule, className, handlerMethod);
+        RuleCheckAdapter checkAdapter = handlerLocation.getRuleCheckAdapter(dummy, transformContext);
         try {
             cr.accept(checkAdapter, ClassReader.EXPAND_FRAMES);
         } catch (Throwable th) {
-            System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + rule.getName() + " to class " + className + "\n" + th);
+            System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + ruleScript.getName() + " to class " + className + "\n" + th);
             th.printStackTrace(System.out);
-            ruleScript.recordTransform(loader, className, rule, th);
+            transformContext.recordFailedTransform(th);
             return targetClassBytes;
         }
         // only insert the rule trigger call if there is a suitable location in the target method
         if (checkAdapter.isVisitOk()) {
             if (isVerbose()) {
-                System.out.println("org.jboss.byteman.agent.Transformer : possible trigger for rule " + rule.getName() + " in class " + className);
+                System.out.println("org.jboss.byteman.agent.Transformer : possible trigger for rule " + ruleScript.getName() + " in class " + className);
             }
             cr = new ClassReader(targetClassBytes);
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-            // PrintWriter pw = new PrintWriter(System.out);
-            // ClassVisitor traceAdapter = new TraceClassVisitor(cw, pw);
-            // RuleTriggerAdapter adapter = handlerLocation.getRuleAdapter(traceAdapter, rule, className, handlerMethod);
-            RuleTriggerAdapter adapter = handlerLocation.getRuleAdapter(cw, rule, className, handlerMethod);
+            RuleTriggerAdapter adapter = handlerLocation.getRuleAdapter(cw, transformContext);
             try {
                 cr.accept(adapter, ClassReader.EXPAND_FRAMES);
             } catch (Throwable th) {
-                System.out.println("org.jboss.byteman.agent.Transformer : error injecting trigger for rule " + rule.getName() + " into class " + className + "\n" +  th);
+                System.out.println("org.jboss.byteman.agent.Transformer : error injecting trigger for rule " + ruleScript.getName() + " into class " + className + "\n" +  th);
                 th.printStackTrace(System.out);
-                ruleScript.recordTransform(loader, className, rule, th);
+                transformContext.recordFailedTransform(th);
                 return targetClassBytes;
             }
-            // only return transformed code if ruleScript is still active
-
-            if (ruleScript.recordTransform(loader, className, rule)) {
-                // hand back the transformed byte code
-                if (isVerbose()) {
-                    System.out.println("org.jboss.byteman.agent.Transformer : inserted trigger for " + rule.getName() + " in class " + className);
-                }
-                return cw.toByteArray();
+            // hand back the transformed byte code
+            if (isVerbose()) {
+                System.out.println("org.jboss.byteman.agent.Transformer : inserted trigger for " + ruleScript.getName() + " in class " + className);
             }
+            return cw.toByteArray();
         }
+        
+        // record a failed match with an ersatz error instance
 
+        Error error =  new Error("Failed to transform class " + className + " using rule " + ruleName);
+        error.setStackTrace(new StackTraceElement[0]);
+        transformContext.recordFailedTransform(error);
+        
         return targetClassBytes;
     }
 

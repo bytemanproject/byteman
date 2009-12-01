@@ -26,16 +26,18 @@ package org.jboss.byteman.agent.adapter;
 import org.objectweb.asm.*;
 import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 
 /**
  * asm Adapter class used to check that the target method for a rule exists in a class
  */
 public class InvokeCheckAdapter extends RuleCheckAdapter
 {
-     public InvokeCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod,
+     public InvokeCheckAdapter(ClassVisitor cv, TransformContext transformContext,
                                String calledClass, String calledMethodName,String calledMethodDescriptor, int count)
     {
-        super(cv, rule,  targetClass, targetMethod);
+        super(cv, transformContext);
         this.calledClass = calledClass;
         this.calledMethodName = calledMethodName;
         this.calledMethodDescriptor = calledMethodDescriptor;
@@ -52,7 +54,7 @@ public class InvokeCheckAdapter extends RuleCheckAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if ((access & (Opcodes.ACC_ABSTRACT|Opcodes.ACC_SYNTHETIC)) == 0 && matchTargetMethod(name, desc)) {
-            return new InvokeCheckMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
+            return new InvokeCheckMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
         }
 
         return mv;
@@ -71,9 +73,9 @@ public class InvokeCheckAdapter extends RuleCheckAdapter
         private String[] exceptions;
         private boolean visited;
 
-        InvokeCheckMethodAdapter(MethodVisitor mv, Rule rule,  int access, String name, String descriptor, String signature, String[] exceptions)
+        InvokeCheckMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor);
+            super(mv, transformContext, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;

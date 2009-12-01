@@ -211,54 +211,57 @@ public class TestScript
 
             // see if we have a record of any transform
             if (script.hasTransform(targetClass)) {
-                Transform transform = script.getTransformed().get(0);
-                Throwable throwable = transform.getThrowable();
+                List<Transform> transforms = script.getTransformed();
+                int numTransforms = transforms.size();
+                for (Transform transform : transforms) {
+                    Throwable throwable = transform.getThrowable();
+                    Rule rule = transform.getRule();
 
-                if (throwable != null) {
-                    errorCount++;
-                    if (throwable  instanceof ParseException) {
-                        System.out.println("TestScript : Failed to parse rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                    if (throwable != null) {
+                        errorCount++;
+                        if (throwable  instanceof ParseException) {
+                            System.out.println("TestScript : Failed to parse rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                            System.out.println();
+                            parseErrorCount++;
+                        } else if (throwable instanceof TypeException) {
+                            System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                            System.out.println();
+                            typeErrorCount++;
+                        } else {
+                            System.out.println("TestScript : Error transforming class " + targetClassName + " using  rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                            System.out.println();
+                        }
+                        throwable.printStackTrace(System.out);
                         System.out.println();
-                        parseErrorCount++;
-                    } else if (throwable instanceof TypeException) {
-                        System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
-                        System.out.println();
-                        typeErrorCount++;
-                    } else {
-                        System.out.println("TestScript : Error transforming class " + targetClassName + " using  rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
-                        System.out.println();
+                        continue;
                     }
-                    throwable.printStackTrace(System.out);
+
+                    System.out.println("parsed rule \"" + script.getName() + "\"");
+
+                    if (verbose) {
+                        System.out.println("# File " + script.getFile() + " line " + script.getLine());
+                        System.out.println(rule);
+                    }
+
+                    // ok, now see if we can type check the rule
+
+                    try {
+                        rule.typeCheck();
+                    } catch (TypeException te) {
+                        System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                        typeErrorCount++;
+                        te.printStackTrace(System.out);
+                        System.out.println();
+                        continue;
+                    }
+
+                    if (script.isOverride()) {
+                        System.out.println("type checked overriding rule \"" + script.getName() + "\" against method in declared class");
+                    } else {
+                        System.out.println("type checked rule \"" + script.getName() + "\"");
+                    }
                     System.out.println();
-                    continue;
                 }
-
-                Rule rule = transform.getRule();
-
-                System.out.println("parsed rule \"" + script.getName() + "\"");
-                if (verbose) {
-                    System.out.println("# File " + script.getFile() + " line " + script.getLine());
-                    System.out.println(rule);
-                }
-
-                // ok, now see if we can type check the rule
-
-                try {
-                    rule.typeCheck();
-                } catch (TypeException te) {
-                    System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
-                    typeErrorCount++;
-                    te.printStackTrace(System.out);
-                    System.out.println();
-                    continue;
-                }
-
-                if (script.isOverride()) {
-                    System.out.println("type checked overriding rule \"" + script.getName() + "\" against method in declared class");
-                } else {
-                    System.out.println("type checked rule \"" + script.getName() + "\"");
-                }
-                System.out.println();
             } else if (targetClass.isInterface() || script.isOverride()) {
                 // ok, not necessarily a surprise - let's see if we can create a rule and parse/type check it
                 final Rule rule;

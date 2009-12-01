@@ -34,6 +34,8 @@ import org.jboss.byteman.rule.binding.Bindings;
 import org.jboss.byteman.rule.binding.Binding;
 import org.jboss.byteman.agent.adapter.cfg.*;
 import org.jboss.byteman.agent.Transformer;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 
 import java.util.*;
 import java.io.PrintStream;
@@ -43,12 +45,9 @@ import java.io.PrintStream;
  */
 public class RuleTriggerMethodAdapter extends RuleMethodAdapter
 {
-    RuleTriggerMethodAdapter(MethodVisitor mv, Rule rule, String targetClass, int access, String name, String descriptor, String signature, String[] exceptions)
+    RuleTriggerMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
     {
-        super(mv, rule, access, name, descriptor);
-        this.targetClass = targetClass;
-        this.access = access;
-        this.descriptor = descriptor;
+        super(mv, transformContext, access, name, descriptor);
         this.signature = signature;
         this.exceptions = exceptions;
         this.callArrayBindings = new ArrayList<Binding>();
@@ -56,7 +55,6 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         this.argumentTypes = Type.getArgumentTypes(descriptor);
         this.argLocalIndices = new int[argumentTypes.length];
         this.bindingsDone = false;
-        this.localTypes = new ArrayList();
     }
 
     private void setBindingIndices()
@@ -245,9 +243,7 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         return name + TypeHelper.internalizeDescriptor(descriptor);
     }
 
-    private String targetClass;
-    private int access;
-    private String descriptor;
+    private RuleScript ruleScript;
     private String signature;
     protected String[] exceptions;
     private Type returnType;
@@ -255,7 +251,6 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
     private int[] argLocalIndices;
     private List<Binding> callArrayBindings;
     private boolean bindingsDone;
-    private final List localTypes;
 
     private CFG cfg;
 
@@ -268,7 +263,6 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
 
     // methdos copied from GeneratorAdapter but modified so they invoke local MethodVisitor
     // method implementations rather than delegating to the next MethodVisitor in line
-
 
 
     // overridden methods from MethodVisitor
@@ -689,6 +683,10 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         super.visitEnd();
         // trash the current label
         cfg.visitEnd();
+
+        // if we injected any triggers then we need to record the transform for this method
+
+        transformContext.recordMethodTransform(name, descriptor);
     }
 
     /**
@@ -698,7 +696,7 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
     {
         // we need to set this here to avoid recursive re-entry into inject routine
 
-        rule.setTypeInfo(targetClass, access, name, descriptor, exceptions);
+        rule.setTypeInfo(getTriggerClass(), access, name, descriptor, exceptions);
         String key = rule.getKey();
         Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.Rule"));
         Method method = Method.getMethod("void execute(String, Object, Object[])");

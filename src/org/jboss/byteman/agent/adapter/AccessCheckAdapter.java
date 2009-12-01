@@ -25,6 +25,7 @@ package org.jboss.byteman.agent.adapter;
 
 import org.objectweb.asm.*;
 import org.jboss.byteman.agent.Location;
+import org.jboss.byteman.agent.TransformContext;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.type.TypeHelper;
 
@@ -33,10 +34,10 @@ import org.jboss.byteman.rule.type.TypeHelper;
  */
 public class AccessCheckAdapter extends RuleCheckAdapter
 {
-     public AccessCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod, String ownerClass,
-                       String fieldName,  int flags, int count)
+     public AccessCheckAdapter(ClassVisitor cv, TransformContext transformContext, String ownerClass,
+                               String fieldName, int flags, int count)
     {
-        super(cv, rule, targetClass, targetMethod);
+        super(cv, transformContext);
         this.ownerClass = ownerClass;
         this.fieldName = fieldName;
         this.flags = flags;
@@ -53,7 +54,7 @@ public class AccessCheckAdapter extends RuleCheckAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if ((access & (Opcodes.ACC_ABSTRACT|Opcodes.ACC_SYNTHETIC)) == 0 && matchTargetMethod(name, desc)) {
-            return new AccessCheckMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
+            return new AccessCheckMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
         }
 
         return mv;
@@ -72,9 +73,9 @@ public class AccessCheckAdapter extends RuleCheckAdapter
         private String[] exceptions;
         private boolean visited;
 
-        AccessCheckMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        AccessCheckMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor);
+            super(mv, transformContext, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;

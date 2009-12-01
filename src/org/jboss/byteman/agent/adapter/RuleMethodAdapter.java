@@ -26,6 +26,7 @@ package org.jboss.byteman.agent.adapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Label;
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.agent.TransformContext;
 
 import java.util.LinkedList;
 import java.util.HashMap;
@@ -38,10 +39,18 @@ import java.util.List;
 
 // public class RuleMethodAdapter extends GeneratorAdapter {
 public class RuleMethodAdapter extends RuleGeneratorAdapter {
-    public RuleMethodAdapter(final MethodVisitor mv, final Rule rule, final int access, final String name, final String desc) {
+    public RuleMethodAdapter(final MethodVisitor mv, final TransformContext transformContext, final int access, final String name, final String desc) {
         super(mv, access, name, desc);
+        this.access = access;
         this.name = name;
-        this.rule = rule;
+        this.descriptor = desc;
+        this.transformContext = transformContext;
+        this.rule = transformContext.getRule(name, desc);
+    }
+
+    public String getTriggerClass()
+    {
+        return transformContext.getTriggerClass();
     }
 
     public void visitLocalVariable(
@@ -98,6 +107,9 @@ public class RuleMethodAdapter extends RuleGeneratorAdapter {
         }
     }
 
+    protected TransformContext transformContext;
     protected Rule rule;
+    protected int access;
     protected String name;
+    protected String descriptor;
 }

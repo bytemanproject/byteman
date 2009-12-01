@@ -25,15 +25,17 @@ package org.jboss.byteman.agent.adapter;
 
 import org.objectweb.asm.*;
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 
 /**
  * asm Adapter class used to check that the target method for a rule exists in a class
  */
 public class SynchronizeCheckAdapter extends RuleCheckAdapter
 {
-     public SynchronizeCheckAdapter(ClassVisitor cv, Rule rule,  String targetClass, String targetMethod, int count)
+     public SynchronizeCheckAdapter(ClassVisitor cv, TransformContext transformContext, int count)
     {
-        super(cv, rule, targetClass, targetMethod);
+        super(cv, transformContext);
         this.count = count;
         this.visitedCount = 0;
     }
@@ -47,7 +49,7 @@ public class SynchronizeCheckAdapter extends RuleCheckAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
-            return new SynchronizeCheckMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
+            return new SynchronizeCheckMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
         }
 
         return mv;
@@ -66,9 +68,9 @@ public class SynchronizeCheckAdapter extends RuleCheckAdapter
         private String[] exceptions;
         private boolean visited;
 
-        SynchronizeCheckMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        SynchronizeCheckMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor);
+            super(mv, transformContext, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;

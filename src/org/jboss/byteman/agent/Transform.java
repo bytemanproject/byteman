@@ -34,6 +34,7 @@ public class Transform
 {
     private ClassLoader loader;
     private String internalClassName;
+    private String triggerMethodName;
     private Rule rule;
     private Throwable throwable;
     private boolean compiled;
@@ -41,12 +42,13 @@ public class Transform
     private String detail;
 
     public Transform(ClassLoader loader, String internalClassName, Rule rule) {
-        this(loader, internalClassName, rule, null);
+        this(loader, internalClassName, null, rule, null);
     }
 
-    public Transform(ClassLoader loader, String internalClassName, Rule rule, Throwable th) {
+    public Transform(ClassLoader loader, String internalClassName, String triggerMethodName, Rule rule, Throwable th) {
         this.loader = loader;
         this.internalClassName = internalClassName;
+        this.triggerMethodName = triggerMethodName;
         this.rule = rule;
         this.compiled = false;
         this.throwable = th;
@@ -60,6 +62,10 @@ public class Transform
 
     public String getInternalClassName() {
         return internalClassName;
+    }
+
+    public String getTriggerMethodName() {
+        return triggerMethodName;
     }
 
     public Rule getRule() {
@@ -94,8 +100,15 @@ public class Transform
         writer.print("Transformed in:\n");
         writer.print("loader: ");
         writer.println(loader);
-        writer.print("trigger class: ");
-        writer.println(internalClassName);
+        if (triggerMethodName == null) {
+            writer.print("trigger class: ");
+            writer.println(internalClassName);
+        } else {
+            writer.print("trigger method: ");
+            writer.print(internalClassName);
+            writer.print('.');
+            writer.println(triggerMethodName);
+        }
         if (throwable != null) {
             writer.print("threw ");
             writer.println(throwable);

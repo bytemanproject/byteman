@@ -24,19 +24,18 @@
 package org.jboss.byteman.agent.adapter;
 
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.type.TypeHelper;
-import org.jboss.byteman.agent.Transformer;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.Method;
 
 /**
  * asm Adapter class used to add a rule event trigger call to a method of som egiven class
  */
 public class EntryTriggerAdapter extends RuleTriggerAdapter
 {
-    public EntryTriggerAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod)
+    public EntryTriggerAdapter(ClassVisitor cv, TransformContext transformContext)
     {
-        super(cv, rule, targetClass, targetMethod);
+        super(cv, transformContext);
     }
 
     public MethodVisitor visitMethod(
@@ -49,9 +48,9 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
             if (name.equals("<init>")) {
-                return new EntryTriggerConstructorAdapter(mv, rule, access, name, desc, signature, exceptions);
+                return new EntryTriggerConstructorAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
             } else {
-                return new EntryTriggerMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
+                return new EntryTriggerMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
             }
         }
         return mv;
@@ -69,9 +68,9 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
          */
         private boolean visited;
 
-        EntryTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        EntryTriggerMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, targetClass, access, name, descriptor, signature, exceptions);
+            super(mv, transformContext, access, name, descriptor, signature, exceptions);
             this.unlatched = true;  // subclass can manipulate this to postponne visit
             visited = false;
         }
@@ -195,9 +194,9 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
 
     private class EntryTriggerConstructorAdapter extends EntryTriggerMethodAdapter
     {
-        EntryTriggerConstructorAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        EntryTriggerConstructorAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor, signature, exceptions);
+            super(mv, getTransformContext(), access, name, descriptor, signature, exceptions);
             this.unlatched = false;
         }
 

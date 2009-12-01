@@ -25,15 +25,17 @@ package org.jboss.byteman.agent.adapter;
 
 import org.objectweb.asm.*;
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 
 /**
  * asm Adapter class used to check that the target method for a rule exists in a class
  */
 public class RuleCheckAdapter extends RuleAdapter
 {
-    protected RuleCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod)
+    protected RuleCheckAdapter(ClassVisitor cv, TransformContext transformContext)
     {
-        super(cv, rule, targetClass, targetMethod);
+        super(cv, transformContext);
         this.visitOk = false;
     }
 

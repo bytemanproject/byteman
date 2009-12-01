@@ -25,15 +25,17 @@ package org.jboss.byteman.agent.adapter;
 
 import org.objectweb.asm.*;
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 
 /**
  * asm Adapter class used to check that the target method for a rule exists in a class
  */
 public class LineCheckAdapter extends RuleCheckAdapter
 {
-    public LineCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod, int targetLine)
+    public LineCheckAdapter(ClassVisitor cv, TransformContext transformContext, int targetLine)
     {
-        super(cv, rule, targetClass, targetMethod);
+        super(cv, transformContext);
         this.targetLine = targetLine;
     }
 
@@ -46,7 +48,7 @@ public class LineCheckAdapter extends RuleCheckAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if ((access & (Opcodes.ACC_ABSTRACT|Opcodes.ACC_SYNTHETIC)) == 0 && matchTargetMethod(name, desc)) {
-            return new LineCheckMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
+            return new LineCheckMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
         }
 
         return mv;
@@ -64,9 +66,9 @@ public class LineCheckAdapter extends RuleCheckAdapter
         private String signature;
         private String[] exceptions;
 
-        LineCheckMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        LineCheckMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor);
+            super(mv, transformContext, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;

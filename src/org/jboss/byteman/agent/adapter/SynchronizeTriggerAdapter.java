@@ -24,19 +24,18 @@
 package org.jboss.byteman.agent.adapter;
 
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.type.TypeHelper;
-import org.jboss.byteman.agent.Transformer;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.Method;
 
 /**
  * asm Adapter class used to add a rule event trigger call to a method of som egiven class
  */
 public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
 {
-    public SynchronizeTriggerAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod, int count, boolean whenComplete)
+    public SynchronizeTriggerAdapter(ClassVisitor cv, TransformContext transformContext, int count, boolean whenComplete)
     {
-        super(cv, rule, targetClass, targetMethod);
+        super(cv, transformContext);
         this.count = count;
         this.whenComplete = whenComplete;
     }
@@ -51,7 +50,7 @@ public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         // we can use the same adapter for methods and constructors
         if (matchTargetMethod(name, desc)) {
-            return new SynchronizeTriggerMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
+            return new SynchronizeTriggerMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
         }
         return mv;
     }
@@ -64,9 +63,9 @@ public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
     {
         private int visitedCount;
 
-        SynchronizeTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        SynchronizeTriggerMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, targetClass, access, name, descriptor, signature, exceptions);
+            super(mv, transformContext, access, name, descriptor, signature, exceptions);
             visitedCount = 0;
         }
 

@@ -26,19 +26,19 @@ package org.jboss.byteman.agent.adapter;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.agent.Location;
-import org.jboss.byteman.agent.Transformer;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.Method;
 
 /**
  * asm Adapter class used to add a rule event trigger call to a method of som egiven class
  */
 public class AccessTriggerAdapter extends RuleTriggerAdapter
 {
-    public AccessTriggerAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod, String ownerClass,
-                       String fieldName, int flags, int count, boolean whenComplete)
+    public AccessTriggerAdapter(ClassVisitor cv, TransformContext transformContext, String ownerClass,
+                                String fieldName, int flags, int count, boolean whenComplete)
     {
-        super(cv, rule, targetClass, targetMethod);
+        super(cv, transformContext);
         this.ownerClass = ownerClass;
         this.fieldName = fieldName;
         this.flags = flags;
@@ -57,9 +57,9 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
             if (name.equals("<init>")) {
-                return new AccessTriggerConstructorAdapter(mv, rule, access, name, desc, signature, exceptions);
+                return new AccessTriggerConstructorAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
             } else {
-                return new AccessTriggerMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
+                return new AccessTriggerMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
             }
         }
         return mv;
@@ -76,9 +76,9 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
          */
         protected boolean latched;
 
-        AccessTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        AccessTriggerMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, targetClass, access, name, descriptor, signature, exceptions);
+            super(mv, transformContext, access, name, descriptor, signature, exceptions);
             visitedCount = 0;
             latched = false;
         }
@@ -159,9 +159,9 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
 
     private class AccessTriggerConstructorAdapter extends AccessTriggerMethodAdapter
     {
-        AccessTriggerConstructorAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        AccessTriggerConstructorAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor, signature, exceptions);
+            super(mv, transformContext, access, name, descriptor, signature, exceptions);
             // ensure we don't transform calls before the super constructor is called
             latched = true;
         }

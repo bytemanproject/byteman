@@ -24,19 +24,18 @@
 package org.jboss.byteman.agent.adapter;
 
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.type.TypeHelper;
-import org.jboss.byteman.agent.Transformer;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.Method;
 
 /**
  * asm Adapter class used to add a rule event trigger call to a method of som egiven class
  */
 public class LineTriggerAdapter extends RuleTriggerAdapter
 {
-    public LineTriggerAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod, int targetLine)
+    public LineTriggerAdapter(ClassVisitor cv, TransformContext transformContext, int targetLine)
     {
-        super(cv, rule, targetClass, targetMethod);
+        super(cv, transformContext);
         this.targetLine = targetLine;
         this.visitedLine = false;
     }
@@ -51,9 +50,9 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
             if (name.equals("<init>")) {
-                return new LineTriggerConstructorAdapter(mv, rule, access, name, desc, signature, exceptions);
+                return new LineTriggerConstructorAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
             } else {
-                return new LineTriggerMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
+                return new LineTriggerMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
             }
         }
         return mv;
@@ -67,9 +66,9 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
     {
         protected boolean unlatched;
 
-        LineTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        LineTriggerMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, targetClass, access, name, descriptor, signature, exceptions);
+            super(mv, transformContext, access, name, descriptor, signature, exceptions);
             this.unlatched = true;  // subclass can manipulate this to postponne visit
         }
 
@@ -91,9 +90,9 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
 
     private class LineTriggerConstructorAdapter extends LineTriggerMethodAdapter
     {
-        LineTriggerConstructorAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        LineTriggerConstructorAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor, signature, exceptions);
+            super(mv, transformContext, access, name, descriptor, signature, exceptions);
             this.unlatched = false;
         }
 

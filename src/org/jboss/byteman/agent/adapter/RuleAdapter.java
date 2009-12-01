@@ -25,6 +25,8 @@ package org.jboss.byteman.agent.adapter;
 
 import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 import org.objectweb.asm.*;
 
 /**
@@ -33,23 +35,32 @@ import org.objectweb.asm.*;
  */
 public class RuleAdapter extends ClassAdapter
 {
-    protected RuleAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod)
+    protected RuleAdapter(ClassVisitor cv, TransformContext transformContext)
     {
         super(cv);
-        this.rule = rule;
-        this.targetClass = targetClass;
-        this.targetMethodName = TypeHelper.parseMethodName(targetMethod);
-        this.targetDescriptor = TypeHelper.parseMethodDescriptor(targetMethod);
+        this.transformContext =  transformContext;
     }
 
-    protected Rule rule;
-    protected String targetClass;
-    protected String targetMethodName;
-    protected String targetDescriptor;
+    private TransformContext transformContext;
 
     protected boolean matchTargetMethod(String name, String desc)
     {
-        return (targetMethodName.equals(name) &&
-                (targetDescriptor.equals("") || TypeHelper.equalDescriptors(targetDescriptor, desc)));
+        return transformContext.matchTargetMethod(name, desc);
+    }
+    
+    protected Rule getRule(String name, String desc)
+    {
+        Rule rule =   null;
+        try {
+            rule = transformContext.getRule(name, desc);
+        } catch(Throwable th) {
+            // will not happen
+        }
+        return rule;
+    }
+
+    protected TransformContext getTransformContext()
+    {
+        return transformContext;
     }
 }

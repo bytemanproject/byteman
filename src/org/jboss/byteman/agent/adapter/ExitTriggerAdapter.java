@@ -24,10 +24,9 @@
 package org.jboss.byteman.agent.adapter;
 
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.Method;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.type.TypeHelper;
-import org.jboss.byteman.agent.Transformer;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 
 import java.util.Vector;
 
@@ -42,8 +41,8 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
 
     private Vector<Label> earlyReturnHandlers;
 
-    public ExitTriggerAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-        super(cv, rule, targetClass, targetMethod);
+    public ExitTriggerAdapter(ClassVisitor cv, TransformContext transformContext) {
+        super(cv, transformContext);
         this.earlyReturnHandlers = new Vector<Label>();
     }
 
@@ -56,7 +55,7 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
-            return new ExitTriggerMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
+            return new ExitTriggerMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
         }
 
         return mv;
@@ -68,9 +67,9 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
 
     private class ExitTriggerMethodAdapter extends RuleTriggerMethodAdapter
     {
-        ExitTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        ExitTriggerMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, targetClass, access, name, descriptor, signature, exceptions);
+            super(mv, transformContext, access, name, descriptor, signature, exceptions);
         }
 
         /**

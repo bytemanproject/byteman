@@ -24,15 +24,21 @@
 package org.jboss.byteman.agent;
 
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.rule.type.TypeHelper;
+import org.jboss.byteman.rule.exception.ParseException;
+import org.jboss.byteman.rule.exception.TypeException;
+import org.jboss.byteman.rule.exception.CompileException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
 import java.io.StringWriter;
 import java.io.PrintWriter;
 
 /**
- * information about a single rule obtained from a rule script including any failed or successful transforms
- * performed using the rule
+ * details of a single rule obtained from a rule file. RuleScritp instances are stored in the script repository
+ * attached to the transformer. They are used to generate Rule instances at transform time. The RuleScript contains
+ * a list of Transforms which detail failed or successful transforms performed using the script.
  */
 
 public class RuleScript
@@ -119,7 +125,7 @@ public class RuleScript
         this.ruleText = ruleText;
         this.line = line;
         this.file = file;
-        this.transformed = null;
+        this.transformed = new ArrayList<Transform>();
     }
 
     public String getName() {
@@ -199,7 +205,7 @@ public class RuleScript
      * called when indexing a script to ensure that it has not already been deleted. it must only be called
      * when synchronized on the script. This avoids a race where a script can be added by thread A, deleted by
      * thread B, unindexed -- unsuccessfully -- by thread B then indexed by thread A
-     * @return the previosu setting of deleted
+     * @return the previous setting of deleted
      */
     public boolean isDeleted()
     {
@@ -207,16 +213,26 @@ public class RuleScript
     }
 
     /**
+     * record the fact that an error was thrown when attempting to transform a given class using this rule script
+     * @param loader
+     * @param internalClassName
+     * @return
+     */
+    public synchronized boolean recordFailedTransform(ClassLoader loader, String internalClassName, Throwable th)
+    {
+        return recordTransform(loader, internalClassName, null, null, null, th);
+    }
+
+    /**
      * record the fact that a trigger call has been successfully installed into bytecode associated with a specific
      * class and loader and a corresponding rule instance been installed
      * @param loader
      * @param internalClassName
-     * @param rule
      * @return
      */
-    public synchronized boolean recordTransform(ClassLoader loader, String internalClassName, Rule rule)
+    public synchronized boolean recordMethodTransform(ClassLoader loader, String internalClassName, String triggerMethodName, String desc, Rule  rule)
     {
-        return recordTransform(loader, internalClassName, rule, null);
+        return recordTransform(loader, internalClassName, triggerMethodName, desc, rule, null);
     }
 
     /**
@@ -224,28 +240,25 @@ public class RuleScript
      * class and loader
      * @param loader the loader of the class being transformed
      * @param internalClassName the internal name of the class being transformed
-     * @param rule the rule resulting from the parse of the rule text or null if a parse error occurred
      * @param th throwable generated during the attempt to parse the rule text or inject code at the trigger point
      * @return
      */
-    public synchronized boolean recordTransform(ClassLoader loader, String internalClassName, Rule rule, Throwable th)
+    public synchronized boolean recordTransform(ClassLoader loader, String internalClassName, String triggerMethodName, String desc, Rule rule, Throwable th)
     {
         if (deleted) {
             return false;
         }
 
-        addTransform(new Transform(loader, internalClassName, rule, th));
-
-        return true;
-    }
-
-    private void addTransform(Transform transform)
-    {
-        if (transformed == null) {
-            transformed = new ArrayList<Transform>();
+        String fullMethodName = null;
+        if (triggerMethodName !=  null) {
+            fullMethodName = triggerMethodName + TypeHelper.internalizeDescriptor(desc);
         }
 
-        transformed.add(transform);
+        // and install the transform in the list
+
+        transformed.add(new Transform(loader, internalClassName, fullMethodName, rule, th));
+
+        return true;
     }
 
     /**
@@ -254,7 +267,7 @@ public class RuleScript
      * it must only be called after the script has been deleted by calling setDeleted.
      * @param clazz the class for which a transform is being sought.
      * @return true if the class has been transformed using this script otherwise false.
-     */
+     */                                       
     public synchronized boolean hasTransform(Class<?> clazz)
     {
         ClassLoader loader = clazz.getClassLoader();

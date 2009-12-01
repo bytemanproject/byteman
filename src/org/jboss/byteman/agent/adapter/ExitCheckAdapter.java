@@ -25,6 +25,8 @@ package org.jboss.byteman.agent.adapter;
 
 import org.objectweb.asm.*;
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 
 import java.util.Vector;
 
@@ -33,8 +35,8 @@ import java.util.Vector;
  */
 public class ExitCheckAdapter extends RuleCheckAdapter
 {
-    public ExitCheckAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod) {
-        super(cv, rule, targetClass, targetMethod);
+    public ExitCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
+        super(cv, transformContext);
         this.earlyReturnHandlers = new Vector<Label>();
     }
     /**
@@ -52,7 +54,7 @@ public class ExitCheckAdapter extends RuleCheckAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if ((access & (Opcodes.ACC_ABSTRACT|Opcodes.ACC_SYNTHETIC)) == 0 && matchTargetMethod(name, desc)) {
-            return new ExitCheckMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
+            return new ExitCheckMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
         }
 
         return mv;
@@ -72,9 +74,9 @@ public class ExitCheckAdapter extends RuleCheckAdapter
         private Vector<Label> startLabels;
         private Vector<Label> endLabels;
 
-        ExitCheckMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        ExitCheckMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor);
+            super(mv, transformContext, access, name, descriptor);
             this.access = access;
             this.name = name;
             this.descriptor = descriptor;

@@ -299,6 +299,7 @@ public class TypeHelper {
             if (addSepr) {
                 while (arrayCount > 0) {
                     buffer.append("[]");
+                    arrayCount--;
                 }
                 buffer.append(sepr);
             }

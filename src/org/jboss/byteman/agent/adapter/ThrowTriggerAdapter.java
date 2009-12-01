@@ -24,19 +24,18 @@
 package org.jboss.byteman.agent.adapter;
 
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.type.TypeHelper;
-import org.jboss.byteman.agent.Transformer;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.Method;
 
 /**
  * asm Adapter class used to add a rule event trigger call to a method of some given class
  */
 public class ThrowTriggerAdapter extends RuleTriggerAdapter
 {
-    public ThrowTriggerAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod, String exceptionClass, int count)
+    public ThrowTriggerAdapter(ClassVisitor cv, TransformContext transformContext, String exceptionClass, int count)
     {
-        super(cv, rule, targetClass, targetMethod);
+        super(cv, transformContext);
         this.exceptionClass = exceptionClass;
         this.count = count;
     }
@@ -50,10 +49,11 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
+            Rule rule = getRule(name, desc);
             if (name.equals("<init>")) {
-                return new ThrowTriggerConstructorAdapter(mv, rule, access, name, desc, signature, exceptions);
+                return new ThrowTriggerConstructorAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
             } else {
-                return new ThrowTriggerMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
+                return new ThrowTriggerMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
             }
         }
         return mv;
@@ -71,9 +71,9 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
         protected boolean latched;
         private int visitedCount;
 
-        ThrowTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        ThrowTriggerMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, targetClass, access, name, descriptor, signature, exceptions);
+            super(mv, transformContext, access, name, descriptor, signature, exceptions);
             visitedCount = 0;
             latched = false;
         }
@@ -105,9 +105,9 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
 
     private class ThrowTriggerConstructorAdapter extends ThrowTriggerMethodAdapter
     {
-        ThrowTriggerConstructorAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        ThrowTriggerConstructorAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor, signature, exceptions);
+            super(mv, transformContext, access, name, descriptor, signature, exceptions);
             // ensure we don't transform calls before the super constructor is called
             latched = true;
         }

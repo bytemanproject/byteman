@@ -25,19 +25,19 @@ package org.jboss.byteman.agent.adapter;
 
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.type.TypeHelper;
-import org.jboss.byteman.agent.Transformer;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.Method;
 
 /**
  * asm Adapter class used to add a rule event trigger call to a method of som egiven class
  */
 public class InvokeTriggerAdapter extends RuleTriggerAdapter
 {
-    public InvokeTriggerAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod, String calledClass,
-                       String calledMethodName, String calledMethodDescriptor, int count, boolean whenComplete)
+    public InvokeTriggerAdapter(ClassVisitor cv, TransformContext transformContext,
+                                String calledClass, String calledMethodName, String calledMethodDescriptor, int count, boolean whenComplete)
     {
-        super(cv, rule, targetClass, targetMethod);
+        super(cv, transformContext);
         this.calledClass = calledClass;
         this.calledMethodName = calledMethodName;
         this.calledMethodDescriptor = calledMethodDescriptor;
@@ -56,9 +56,9 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
             if (name.equals("<init>")) {
-                return new InvokeTriggerConstructorAdapter(mv, rule, access, name, desc, signature, exceptions);
+                return new InvokeTriggerConstructorAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
             } else {
-                return new InvokeTriggerMethodAdapter(mv, rule, access, name, desc, signature, exceptions);
+                return new InvokeTriggerMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
             }
         }
         return mv;
@@ -75,9 +75,9 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
          */
         protected boolean latched;
 
-        InvokeTriggerMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        InvokeTriggerMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, targetClass, access, name, descriptor, signature, exceptions);
+            super(mv, transformContext, access, name, descriptor, signature, exceptions);
             visitedCount = 0;
             latched = false;
         }
@@ -146,9 +146,9 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
 
     private class InvokeTriggerConstructorAdapter extends InvokeTriggerMethodAdapter
     {
-        InvokeTriggerConstructorAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor, String signature, String[] exceptions)
+        InvokeTriggerConstructorAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, rule, access, name, descriptor, signature, exceptions);
+            super(mv, transformContext, access, name, descriptor, signature, exceptions);
             // ensure we don't transform calls before the super constructor is called
             latched = true;
         }

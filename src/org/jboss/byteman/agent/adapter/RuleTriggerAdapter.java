@@ -24,6 +24,8 @@
 package org.jboss.byteman.agent.adapter;
 
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.agent.RuleScript;
+import org.jboss.byteman.agent.TransformContext;
 import org.objectweb.asm.*;
 
 /**
@@ -31,11 +33,8 @@ import org.objectweb.asm.*;
  */
 public class RuleTriggerAdapter extends RuleAdapter
 {
-    protected RuleTriggerAdapter(ClassVisitor cv, Rule rule, String targetClass, String targetMethod)
+    protected RuleTriggerAdapter(ClassVisitor cv, TransformContext transformContext)
     {
-        super(cv, rule, targetClass, targetMethod);
-        this.rule = rule;
+        super(cv, transformContext);
     }
-
-    protected Rule rule;
 }

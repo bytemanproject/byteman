@@ -31,6 +31,7 @@ import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.binding.Bindings;
 import org.jboss.byteman.rule.binding.Binding;
 import org.jboss.byteman.agent.Transformer;
+import org.jboss.byteman.agent.TransformContext;
 
 import java.util.*;
 
@@ -38,11 +39,9 @@ import java.util.*;
  * class which provides base functionality extended by all the location-specific method check adapters
  */
 public class RuleCheckMethodAdapter extends RuleMethodAdapter {
-    RuleCheckMethodAdapter(MethodVisitor mv, Rule rule, int access, String name, String descriptor)
+    RuleCheckMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor)
     {
-        super(mv, rule, access, name, descriptor);
-        this.access = access;
-        this.descriptor = descriptor;
+        super(mv, transformContext, access, name, descriptor);
         this.triggerPoints = null;
     }
 
@@ -151,7 +150,5 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
         return true;
     }
 
-    private int access;
-    private String descriptor;
     private List<Label> triggerPoints;
 }
