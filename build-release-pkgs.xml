@@ -86,10 +86,10 @@
     <property name="svnbase"
     value="https://svn.jboss.org/repos/labs/labs/jbosstm/workspace/adinn/byteman/tags"/>
     <!-- The tag as it appears under svnbase -->
-    <property name="tag" value="Byteman_1_1_1"/>
+    <property name="tag" value="Byteman_1_2_0"/>
     <!-- The file name base for the user downloadable files. Derive it
     from the tag -->
-    <property name="filename" value="1.1.1"/>
+    <property name="filename" value="1.2.0"/>
     <!-- the location the Byteman web site content svn is checked out to -->
     <property name="cmsdir" value="/home/adinn/jboss/workspace/adinn/byteman/"/>
     <!-- the location the maven repository svn is checked out to.
