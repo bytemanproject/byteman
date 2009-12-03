@@ -213,7 +213,11 @@ public class ThreadMonitorHelper extends StackTraceHelper
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
 
         buffer.append("    from ");
-        printlnFrame(buffer, i);
+        if (i < l - 1) {
+            printlnFrame(buffer, i + 1);
+        } else {
+            buffer.append(" VM runtime\n");
+        }
         trace(key, buffer.toString());
     }
 }

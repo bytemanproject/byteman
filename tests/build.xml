@@ -434,6 +434,48 @@
             -->
             <test name="org.jboss.byteman.tests.misc.TestRecursiveTriggers"/>
         </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestOverridingInjection.txt"/>
+            <!--
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <test name="org.jboss.byteman.tests.misc.TestOverridingInjection"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestInterfaceInjection.txt"/>
+            <!--
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <test name="org.jboss.byteman.tests.misc.TestInterfaceInjection"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestOverridingInterfaceInjection.txt"/>
+            <!--
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <test name="org.jboss.byteman.tests.misc.TestOverridingInterfaceInjection"/>
+        </junit>
     </target>
 
     <target name="tests.misc.compiled">
@@ -451,6 +493,63 @@
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             -->
             <test name="org.jboss.byteman.tests.misc.TestRecursiveTriggers"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestOverridingInjection.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <!-- uncomment to dump generated code
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+            -->
+            <!--
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <test name="org.jboss.byteman.tests.misc.TestOverridingInjection"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestInterfaceInjection.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <!-- uncomment to dump generated code
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+            -->
+            <!--
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <test name="org.jboss.byteman.tests.misc.TestInterfaceInjection"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestOverridingInterfaceInjection.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <!-- uncomment to dump generated code
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+            -->
+            <!--
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <test name="org.jboss.byteman.tests.misc.TestOverridingInterfaceInjection"/>
         </junit>
     </target>
 

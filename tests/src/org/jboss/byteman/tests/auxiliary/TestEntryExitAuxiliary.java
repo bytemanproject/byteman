@@ -28,8 +28,7 @@ import org.jboss.byteman.tests.Test;
 /**
  * Auxiliary class used by entry and exit location test classes
  */
-public class TestEntryExitAuxiliary
-{
+public class TestEntryExitAuxiliary implements TestInterface {
     protected Test test;
 
     public TestEntryExitAuxiliary(Test test)
