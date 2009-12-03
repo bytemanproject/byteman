@@ -221,6 +221,9 @@ public class Transformer implements ClassFileTransformer {
             if (loader == null) {
                 loader = ClassLoader.getSystemClassLoader();
             }
+            if (internalName.contains("TestEntryExitAuxiliary")) {
+                System.out.println("found it");
+            }
 
             // ok, we need to check whether there are any class scripts associated with this class and if so
             // we will consider transforming the byte code
@@ -287,10 +290,10 @@ public class Transformer implements ClassFileTransformer {
                         // TODO -- we probably don't want to inject twice in such cases so we ought to remember whether
                         // TODO -- we have seen an interface before
                         String interfaceName = interfaces[i].getName();
-                        newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, interfaceName, false, true);
+                        newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, interfaceName, true, true);
                         dotIdx = interfaceName.lastIndexOf('.');
                         if (dotIdx >= 0) {
-                            newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, interfaceName.substring(dotIdx + 1), false, true);
+                            newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, interfaceName.substring(dotIdx + 1), true, true);
                         }
                     }
 
