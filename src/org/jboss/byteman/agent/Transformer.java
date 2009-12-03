@@ -221,9 +221,6 @@ public class Transformer implements ClassFileTransformer {
             if (loader == null) {
                 loader = ClassLoader.getSystemClassLoader();
             }
-            if (internalName.contains("TestEntryExitAuxiliary")) {
-                System.out.println("found it");
-            }
 
             // ok, we need to check whether there are any class scripts associated with this class and if so
             // we will consider transforming the byte code
