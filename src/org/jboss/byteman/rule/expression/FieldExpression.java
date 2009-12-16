@@ -38,6 +38,7 @@ import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 /**
  * an expression which identifies an instance field reference
@@ -148,6 +149,10 @@ public class FieldExpression extends Expression
                 field  = ownerClazz.getField(fieldName);
             } catch (NoSuchFieldException e) {
                 throw new TypeException("FieldExpresssion.typeCheck : invalid field reference " + fieldName + getPos());
+            }
+
+            if ((field.getModifiers() & Modifier.STATIC) != 0) {
+                throw new TypeException("FieldExpresssion.typeCheck : field is static " + fieldName + getPos());
             }
 
             valueClass = field.getType();
