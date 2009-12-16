@@ -110,6 +110,7 @@ public class ScriptRepository
                     nextRule = "";
                     sepr = "";
                     inRule = false;
+                    isInterface = false;
                     // reset start nuuber so we pick up the next rule text line
                     startNumber = -1;
                 } else if (lineNumber == maxLines && !nextRule.trim().equals("")) {
