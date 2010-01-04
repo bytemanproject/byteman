@@ -386,7 +386,7 @@ public class Transformer implements ClassFileTransformer {
     /**
      * retained for compatibility
      */
-    public static final String TRANFORM_ALL_COMPATIBILITY = BYTEMAN_PACKAGE_PREFIX + "quodlibet";
+    public static final String TRANSFORM_ALL_COMPATIBILITY = BYTEMAN_PACKAGE_PREFIX + "quodlibet";
 
     /**
      * system property which turns off injection into overriding methods
@@ -399,6 +399,11 @@ public class Transformer implements ClassFileTransformer {
      */
     public static final String SYSPROPS_STRICT_MODE = BYTEMAN_PACKAGE_PREFIX + "sysprops.strict";
 
+    /**
+     * system property which determines whether or not byteman configuration can be updated at runtime
+     * via the byteman agent listener
+     */
+    public static final String ALLOW_CONFIG_UPDATE = BYTEMAN_PACKAGE_PREFIX + "allow.config.update";
 
     /**
      * disable triggering of rules inside the current thread
@@ -452,6 +457,11 @@ public class Transformer implements ClassFileTransformer {
      */
     public static boolean isVerbose()
     {
+        if (allowConfigUpdate()) {
+            synchronized (configLock) {
+                return verbose;
+            }
+        }
         return verbose;
     }
 
@@ -461,6 +471,11 @@ public class Transformer implements ClassFileTransformer {
      */
     public static boolean isDumpCFG()
     {
+        if (allowConfigUpdate()) {
+            synchronized (configLock) {
+                return dumpCFG;
+            }
+        }
         return dumpCFG;
     }
 
@@ -470,6 +485,11 @@ public class Transformer implements ClassFileTransformer {
      */
     public static boolean isDumpCFGPartial()
     {
+        if (allowConfigUpdate()) {
+            synchronized (configLock) {
+                return dumpCFGPartial;
+            }
+        }
         return dumpCFGPartial;
     }
 
@@ -479,6 +499,11 @@ public class Transformer implements ClassFileTransformer {
      */
     public static boolean isDebug()
     {
+        if (allowConfigUpdate()) {
+            synchronized (configLock) {
+                return debug || verbose;
+            }
+        }
         return debug || verbose;
     }
 
@@ -488,6 +513,11 @@ public class Transformer implements ClassFileTransformer {
      */
     public static boolean isCompileToBytecode()
     {
+        if (allowConfigUpdate()) {
+            synchronized (configLock) {
+                return compileToBytecode;
+            }
+        }
         return compileToBytecode;
     }
 
@@ -497,7 +527,35 @@ public class Transformer implements ClassFileTransformer {
      */
     public static boolean skipOverrideRules()
     {
+        if (allowConfigUpdate()) {
+            synchronized (configLock) {
+                return skipOverrideRules;
+            }
+        }
         return skipOverrideRules;
+    }
+
+    /**
+     * check whether changes to org.jboss.byteman.* system properties will affect the agent configuration.
+     * @return true if changes will affect the agent configuration otherwise false
+     */
+    public static boolean allowConfigUpdate()
+    {
+        return allowConfigUpdate;
+    }
+
+    /**
+     * notify a change to an org.jboss.byteman.* system property so that the agent can choose to update its
+     * configuration. n.b. this method is not synchronized because there is an implicit assumption that it is
+     * called from the the listener thread immediately after it has updated the property and that no other
+     * thread will modify org.jboss.byteman.* properties
+     * @param property an org.jboss.byteman.* system property which has been updated.
+     */
+    public void updateConfiguration(String property)
+    {
+        if (allowConfigUpdate() && property.startsWith(BYTEMAN_PACKAGE_PREFIX)) {
+            checkConfiguration(property);
+        }
     }
 
     /**
@@ -876,68 +934,209 @@ public class Transformer implements ClassFileTransformer {
 
     protected final ScriptRepository scriptRepository;
 
+    /* configuration values defined via system property settings */
+
     /**
      *  switch to control verbose output during rule processing
      */
-    private final static boolean verbose = (System.getProperty(VERBOSE) != null);
+    private static boolean verbose = computeVerbose();
 
     /**
      *  switch to control control flow graph output during rule processing
      */
-    private final static boolean dumpCFGPartial = (System.getProperty(DUMP_CFG_PARTIAL) != null);
+    private static boolean dumpCFGPartial = computeDumpCFGPartial();
 
     /**
      *  switch to control control flow graph output during rule processing
      */
-    private final static boolean dumpCFG = (dumpCFGPartial || (System.getProperty(DUMP_CFG) != null));
+    private static boolean dumpCFG = computeDumpCFG();
 
     /**
      *  switch to control debug output during rule processing
      */
-    private final static boolean debug = (System.getProperty(DEBUG) != null);
+    private static boolean debug = computeDebug();
 
     /**
      *  switch to control whether rules are compiled to bytecode or not
      */
-    private final static boolean compileToBytecode =
-            (System.getProperty(COMPILE_TO_BYTECODE) != null ||
-                    System.getProperty(COMPILE_TO_BYTECODE_COMPATIBILITY) != null);
+    private static boolean compileToBytecode = computeCompileToBytecode();
 
     /**
      *  switch to control whether rules are injected into overriding methods
      */
-    private final static boolean skipOverrideRules =(System.getProperty(SKIP_OVERRIDE_RULES) != null);
+    private static boolean skipOverrideRules = computeSkipOverrideRules();
 
     /**
      *  switch to control dumping of generated bytecode to .class files
      */
-    private final static boolean dumpGeneratedClasses = (System.getProperty(DUMP_GENERATED_CLASSES) != null);
+    private static boolean dumpGeneratedClasses = computeDumpGeneratedClasses();
 
     /**
      *  directory in which to dump generated bytecode .class files (defaults to "."
      */
-    private final static String dumpGeneratedClassesDir;
+    private static String dumpGeneratedClassesDir = computeDumpGeneratedClassesDir();
 
     /**
      *  switch to control whether transformations will be applied to java.lang.* classes
      */
-    private final static boolean transformAll =
-            (System.getProperty(TRANSFORM_ALL) != null || System.getProperty(TRANFORM_ALL_COMPATIBILITY) != null);
+    private static boolean transformAll = computeTransformAll();
 
-    static {
+    /**
+     * master switch which determines whether or not config values can be updated
+     */
+    private static boolean allowConfigUpdate = (System.getProperty(ALLOW_CONFIG_UPDATE) != null);
+
+    /**
+     * lock object used to control getters and setters when allowConfigUpdate is true
+     */
+
+    private static Object configLock = new Object();
+
+    /* methods which compute values to be used for the verbose configuration setting */
+
+    private static boolean computeVerbose()
+    {
+        return System.getProperty(VERBOSE) != null;
+    }
+
+    private static boolean computeDumpCFGPartial()
+    {
+        return System.getProperty(DUMP_CFG_PARTIAL) != null;
+    }
+
+    private static boolean computeDumpCFG()
+    {
+        return System.getProperty(DUMP_CFG) != null || System.getProperty(DUMP_CFG_PARTIAL) != null;
+    }
+
+    private static boolean computeDebug()
+    {
+        return System.getProperty(DEBUG) != null;
+    }
+
+    private static boolean computeCompileToBytecode()
+    {
+        return System.getProperty(COMPILE_TO_BYTECODE) != null ||
+                System.getProperty(COMPILE_TO_BYTECODE_COMPATIBILITY) != null;
+    }
+
+    private static boolean computeSkipOverrideRules()
+    {
+        return System.getProperty(SKIP_OVERRIDE_RULES) != null;
+    }
+
+    public static boolean computeDumpGeneratedClasses()
+    {
+        return System.getProperty(DUMP_GENERATED_CLASSES) != null;
+    }
+
+    public static String computeDumpGeneratedClassesDir()
+    {
         String userDir = System.getProperty(DUMP_GENERATED_CLASSES_DIR);
         if (userDir != null) {
             File userFile = new File(userDir);
             if (userFile.exists() && userFile.isDirectory() && userFile.canWrite()) {
-                dumpGeneratedClassesDir = userDir;
+                return userDir;
             } else {
-                dumpGeneratedClassesDir = ".";
+                return ".";
             }
         } else {
-            dumpGeneratedClassesDir =  ".";
+            return ".";
         }
     }
 
+    private static boolean computeTransformAll()
+    {
+        return System.getProperty(TRANSFORM_ALL) != null || System.getProperty(TRANSFORM_ALL_COMPATIBILITY) != null;
+    }
+
+    private void checkConfiguration(String property)
+    {
+        // n.b. this needs to be kept up to date with each new config setting that is added
+
+        if (VERBOSE.equals(property)) {
+            boolean value = computeVerbose();
+            synchronized (configLock) {
+                verbose = value;
+            }
+            return;
+        }
+
+        /*
+         * hmm. don't think we want to allow this to be overridden
+        if (DUMP_CFG_PARTIAL.equals(property)) {
+            boolean value = computeDumpCFGPartial();
+            boolean value2 = computeDumpCFG();
+            synchronized (configLock) {
+                dumpCFGPartial = value;
+                dumpCFG = value2;
+            }
+            return;
+        }
+         */
+
+        /*
+         * hmm. don't think we want to allow this to be overridden
+        if (DUMP_CFG.equals(property)) {
+            boolean value = computeDumpCFG();
+            synchronized (configLock) {
+                dumpCFG = value;
+            }
+            return;
+        }
+         */
+
+        if (DEBUG.equals(property)) {
+            boolean value = computeDumpCFG();
+            synchronized (configLock) {
+                debug = value;
+            }
+            return;
+        }
+
+        // n.b. this deliberately cannot be mixed with the old compatibility property -- user beware!
+        if (COMPILE_TO_BYTECODE.equals(property)) {
+            boolean value = computeCompileToBytecode();
+            synchronized (configLock) {
+                compileToBytecode = value;
+            }
+        }
+
+        /*
+         * hmm. don't think we want to allow this to be overridden
+        if (SKIP_OVERRIDE_RULES.equals(property)) {
+            boolean value = computeSkipOverrideRules();
+            synchronized (configLock) {
+                skipOverrideRules = value;
+            }
+            return;
+        }
+         */
+
+        if (DUMP_GENERATED_CLASSES.equals(property)) {
+            boolean value = computeDumpGeneratedClasses();
+            synchronized (configLock) {
+                dumpGeneratedClasses = value;
+            }
+        }
+
+        if (DUMP_GENERATED_CLASSES_DIR.equals(property)) {
+            String value = computeDumpGeneratedClassesDir();
+            synchronized (configLock) {
+                dumpGeneratedClassesDir = value;
+            }
+        }
+
+        if (TRANSFORM_ALL.equals(property)) {
+            boolean value = computeTransformAll();
+            synchronized (configLock) {
+                transformAll = value;
+            }
+        }
+    }
+
+    /* helper methods to dump class files */
+    
     private static void dumpClass(String fullName, byte[] bytes)
     {
         dumpClass(fullName, bytes, null);

@@ -409,6 +409,8 @@ public class TransformListener extends Thread
                 	System.clearProperty(name);
                 	out.append("Deleted system property [" + name + "]\n");
                 }
+                // ok, now tell the transformer a property has changed
+                retransformer.updateConfiguration(name);
             } catch (Exception e) {
                 out.append("EXCEPTION ");
                 out.append("Unable to set system property [" + line + "]\n");
