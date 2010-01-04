@@ -58,11 +58,11 @@ public class Transformer implements ClassFileTransformer {
         this.isRedefine = isRedefine;
         scriptRepository = new ScriptRepository(skipOverrideRules());
 
-        Iterator<String> iter = scriptTexts.iterator();
-        int scriptIdx = 0;
-        while (iter.hasNext()) {
-            String scriptText = iter.next();
-            String file = scriptPaths.get(scriptIdx);
+        Iterator<String> scritpsIter = scriptTexts.iterator();
+        Iterator<String> filesIter = scriptPaths.iterator();
+        while (scritpsIter.hasNext()) {
+            String scriptText = scritpsIter.next();
+            String file = filesIter.next();
             List<RuleScript> ruleScripts = scriptRepository.processScripts(scriptText, file);
             for (RuleScript ruleScript : ruleScripts) {
                 String name = ruleScript.getName();
