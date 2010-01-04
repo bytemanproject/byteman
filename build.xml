@@ -24,6 +24,9 @@
     <!-- the directory in which your installed app server resides -->
     <property environment="env"/>
 
+    <!-- version string stamped inside the manifests -->
+    <property name="version" value="1.2.0.2"/>
+
     <property name="ext.asm.jars" value="asm-all-3.0.jar"/>
 
     <!-- locations for inputs ot build process-->
@@ -138,11 +141,15 @@
          <unjar src="${ext.lib.dir}/asm-all-3.0.jar" dest="${build.classes.dir}"/>
          <jar jarfile="${build.lib.dir}/${byteman.jar}" manifest="${manifest.file}">
              <fileset dir="${build.classes.dir}" includes="**/*"/>
+             <manifest>
+                 <attribute name="Implementation-Version" value="${version}"/>
+             </manifest>
          </jar>
          <jar jarfile="${build.lib.dir}/${byteman-submit.jar}">
              <fileset dir="${build.classes.dir}" includes="**/Submit*.class"/>
              <manifest>
                  <attribute name="Main-Class" value="org.jboss.byteman.agent.submit.Submit"/>
+                 <attribute name="Implementation-Version" value="${version}"/>
              </manifest>
          </jar>
     </target>

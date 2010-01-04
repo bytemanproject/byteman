@@ -392,6 +392,12 @@ public class Transformer implements ClassFileTransformer {
      * system property which turns off injection into overriding methods
      */
     public static final String SKIP_OVERRIDE_RULES = BYTEMAN_PACKAGE_PREFIX + "skip.override.rules";
+    
+    /**
+     * system property which enables the restriction that only byteman specific system properties
+     * will be gettable/settable via a client using the LISTSYSPROPS and SETSYSPROPS commands.
+     */
+    public static final String SYSPROPS_STRICT_MODE = BYTEMAN_PACKAGE_PREFIX + "sysprops.strict";
 
 
     /**

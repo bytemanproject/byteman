@@ -26,6 +26,7 @@ package org.jboss.byteman.rule.helper;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.synchronization.*;
+import org.jboss.byteman.synchronization.Timer;
 import org.jboss.byteman.agent.Transformer;
 
 import java.io.*;
@@ -155,7 +156,7 @@ public class Helper
                 // need to do the close while synchornized so we ensure an open cannot
                 // proceed until we have flushed all changes to disk
                 ps.close();
-                traceMap.put(identifier, null);
+                traceMap.remove(identifier);
                 return true;
             }
         }
@@ -813,7 +814,7 @@ public class Helper
         synchronized (counterMap) {
             Counter counter = counterMap.get(o);
             if  (counter != null) {
-                counterMap.put(o, null);
+                counterMap.remove(o);
                 return true;
             } else {
                 return false;
@@ -872,6 +873,79 @@ public class Helper
                 counterMap.put(o, counter);
             }
             return counter.decrement();
+        }
+    }
+
+    // timer support
+    /**
+     * create a timer identified by the given object
+     * @param o an identifier used to refer to the timer in future
+     * @return true if a new timer was created and false if one already existed under the given identifier
+     */
+    public boolean createTimer(Object o)
+    {
+        synchronized (timerMap) {
+            Timer timer = timerMap.get(o);
+            if  (timer != null) {
+                return false;
+            } else {
+                timerMap.put(o, new Timer());
+                return true;
+            }
+        }
+    }
+
+    /**
+     * delete a timer identified by the given object
+     * @param o the identifier for the timer
+     * @return true if a timer was deleted and false if no timer existed under the given identifier
+     */
+    public boolean deleteTimer(Object o)
+    {
+        synchronized (timerMap) {
+            Timer timer = timerMap.get(o);
+            if  (timer != null) {
+                timerMap.remove(o);
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    /**
+     * get the elapsed time from the start (or last reset) of timer associated with given identifier,
+     * creating a new one if none exists
+     * @param o the identifier for the timer
+     * @return the elapsed time since the start (or reset) of the timer
+     */
+    public long getElapsedTimeFromTimer(Object o)
+    {
+        synchronized (timerMap) {
+            Timer timer = timerMap.get(o);
+            if (timer == null) {
+                timer = new Timer();
+                timerMap.put(o, timer);
+            }
+            return timer.getElapsedTime();
+        }
+    }
+
+    /**
+     * reset the timer associated with given identifier, creating a new one
+     * if none exists
+     * @param o the identifier for the timer
+     * @return the current elapsed value of the timer before the reset
+     */
+    public long resetTimer(Object o)
+    {
+        synchronized (timerMap) {
+            Timer timer = timerMap.get(o);
+            if (timer == null) {
+                timer = new Timer();
+                timerMap.put(o, timer);
+            }
+            return timer.reset();
         }
     }
 
@@ -1023,6 +1097,11 @@ public class Helper
      */
     private static HashMap<Object, Rendezvous> rendezvousMap = new HashMap<Object, Rendezvous>();
 
+    /**
+     * a hash map used to identify timer from their identifying objects
+     */
+    private static HashMap<Object, Timer> timerMap = new HashMap<Object, Timer>();
+    
     // initialise the trace map so it contains the system  output and error keyed under "out" and "err"
 
     static {
