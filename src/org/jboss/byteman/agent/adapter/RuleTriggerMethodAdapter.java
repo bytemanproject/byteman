@@ -28,7 +28,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.Method;
-import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.rule.binding.Bindings;
 import org.jboss.byteman.rule.binding.Binding;
@@ -55,6 +54,7 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         this.argumentTypes = Type.getArgumentTypes(descriptor);
         this.argLocalIndices = new int[argumentTypes.length];
         this.bindingsDone = false;
+        this.bindReturnValue = false;
     }
 
     private void setBindingIndices()
@@ -109,35 +109,49 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
             if (binding.isParam()) {
                 callArrayBindings.add(binding);
             } else if (binding.isReturn()) {
-                // at some point we will allow reference to the current return value so we need
-                // to be sure that the method has a non-void return type and that the location
-                // specifier is AT RETURN but for now we do nothing
+                // in order to be able to add the return value to the args array
+                // we have to add a local var to store the return value so track that requirement
+                bindReturnValue = true;
+                callArrayBindings.add(binding);
             }
         }
         // we don't have to do this but it makes debgging easier
         
         if (true) {
             // ok now sort the callArrayBindings for later use
+            // we sort param bindings before local bindings before the return binding
+            // within param bindings we sort by param idx
+            // within local bindings we sort by local var idx
 
             Comparator<Binding> comparator = new Comparator<Binding>() {
                 public int compare(Binding b1, Binding b2)
                 {
                     if (b1.isParam()) {
                         if (b2.isParam()) {
+                            // sort by param index
                             int i1 = b1.getIndex();
                             int i2 = b2.getIndex();
                             return (i1 < i2 ? -1 : (i1 > i2 ? 1 : 0));
                         } else {
+                            // param bindings precede all other types
                             return -1;
                         }
-                    } else {
+                    } else if (b1.isLocalVar()){
                         if (b2.isParam()) {
+                            // param bindings precede all other types
                             return 1;
-                        } else {
+                        } else if (b2.isLocalVar()) {
+                            // sort by local index
                             int i1 = b1.getLocalIndex();
                             int i2 = b2.getLocalIndex();
                             return (i1 < i2 ? -1 : (i1 > i2 ? 1 : 0));
+                        } else {
+                            // return var always sort last
+                            return 1;
                         }
+                    } else {
+                        // return var always sorts last
+                        return 1;
                     }
                 }
             };
@@ -193,13 +207,36 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         return null;
     }
 
-    public void doArgLoad()
+    private int doReturnSave()
     {
+        // ensure all the bindings have been processed
+        
         if (!bindingsDone) {
             setBindingIndices();
             bindingsDone = true;
         }
-        
+
+        // if we need to save the return value then allocate a slot for it now
+        // stash the value into the slot and return the slot idx otherwise return
+        // an invalid idx
+
+        if (bindReturnValue) {
+            int returnSlot = newLocal(returnType);
+            if (returnType.getSize() == 2) {
+                visitInsn(Opcodes.DUP2);
+            } else {
+                visitInsn(Opcodes.DUP);
+            }
+            storeLocal(returnSlot);
+
+            return returnSlot;
+        } else {
+            return -1;
+        }
+    }
+
+    private void doArgLoad(int returnSlot)
+    {
         if (callArrayBindings.size() ==  0) {
             push((org.objectweb.asm.Type)null);
             return;
@@ -219,10 +256,13 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                 int idx = binding.getIndex() - 1;
                 loadArg(idx);
                 box(argumentTypes[idx]);
-            } else {
+            } else if (binding.isLocalVar()){
                 int idx = binding.getLocalIndex();
                 loadLocal(idx);
                 box(getLocalType(idx));
+            } else {
+                loadLocal(returnSlot);
+                box(returnType);
             }
             arrayStore(objectType);
         }
@@ -251,6 +291,7 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
     private int[] argLocalIndices;
     private List<Binding> callArrayBindings;
     private boolean bindingsDone;
+    private boolean bindReturnValue;
 
     private CFG cfg;
 
@@ -707,13 +748,14 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         Label startLabel = newLabel();
         Label endLabel = newLabel();
         visitTriggerStart(startLabel);
+        int returnSlot = doReturnSave();
         push(key);
         if ((access & Opcodes.ACC_STATIC) == 0) {
             loadThis();
         } else {
             push((Type)null);
         }
-        doArgLoad();
+        doArgLoad(returnSlot);
         invokeStatic(ruleType, method);
         visitTriggerEnd(endLabel);
     }

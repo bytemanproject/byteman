@@ -221,6 +221,8 @@ Float = {Sign}? {PosFloat}
 
 "$" {Identifier} { return symbol(sym.DOLLAR, yytext()); }
 
+"$" "!" { return symbol(sym.DOLLAR, yytext()); }
+
 /* identifiers */
 
 {Identifier}		{ return symbol(sym.IDENTIFIER, yytext()); }

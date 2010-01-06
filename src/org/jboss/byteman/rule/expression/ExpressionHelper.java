@@ -177,8 +177,10 @@ public class ExpressionHelper
                 if (Character.isDigit(leading)) {
                     int index = Integer.valueOf(text.substring(1));
                     expr = new DollarExpression(rule, type, exprTree, index);
+                } else if (text.equals("$!")) {
+                    expr = new DollarExpression(rule, type, exprTree, DollarExpression.RETURN_VALUE_IDX);
                 } else {
-                    expr = new DollarExpression(rule, type, exprTree, text.substring(1));                    
+                    expr = new DollarExpression(rule, type, exprTree, text.substring(1));
                 }
             }
             break;
@@ -360,7 +362,11 @@ public class ExpressionHelper
             case DOLLAR:
             {
                 if (child1.getTag() == IDENTIFIER) {
-                    expr = new DollarExpression(rule, type, exprTree, child1.getText());
+                    if (child1.getText().equals("!")) {
+                        expr = new DollarExpression(rule, type, exprTree, DollarExpression.RETURN_VALUE_IDX);
+                    } else {
+                        expr = new DollarExpression(rule, type, exprTree, child1.getText());
+                    }
                 } else if (child1.getTag() == INTEGER_LITERAL) {
                     Integer intObject = (Integer) child1.getChild(0);
                     expr = new DollarExpression(rule, type, exprTree, intObject.intValue());

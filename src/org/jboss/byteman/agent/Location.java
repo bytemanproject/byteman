@@ -86,6 +86,12 @@ public abstract class Location
     public abstract RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext);
 
     /**
+     * identify the type of this location
+     * @return the type of this location
+     */
+    public abstract LocationType getLocationType();
+
+    /**
      * flag indicating that a field access location refers to field READ operations
      */
     public static final int ACCESS_READ = 1;
@@ -129,6 +135,10 @@ public abstract class Location
          */
         public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
             return new EntryTriggerAdapter(cv, transformContext);
+        }
+
+        public LocationType getLocationType() {
+            return LocationType.ENTRY;
         }
 
         public String toString() {
@@ -186,6 +196,10 @@ public abstract class Location
          */
         public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
             return new LineTriggerAdapter(cv, transformContext, targetLine);
+        }
+
+        public LocationType getLocationType() {
+            return LocationType.LINE;
         }
 
         public String toString() {
@@ -306,6 +320,22 @@ public abstract class Location
          */
         public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
             return new AccessTriggerAdapter(cv, transformContext, typeName, fieldName, flags, count, whenComplete);
+        }
+
+        public LocationType getLocationType() {
+            if ((flags & ACCESS_WRITE) != 0) {
+                if (whenComplete) {
+                    return LocationType.WRITE_COMPLETED;
+                } else {
+                    return LocationType.WRITE;
+                }
+            } else {
+                if (whenComplete) {
+                    return LocationType.READ_COMPLETED;
+                } else {
+                    return LocationType.READ;
+                }
+            }
         }
 
         public String toString() {
@@ -471,6 +501,14 @@ public abstract class Location
             return new InvokeTriggerAdapter(cv, transformContext, typeName, methodName, signature, count, whenComplete);
         }
 
+        public LocationType getLocationType() {
+            if (whenComplete) {
+                return LocationType.INVOKE_COMPLETED;
+            } else {
+                return LocationType.INVOKE;
+            }
+        }
+
         public String toString() {
             String text;
 
@@ -568,6 +606,14 @@ public abstract class Location
          */
         public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
             return new SynchronizeTriggerAdapter(cv, transformContext, count, whenComplete);
+        }
+
+        public LocationType getLocationType() {
+            if (whenComplete) {
+                return LocationType.SYNCHRONIZE_COMPLETED;
+            } else {
+                return LocationType.SYNCHRONIZE;
+            }
         }
 
         public String toString() {
@@ -674,6 +720,10 @@ public abstract class Location
             return new ThrowTriggerAdapter(cv, transformContext, typeName, count);
         }
 
+        public LocationType getLocationType() {
+            return LocationType.THROW;
+        }
+
         public String toString() {
             String text = "AT THROW";
 
@@ -722,6 +772,10 @@ public abstract class Location
             // a line adapter with line -1 will do the job
 
             return new ExitTriggerAdapter(cv, transformContext);
+        }
+
+        public LocationType getLocationType() {
+            return LocationType.EXIT;
         }
 
         public String toString() {

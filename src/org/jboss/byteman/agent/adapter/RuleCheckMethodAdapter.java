@@ -32,6 +32,7 @@ import org.jboss.byteman.rule.binding.Bindings;
 import org.jboss.byteman.rule.binding.Binding;
 import org.jboss.byteman.agent.Transformer;
 import org.jboss.byteman.agent.TransformContext;
+import org.jboss.byteman.agent.LocationType;
 
 import java.util.*;
 
@@ -93,7 +94,11 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                 }
             } else if (binding.isReturn()) {
                 // at some point we will allow reference to the current return value so we need
-                // to be sure that the methdo has a non-void return type bit for now we do nothing
+                // to be sure that the method has a non-void return type
+                if (rule.getTargetLocation().getLocationType() != LocationType.EXIT) {
+                    System.out.println("RuleCheckMethodAdapter.checkBindings : found return value binding $! in non-EXIT rule " + rule.getName());
+                    return false;
+                }
             } else if (binding.isLocalVar()){
                 // make sure we have a local variable with the correct name
                 String localVarName = binding.getName().substring(1);

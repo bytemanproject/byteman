@@ -314,7 +314,7 @@ public class Compiler implements Opcodes
         mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
         mv.visitInsn(POP);
         mv.visitJumpInsn(GOTO, l4);
-        // else if (binding.isParam() || binding.isLocalVar())
+        // else if (binding.isParam() || binding.isLocalVar() || binding.isReturn())
         mv.visitLabel(l5);
         Label l6 = new Label();
         mv.visitVarInsn(ALOAD, 5);
@@ -322,6 +322,9 @@ public class Compiler implements Opcodes
         mv.visitJumpInsn(IFNE, l6); // skip to then if true or drop throuogh to || branch if false
         mv.visitVarInsn(ALOAD, 5);
         mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "isLocalVar", "()Z");
+        mv.visitJumpInsn(IFNE, l6); // skip to then if true or drop throuogh to || branch if false
+        mv.visitVarInsn(ALOAD, 5);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "isReturn", "()Z");
         mv.visitJumpInsn(IFEQ, l4); // bypass this branch
         mv.visitLabel(l6);
         // then
