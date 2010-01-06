@@ -9,6 +9,9 @@ import java.net.InetSocketAddress;
 import java.io.*;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.jar.JarFile;
 
 /**
@@ -48,6 +51,7 @@ public class TransformListener extends Thread
                 e.printStackTrace();
                 return false;
             }
+
             theTransformListener = new TransformListener(retransformer);
 
             theTransformListener.start();
@@ -189,6 +193,16 @@ public class TransformListener extends Thread
                 listScripts(in, out);
             } else if (line.equals("DELETEALL")) {
                 purgeScripts(in, out);
+            } else if (line.equals("VERSION")) {
+                getVersion(in, out);
+            } else if (line.equals("LISTBOOT")) {
+                listBootJars(in, out);
+            } else if (line.equals("LISTSYS")) {
+                listSystemJars(in, out);
+            } else if (line.equals("LISTSYSPROPS")) {
+                listSystemProperties(in, out);
+            } else if (line.equals("SETSYSPROPS")) {
+                setSystemProperties(in, out);
             } else {
                 out.println("ERROR");
                 out.println("Unexpected command " + line);
@@ -205,6 +219,16 @@ public class TransformListener extends Thread
                 e.printStackTrace();
             }
         }
+    }
+
+    private void getVersion(BufferedReader in, PrintWriter out) {
+        String version = this.getClass().getPackage().getImplementationVersion();
+        if (version == null) {
+            version = "0";
+        }
+        out.println(version);
+        out.println("OK");
+        out.flush();
     }
 
     private void loadScripts(BufferedReader in, PrintWriter out) throws IOException
@@ -308,6 +332,98 @@ public class TransformListener extends Thread
     private void listScripts(BufferedReader in, PrintWriter out) throws Exception
     {
         retransformer.listScripts(out);
+        out.println("OK");
+        out.flush();
+    }
+
+    private void listBootJars(BufferedReader in, PrintWriter out) throws Exception
+    {
+        Set<String> jars = retransformer.getLoadedBootJars();
+        for (String jar : jars) {
+            out.println(new File(jar).getAbsolutePath());
+        }
+        out.println("OK");
+        out.flush();
+    }
+
+    private void listSystemJars(BufferedReader in, PrintWriter out) throws Exception
+    {
+        Set<String> jars = retransformer.getLoadedSystemJars();
+        for (String jar : jars) {
+            out.println(new File(jar).getAbsolutePath());
+        }
+        out.println("OK");
+        out.flush();
+    }
+
+    private void listSystemProperties(BufferedReader in, PrintWriter out) throws Exception
+    {
+        Properties sysProps = System.getProperties();
+        boolean strictMode = false;
+        if (Boolean.parseBoolean(sysProps.getProperty(Transformer.SYSPROPS_STRICT_MODE, "true"))) {
+            strictMode = true;
+        }
+                
+        for (Map.Entry<Object, Object> entry : sysProps.entrySet()) {
+            String name = entry.getKey().toString();
+            if (!strictMode || name.startsWith("org.jboss.byteman.")) {
+               String value = entry.getValue().toString();
+               out.println(name + "=" + value.replace("\n", "\\n").replace("\r", "\\r"));
+            }
+        }
+        out.println("OK");
+        out.flush();
+    }
+    
+    private void setSystemProperties(BufferedReader in, PrintWriter out) throws Exception
+    {
+        boolean strictMode = false;
+        if (Boolean.parseBoolean(System.getProperty(Transformer.SYSPROPS_STRICT_MODE, "true"))) {
+            strictMode = true;
+        }
+        
+        final String endMarker = "ENDSETSYSPROPS";
+        String line = in.readLine().trim();
+        while (line != null && !line.equals(endMarker)) {
+            try {
+                String[] nameValuePair = line.split("=", 2);
+                if (nameValuePair.length != 2 ) {
+                    throw new Exception("missing '='");
+                }
+                String name = nameValuePair[0];
+                String value = nameValuePair[1];
+                if (strictMode && !name.startsWith("org.jboss.byteman.")) {
+                    throw new Exception("strict mode is enabled, cannot set non-byteman system property");                    
+                }
+                if (name.equals(Transformer.SYSPROPS_STRICT_MODE) && !value.equals("true")) {
+                    // nice try
+                    throw new Exception("cannot turn off strict mode");
+                }
+
+                // everything looks good and we are allowed to set the system property now
+                if (value.length() > 0) {
+                	// "some.sys.prop=" means the client wants to delete the system property
+                	System.setProperty(name, value);                	
+                	out.append("Set system property [" + name + "] to value [" + value + "]\n");
+                } else {
+                	System.clearProperty(name);
+                	out.append("Deleted system property [" + name + "]\n");
+                }
+                // ok, now tell the transformer a property has changed
+                retransformer.updateConfiguration(name);
+            } catch (Exception e) {
+                out.append("EXCEPTION ");
+                out.append("Unable to set system property [" + line + "]\n");
+                out.append(e.toString());
+                out.append("\n");
+                e.printStackTrace(out);
+            }
+            line = in.readLine().trim();
+        }
+        if (line == null || !line.equals(endMarker)) {
+            out.append("ERROR\n");
+            out.append("Unexpected end of line reading system properties\n");
+        }
         out.println("OK");
         out.flush();
     }

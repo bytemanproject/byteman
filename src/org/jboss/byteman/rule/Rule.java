@@ -538,6 +538,10 @@ public class Rule
             }
         }
 
+        String returnTypeName = Type.parseMethodReturnType(triggerDescriptor);
+
+        returnType = typeGroup.create(returnTypeName);
+
         Iterator<Binding> iterator = bindings.iterator();
 
         while (iterator.hasNext()) {
@@ -554,12 +558,10 @@ public class Rule
                     paramType = typeGroup.createArray(paramType);
                 }
                 binding.setType(paramType);
+            } else if (binding.isReturn()) {
+                binding.setType(returnType);
             }
         }
-
-        String returnTypeName = Type.parseMethodReturnType(triggerDescriptor);
-
-        returnType = typeGroup.create(returnTypeName);
     }
 
     /**

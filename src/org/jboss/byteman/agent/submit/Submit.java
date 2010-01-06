@@ -9,11 +9,15 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A Java API that can be used to submit requests to a remote Byteman agent.
@@ -21,9 +25,9 @@ import java.util.Map;
  * This object provides a means by which you communicate with the Byteman agent at runtime allowing loading,
  * reloading, unloading of rules and listing of the current rule set and any successful or failed attempts
  * to inject, parse and typecheck the rules.
- * 
+ *
  * Note that this class is completely standalone and has no dependencies on any other Byteman class.
- * It can be shipped alone in a client jar to be used as a very small app. 
+ * It can be shipped alone in a client jar to be used as a very small app.
  */
 public class Submit
 {
@@ -82,6 +86,31 @@ public class Submit
     }
 
     /**
+     * Returns the version of the remote Byteman agent.
+     *
+     * @return the version of the remote Byteman agent
+     *
+     * @throws Exception
+     *             if the request failed
+     */
+    public String getAgentVersion() throws Exception {
+        String version = submitRequest("VERSION\n");
+        return (version != null) ? version.trim() : "0";
+    }
+
+    /**
+     * Returns the version of this Byteman submit client.
+     *
+     * @return the version of the submit client, or <code>null</code> if unknown
+     *
+     * @throws Exception
+     *             if the request failed
+     */
+    public String getClientVersion() throws Exception {
+        return this.getClass().getPackage().getImplementationVersion();
+    }
+
+    /**
      * Tells the Byteman agent to delete all rules. This will effectively revert
      * the Byteman's VM to its original state; that is, no Byteman injected
      * byte-code will be invoked.
@@ -108,6 +137,179 @@ public class Submit
     }
 
     /**
+     * Gets all deployed rules from the agent just as
+     * {@link #listAllRules()}, but will return the rules
+     * organized by script (i.e. rule file). Each "script",
+     * or rule file, has a set of rules associated with it.
+     *
+     * @return all the scripts deployed in the Byteman agent
+     *         the keys are the script names (typically this is
+     *         the filenames where the rule definitions were found);
+     *         the values are the rule definitions in the scripts
+     *
+     * @throws Exception
+     *             if the request failed
+     */
+    public Map<String, String> getAllScripts() throws Exception {
+        Map<String, String> rulesByScript = new HashMap<String, String>();
+
+        Pattern scriptHeaderPattern = Pattern.compile("# File (.*) line \\d+\\s*");
+        Pattern ruleNamePattern = Pattern.compile("\\s*RULE\\s+(.+)\\s*");
+        Pattern endRuleNamePattern = Pattern.compile("\\s*ENDRULE\\s*");
+        Matcher matcher;
+
+        String currentScriptName = null;
+        String currentRuleName = null; // will be non-null while we are parsing actual rule code
+        StringBuilder currentScriptText = new StringBuilder();
+
+        String allRules = listAllRules();
+        BufferedReader reader = new BufferedReader(new StringReader(allRules));
+        String line = reader.readLine();
+        while (line != null) {
+            matcher = scriptHeaderPattern.matcher(line);
+            if (matcher.matches()) {
+                // found a new script header; squirrel away the current script text
+                // and get ready for this new script
+                if (currentScriptName != null) {
+                    rulesByScript.put(currentScriptName, currentScriptText.toString());
+                }
+                currentScriptName = matcher.group(1);
+                if (rulesByScript.containsKey(currentScriptName)) {
+                    currentScriptText = new StringBuilder(rulesByScript.get(currentScriptName));
+                } else {
+                    currentScriptText = new StringBuilder();
+                }
+            } else {
+                matcher = ruleNamePattern.matcher(line);
+                if (matcher.matches()) {
+                    // found a new rule; definition that follows belong to this new rule
+                    currentRuleName = matcher.group(1);
+                    currentScriptText.append(line).append('\n');
+                } else {
+                    matcher = endRuleNamePattern.matcher(line);
+                    if (matcher.matches()) {
+                        // reached the end of the current rule
+                        if (currentRuleName != null) {
+                            currentRuleName = null;
+                            currentScriptText.append(line).append('\n');
+                        }
+                    } else {
+                        // line is basic rule text, a comment or miscellaneous.
+                        // if we are currently processing inside a rule, we'll add the line to the script
+                        // otherwise, we ignore the line since its not part of a rule definition.
+                        if (currentRuleName != null) {
+                            currentScriptText.append(line).append('\n');
+                        }
+                    }
+                }
+            }
+            line = reader.readLine();
+        }
+
+        // finish up by adding the last script we encountered
+        if (currentScriptName != null && currentScriptText.length() > 0) {
+            rulesByScript.put(currentScriptName, currentScriptText.toString());
+        }
+
+        return rulesByScript;
+    }
+
+    /**
+     * Given the content of a script (which will be one or more
+     * rule definitions), this will return each rule definition
+     * as an individual string within the returned list.
+     * The returned list will be ordered - that is, the first
+     * rule in the list is the first rule encountered in the script.
+     *
+     * One usage of this method is to pass in map values from the results
+     * of {@link #getAllScripts()} in case you need the scripts' individual rules.
+     *
+     * @param scriptContent
+     *            the actual content of a script (i.e. the rule definitions)
+     *
+     * @return all the rule definitions found in the given script
+     */
+    public List<String> splitAllRulesFromScript(String scriptContent) throws Exception {
+        List<String> rules = new ArrayList<String>();
+
+        if (scriptContent == null || scriptContent.length() == 0) {
+            return rules;
+        }
+
+        Pattern ruleNamePattern = Pattern.compile("\\s*RULE\\s+(.+)\\s*");
+        Pattern endRuleNamePattern = Pattern.compile("\\s*ENDRULE\\s*");
+        Matcher matcher;
+
+        String currentRuleName = null; // will be non-null while we are parsing actual rule code
+        StringBuilder currentRuleText = new StringBuilder();
+
+        BufferedReader reader = new BufferedReader(new StringReader(scriptContent));
+        String line = reader.readLine();
+        while (line != null) {
+            matcher = ruleNamePattern.matcher(line);
+            if (matcher.matches()) {
+                // found a new rule; definition that follows belong to this new rule
+                currentRuleName  = matcher.group(1);
+                currentRuleText = new StringBuilder();
+                currentRuleText.append(line).append('\n');
+            } else {
+                matcher = endRuleNamePattern.matcher(line);
+                if (matcher.matches()) {
+                    // reached the end of the current rule
+                    if (currentRuleName != null) {
+                        currentRuleName = null;
+                        currentRuleText.append(line).append('\n');
+                        rules.add(currentRuleText.toString());
+                    }
+                } else {
+                    // line is basic rule text, a comment or miscellaneous.
+                    // if we are currently processing inside a rule, we'll add the line to the script
+                    // otherwise, we ignore the line since its not part of a rule definition.
+                    if (currentRuleName != null) {
+                        currentRuleText.append(line).append('\n');
+                    }
+                }
+            }
+            line = reader.readLine();
+        }
+
+        // finish up by adding the last script we encountered.
+        // the only time this code would be needed is if we were missng an ENDRULE line,
+        // but that would not be valid rule code, so we should never really get inside this if-statement
+        if (currentRuleName != null && currentRuleText.length() > 0) {
+            rules.add(currentRuleText.toString());
+        }
+
+        return rules;
+    }
+
+
+    /**
+     * Given the content of an individual rule definition, this will
+     * return the name of that rule.
+     *
+     * @param ruleDefinition
+     *            the actual content of an individual rule
+     *
+     * @return the name of the given rule, or <code>null</code> if it could not be determined
+     */
+    public String determineRuleName(String ruleDefinition) throws Exception {
+        Pattern ruleNamePattern = Pattern.compile("\\s*RULE\\s+(.+)\\s*");
+        Matcher matcher;
+        String ruleName = null;
+        BufferedReader reader = new BufferedReader(new StringReader(ruleDefinition));
+        String line = reader.readLine();
+        while (line != null && ruleName == null) {
+            matcher = ruleNamePattern.matcher(line);
+            if (matcher.matches()) {
+                ruleName = matcher.group(1);
+            }
+            line = reader.readLine();
+        }
+        return ruleName;
+    }
+
+    /**
      * This adds the given list of files to the Byteman agent's <em>boot</em>
      * classloader. Note that if the Byteman agent is running on a remote
      * machine, the paths must resolve on that remote host (i.e. the file must
@@ -121,7 +323,7 @@ public class Submit
      * @throws Exception
      *             if the request failed
      */
-    public String addJarToBootClassloader(List<String> jarPaths) throws Exception {
+    public String addJarsToBootClassloader(List<String> jarPaths) throws Exception {
         if (jarPaths == null || jarPaths.size() == 0) {
             return "";
         }
@@ -149,7 +351,7 @@ public class Submit
      * @throws Exception
      *             if the request failed
      */
-    public String addJarToSystemClassloader(List<String> jarPaths) throws Exception {
+    public String addJarsToSystemClassloader(List<String> jarPaths) throws Exception {
         if (jarPaths == null || jarPaths.size() == 0) {
             return "";
         }
@@ -161,6 +363,46 @@ public class Submit
         str.append("ENDSYS\n");
 
         return submitRequest(str.toString());
+    }
+
+    /**
+     * Returns a list of jars that were added to the Byteman agent's boot classloader.
+     *
+     * @return list of jars that were added to the boot classloader
+     *
+     * @throws Exception
+     *             if the request failed
+     */
+    public List<String> getLoadedBootClassloaderJars() throws Exception {
+        String results = submitRequest("LISTBOOT\n");
+        List<String> jars = new ArrayList<String>();
+        BufferedReader reader = new BufferedReader(new StringReader(results));
+        String line = reader.readLine();
+        while (line != null) {
+            jars.add(line);
+            line = reader.readLine();
+        }
+        return jars;
+    }
+
+    /**
+     * Returns a list of jars that were added to the Byteman agent's system classloader.
+     *
+     * @return list of jars that were added to the system classloader
+     *
+     * @throws Exception
+     *             if the request failed
+     */
+    public List<String> getLoadedSystemClassloaderJars() throws Exception {
+        String results = submitRequest("LISTSYS\n");
+        List<String> jars = new ArrayList<String>();
+        BufferedReader reader = new BufferedReader(new StringReader(results));
+        String line = reader.readLine();
+        while (line != null) {
+            jars.add(line);
+            line = reader.readLine();
+        }
+        return jars;
     }
 
     /**
@@ -270,13 +512,66 @@ public class Submit
     }
 
     /**
-     * Submits the generic request string to the Byteman agent for processing.
+     * Sets system properties in the Byteman agent VM.
+     * If Byteman was configured for strict mode, only Byteman related
+     * system properties will be allowed to be set.
      * 
+     * @param propsToSet
+     *            system properties to set in the Byteman agent VM
+     *
+     * @return response from the Byteman agent
+     *
+     * @throws Exception
+     *             if the request failed
+     */
+    public String setSystemProperties(Properties propsToSet) throws Exception {
+        if (propsToSet == null || propsToSet.size() == 0) {
+            return "";
+        }
+
+        StringBuilder str = new StringBuilder("SETSYSPROPS\n");
+        for (Map.Entry<Object, Object> entry : propsToSet.entrySet()) {
+            str.append(entry.getKey()).append('=').append(entry.getValue()).append('\n');
+        }
+        str.append("ENDSETSYSPROPS\n");
+
+        return submitRequest(str.toString());
+    }
+
+    /**
+     * Returns the system properties set in the Byteman agent VM.
+     * If Byteman was configured for strict mode, only Byteman related
+     * system properties will be returned.
+     *
+     * @return system properties defined in the Byteman agent VM
+     *
+     * @throws Exception
+     *             if the request failed
+     */
+    public Properties listSystemProperties() throws Exception {
+        String results = submitRequest("LISTSYSPROPS\n");
+        Properties props = new Properties();
+        BufferedReader reader = new BufferedReader(new StringReader(results));
+        String line = reader.readLine();
+        while (line != null) {
+            String[] nameValuePair = line.split("=", 2);
+            if (nameValuePair.length != 2) {
+                throw new Exception("Invalid name/value pair in line [" + line + "]. Full response below:\n" + results);
+            }
+            props.setProperty(nameValuePair[0], nameValuePair[1].replace("\\n", "\n").replace("\\r", "\r"));
+            line = reader.readLine();
+        }
+        return props;
+    }
+
+    /**
+     * Submits the generic request string to the Byteman agent for processing.
+     *
      * @param request
      *            the request to submit
-     * 
+     *
      * @return the response that the Byteman agent replied with
-     * 
+     *
      * @throws Exception
      *             if the request failed
      */
@@ -401,11 +696,34 @@ public class Submit
 
         public String readResponse() throws Exception {
             StringBuilder str = new StringBuilder();
+            StringBuilder errorStr = null; // will be non-null if an error was reported by the agent
 
             String line = this.commInput.readLine();
             while (line != null && !line.trim().equals("OK")) {
-                str.append(line.trim()).append('\n');
+                line = line.trim();
+
+                if (line.startsWith("ERROR") || line.startsWith("EXCEPTION")) {
+                    if (errorStr == null) {
+                        errorStr = new StringBuilder();
+                    }
+                }
+
+                // if an error was detected, gobble up the text coming over the wire as part of the error message
+                if (errorStr != null) {
+                    errorStr.append(line).append('\n');
+                }
+
+                str.append(line).append('\n');
                 line = this.commInput.readLine();
+            }
+
+            if (errorStr != null) {
+                StringBuilder msg = new StringBuilder();
+                msg.append("The remote byteman agent reported an error:\n").append(errorStr);
+                if (!errorStr.toString().equals(str.toString())) {
+                    msg.append("\nThe full response received from the byteman agent follows:\n").append(str);
+                }
+                throw new Exception(msg.toString());
             }
 
             return str.toString();
@@ -425,6 +743,9 @@ public class Submit
         boolean deleteRules = false;
         boolean addBoot = false;
         boolean addSys = false;
+        boolean showVersion = false;
+        boolean showAddedClassloaderJars = false;
+        boolean sysProps = false;
         int optionCount = 0;
 
         while (startIdx < maxIdx && args[startIdx].startsWith("-")) {
@@ -454,9 +775,21 @@ public class Submit
                 addBoot = true;
                 startIdx ++;
                 optionCount++;
+            } else if (args[startIdx].equals("-v")) {
+                showVersion = true;
+                startIdx ++;
+                optionCount++;
+            } else if (args[startIdx].equals("-c")) {
+                showAddedClassloaderJars = true;
+                startIdx ++;
+                optionCount++;
             } else if (args[startIdx].equals("-s")) {
                 addSys = true;
                 startIdx ++;
+                optionCount++;
+            } else if (args[startIdx].equals("-y")) {
+                sysProps = true;
+                startIdx++;
                 optionCount++;
             } else {
                 break;
@@ -478,29 +811,73 @@ public class Submit
         List<String> argsList = null;
 
         try {
-            if (startIdx == maxIdx) {
-                // no args means list or delete all current scripts
-                if (deleteRules) {
-                    results = client.deleteAllRules();
+            if (showVersion) {
+                String agentVersion = client.getAgentVersion();
+                String clientVersion = client.getClientVersion();
+                results = "Agent Version: " + agentVersion + "\nClient Version: " + clientVersion;
+            } else if (showAddedClassloaderJars) {
+                List<String> bootJars = client.getLoadedBootClassloaderJars();
+                List<String> sysJars = client.getLoadedSystemClassloaderJars();
+                StringBuilder str = new StringBuilder();
+                str.append("Boot Classloader Jars:").append('\n');
+                if (bootJars.isEmpty()) {
+                    str.append("\t<none>\n");
                 } else {
-                    // the default behavior (or if -l was explicitly specified) is to do this
-                    results = client.listAllRules();
+                    for (String jar : bootJars) {
+                        str.append('\t').append(jar).append('\n');
+                    }
                 }
+                str.append("System Classloader Jars:").append('\n');
+                if (sysJars.isEmpty()) {
+                    str.append("\t<none>\n");
+                } else {
+                    for (String jar : sysJars) {
+                        str.append('\t').append(jar).append('\n');
+                    }
+                }
+                results = str.toString();
             } else {
-                argsList = new ArrayList<String>();
-                for (int i = startIdx; i < maxIdx; i++) {
-                    argsList.add(args[i]);
-                }
-                if (addBoot) {
-                    results = client.addJarToBootClassloader(argsList);
-                } else if (addSys) {
-                    results = client.addJarToSystemClassloader(argsList);
-                } else {
+                if (startIdx == maxIdx) {
+                    // no args means list or delete all current scripts or list sysprops
                     if (deleteRules) {
-                        results = client.deleteRulesFromFiles(argsList);
+                        results = client.deleteAllRules();
+                    } else if (sysProps) {
+                        Properties props = client.listSystemProperties();
+                        StringBuilder str = new StringBuilder();
+                        for (Map.Entry<Object, Object> prop : props.entrySet()) {
+                            str.append(prop.getKey()).append('=').append(prop.getValue()).append('\n');
+                        }
+                        results = str.toString();
                     } else {
                         // the default behavior (or if -l was explicitly specified) is to do this
-                        results = client.addRulesFromFiles(argsList);
+                        results = client.listAllRules();
+                    }
+                } else {
+                    argsList = new ArrayList<String>();
+                    for (int i = startIdx; i < maxIdx; i++) {
+                        argsList.add(args[i]);
+                    }
+                    if (addBoot) {
+                        results = client.addJarsToBootClassloader(argsList);
+                    } else if (addSys) {
+                        results = client.addJarsToSystemClassloader(argsList);
+                    } else if (sysProps) {
+                        Properties propsToSet = new Properties();
+                        for (String arg : argsList) {
+                            String[] nameValuePair = arg.split("=", 2);
+                            if (nameValuePair.length != 2) {
+                                throw new Exception("Invalid name/value pair: " + arg);
+                            }
+                            propsToSet.setProperty(nameValuePair[0], nameValuePair[1]);
+                        }
+                        results = client.setSystemProperties(propsToSet);
+                    } else {
+                        if (deleteRules) {
+                            results = client.deleteRulesFromFiles(argsList);
+                        } else {
+                            // the default behavior (or if -l was explicitly specified) is to do this
+                            results = client.addRulesFromFiles(argsList);
+                        }
                     }
                 }
             }
@@ -516,7 +893,7 @@ public class Submit
             e.printStackTrace();
             System.exit(1);
         }
-        
+
         System.out.println(results);
     }
 
@@ -524,6 +901,9 @@ public class Submit
     {
         System.out.println("usage : Submit [-p port] [-h hostname] [-l|-u] [scriptfile . . .]");
         System.out.println("        Submit [-p port] [-h hostname] [-b|-s] jarfile . . .");
+        System.out.println("        Submit [-p port] [-h hostname] [-c]");
+        System.out.println("        Submit [-p port] [-h hostname] [-y] [prop1[=[value1]]. . .]");
+        System.out.println("        Submit [-p port] [-h hostname] [-v]");
         System.out.println("        -p specifies listener port");
         System.out.println("        -h specifies listener host");
         System.out.println("        -l (default) with scriptfile(s) means load/reload all rules in scriptfile(s)");
@@ -532,6 +912,13 @@ public class Submit
         System.out.println("           with no scriptfile means unload all currently loaded rules");
         System.out.println("        -b with jarfile(s) means add jars to bootstrap classpath");
         System.out.println("        -s with jarfile(s) means add jars to system classpath");
+        System.out.println("        -c prints the jars that have been added to the system and boot classloaders");
+        System.out.println("        -y with no args list all byteman config system properties");
+        System.out.println("           with args modifies specified byteman config system properties");
+        System.out.println("             prop=value sets system property 'prop' to value");
+        System.out.println("             prop= sets system property 'prop' to an empty string");
+        System.out.println("             prop unsets system property 'prop'");
+        System.out.println("        -v prints the version of the byteman agent and this client");
         System.exit(exitCode);
     }
 }

@@ -37,6 +37,7 @@ import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 /**
  * an expression which identifies a static field reference
@@ -79,6 +80,11 @@ public class StaticExpression extends Expression
         } catch (NoSuchFieldException e) {
                 // oops
             throw new TypeException("StaticExpression.typeCheck : invalid field name " + fieldName + getPos());
+        }
+
+        if ((field.getModifiers() & Modifier.STATIC)== 0) {
+            // oops
+            throw new TypeException("StaticExpression.typeCheck : field is not static " + fieldName + getPos());
         }
 
         clazz = field.getType();

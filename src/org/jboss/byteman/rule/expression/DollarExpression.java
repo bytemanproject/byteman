@@ -55,8 +55,10 @@ public class DollarExpression extends Expression
     public DollarExpression(Rule rule, Type type, ParseNode token, int index)
     {
         super(rule, type, token);
-        if (index == -1) {
+        if (index == HELPER_IDX) {
             name = "$$";
+        } else if (index == RETURN_VALUE_IDX){
+            name = "$!";
         } else {
             name = "$" + Integer.toString(index);
         }
@@ -66,7 +68,7 @@ public class DollarExpression extends Expression
     public DollarExpression(Rule rule, Type type, ParseNode token, String name)
     {
         super(rule, type, token);
-        this.index = -2;
+        this.index = BINDING_IDX;
         this.name = "$" + name;
     }
 
@@ -120,7 +122,7 @@ public class DollarExpression extends Expression
     {
         int currentStack = currentStackHeights.stackCount;
 
-        if (index == -1) {
+        if (index == HELPER_IDX) {
             // reference to the current helper so just stack this
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             currentStackHeights.addStackCount(1);
@@ -161,5 +163,13 @@ public class DollarExpression extends Expression
     }
 
     private String name;
+    /**
+     * index is positive or zero if this is a reference to a method param and negative if this is a reference to
+     * the current helper, the return value on the stack in an AT EXIT rule or a local or BIND variable
+     */
     private int index;
+
+    public final static int HELPER_IDX = -1;
+    public final static int BINDING_IDX = -2;
+    public final static int RETURN_VALUE_IDX = -3;
 }

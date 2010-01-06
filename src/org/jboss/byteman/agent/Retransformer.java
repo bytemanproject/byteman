@@ -33,6 +33,9 @@ import java.io.PrintWriter;
  */
 public class Retransformer extends Transformer {
 
+    private Set<String> sysJars = new HashSet<String>();  // jar files that were loaded in the sys CL
+    private Set<String> bootJars = new HashSet<String>(); // jar files that were loaded in the boot CL
+
     /**
      * constructor allowing this transformer to be provided with access to the JVM's instrumentation
      * implementation
@@ -297,10 +300,38 @@ public class Retransformer extends Transformer {
     {
         if (isBoot) {
             inst.appendToBootstrapClassLoaderSearch(jarfile);
+            bootJars.add(jarfile.getName());
             out.println("append boot jar " + jarfile.getName());
         } else {
             inst.appendToSystemClassLoaderSearch(jarfile);
+            sysJars.add(jarfile.getName());
             out.println("append sys jar " + jarfile.getName());
         }
+    }
+
+    /**
+     * Returns jars that this retransformer was asked to
+     * {@link #appendJarFile(PrintWriter, JarFile, boolean) add} to the boot classloader.
+     * 
+     * Note that the returned set will not include those jars that were added to the
+     * instrumentor object at startup via the -javaagent command line argument.
+     * 
+     * @return set of jar pathnames for all jars loaded in the boot classloader
+     */
+    public Set<String> getLoadedBootJars() {
+        return new HashSet<String>(bootJars); // returns a copy
+    }
+
+    /**
+     * Returns jars that this retransformer was asked to
+     * {@link #appendJarFile(PrintWriter, JarFile, boolean) add} to the system classloader.
+     * 
+     * Note that the returned set will not include those jars that were added to the
+     * instrumentor object at startup via the -javaagent command line argument.
+     * 
+     * @return set of jar pathnames for all jars loaded in the system classloader
+     */
+    public Set<String> getLoadedSystemJars() {
+        return new HashSet<String>(sysJars); // returns a copy
     }
 }

@@ -156,7 +156,7 @@ public class MethodExpression extends Expression
         if (recipient == null) {
             if (rootType == null) {
                 Type ruleType = typeGroup.create(rule.getHelperClass().getCanonicalName());
-                recipient = new DollarExpression(rule, ruleType, token, -1);
+                recipient = new DollarExpression(rule, ruleType, token, DollarExpression.HELPER_IDX);
 
                 rootType = recipient.typeCheck(Type.UNDEFINED);
             }
