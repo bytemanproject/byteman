@@ -26,6 +26,9 @@
 #
 # usage: submit [-p port] [-h host] [-l|-u] [script1 . . . scriptN]
 #        submit [-p port] [-h host] [-b | -s] bootjar1 . . .
+#        submit [-p port] [-h host] -c
+#        submit [-p port] [-h host] -y [prop1[=[value1]]. . .]
+#        submit [-p port] [-h host] -v
 #   -p specifies the listener port (default 9091)
 #   -h specifies the listener host name (default localhost)
 #   -l (default) install rules in script1 . . . scriptN
@@ -36,6 +39,16 @@
 #   -b install jar files bootjar1 etc into bootstrap classpath
 #
 #   -s install jar files bootjar1 etc into system classpath
+#
+#   -c print the jars that have been added to the system and boot classloaders
+#
+#   -y with no args list all byteman config system properties
+#      with args modifies specified byteman config system properties
+#        prop=value sets system property 'prop' to value
+#        prop= sets system property 'prop' to an empty string
+#        prop unsets system property 'prop'
+#
+#   -v print the version of the byteman agent and this client 
 #
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then

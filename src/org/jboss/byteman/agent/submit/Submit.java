@@ -901,21 +901,24 @@ public class Submit
     {
         System.out.println("usage : Submit [-p port] [-h hostname] [-l|-u] [scriptfile . . .]");
         System.out.println("        Submit [-p port] [-h hostname] [-b|-s] jarfile . . .");
-        System.out.println("        Submit [-p port] [-h hostname] [-v]");
         System.out.println("        Submit [-p port] [-h hostname] [-c]");
-        System.out.println("        Submit [-p port] [-h hostname] [-y] [name=value.  . .]");
+        System.out.println("        Submit [-p port] [-h hostname] [-y] [prop1[=[value1]]. . .]");
+        System.out.println("        Submit [-p port] [-h hostname] [-v]");
         System.out.println("        -p specifies listener port");
         System.out.println("        -h specifies listener host");
-        System.out.println("        -v prints the version of the byteman agent and this client");
-        System.out.println("        -c prints the jars that have been added to the system and boot classloaders");
         System.out.println("        -l (default) with scriptfile(s) means load/reload all rules in scriptfile(s)");
         System.out.println("                     with no scriptfile means list all currently loaded rules");
         System.out.println("        -u with scriptfile(s) means unload all rules in scriptfile(s)");
         System.out.println("           with no scriptfile means unload all currently loaded rules");
         System.out.println("        -b with jarfile(s) means add jars to bootstrap classpath");
         System.out.println("        -s with jarfile(s) means add jars to system classpath");
-        System.out.println("        -y with name/value pairs means set system properties");
-        System.out.println("           with no name/value pairs means list system properties");
+        System.out.println("        -c prints the jars that have been added to the system and boot classloaders");
+        System.out.println("        -y with no args list all byteman config system properties");
+        System.out.println("           with args modifies specified byteman config system properties");
+        System.out.println("             prop=value sets system property 'prop' to value");
+        System.out.println("             prop= sets system property 'prop' to an empty string");
+        System.out.println("             prop unsets system property 'prop'");
+        System.out.println("        -v prints the version of the byteman agent and this client");
         System.exit(exitCode);
     }
 }
