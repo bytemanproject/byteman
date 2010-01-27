@@ -25,7 +25,7 @@
     <property environment="env"/>
 
     <!-- version string stamped inside the manifests -->
-    <property name="version" value="1.2.1"/>
+    <property name="version" value="1.2.2.SNAPSHOT"/>
 
     <property name="ext.asm.jars" value="asm-all-3.0.jar"/>
 
