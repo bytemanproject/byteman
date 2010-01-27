@@ -2,7 +2,6 @@ package org.jboss.byteman.tests.misc;
 
 import org.jboss.byteman.tests.Test;
 import org.jboss.byteman.tests.auxiliary.TestEntryExitAuxiliarySub;
-import org.jboss.byteman.tests.auxiliary.TestEntryExitAuxiliary;
 
 /**
  * Test class to ensure injection into interfaces with overriding works as expected
@@ -21,12 +20,15 @@ public class TestOverridingInterfaceInjection extends Test
         // an interface rule
 
         try {
-        TestEntryExitAuxiliary testAuxiliary;
+        // n.b. it is important that we do not employ the parent class TestEntryExitAuxiliary
+        // in the code here. that guarantees when we create the subclass instance here
+        // that the parent class has not yet been loaded. this verifies the fix to BYTEMAN-80
+        TestEntryExitAuxiliarySub testAuxiliarySub;
         log("creating TestEntryExitAuxiliarySub");
-        testAuxiliary = new TestEntryExitAuxiliarySub(this);
+        testAuxiliarySub = new TestEntryExitAuxiliarySub(this);
         log("created TestEntryExitAuxiliarySub");
         log("calling TestEntryExitAuxiliarySub.testMethod");
-        testAuxiliary.testMethod();
+        testAuxiliarySub.testMethod();
         log("called TestEntryExitAuxiliarySub.testMethod");
         } catch (Exception e) {
             log(e);
@@ -42,7 +44,7 @@ public class TestOverridingInterfaceInjection extends Test
         logExpected("inside TestEntryExitAuxiliary(Test)");
         logExpected("inside TestEntryExitAuxiliarySub(Test)");
         logExpected("created TestEntryExitAuxiliarySub");
-        // we see injected coede in the subclass method and then in the superclass method
+        // we see injected code in the subclass method and then in the superclass method
         logExpected("calling TestEntryExitAuxiliarySub.testMethod");
         logExpected("ENTRY triggered in ^TestInterface.testMethod");
         logExpected("inside TestEntryExitAuxiliarySub.testMethod");

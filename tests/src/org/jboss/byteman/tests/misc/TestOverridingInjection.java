@@ -2,7 +2,6 @@ package org.jboss.byteman.tests.misc;
 
 import org.jboss.byteman.tests.Test;
 import org.jboss.byteman.tests.auxiliary.TestEntryExitAuxiliarySub;
-import org.jboss.byteman.tests.auxiliary.TestEntryExitAuxiliary;
 
 /**
  * Test class to ensure injection into overriding methods works as expected
@@ -20,12 +19,16 @@ public class TestOverridingInjection extends Test
         // rule trace into both constructors. ditto for both implementations of testMethod.
 
         try {
-        TestEntryExitAuxiliary testAuxiliary;
+
+        // n.b. it is important that we do not employ the parent class TestEntryExitAuxiliary
+        // in the code here. that guarantees when we create the subclass instance here
+        // that the parent class has not yet been loaded. this verifies the fix to BYTEMAN-80
+        TestEntryExitAuxiliarySub testAuxiliarySub;
         log("creating TestEntryExitAuxiliarySub");
-        testAuxiliary = new TestEntryExitAuxiliarySub(this);
+        testAuxiliarySub = new TestEntryExitAuxiliarySub(this);
         log("created TestEntryExitAuxiliarySub");
         log("calling TestEntryExitAuxiliarySub.testMethod");
-        testAuxiliary.testMethod();
+        testAuxiliarySub.testMethod();
         log("called TestEntryExitAuxiliarySub.testMethod");
         } catch (Exception e) {
             log(e);
