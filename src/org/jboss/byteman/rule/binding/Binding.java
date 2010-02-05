@@ -109,7 +109,7 @@ public class Binding extends RuleElement
     {
         if (isBindVar()) {
             Object result = value.interpret(helper);
-            helper.bindVariable(getName(), result);
+            helper.setBinding(getName(), result);
             return result;
         }
         return null;
@@ -134,8 +134,8 @@ public class Binding extends RuleElement
             if (type.isPrimitive()) {
                 compileBox(Type.boxType(type), mv, currentStackHeights, maxStackHeights);
             }
-            // compile a bindVariable call pops 3 from stack height
-            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "bindVariable", "(Ljava/lang/String;Ljava/lang/Object;)V");
+            // compile a setBinding call pops 3 from stack height
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V");
             currentStackHeights.addStackCount(-3);
 
             // check the max height was enough for 3 extra values

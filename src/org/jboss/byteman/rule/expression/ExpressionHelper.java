@@ -62,10 +62,11 @@ public class ExpressionHelper
         //                   (INTEGER_LITERAL)
         //                   (FLOAT_LITERAL)
         //                   (STRING_LITERAL)
-        //                   (PATH simple_name)
-        //                   (PATH simple_name path)
         //                   (IDENTIFIER simple_name)
         //                   (IDENTIFIER simple_name path)
+        //                   (DOLLAR string)
+        //                   (ASSIGN simple_name expr)
+        //                   (ASSIGN dollar_expr expr)
 
         int tag = exprTree.getTag();
         Expression expr;
@@ -184,6 +185,18 @@ public class ExpressionHelper
                 }
             }
             break;
+            case ASSIGN:
+            {
+                ParseNode child0 = (ParseNode) exprTree.getChild(0);
+                ParseNode child1 = (ParseNode) exprTree.getChild(1);
+                // the left hand side is special but nay expression will do for the right hand side
+
+                AssignableExpression left = createAssignableExpression(rule, bindings, child0, type);;
+                Expression right = createExpression(rule, bindings, child1, type);
+
+                expr = new AssignExpression(rule, exprTree, left, right);
+            }
+            break;
             case UNOP:
             {
                 expr = createUnaryExpression(rule, bindings, exprTree, type);
@@ -224,10 +237,10 @@ public class ExpressionHelper
         return expr;
     }
 
-    public static Expression createFieldExpression(Rule rule, Bindings bindings, ParseNode fieldTree, ParseNode targetTree, Type type)
+    public static AssignableExpression createFieldExpression(Rule rule, Bindings bindings, ParseNode fieldTree, ParseNode targetTree, Type type)
             throws TypeException
     {
-        Expression expr;
+        AssignableExpression fieldExpr;
         Expression target;
         String[] pathList;
 
@@ -241,9 +254,9 @@ public class ExpressionHelper
             target = createExpression(rule, bindings, targetTree, Type.UNDEFINED);
             pathList = null;
         }
-        expr = new FieldExpression(rule, type, fieldTree, fieldTree.getText(), target, pathList);
+        fieldExpr = new FieldExpression(rule, type, fieldTree, fieldTree.getText(), target, pathList);
 
-        return expr;
+        return fieldExpr;
     }
 
     public static Expression createCallExpression(Rule rule, Bindings bindings, ParseNode selectorTree, ParseNode recipientTree, ParseNode argTree, Type type)
@@ -534,6 +547,60 @@ public class ExpressionHelper
             {
                 throw new TypeException("ExpressionHelper.createTernaryExpression : unexpected token type " + exprTree.getTag() + " for expression " + exprTree.getText() + "" + exprTree.getPos());
             }
+        }
+
+        return expr;
+    }
+
+    public static AssignableExpression createAssignableExpression(Rule rule, Bindings bindings, ParseNode exprTree, Type type)
+            throws TypeException
+    {
+        AssignableExpression expr;
+        // we expect expr =  (FIELD expr simple_name)
+        //                   (IDENTIFIER simple_name)
+        //                   (DOLLAR string)
+        // we allow assignment to identifiers or dollar symbols
+        int tag = exprTree.getTag();
+        switch(tag) {
+            case FIELD:
+            {
+                ParseNode child0 = (ParseNode) exprTree.getChild(0);
+                ParseNode child1 = (ParseNode) exprTree.getChild(1);
+                expr = createFieldExpression(rule, bindings, child0, child1, type);
+            }
+            break;
+            case IDENTIFIER:
+            {
+                String name = (String)exprTree.getChild(0);
+                ParseNode child1 = (ParseNode)exprTree.getChild(1);
+
+                if (child1 == null && bindings.lookup(name) != null) {
+                    // a clear cut direct variable reference
+                    expr = new Variable(rule, type, exprTree, name);
+                } else {
+                    // we should only get these as identifiers for binding types or throw types which are
+                    // explicitly caught by the bindings or throw processing case handlers so this is an error
+
+                    throw new TypeException("ExpressionHelper.createAssignableExpression : unexpected IDENTIFIER " + exprTree.getText() + " in "  + exprTree.getPos());
+                }
+            }
+            break;
+            case DOLLAR:
+            {
+                String text = (String)exprTree.getChild(0);
+                char leading = text.charAt(1);
+                if (Character.isDigit(leading)) {
+                    int index = Integer.valueOf(text.substring(1));
+                    expr = new DollarExpression(rule, type, exprTree, index);
+                } else if (text.equals("$!")) {
+                    expr = new DollarExpression(rule, type, exprTree, DollarExpression.RETURN_VALUE_IDX);
+                } else {
+                    expr = new DollarExpression(rule, type, exprTree, text.substring(1));
+                }
+            }
+            break;
+            default:
+                throw new TypeException("ExpressionHelper.createAssignableExpression : unexpected token type " + tag + " for lhs of assignment " + exprTree.getPos());
         }
 
         return expr;

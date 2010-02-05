@@ -123,9 +123,12 @@ public class Action extends RuleElement
             boolean maybePop = !(expr instanceof ReturnExpression || expr instanceof ThrowExpression);
             if (maybePop && resultType != Type.VOID) {
                 int expected = (resultType.getNBytes() > 4 ? 2 : 1);
-                for (int i = 0; i < expected; i++) {
+                if (expected == 1) {
                     mv.visitInsn(Opcodes.POP);
                     currentStackHeights.addStackCount(-1);
+                } else if (expected == 2) {
+                    mv.visitInsn(Opcodes.POP2);
+                    currentStackHeights.addStackCount(-2);
                 }
             }
         }

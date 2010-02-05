@@ -41,7 +41,7 @@ public interface HelperAdapter
 {
     public void execute(Bindings bindings, Object recipient, Object[] args)
             throws ExecuteException;
-    public void bindVariable(String name, Object value);
+    public void setBinding(String name, Object value);
     public Object getBinding(String name);
     public String getName();
 }

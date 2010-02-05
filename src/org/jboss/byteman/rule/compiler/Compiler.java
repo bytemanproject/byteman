@@ -359,10 +359,10 @@ public class Compiler implements Opcodes
         mv.visitEnd();
         }
         {
-        // create the bindVariable method
+        // create the setBinding method
         //
-        // public void bindVariable(String name, Object value)
-        mv = cw.visitMethod(ACC_PUBLIC, "bindVariable", "(Ljava/lang/String;Ljava/lang/Object;)V", null, null);
+        // public void setBinding(String name, Object value)
+        mv = cw.visitMethod(ACC_PUBLIC, "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V", null, null);
         mv.visitCode();
         //  bindingMap.put(name, value);
         mv.visitVarInsn(ALOAD, 0);

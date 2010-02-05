@@ -50,7 +50,7 @@ import java.io.StringWriter;
  *
  * At present there are no special variables but we may need to add some later
  */
-public class DollarExpression extends Expression
+public class DollarExpression extends AssignableExpression
 {
     public DollarExpression(Rule rule, Type type, ParseNode token, int index)
     {
@@ -152,6 +152,80 @@ public class DollarExpression extends Expression
             }
             // make sure we have room for 2 working slots
             int overflow = (currentStack + 2 - maxStackHeights.stackCount);
+            if (overflow > 0) {
+                maxStackHeights.addStackCount(overflow);
+            }
+        }
+    }
+
+    @Override
+    public Object interpretAssign(HelperAdapter helperAdapter, Object value) throws ExecuteException
+    {
+        helperAdapter.setBinding(name, value);
+        return value;
+    }
+
+    @Override
+    public void compileAssign(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        int currentStack = currentStackHeights.stackCount;
+        int size = ((type.getNBytes() > 4) ? 2 : 1);
+        int max;
+
+        if (index == HELPER_IDX) {
+            // not allowed to reassign the helper binding
+            throw new CompileException("DollarExpression.compileAssign : invalid assignment to helper binding $$");
+        } else {
+            // value to be assigned is TOS and will already be coerced to the correct value type
+            // copy it so we leave it as a a return value on the stack
+            if (size == 2) {
+                mv.visitInsn(Opcodes.DUP2);
+            } else {
+                mv.visitInsn(Opcodes.DUP);
+            }
+            // stack the current helper then insert it below the value
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            if (size == 2) {
+                // use a DUP_X2 to push a copy below the value then pop the redundant value
+                mv.visitInsn(Opcodes.DUP_X2);
+                mv.visitInsn(Opcodes.POP);
+            } else {
+                // we can just swap the two values
+                mv.visitInsn(Opcodes.SWAP);
+            }
+            // stack the name for the variable and swap below the value
+            mv.visitLdcInsn(name);
+            if (size == 2) {
+                // use a DUP_X2 to push a copy below the value then pop the redundant value
+                mv.visitInsn(Opcodes.DUP_X2);
+                // this is the high water mark
+                // at this point the stack has gone from [ .. val1 val2]  to [.. val1 val2 helper name val1 val2 name]
+                max = 3 + size;
+                mv.visitInsn(Opcodes.POP);
+            } else {
+                // this is the high water mark
+                // at this point the stack has gone from [ .. val]  to [.. val helper val name]
+                max = 2 + size;
+                // we can just swap the two values
+                mv.visitInsn(Opcodes.SWAP);
+            }
+            // update the stack count for the value and two extra words before we attempt a type conversion
+            currentStackHeights.addStackCount(2 + size);
+            // ensure we have an object
+            compileObjectConversion(type, Type.OBJECT, mv, currentStackHeights, maxStackHeights);
+
+            // call the setBinding method
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V");
+
+            // the call will remove 3 from the stack height
+            currentStackHeights.addStackCount(-3);
+
+            // ok, the stack height should be as it was
+            if (currentStackHeights.stackCount != currentStack) {
+                throw new CompileException("variable.compileAssignment : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack);
+            }
+            // make sure we left room for the right number of working slots at our maximum
+            int overflow = (currentStack + max - maxStackHeights.stackCount);
             if (overflow > 0) {
                 maxStackHeights.addStackCount(overflow);
             }

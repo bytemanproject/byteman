@@ -82,8 +82,8 @@ public abstract class Expression extends RuleElement
      * ensure that all type references in the expression and its component expressions
      * can be resolved, that the type of the expression is well-defined and that it is
      * compatible with the type expected in the context in which it occurs.
-     * @param expected the type expected for the expression in the contxt in which it occurs. this
-     * may be void but shoudl not be undefined at the point where type checking is performed.
+     * @param expected the type expected for the expression in the contxet in which it occurs. this
+     * may be void but should not be undefined at the point where type checking is performed.
      * @return
      * @throws TypeException
      */
@@ -92,9 +92,9 @@ public abstract class Expression extends RuleElement
 
     /**
      * evaluate the expression by interpreting the expression tree
-     * @param helper an execution context associated with the rule whcih contains a map of
+     * @param helper an execution context associated with the rule which contains a map of
      * current bindings for rule variables and another map of their declared types both of which
-     * are indexed by varoable name. This includes entries for the helper (name "-1"), the
+     * are indexed by variable name. This includes entries for the helper (name "-1"), the
      * recipient if the trigger method is not static (name "0") and the trigger method arguments
      * (names "1", ...)
      * @return  the result of evaluation as an Object

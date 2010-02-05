@@ -42,7 +42,7 @@ import java.lang.reflect.Modifier;
 /**
  * an expression which identifies a static field reference
  */
-public class StaticExpression extends Expression
+public class StaticExpression extends AssignableExpression
 {
     public StaticExpression(Rule rule, Type type, ParseNode token, String fieldName, String ownerTypeName) {
         // type is the type of static field
@@ -145,4 +145,47 @@ public class StaticExpression extends Expression
     private String fieldName;
     private Field field;
     private Type ownerType;
+
+    @Override
+    public Object interpretAssign(HelperAdapter helperAdapter, Object value) throws ExecuteException
+    {
+        try {
+            field.set(null, value);
+            return value;
+        } catch (ExecuteException e) {
+            throw e;
+        } catch (IllegalAccessException e) {
+            throw new ExecuteException("StaticExpression.interpretAssign : error accessing field " + ownerTypeName + "." + fieldName + getPos(), e);
+        } catch (IllegalArgumentException e) {
+            throw new ExecuteException("StaticExpression.interpretAssign : invalid value assigning field " + ownerTypeName + "." + fieldName + getPos(), e);
+        } catch (Exception e) {
+            throw new ExecuteException("StaticExpression.interpretAssign : unexpected exception accessing field " + ownerTypeName + "." + fieldName + getPos(), e);
+        }
+    }
+
+    @Override
+    public void compileAssign(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        int currentStack = currentStackHeights.stackCount;
+        int size = (type.getNBytes() > 4 ? 2 : 1);
+
+        // copy the value so we leave a result
+        // increases stack height by size words
+        if (size == 1) {
+            mv.visitInsn(Opcodes.DUP);
+        } else {
+            mv.visitInsn(Opcodes.DUP2);
+        }
+        // compile a static field update
+
+        String ownerType = Type.internalName(field.getDeclaringClass());
+        String fieldName = field.getName();
+        String fieldType = Type.internalName(field.getType(), true);
+        mv.visitFieldInsn(Opcodes.PUTSTATIC, ownerType, fieldName, fieldType);
+        // ensure that we had room for size extra words
+        int overflow = (currentStack + size - maxStackHeights.stackCount);
+        if (overflow > 0) {
+            maxStackHeights.addStackCount(overflow);
+        }
+    }
 }

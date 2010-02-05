@@ -120,7 +120,7 @@ public class InterpretedHelper extends Helper implements HelperAdapter
         }
     }
 
-    public void bindVariable(String name, Object value)
+    public void setBinding(String name, Object value)
     {
         bindingMap.put(name, value);
     }
