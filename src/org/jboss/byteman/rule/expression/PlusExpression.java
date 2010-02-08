@@ -97,6 +97,11 @@ public class PlusExpression extends BinaryOperExpression
                 int i2 = n2.intValue();
                 int result = (i1 + i2);
                 return new Integer(result);
+            }  else if (type == Type.J) {
+                long l1 = n1.longValue();
+                long l2 = n2.longValue();
+                long result = (l1 + l2);
+                return new Long(result);
             } else if (type == Type.F) {
                 float f1 = n1.floatValue();
                 float f2 = n2.floatValue();
