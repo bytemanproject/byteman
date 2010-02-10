@@ -1132,37 +1132,44 @@ public class Transformer implements ClassFileTransformer {
 
     private static void dumpClass(String fullName, byte[] bytes, boolean intermediate)
     {
-        int dotIdx = fullName.lastIndexOf('.');
-
-        String name = (dotIdx < 0 ? fullName : fullName.substring(dotIdx + 1));
-        String prefix = (dotIdx > 0 ? fullName.substring(0, dotIdx) : "");
-        String dir = dumpGeneratedClassesDir + File.separator + prefix.replaceAll("\\.", File.separator);
-        if (!ensureDumpDirectory(dir)) {
-            System.out.println("org.jboss.byteman.agent.Transformer : Cannot dump transformed bytes to directory " + dir + File.separator + prefix);
-            return;
-        }
-        String newname;
-        if (intermediate) {
-            int counter = 0;
-            // add _<n> prefix until we come up with a new name
-            newname = dir + File.separator + name + "_" + counter + ".class";
-            File file = new File(newname);
-            while (file.exists()) {
-                counter++;
-                newname = dir + File.separator + name + "_" + counter + ".class";
-                file = new File(newname);
-            }
-        } else {
-            newname = dir + File.separator + name + ".class";
-        }
-        System.out.println("org.jboss.byteman.agent.Transformer : Saving transformed bytes to " + newname);
+        // wrap this in a try catch in case the file i/o code generates a runtime exception
+        // this may happen e.g. because of a security restriction
         try {
-            FileOutputStream fio = new FileOutputStream(newname);
-            fio.write(bytes);
-            fio.close();
-        } catch (IOException ioe) {
-            System.out.println("Error saving transformed bytes to" + newname);
-            ioe.printStackTrace(System.out);
+            int dotIdx = fullName.lastIndexOf('.');
+
+            String name = (dotIdx < 0 ? fullName : fullName.substring(dotIdx + 1));
+            String prefix = (dotIdx > 0 ? fullName.substring(0, dotIdx) : "");
+            String dir = dumpGeneratedClassesDir + File.separator + prefix.replaceAll("\\.", File.separator);
+            if (!ensureDumpDirectory(dir)) {
+                System.out.println("org.jboss.byteman.agent.Transformer : Cannot dump transformed bytes to directory " + dir + File.separator + prefix);
+                return;
+            }
+            String newname;
+            if (intermediate) {
+                int counter = 0;
+                // add _<n> prefix until we come up with a new name
+                newname = dir + File.separator + name + "_" + counter + ".class";
+                File file = new File(newname);
+                while (file.exists()) {
+                    counter++;
+                    newname = dir + File.separator + name + "_" + counter + ".class";
+                    file = new File(newname);
+                }
+            } else {
+                newname = dir + File.separator + name + ".class";
+            }
+            System.out.println("org.jboss.byteman.agent.Transformer : Saving transformed bytes to " + newname);
+            try {
+                FileOutputStream fio = new FileOutputStream(newname);
+                fio.write(bytes);
+                fio.close();
+            } catch (IOException ioe) {
+                System.out.println("Error saving transformed bytes to" + newname);
+                ioe.printStackTrace(System.out);
+            }
+        } catch (Throwable th) {
+            System.out.println("org.jboss.byteman.agent.Transformer : Error saving transformed bytes for class " + fullName);
+            th.printStackTrace(System.out);
         }
     }
 
