@@ -869,7 +869,11 @@ public class Transformer implements ClassFileTransformer {
                 }
                 return new org.jboss.byteman.agent.check.BytecodeChecker(bytecode);
             } else {
-                throw new IOException("unable to load bytecode for for class " + name);
+                // throw new IOException("unable to load bytecode for for class " + name);
+                if (isVerbose()) {
+                    System.out.println("Transformer.getClassChecker : unable to load bytecode for for class " + name);
+                }
+                return null;
             }
         } catch (IOException e) {
             // log the exception and return null
