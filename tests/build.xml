@@ -320,18 +320,18 @@
             </classpath>
             <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestAssign.txt"/>
             <!-- uncomment for verbose byteman output
-            <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
+            <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             <!-- uncomment to dump generated code
+            -->
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
-            -->
             <!-- uncomment to enable debug
+            -->
             <jvmarg value="-Xdebug"/>
             <jvmarg  value="-Xnoagent"/>
             <jvmarg  value="-Djava.compiler=NONE"/>
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
-            -->
             <!--  set this to debug the rule parser
             <jvmarg value="-Dorg.jboss.byteman.rule.debug"/>
             -->
@@ -448,6 +448,9 @@
             </classpath>
             <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestAssign.txt"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <!-- uncomment for verbose byteman output
+            <jvmarg value="-Dorg.jboss.byteman.verbose"/>
+            -->
             <!-- uncomment to dump generated code
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>

@@ -52,4 +52,12 @@ public abstract class AssignableExpression extends Expression
      * @throws CompileException
      */
     public abstract void compileAssign(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException;
+
+    /**
+     * bind as an assignable expression. for variables and dollar expressions this will ensure that a binding exists
+     * and that it is marked as potentially updateable.
+     * @return true if all bindings are valid and false if the expression contains an invalid or
+     * unassignable reference
+     */
+    public abstract void bindAssign() throws TypeException;
 }

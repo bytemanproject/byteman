@@ -25,6 +25,8 @@
 package org.jboss.byteman.rule.compiler;
 
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.rule.binding.Binding;
+import org.jboss.byteman.rule.binding.Bindings;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.agent.Transformer;
 import org.objectweb.asm.MethodVisitor;
@@ -32,6 +34,7 @@ import org.objectweb.asm.*;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * A class which compiles a rule by generating a subclass of the rule's helperClass which implements
@@ -42,71 +45,43 @@ public class Compiler implements Opcodes
     public static Class getHelperAdapter(Rule rule, Class helperClass, boolean compileToBytecode) throws CompileException
     {
         Class adapterClass;
-        // for each rule with the same helper we can use the same interpreted adapter
-        // we have to use a different compiled helper per rule since it encodes the
-        // details of the rule event, condition and action into its execute method
+        // ok we have to create the adapter class
 
-        if (!compileToBytecode) {
-            // try to reuse any existing adaoter
-            adapterClass = interpretedAdapterMap.get(helperClass);
-        } else {
-            adapterClass = null;
-        }
+        // n.b. we don't bother synchronizing here -- if another rule is racing to create an adapter
+        // in parallel we don't really care about generating two of them -- we can use whichever
+        // one gets installed last
 
-        if (adapterClass == null) {
-            // ok we have to create the adapter class
+        try {
+            String helperName = Type.getInternalName(helperClass);
+            String compiledHelperName;
 
-            // n.b. we don't bother synchronizing here -- if another rule is racing to create an adapter
-            // in parallel we don't really care about generating two of them -- we can use whichever
-            // one gets intalled last
-
-            try {
-                String helperName = Type.getInternalName(helperClass);
-                String compiledHelperName;
-
-                // we put the helper in the 
-                if (compileToBytecode) {
-                    compiledHelperName = helperName + "_HelperAdapter_Compiled_" + nextId();
-                } else {
-                    compiledHelperName = helperName + "_HelperAdapter_Interpreted";
-                }
-
-                byte[] classBytes = compileBytes(rule, helperClass, helperName, compiledHelperName, compileToBytecode);
-                String externalName = compiledHelperName.replaceAll("/", ".");
-                // dump the compiled class bytes if required
-                Transformer.maybeDumpClass(externalName, classBytes);
-                // ensure the class is loaded
-                // think we need to load the generated helper using the class loader of the trigger class
-                ClassLoader loader = rule.getLoader();
-                adapterClass = loadHelperAdapter(loader, externalName, classBytes);
-            } catch(CompileException ce) {
-                throw ce;
-            } catch (Throwable th) {
-                if (compileToBytecode) {
-                    throw new CompileException("Compiler.createHelperAdapter : exception creating compiled helper adapter for " + helperClass.getName(), th);
-                } else {
-                    throw new CompileException("Compiler.createHelperAdapter : exception creating interpreted helper adapter for " + helperClass.getName(), th);
-                }
+            // we put the helper in the
+            if (compileToBytecode) {
+                compiledHelperName = helperName + "_HelperAdapter_Compiled_" + nextId();
+            } else {
+                compiledHelperName = helperName + "_HelperAdapter_Interpreted_" + nextId();
             }
 
-            // if this is an interpreted adapter then stash it for later reuse
-
-            if(!compileToBytecode) {
-                interpretedAdapterMap.put(helperClass, adapterClass);
+            byte[] classBytes = compileBytes(rule, helperClass, helperName, compiledHelperName, compileToBytecode);
+            String externalName = compiledHelperName.replaceAll("/", ".");
+            // dump the compiled class bytes if required
+            Transformer.maybeDumpClass(externalName, classBytes);
+            // ensure the class is loaded
+            // think we need to load the generated helper using the class loader of the trigger class
+            ClassLoader loader = rule.getLoader();
+            adapterClass = loadHelperAdapter(loader, externalName, classBytes);
+        } catch(CompileException ce) {
+            throw ce;
+        } catch (Throwable th) {
+            if (compileToBytecode) {
+                throw new CompileException("Compiler.createHelperAdapter : exception creating compiled helper adapter for " + helperClass.getName(), th);
+            } else {
+                throw new CompileException("Compiler.createHelperAdapter : exception creating interpreted helper adapter for " + helperClass.getName(), th);
             }
         }
-        
+
         return adapterClass;
     }
-
-    /**
-     * hashmap used to retrieve previously generated interpred adapters
-     *
-     * TODO strictly this should be a weak hash map so we don't hang on to adapters after the helper
-     * has been dropped. but to make that work we probably need to worry about dropping references to
-     * rules too.
-     */
-    private static HashMap<Class<?>, Class<?>> interpretedAdapterMap = new HashMap<Class<?>, Class<?>>();
 
     private static byte[] compileBytes(Rule rule, Class helperClass, String helperName, String compiledHelperName, boolean compileToBytecode) throws Exception
     {
@@ -127,14 +102,6 @@ public class Compiler implements Opcodes
         // private HashMap<String, Object> bindingMap;
 
         fv = cw.visitField(ACC_PRIVATE, "bindingMap", "Ljava/util/HashMap;", "Ljava/util/HashMap<Ljava/lang/String;Ljava/lang/Object;>;", null);
-        fv.visitEnd();
-        }
-        {
-        // and another Hashmap field to hold the binding types
-        //
-        // private HashMap<String, Type> bindingTypeMap;
-
-        fv = cw.visitField(ACC_PRIVATE, "bindingTypeMap", "Ljava/util/HashMap;", "Ljava/util/HashMap<Ljava/lang/String;Lorg/jboss/byteman/rule/type/Type;>;", null);
         fv.visitEnd();
         }
         {
@@ -191,12 +158,6 @@ public class Compiler implements Opcodes
         mv.visitInsn(DUP);
         mv.visitMethodInsn(INVOKESPECIAL, "java/util/HashMap", "<init>", "()V");
         mv.visitFieldInsn(PUTFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
-        // bindingTypeMap = new HashMap<String, Type);
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitTypeInsn(NEW, "java/util/HashMap");
-        mv.visitInsn(DUP);
-        mv.visitMethodInsn(INVOKESPECIAL, "java/util/HashMap", "<init>", "()V");
-        mv.visitFieldInsn(PUTFIELD, compiledHelperName, "bindingTypeMap", "Ljava/util/HashMap;");
         // this.rule = rule
         mv.visitVarInsn(ALOAD, 0);
         mv.visitVarInsn(ALOAD, 1);
@@ -207,156 +168,107 @@ public class Compiler implements Opcodes
         mv.visitEnd();
         }
         {
-        // create the execute method
-        //
-        // public void execute(Bindings bindings, Object recipient, Object[] args) throws ExecuteException
-        mv = cw.visitMethod(ACC_PUBLIC, "execute", "(Lorg/jboss/byteman/rule/binding/Bindings;Ljava/lang/Object;[Ljava/lang/Object;)V", null, new String[] { "org/jboss/byteman/rule/exception/ExecuteException" });
-        mv.visitCode();
-        // if (Transformer.isVerbose())
-        mv.visitMethodInsn(INVOKESTATIC, "org/jboss/byteman/agent/Transformer", "isVerbose", "()Z");
-        Label l0 = new Label();
-        mv.visitJumpInsn(IFEQ, l0);
-        // then
-        // System.out.println(rule.getName() + " execute");
-        mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-        mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
-        mv.visitInsn(DUP);
-        mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V");
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitFieldInsn(GETFIELD, compiledHelperName, "rule", "Lorg/jboss/byteman/rule/Rule;");
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/Rule", "getName", "()Ljava/lang/String;");
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
-        mv.visitLdcInsn(" execute()");
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;");
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
-        // end if
-        mv.visitLabel(l0);
-        // Iterator<Binding> iterator = bindings.iterator();
-        mv.visitVarInsn(ALOAD, 1);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Bindings", "iterator", "()Ljava/util/Iterator;");
-        mv.visitVarInsn(ASTORE, 4);
-        // while 
-        Label l1 = new Label();
-        mv.visitLabel(l1);
-        // iterator.hasNext()
-        mv.visitVarInsn(ALOAD, 4);
-        mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Iterator", "hasNext", "()Z");
-        Label l2 = new Label();
-        mv.visitJumpInsn(IFEQ, l2);
-        // do
-        // binding = (Binding)iterator.next();
-        mv.visitVarInsn(ALOAD, 4);
-        mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Iterator", "next", "()Ljava/lang/Object;");
-        mv.visitTypeInsn(CHECKCAST, "org/jboss/byteman/rule/binding/Binding");
-        mv.visitVarInsn(ASTORE, 5);
-        // String name = binding.getName();
-        mv.visitVarInsn(ALOAD, 5);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "getName", "()Ljava/lang/String;");
-        mv.visitVarInsn(ASTORE, 6);
-        // if (binding.isAlias())
-        mv.visitVarInsn(ALOAD, 5);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "isAlias", "()Z");
-        Label l2a = new Label();
-        mv.visitJumpInsn(IFEQ, l2a);
-        // then
-        // binding = binding.getAlias();
-        mv.visitVarInsn(ALOAD, 5);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "getAlias", "()Lorg/jboss/byteman/rule/binding/Binding;");
-        mv.visitVarInsn(ASTORE, 5);
-        // endif
-        mv.visitLabel(l2a);
-        // Type type = binding.getType();
-        mv.visitVarInsn(ALOAD, 5);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "getType", "()Lorg/jboss/byteman/rule/type/Type;");
-        mv.visitVarInsn(ASTORE, 7);
-        // if (binding.isHelper())
-        mv.visitVarInsn(ALOAD, 5);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "isHelper", "()Z");
-        Label l3 = new Label();
-        mv.visitJumpInsn(IFEQ, l3);
-        // then
-        // bindingMap.put(name, this);
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
-        mv.visitVarInsn(ALOAD, 6);
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        mv.visitInsn(POP);
-        // bindingTypeMap.put(name, type);
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingTypeMap", "Ljava/util/HashMap;");
-        mv.visitVarInsn(ALOAD, 6);
-        mv.visitVarInsn(ALOAD, 7);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        mv.visitInsn(POP);
-        Label l4 = new Label();
-        mv.visitJumpInsn(GOTO, l4);
-        // else if (binding.isRecipient())
-        mv.visitLabel(l3);
-        mv.visitVarInsn(ALOAD, 5);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "isRecipient", "()Z");
-        Label l5 = new Label();
-        mv.visitJumpInsn(IFEQ, l5);
-        // then
-        // bindingMap.put(name, recipient);
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
-        mv.visitVarInsn(ALOAD, 6);
-        mv.visitVarInsn(ALOAD, 2);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        mv.visitInsn(POP);
-        // bindingTypeMap.put(name, type);
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingTypeMap", "Ljava/util/HashMap;");
-        mv.visitVarInsn(ALOAD, 6);
-        mv.visitVarInsn(ALOAD, 7);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        mv.visitInsn(POP);
-        mv.visitJumpInsn(GOTO, l4);
-        // else if (binding.isParam() || binding.isLocalVar() || binding.isReturn())
-        mv.visitLabel(l5);
-        Label l6 = new Label();
-        mv.visitVarInsn(ALOAD, 5);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "isParam", "()Z");
-        mv.visitJumpInsn(IFNE, l6); // skip to then if true or drop throuogh to || branch if false
-        mv.visitVarInsn(ALOAD, 5);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "isLocalVar", "()Z");
-        mv.visitJumpInsn(IFNE, l6); // skip to then if true or drop throuogh to || branch if false
-        mv.visitVarInsn(ALOAD, 5);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "isReturn", "()Z");
-        mv.visitJumpInsn(IFEQ, l4); // bypass this branch
-        mv.visitLabel(l6);
-        // then
-        // bindingMap.put(name, args[binding.getCallArrayIndex]);
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
-        mv.visitVarInsn(ALOAD, 6);
-        mv.visitVarInsn(ALOAD, 3);
-        mv.visitVarInsn(ALOAD, 5);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/binding/Binding", "getCallArrayIndex", "()I");
-        mv.visitInsn(AALOAD);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        mv.visitInsn(POP);
-        // bindingTypeMap.put(name, type);
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingTypeMap", "Ljava/util/HashMap;");
-        mv.visitVarInsn(ALOAD, 6);
-        mv.visitVarInsn(ALOAD, 7);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        mv.visitInsn(POP);
-        // end if
-        mv.visitLabel(l4);
-        mv.visitJumpInsn(GOTO, l1);
-        // end do while
-        mv.visitLabel(l2);
-        // execute0()
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitMethodInsn(INVOKEVIRTUAL, compiledHelperName, "execute0", "()V");
-        // return
-        mv.visitInsn(RETURN);
-        mv.visitMaxs(5, 8);
-        mv.visitEnd();
+            // create the execute method
+            //
+            // public void execute(Bindings bindings, Object recipient, Object[] args) throws ExecuteException
+            mv = cw.visitMethod(ACC_PUBLIC, "execute", "(Ljava/lang/Object;[Ljava/lang/Object;)V", null, new String[] { "org/jboss/byteman/rule/exception/ExecuteException" });
+            mv.visitCode();
+            // if (Transformer.isVerbose())
+            mv.visitMethodInsn(INVOKESTATIC, "org/jboss/byteman/agent/Transformer", "isVerbose", "()Z");
+            Label l0 = new Label();
+            mv.visitJumpInsn(IFEQ, l0);
+            // then
+            // System.out.println(rule.getName() + " execute");
+            mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+            mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V");
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, compiledHelperName, "rule", "Lorg/jboss/byteman/rule/Rule;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/Rule", "getName", "()Ljava/lang/String;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitLdcInsn(" execute()");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+            // end if
+            mv.visitLabel(l0);
+
+            Bindings bindings = rule.getBindings();
+            Iterator<Binding> iterator = bindings.iterator();
+
+            while (iterator.hasNext()) {
+                Binding binding = iterator.next();
+                String name = binding.getName();
+                if (binding.isAlias()) {
+                    // lookups and updates will use the aliased name
+                    continue;
+                }
+                if (binding.isHelper()) {
+                    // bindingMap.put(name, this);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
+                    mv.visitLdcInsn(name);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+                    mv.visitInsn(POP);
+                } else if (binding.isRecipient()) {
+                    // bindingMap.put(name, recipient);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
+                    mv.visitLdcInsn(name);
+                    mv.visitVarInsn(ALOAD, 1);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+                    mv.visitInsn(POP);
+                } else if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
+                    // bindingMap.put(name, args[binding.getCallArrayIndex()]);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
+                    mv.visitLdcInsn(name);
+                    mv.visitVarInsn(ALOAD, 2);
+                    mv.visitLdcInsn(binding.getCallArrayIndex());
+                    mv.visitInsn(AALOAD);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+                    mv.visitInsn(POP);
+                }
+            }
+
+            // execute0()
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKEVIRTUAL, compiledHelperName, "execute0", "()V");
+
+            // now restore update bindings
+
+            iterator = bindings.iterator();
+
+            while (iterator.hasNext()) {
+                Binding binding = iterator.next();
+                if (binding.isAlias()) {
+                    continue;
+                }
+                String name = binding.getName();
+
+                if (binding.isUpdated()) {
+                    if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
+
+                        int idx = binding.getCallArrayIndex();
+                        // Object value = bindingMap.get(name);
+                        // args[idx] = value;
+                        mv.visitVarInsn(ALOAD, 2); // args
+                        mv.visitLdcInsn(idx);
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
+                        mv.visitLdcInsn(name);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+                        mv.visitInsn(AASTORE);
+                    }
+                }
+            }
+
+            // return
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(4, 3);
+            mv.visitEnd();
         }
         {
         // create the setBinding method

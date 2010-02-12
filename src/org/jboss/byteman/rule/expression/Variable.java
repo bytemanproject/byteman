@@ -62,15 +62,40 @@ public class Variable extends AssignableExpression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind() {
+    public void bind() throws TypeException
+    {
+        bind(false);
+    }
+
+    /**
+     * verify that variables mentioned in this expression are actually available in the supplied
+     * bindings list. infer/validate the type of this expression or its subexpressions
+     * where possible
+
+     * @return true if all variables in this expression are bound and non-final and no type mismatches have
+     * been detected during inference/validation.
+     */
+
+    public void bindAssign() throws TypeException
+    {
+        bind(true);
+    }
+
+    private boolean bind(boolean isUpdateable)throws TypeException
+    {
         // ensure that there is a binding with this name
 
         Binding binding = getBindings().lookup(name);
 
         if (binding == null) {
-            System.err.println("Variable.bind : unbound variable " + name + getPos());
-            return false;
+            throw new TypeException("Variable.bind : unbound variable " + name + getPos());
         }
+
+        // if necessary tag it as updateable
+        if (isUpdateable) {
+            binding.setUpdated();
+        }
+        
         // adopt the binding type
 
         this.type = binding.getType();

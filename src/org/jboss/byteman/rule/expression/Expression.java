@@ -66,7 +66,7 @@ public abstract class Expression extends RuleElement
      * @return true if all variables in this expression are bound and no type mismatches have
      * been detected during validation.
      */
-    public abstract boolean bind();
+    public abstract void bind() throws TypeException;
 
     public String getPos()
     {

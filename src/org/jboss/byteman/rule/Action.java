@@ -87,9 +87,8 @@ public class Action extends RuleElement
         } else {
             this.action = ExpressionHelper.createExpressionList(rule, this.getBindings(), actionTree, Type.VOID);
             for (Expression expr : action) {
-                if (!expr.bind()) {
-                    throw new TypeException("ExpressionHelper.createExpression : unknown reference in expression" + expr.getPos());
-                }
+                // check bindings
+                expr.bind();
             }
         }
     }

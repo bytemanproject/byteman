@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.grammar.ParseNode;
@@ -49,14 +50,14 @@ public abstract class TernaryOperExpression extends OperExpression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind() {
+    public void bind() throws TypeException
+    {
         // we just need to ensure that the operands can find their bindings
         // run both so we get as many errors as possible
 
-        boolean success = operand1.bind();
-        success &= operand2.bind();
-        success &= operand3.bind();
-        return success;
+        operand1.bind();
+        operand2.bind();
+        operand3.bind();
     }
 
     /**

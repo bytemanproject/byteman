@@ -57,8 +57,8 @@ public class BooleanLiteral extends Expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind() {
-        return true;
+    public void bind()
+    {
     }
 
     public Type typeCheck(Type expected) throws TypeException {

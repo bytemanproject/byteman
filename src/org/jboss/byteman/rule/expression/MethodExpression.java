@@ -68,13 +68,13 @@ public class MethodExpression extends Expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind() {
+    public void bind() throws TypeException
+    {
         // check that the recipient and argument expressions have valid bindings
 
-        boolean valid = true;
         if (recipient != null) {
             // ok, we have a supplied recipient
-            valid &= recipient.bind();
+            recipient.bind();
         } else if (pathList != null) {
             // see if the path starts with a bound variable and, if so, treat the path as a series
             // of field references and construct a owner expression from it.
@@ -97,11 +97,9 @@ public class MethodExpression extends Expression
 
         Iterator<Expression> iterator = arguments.iterator();
 
-        while (valid && iterator.hasNext()) {
-            valid &= iterator.next().bind();
+        while (iterator.hasNext()) {
+            iterator.next().bind();
         }
-
-        return valid;
     }
 
     public Type typeCheck(Type expected) throws TypeException {
@@ -157,6 +155,7 @@ public class MethodExpression extends Expression
             if (rootType == null) {
                 Type ruleType = typeGroup.create(rule.getHelperClass().getCanonicalName());
                 recipient = new DollarExpression(rule, ruleType, token, DollarExpression.HELPER_IDX);
+                recipient.bind();
 
                 rootType = recipient.typeCheck(Type.UNDEFINED);
             }

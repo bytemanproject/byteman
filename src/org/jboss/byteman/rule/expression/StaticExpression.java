@@ -60,10 +60,17 @@ public class StaticExpression extends AssignableExpression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind() {
+    public void bind() throws TypeException {
         // nothing to verify
+    }
 
-        return true;
+    /**
+     * treat this as a normal bind because an update to a field reference does not update any bindings
+     * @return whatever a normal bind call returns
+     */
+    public void bindAssign() throws TypeException
+    {
+        bind();
     }
 
     public Type typeCheck(Type expected) throws TypeException {

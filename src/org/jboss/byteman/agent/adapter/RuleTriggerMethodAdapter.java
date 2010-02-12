@@ -235,12 +235,25 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         }
     }
 
-    private void doArgLoad(int returnSlot)
+    /**
+     * stack an argument array containing all the values which need to be bound to parameters or local variables
+     * in the rule or a null pointer if no bindings are required. this method also inserts a copy of the array
+     * below the initial two top entries if any of the bindings can potentially be updated by the rule, allowing
+     * the updated values to be written back on return from the call to the rule engine.
+     * @param returnSlot a local variable slot containing the return value which the trigger method is about to
+     * return. this is only valid if the rule location is AT EXIT and the rule body contains a reference to the
+     * return value ($!).
+     * @return true if the rule may update the argument array and hence if a copy of the array has been inserted
+     * below the initial two top entries otherwise false.
+     */
+    private boolean doArgLoad(int returnSlot)
     {
         if (callArrayBindings.size() ==  0) {
             push((org.objectweb.asm.Type)null);
-            return;
+            return false;
         }
+
+        // create the array used to pass the bindings
 
         int arraySize = callArrayBindings.size();
 
@@ -248,6 +261,27 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         Type objectType = Type.getType(Object.class);
         newArray(objectType);
 
+        // check if any of the bindings gets updated. if so we need to stash a copy of the bindings array
+        // below the key and owner so we can pull out the updated values and update local var/param slots
+        // once the call ahs completed
+
+        boolean doUpdates = false;
+
+        for (int i = 0; i < arraySize; i++) {
+            Binding binding = callArrayBindings.get(i);
+            if (binding.isUpdated()) {
+                doUpdates = true;
+                break;
+            }
+        }
+
+        if (doUpdates) {
+            // insert copy of array below first two call arguments
+            // [.. key owner bindings ] ==> [.. bindings key owner bindings ]
+            mv.visitInsn(Opcodes.DUP_X2);
+        }
+
+        // now install required values into bindings array
         for (int i = 0; i < arraySize; i++) {
             Binding binding = callArrayBindings.get(i);
             dup();
@@ -266,8 +300,84 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
             }
             arrayStore(objectType);
         }
+
+        return doUpdates;
     }
 
+    /**
+     * plant code to copy back any updated values from the argument array to the relevant local variable slots
+     */
+    private void doArgUpdate()
+    {
+        // at entry the top of the stack contains the object array
+        // for an AT EXIT rule the entry below this is the return value
+
+        Type objectType = Type.getType(Object.class);
+        int arraySize = callArrayBindings.size();
+        int lastUpdated = -1;
+        int returnIdx = -1;
+
+
+        // identify which is the last index we will need to update. n.b. if we find a return value we will
+        // update that last
+
+        for (int i = 0; i < arraySize; i++) {
+            Binding binding = callArrayBindings.get(i);
+            if (binding.isUpdated()) {
+                lastUpdated = i;
+                if (binding.isReturn()) {
+                    returnIdx = i;
+                }
+            }
+        }
+        
+        // if the return value is updated it gets done last
+        if (returnIdx >- 0) {
+            lastUpdated = returnIdx;
+        }
+
+        // write back all other args then stack new return value and drop old one
+        for (int i = 0; i < arraySize; i++) {
+            Binding binding = callArrayBindings.get(i);
+            if (binding.isUpdated() && !binding.isReturn()) {
+                // if this is the last update then we consume the arguments array
+                // otherwise we need to copy it
+                if (i != lastUpdated) {
+                    dup();
+                }
+                push(i);
+                arrayLoad(objectType);
+                if (binding.isParam()) {
+                    int idx = binding.getIndex() - 1;
+                    unbox(argumentTypes[idx]);
+                    storeArg(idx);
+                } else if (binding.isLocalVar()) {
+                    int idx = binding.getLocalIndex();
+                    unbox(getLocalType(idx));
+                    storeLocal(idx);
+                }
+            }
+        }
+
+        // if we had a return value to process then the args array will still be on top of the stack above
+        // the old return value
+
+        if (returnIdx >= 0) {
+            // get rid of old return value
+            if (returnType.getSize() == 2) {
+                mv.visitInsn(Opcodes.DUP_X2);
+                mv.visitInsn(Opcodes.POP);
+                mv.visitInsn(Opcodes.POP2);
+            } else {
+                mv.visitInsn(Opcodes.SWAP);
+                mv.visitInsn(Opcodes.POP);
+            }
+
+            push(returnIdx);
+            arrayLoad(objectType);
+            unbox(returnType);
+        }
+    }
     /**
      * return true if the current block is handler which catches a thrown exception within the scope
      * of a monitor enter in order to be able exit the monitor and rethrow the exception
@@ -755,8 +865,13 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         } else {
             push((Type)null);
         }
-        doArgLoad(returnSlot);
+        boolean handleUpdates;
+        handleUpdates = doArgLoad(returnSlot);
         invokeStatic(ruleType, method);
+        // if the rule can modify local variables then generate code to perform the update
+        if (handleUpdates) {
+            doArgUpdate();
+        }
         visitTriggerEnd(endLabel);
     }
 }

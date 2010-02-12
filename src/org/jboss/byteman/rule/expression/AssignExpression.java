@@ -45,6 +45,14 @@ public class AssignExpression extends BinaryOperExpression
         this.lhs = left;
     }
 
+    public void bind() throws TypeException
+    {
+        // we need to ensure that the assignable expression gets told to bindAssign()
+
+        lhs.bindAssign();
+        getOperand(1).bind();
+    }
+
     public Type typeCheck(Type expected) throws TypeException {
         // we accept any type we are given and check the var type then we use its type to check the expression
         // if either operand cannot type check then it will throw an error

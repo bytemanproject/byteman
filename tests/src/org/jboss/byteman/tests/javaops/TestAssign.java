@@ -47,12 +47,24 @@ public class TestAssign extends Test
         int ires;
 
         try {
-            log("calling TestArithmetic.triggerMethod");
+            log("calling TestAssign.triggerMethod");
             ires = triggerMethod(0);
-            log("called TestArithmetic.triggerMethod : result == " + ires);
+            log("called TestAssign.triggerMethod : result == " + ires);
             log("                                    : testInt == " + testInt);
             log("                                    : testLong == " + testLong);
             log("                                    : staticLong == " + staticLong);
+        } catch (Exception e) {
+            log(e);
+        }
+
+        checkOutput(true);
+
+        runNumber++;
+
+        try {
+            log("calling TestAssign.triggerMethod2");
+            ires = triggerMethod2(0);
+            log("called TestAssign.triggerMethod2 : result == " + ires);
         } catch (Exception e) {
             log(e);
         }
@@ -65,26 +77,46 @@ public class TestAssign extends Test
     {
         int local = 99;
         long local2 = 1234567890;
-        log("inside TestArithmetic.triggerMethod");
+        log("inside TestAssign.triggerMethod");
+        return 999;
+    }
+
+    public int triggerMethod2(int i)
+    {
+        int local = 99;
+        long local2 = 1234567890;
+        log("inside TestAssign.triggerMethod2");
+        log("inside TestAssign.triggerMethod2 : i == " + i);
+        log("inside TestAssign.triggerMethod2 : local == " + local);
+        log("inside TestAssign.triggerMethod2 : local2 == " + local2);
         return 999;
     }
 
     @Override
     public String getExpected() {
-        logExpected("calling TestArithmetic.triggerMethod");
-        logExpected("inside TestArithmetic.triggerMethod");
-        logExpected("triggerMethod1 : local == 99");
-        logExpected("triggerMethod1 : $local == 99");
-        logExpected("triggerMethod1 : $local2 == 1234567890");
-        logExpected("triggerMethod1 : local == 100");
-        logExpected("triggerMethod1 : $local == 98");
-        logExpected("triggerMethod1 : $local2 == -1234567890");
-        logExpected("triggerMethod1 : $1 == 2");
-        logExpected("called TestArithmetic.triggerMethod : result == " + 1000);
-        logExpected("                                    : testInt == 1");
-        logExpected("                                    : testLong == 1234567891");
-        logExpected("                                    : staticLong == 1234567892");
-
+        if (runNumber == 0) {
+            logExpected("calling TestAssign.triggerMethod");
+            logExpected("inside TestAssign.triggerMethod");
+            logExpected("triggerMethod1 : local == 99");
+            logExpected("triggerMethod1 : $local == 99");
+            logExpected("triggerMethod1 : $local2 == 1234567890");
+            logExpected("triggerMethod1 : $! == 999");
+            logExpected("triggerMethod1 : local == 100");
+            logExpected("triggerMethod1 : $local == 98");
+            logExpected("triggerMethod1 : $local2 == -1234567890");
+            logExpected("triggerMethod1 : $1 == 2");
+            logExpected("called TestAssign.triggerMethod : result == " + 1000);
+            logExpected("                                    : testInt == 1");
+            logExpected("                                    : testLong == 1234567891");
+            logExpected("                                    : staticLong == 1234567892");
+        } else {
+            logExpected("calling TestAssign.triggerMethod2");
+            logExpected("inside TestAssign.triggerMethod2");
+            logExpected("inside TestAssign.triggerMethod2 : i == 1");
+            logExpected("inside TestAssign.triggerMethod2 : local == 101");
+            logExpected("inside TestAssign.triggerMethod2 : local2 == 1234567893");
+            logExpected("called TestAssign.triggerMethod2 : result == " + 999);
+        }
         return super.getExpected();
     }
 }

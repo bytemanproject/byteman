@@ -80,6 +80,8 @@ public class Binding extends RuleElement
             index = BINDVAR;
         }
         this.callArrayIndex = 0;
+
+        this.updated = false;
     }
 
     public Type typeCheck(Type expected)
@@ -253,6 +255,25 @@ public class Binding extends RuleElement
         this.descriptor = desc;
     }
 
+    /**
+     * record that this binding occurs on the LHS of an assignment
+     */
+    public void setUpdated()
+    {
+        updated = true;
+        if (alias != null) {
+            alias.setUpdated();
+        }
+    }
+
+    /**
+     * record that this binding occurs on the LHS of an assignment
+     */
+    public boolean isUpdated()
+    {
+        return updated;
+    }
+
     public void writeTo(StringWriter stringWriter)
     {
         if (isHelper()) {
@@ -281,6 +302,9 @@ public class Binding extends RuleElement
     {
         if (this.isLocalVar()) {
             this.alias = alias;
+            if (this.updated) {
+                alias.updated = true;
+            }
         } else {
             System.out.println("Binding : attempt to alias non-local var " + getName() + " to " + alias.getName());
         }
@@ -315,4 +339,5 @@ public class Binding extends RuleElement
     // the offset into the stack at which a local var is located
     private int localIndex;
     private Binding alias; // aliases $x to $n where x is a method parameter name and n its index in the parameter list
+    boolean updated; // records whether this binding occurs on the lhs of an assignment
 }
