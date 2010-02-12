@@ -15,11 +15,12 @@ release directory. In that directory execute command 'ant install' to
 build the byteman release. It will be found in a subdirectory named
 install. The installed version contains the following subdirectories
 
-  bin -- contains Unix scripts to simplify: using Byteman (bmjava.sh),
-      typechecking Byteman rule scripts (bytemancheck.sh), and
+  bin -- contains Unix scripts to simplify: using Byteman (bmjava.sh);
+      typechecking Byteman rule scripts (bytemancheck.sh); and
       communicating with the Byteman agent listener (submit.sh)
 
-  docs -- contains the Byteman Programmer'S guide
+  docs -- contains the Byteman Programmer's guide and license
+      information for Byteman plus the third-party software it uses
 
   lib -- contains the Byteman agent and rule engine (byteman.jar)
       and a subset of this code needed to compile/run the submit

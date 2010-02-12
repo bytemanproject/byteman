@@ -61,7 +61,8 @@
     <property name="byteman.jar" value="byteman.jar"/>
     <property name="byteman-submit.jar" value="byteman-submit.jar"/>
     <property name="byteman.bin.scripts" value="bytemancheck.sh submit.sh bmjava.sh"/>
-    <property name="byteman.doc.files" value="ProgrammersGuide.pdf"/>
+    <property name="byteman.doc.files" value="ProgrammersGuide.pdf copyright.txt"/>
+    <property name="byteman.ext.lib.doc.files" value="third_party_licenses.txt"/>
     <property name="manifest.file" value="${dd.dir}/META-INF/MANIFEST.MF"/>
 
     <property name="javac.debug" value="on"/>
@@ -175,6 +176,9 @@
         </copy>
         <copy todir="${install.docs.dir}">
             <fileset dir="${docs.src.dir}" includes="${byteman.doc.files}"/>
+        </copy>
+        <copy todir="${install.docs.dir}">
+            <fileset dir="${ext.lib.dir}" includes="${byteman.ext.lib.doc.files}"/>
         </copy>
     </target>
 
