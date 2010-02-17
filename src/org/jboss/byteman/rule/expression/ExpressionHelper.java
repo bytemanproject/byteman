@@ -63,6 +63,7 @@ public class ExpressionHelper
         //                   (INTEGER_LITERAL)
         //                   (FLOAT_LITERAL)
         //                   (STRING_LITERAL)
+        //                   (NULL_LITERAL)
         //                   (IDENTIFIER simple_name)
         //                   (IDENTIFIER simple_name path)
         //                   (DOLLAR string)
@@ -171,6 +172,11 @@ public class ExpressionHelper
             case BOOLEAN_LITERAL:
             {
                 expr = new BooleanLiteral(rule, exprTree);
+            }
+            break;
+            case NULL_LITERAL:
+            {
+                expr = new NullLiteral(rule, exprTree);
             }
             break;
             case RETURN:

@@ -52,6 +52,7 @@ public abstract class ParseNode
     public final static int THROW = 18;
     public final static int UNOP = 19;
     public final static int NEW = 20;
+    public final static int NULL_LITERAL = 21;
     /* tags for operators */
     public final static int AND = 30;
     public final static int BAND = 31;
@@ -278,6 +279,8 @@ public abstract class ParseNode
                     return "~";
                 case UMINUS:
                     return "-";
+                case NULL_LITERAL:
+                    return "null";
                 default:
                     System.out.println("NullaryNode.getText() : Unexpected tag " + tag);
                     return "???";

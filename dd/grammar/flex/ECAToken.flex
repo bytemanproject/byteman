@@ -227,6 +227,8 @@ Float = {Sign}? {PosFloat}
 
 /* identifiers */
 
+"NULL" | "null" { return symbol(sym.NULL_LITERAL); }
+
 {Identifier}		{ return symbol(sym.IDENTIFIER, yytext()); }
 
 /* numbers */

@@ -95,9 +95,15 @@ public class Binding extends RuleElement
         if (value != null) {
             // type check the binding expression, using the bound variable's expected if it is known
 
-            Type valueType = value.typeCheck(expected);
+            if (type.isDefined()) {
+                value.typeCheck(type);
+                // redundant?
+                if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
+                    throw new TypeException("Binding.typecheck : incompatible type binding expression " + type + value.getPos());
+                }
+            }  else {
+                Type valueType = value.typeCheck(expected);
 
-            if (type.isUndefined()) {
                 type = valueType;
             }
         } else if (type.isUndefined()) {

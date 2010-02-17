@@ -258,6 +258,8 @@ terminal	DOLLAR;
 
 /* literals. strings and identifiers */
 
+terminal	NULL_LITERAL;
+
 terminal	Float FLOAT_LITERAL;
 
 terminal	Integer INTEGER_LITERAL;
@@ -299,6 +301,7 @@ non terminal ParseNode meth_expr;
 non terminal ParseNode expr_meth_expr;
 non terminal ParseNode new_expr;
 non terminal ParseNode simple_expr;
+non terminal ParseNode null_expr;
 
 non terminal ParseNode array_idx_list;
 non terminal ParseNode array_idx;
@@ -501,11 +504,12 @@ expr
 	|	meth_expr:e {: RESULT = e; :}
 	|   new_expr:ne {: RESULT = ne; :}
 	|	simple_expr:e {: RESULT = e; :}
+	|   null_expr:e {: RESULT = e; :}
 	|	simple_name:n {: RESULT = n; :}
-	|   error:err expr:e {: error("invalid expression", errleft, errright); RESULT = e; :}
 	|   simple_name:s ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, sleft, sright, s, e); :}
 	|   DOLLAR:d ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, dleft, dright, node(ParseNode.DOLLAR, dleft, dright, d), e); :}
 	|   field_expr:f ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, fleft, fright, f, e); :}
+	|   error:err expr:e {: error("invalid expression", errleft, errright); RESULT = e; :}
 	;
 
 ternary_oper_expr
@@ -628,6 +632,11 @@ simple_expr
 	    {: RESULT = node(ParseNode.DOLLAR, sleft, sright, s); :}
 	|	LPAREN expr:e RPAREN
 		{: RESULT = e; :}
+	;
+
+null_expr
+    ::=	NULL_LITERAL:n
+		{: RESULT = node(ParseNode.NULL_LITERAL, nleft, nright); :}
 	;
 
 name	::=	simple_name:n
