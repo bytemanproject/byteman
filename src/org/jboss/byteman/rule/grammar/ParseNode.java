@@ -51,6 +51,7 @@ public abstract class ParseNode
     public final static int TERNOP = 17;
     public final static int THROW = 18;
     public final static int UNOP = 19;
+    public final static int NEW = 20;
     /* tags for operators */
     public final static int AND = 30;
     public final static int BAND = 31;
@@ -428,6 +429,8 @@ public abstract class ParseNode
                     return ";";                    
                 case THROW:
                     return "THROW";
+                case NEW:
+                    return "NEW";
                 case UNOP:
                     return ((ParseNode)child0).getText();
                 default:

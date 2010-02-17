@@ -58,6 +58,7 @@ public class ExpressionHelper
         //                   (ARRAY expr expr_list)
         //                   (FIELD expr simple_name)
         //                   (METH simple_name expr expr_list)
+        //                   (NEW name expr_list)
         //                   (BOOLEAN_LITERAL)
         //                   (INTEGER_LITERAL)
         //                   (FLOAT_LITERAL)
@@ -136,6 +137,19 @@ public class ExpressionHelper
                     throw new TypeException("ExpressionHelper.createExpression : invalid throw type " + tag + " in expression " + child0.getText() + child0.getPos());
                 } else {
                     expr = createThrowExpression(rule, bindings, child0, child1);
+                }
+            }
+            break;
+            case NEW:
+            {
+                ParseNode child0 = (ParseNode) exprTree.getChild(0);
+                ParseNode child1 = (ParseNode) exprTree.getChild(1);
+                int tag0 = child0.getTag();
+
+                if (tag0 != IDENTIFIER) {
+                    throw new TypeException("ExpressionHelper.createExpression : invalid new type " + tag + " in expression " + child0.getText() + child0.getPos());
+                } else {
+                    expr = createNewExpression(rule, bindings, child0, child1);
                 }
             }
             break;
@@ -326,6 +340,23 @@ public class ExpressionHelper
         }
 
         expr = new ThrowExpression(rule, typeNameTree, args);
+
+        return expr;
+    }
+
+    public static Expression createNewExpression(Rule rule, Bindings bindings, ParseNode typeNameTree, ParseNode argTree)
+            throws TypeException
+    {
+        Expression expr;
+        List<Expression> args;
+
+        if (argTree == null) {
+            args = new ArrayList<Expression>();
+        } else {
+            args = createExpressionList(rule, bindings, argTree);
+        }
+
+        expr = new NewExpression(rule, typeNameTree, args);
 
         return expr;
     }

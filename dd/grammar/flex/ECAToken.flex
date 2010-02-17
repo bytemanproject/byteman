@@ -129,6 +129,8 @@ Float = {Sign}? {PosFloat}
 	
 "THROW"|"throw"	{ return symbol(sym.THROW); }
 
+"NEW"|"new"	{ return symbol(sym.NEW); }
+
 /* various bracket pairs */
 	
 "("		{ return symbol(sym.LPAREN); }
