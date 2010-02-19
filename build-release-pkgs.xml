@@ -130,12 +130,6 @@
         </copy>
     </target>
 
-    <target name="test">
-        <ant dir="." antfile="build.xml" target="zip">
-            <property name="version" value="${version}"/>
-            <property name="obfuscate.3rd.party" value="true"/>
-        </ant>
-    </target>
     <!-- copy the release into the cms svn tree (http://www.jboss.org/jbosstm web site content) -->
     <target name="cms-repository" description="copy release bundles to JBossTS web site content">
         <mkdir dir="${cmsdir}/downloads/${version}"/>
