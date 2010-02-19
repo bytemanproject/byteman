@@ -1,0 +1,65 @@
+########################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2009, Red Hat Middleware LLC, and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+# FinalizeMonitor
+#
+# A byteman script which traces calls to Object.finalize().
+#
+# to use ths script to trace execution of java program org.my.App execute
+#
+#  -- set the directory in which byteman has been installed
+#  BYTEMAN_HOME= ...
+#
+#   -- identify the samples jar to the boot path
+#   SAMPLE_JAR=${BYTEMAN_HOME}/sample/lib/byteman-sample.jar
+#
+#   -- identify this script
+#   SCRIPT={BYTEMAN_HOME}/sample/scripts/FinalizeMonitor.txt
+#
+#  ${BYTEMAN_HOME}/bin/bmjava.sh -l $SCRIPT -b $SAMPLE_JAR org.my.App
+#
+# alternatively to load the script dynamically
+#
+#   -- start the program with the agent
+#  ${BYTEMAN_HOME}/bin/bmjava.sh org.my.App
+#
+#   -- install the helper library into the bootstrap classpath
+#  ${BYTEMAN_HOME}/bin/submit.sh -b $SAMPLE_JAR
+#
+#   -- install the script
+#  ${BYTEMAN_HOME}/bin/submit.sh -l $SCRIPT
+
+########################################################################
+#
+# Rule to trace calls to Object.finalize() or any overriding
+# implementations in subclasses of Object.
+#
+
+RULE FinalizeMonitor trace finalize
+CLASS ^java.lang.Object
+METHOD finalize
+HELPER org.jboss.byteman.sample.helper.StackTraceHelper
+AT RETURN
+IF TRUE
+DO traceStack("finalizing " + $0, 1)
+ENDRULE

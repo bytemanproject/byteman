@@ -1,0 +1,259 @@
+<!--
+  JBoss, Home of Professional Open Source
+  Copyright 2008-9, Red Hat Middleware LLC, and individual contributors
+  as indicated by the @author tags.
+  See the copyright.txt in the distribution for a full listing
+  of individual contributors.
+  This copyrighted material is made available to anyone wishing to use,
+  modify, copy, or redistribute it subject to the terms and conditions
+  of the GNU General Public License, v. 2.0.
+  This program is distributed in the hope that it will be useful, but WITHOUT A
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+  PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  You should have received a copy of the GNU General Public License,
+  v. 2.0 along with this distribution; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+  MA  02110-1301, USA.
+
+  (C) 2008-9
+  @author JBoss Inc.
+-->
+
+<project name="byteman" default="install" basedir=".">
+
+    <!-- define property obfuscate.3rd.party to hide 3rd party packages -->
+
+    <property environment="env"/>
+
+    <!-- version string stamped inside the manifests -->
+    <property name="version" value="1.2.2.SNAPSHOT"/>
+
+    <property name="ext.asm.jars" value="asm-all-3.0.jar"/>
+
+    <!-- locations for inputs ot build process-->
+    <property name="src.dir"           value="src"/>
+    <property name="bin.src.dir"       value="bin"/>
+    <property name="docs.src.dir"      value="docs"/>
+    <property name="dd.dir"            value="dd"/>
+    <property name="dd.grammar.dir"    value="${dd.dir}/grammar"/>
+    <property name="ext.lib.dir"       value="ext"/>
+    <property name="tests.dir"         value="tests"/>
+    <property name="tests.src.dir"     value="${tests.dir}/src"/>
+    <property name="tests.dd.dir"      value="${tests.dir}/dd"/>
+
+    <!-- locations of intermediate build products -->
+
+    <property name="build.dir"         value="build"/>
+    <property name="build.classes.dir" value="${build.dir}/classes"/>
+    <property name="build.lib.dir"     value="${build.dir}/lib"/>
+    <property name="htdocs.dir"        value="htdocs"/>
+
+    <!-- location of installed build products -->
+    <property name="install.dir" value="install"/>
+    <property name="install.lib.dir" value="${install.dir}/lib"/>
+    <property name="install.bin.dir" value="${install.dir}/bin"/>
+    <property name="install.docs.dir" value="${install.dir}/docs"/>
+
+    <!-- names of specific input and output products -->
+
+    <property name="ext.jflex.jars" value="JFlex.jar"/>
+    <property name="ext.javacup.jars" value="javacup.jar"/>
+    <property name="ext.javacup.rt.jars" value="javacuprt.jar"/>
+    <property name="byteman.jar" value="byteman.jar"/>
+    <property name="byteman-submit.jar" value="byteman-submit.jar"/>
+    <property name="byteman.bin.scripts" value="bytemancheck.sh submit.sh bmjava.sh"/>
+    <property name="byteman.doc.files" value="ProgrammersGuide.pdf copyright.txt"/>
+    <property name="byteman.ext.lib.doc.files" value="third_party_licenses.txt"/>
+    <property name="manifest.file" value="${dd.dir}/META-INF/MANIFEST.MF"/>
+
+    <property name="javac.debug" value="on"/>
+
+    <target name="init">
+        <delete dir="${build.dir}"/>
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${build.classes.dir}"/>
+        <mkdir dir="${build.lib.dir}"/>
+        <mkdir dir="${build.classes.dir}/META-INF"/>
+    </target>
+
+    <!-- parser is not automatically remade -->
+    <target name="parser" depends="init">
+        <java classname="JFlex.Main">
+            <classpath>
+                <fileset dir="${ext.lib.dir}" includes="${ext.jflex.jars}"/>
+            </classpath>
+            <arg value="-q"/>
+            <arg value="${dd.grammar.dir}/flex/ECAToken.flex"/>
+        </java>
+        
+<!--
+        <java classname="java_cup.Main">
+            <classpath>
+                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.jars}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
+            </classpath>
+            <arg value="-parser" />
+            <arg value="ECAGrammarParser" />
+            <arg value="-nonterms"/>
+            <arg value="-dump_grammar"/>
+            <arg value="-dump_states"/>
+            <arg value="-dump_tables"/>
+            <arg value="-dump"/>
+            <arg value="${dd.grammar.dir}/cup/ECAGrammar.cup"/>
+        </java>
+-->
+        <java classname="java_cup.Main">
+            <classpath>
+                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.jars}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
+            </classpath>
+            <arg value="-package"/>
+            <arg value="org.jboss.byteman.rule.grammar"/>
+            <arg value="-parser" />
+            <arg value="ECAGrammarParser" />
+            <arg value="-nonterms"/>
+            <arg value="${dd.grammar.dir}/cup/ECAGrammar.cup"/>
+        </java>
+        <delete file="${src.dir}/org/jboss/byteman/rule/grammar/ECATokenLexer.java"/>
+        <delete file="${src.dir}/org/jboss/byteman/rule/grammar/ECAGrammarParser.java"/>
+        <delete file="${src.dir}/org/jboss/byteman/rule/grammar/sym.java"/>
+        <move file="${dd.grammar.dir}/flex/ECATokenLexer.java"
+            tofile="${src.dir}/org/jboss/byteman/rule/grammar/ECATokenLexer.java"/>
+        <move file="ECAGrammarParser.java"
+            tofile="${src.dir}/org/jboss/byteman/rule/grammar/ECAGrammarParser.java"/>
+        <move file="sym.java"
+            tofile="${src.dir}/org/jboss/byteman/rule/grammar/sym.java"/>
+    </target>
+
+    <target name="compile" depends="init">
+        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}">
+            <classpath>
+                <fileset dir="${ext.lib.dir}" includes="${ext.asm.jars}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.jars}"/>
+                <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+       classpath="${ext.lib.dir}/jarjar-1.0.jar"/>
+
+   <target name="jar" depends="compile, byteman.jar, submit.jar">
+   </target>
+
+    <target name="byteman.jar.obfuscated" if="obfuscate.3rd.party">
+        <jarjar jarfile="${build.lib.dir}/${byteman.jar}" manifest="${manifest.file}">
+            <fileset dir="${build.classes.dir}" includes="**/*"/>
+            <zipfileset src="${ext.lib.dir}/asm-all-3.0.jar"/>
+            <zipfileset src="${ext.lib.dir}/javacuprt.jar"/>
+            <rule pattern="org.objectweb.asm.**" result="org.jboss.byteman.org.objectweb.asm.@1"/>
+            <rule pattern="java_cup.runtime.**" result="org.jboss.byteman.java_cup.runtime.@1"/>
+            <manifest>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+        </jarjar>
+    </target>
+
+    <target name="byteman.jar.clear" unless="obfuscate.3rd.party">
+        <jarjar jarfile="${build.lib.dir}/${byteman.jar}" manifest="${manifest.file}">
+            <fileset dir="${build.classes.dir}" includes="**/*"/>
+            <zipfileset src="${ext.lib.dir}/asm-all-3.0.jar"/>
+            <zipfileset src="${ext.lib.dir}/javacuprt.jar"/>
+            <manifest>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+        </jarjar>
+    </target>
+
+    <target name="byteman.jar" depends="byteman.jar.obfuscated, byteman.jar.clear">
+    </target>
+
+    <target  name="submit.jar">
+        <jar jarfile="${build.lib.dir}/${byteman-submit.jar}">
+            <fileset dir="${build.classes.dir}" includes="**/Submit*.class"/>
+            <manifest>
+                <attribute name="Main-Class" value="org.jboss.byteman.agent.submit.Submit"/>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- installation targets -->
+    <target  name="init-install">
+        <delete dir="${install.dir}"/>
+        <mkdir dir="${install.dir}"/>
+        <mkdir dir="${install.lib.dir}"/>
+        <mkdir dir="${install.bin.dir}"/>
+        <mkdir dir="${install.docs.dir}"/>
+    </target>
+
+    <target name="local-install">
+        <copy todir="${install.lib.dir}">
+            <fileset dir="${build.lib.dir}" includes="${byteman.jar}"/>
+        </copy>
+        <copy todir="${install.lib.dir}">
+            <fileset dir="${build.lib.dir}" includes="${byteman-submit.jar}"/>
+        </copy>
+        <copy todir="${install.bin.dir}">
+            <fileset dir="${bin.src.dir}" includes="${byteman.bin.scripts}"/>
+        </copy>
+        <copy todir="${install.docs.dir}">
+            <fileset dir="${docs.src.dir}" includes="${byteman.doc.files}"/>
+        </copy>
+        <copy todir="${install.docs.dir}">
+            <fileset dir="${ext.lib.dir}" includes="${byteman.ext.lib.doc.files}"/>
+        </copy>
+    </target>
+
+    <!-- target to make and install samples in samples directory -->
+    <target name="sample-install">
+        <ant dir="sample" target="install"/>
+    </target>
+
+    <target name="install" depends="jar, init-install, local-install, sample-install">
+    </target>
+
+    <!-- target for use by build-release-pkgs script n.b. this assumes it is being run in a clean
+         source tree under tags obtained using svn export. -->
+    <target name="zip" depends="install">
+        <zip destfile="${build.dir}/byteman.zip">
+            <fileset  dir="${install.dir}" includes="**/*"/>
+        </zip>
+        <zip destfile="${build.dir}/byteman-src.zip">
+            <fileset  dir="${install.dir}" includes="**/*"/>
+            <fileset  dir="." includes="${src.dir}/**/*"/>
+            <fileset  dir="." includes="${dd.dir}/**/*"/>
+            <fileset  dir="." includes="${docs.src.dir}/**/*"/>
+            <fileset  dir="." includes="${htdocs.dir}/**/*"/>
+            <fileset  dir="." includes="${bin.src.dir}/**/*"/>
+            <fileset  dir="." includes="${ext.lib.dir}/**/*"/>
+            <fileset  dir="." includes="${tests.src.dir}/**/*"/>
+            <fileset  dir="." includes="${tests.dd.dir}/**/*"/>
+        </zip>
+    </target>
+
+    <!-- target to make htdocs for byteman code -->
+   <target name="htdocs">
+       <delete dir="${htdocs.dir}"/>
+       <mkdir dir="${htdocs.dir}"/>
+       <javadoc packagenames="org.jboss.byteman" destdir="${htdocs.dir}" private="true">
+           <classpath>
+               <fileset dir="${ext.lib.dir}" includes="${ext.asm.jars}"/>
+               <fileset dir="${ext.lib.dir}" includes="${ext.javacup.jars}"/>
+               <fileset dir="${ext.lib.dir}" includes="${ext.javacup.rt.jars}"/>
+           </classpath>
+           <fileset dir="${src.dir}" includes="**/*.java"/>
+       </javadoc>
+   </target>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dd.grammar.dir}" includes="*.java *.tokens"/>
+        <ant dir="sample" target="clean"/>
+     </target>
+
+    <target name="spotless" depends="clean">
+        <delete dir="${install.dir}"/>
+        <ant dir="sample" target="spotless"/>
+     </target>
+</project>

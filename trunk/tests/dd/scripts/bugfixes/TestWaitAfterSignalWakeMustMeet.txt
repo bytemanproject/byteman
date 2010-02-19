@@ -1,0 +1,123 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2009, Red Hat Middleware LLC, and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+# Test for BYTEMAN-38
+
+##############################################################################
+# when test is entered we need to set up a rendezvous
+
+RULE setup
+CLASS TestWaitAfterSignalWakeMustMeet
+METHOD test
+HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
+IF TRUE
+DO createRendezvous("test", 2, true)
+ENDRULE
+
+
+##############################################################################
+# when ensureSignalWake is called we need to ensure that another thread has
+# called signalWake. our helper specialises signalWake to allow this to be
+# checked
+
+RULE ensureSignalWait
+CLASS TestWaitAfterSignalWakeMustMeet
+METHOD ensureSignalWake
+HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
+IF TRUE
+DO ensureSignalWake()
+ENDRULE
+
+##############################################################################
+# when ensureWaitFor is called we need to ensure that another thread has
+# called waitFor. our helper specialises waitFor to allow this to be
+# checked
+
+RULE ensureWaitFor
+CLASS TestWaitAfterSignalWakeMustMeet
+METHOD ensureWaitFor
+HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
+IF TRUE
+DO ensureWaitFor()
+ENDRULE
+
+##############################################################################
+# when triggerWaitFor is called we need to do a waitFor
+
+RULE triggerWaitFor
+CLASS TestWaitAfterSignalWakeMustMeet
+METHOD triggerWaitFor
+HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
+BIND test : TestEmptySignature = $0
+IF TRUE
+DO test.log("waitFor"),
+   waitFor("test")
+ENDRULE
+
+##############################################################################
+# when triggerSignalWake is called we need to do a signalWake
+
+RULE triggerSignalWake
+CLASS TestWaitAfterSignalWakeMustMeet
+METHOD triggerSignalWake
+HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
+BIND test : TestEmptySignature = $0
+IF TRUE
+DO test.log("signalWake"),
+   signalWake("test", true)
+ENDRULE
+
+##############################################################################
+# when triggerRendezvous is called we need to do a rendezvous
+
+RULE triggerRendezvous
+CLASS TestWaitAfterSignalWakeMustMeet
+METHOD triggerRendezvous
+HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
+IF TRUE
+DO rendezvous("test")
+ENDRULE
+
+##############################################################################
+# when triggerTimeoutCheck is called we need to wait and, if we timeout
+# throw an Exception
+
+RULE triggerTimeoutCheck
+CLASS TestWaitAfterSignalWakeMustMeet
+METHOD triggerTimeoutCheck
+IF TRUE
+DO waitFor("timeout", 60 * 1000),
+   throw Exception("failed with timeout")
+ENDRULE
+
+##############################################################################
+# when triggerTimeoutCancel is called we need to call signalThrow to cause
+# a runtime exception in the main thread.
+
+RULE triggerTimeoutCancel
+CLASS TestWaitAfterSignalWakeMustMeet
+METHOD triggerTimeoutCancel
+IF TRUE
+DO signalThrow("timeout")
+ENDRULE
+

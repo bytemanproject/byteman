@@ -1,0 +1,53 @@
+Byteman README
+--------------
+
+Byteman supports injection of side effects into Java programs for the
+purpose of tracing and testing application behaviour.
+
+Installation
+------------
+
+If you have downloaded a binary release then unzip it into a target
+install directory.
+
+If you have downloaded a source release then unzip into a target
+release directory. In that directory execute command 'ant install' to
+build the byteman release. It will be found in a subdirectory named
+install. The installed version contains the following subdirectories
+
+  bin -- contains Unix scripts to simplify: using Byteman (bmjava.sh);
+      typechecking Byteman rule scripts (bytemancheck.sh); and
+      communicating with the Byteman agent listener (submit.sh)
+
+  docs -- contains the Byteman Programmer's guide and license
+      information for Byteman plus the third-party software it uses
+
+  lib -- contains the Byteman agent and rule engine (byteman.jar)
+      and a subset of this code needed to compile/run the submit
+      client (byteman-submit.jar)
+
+  sample/lib -- contains helper code for the sample scripts
+
+  sample/scripts -- contains example rule scripts showing how to
+      use Byteman
+
+Using Byteman
+-------------
+Please consult the Programmer's Guide for details of how Byteman
+operates, how to write Byteman rule scripts and how to run a Java
+program with the Byteman agent in place.
+
+Take a look at the sample scripts directory to see some examples of
+how you can use Byteman to trace application and JVM execution
+(n.b. these examples need extending to show how to use Byteman for
+fault injection based testing).
+
+Copyright
+---------
+See the copyright file in the docs directory for details of the open
+source license under which this code is released. Note that this code
+employs the ObjectWeb ASM package to do bytecode manipulation and the
+JFlex and JavaCUP tokeniser and parser genereators to generate and
+provide runtime support for the rule parser which are also released
+under open source licenses.
+
