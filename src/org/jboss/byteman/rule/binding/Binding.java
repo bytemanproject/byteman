@@ -80,6 +80,8 @@ public class Binding extends RuleElement
             index = BINDVAR;
         }
         this.callArrayIndex = 0;
+
+        this.updated = false;
     }
 
     public Type typeCheck(Type expected)
@@ -93,9 +95,15 @@ public class Binding extends RuleElement
         if (value != null) {
             // type check the binding expression, using the bound variable's expected if it is known
 
-            Type valueType = value.typeCheck(expected);
+            if (type.isDefined()) {
+                value.typeCheck(type);
+                // redundant?
+                if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
+                    throw new TypeException("Binding.typecheck : incompatible type binding expression " + type + value.getPos());
+                }
+            }  else {
+                Type valueType = value.typeCheck(expected);
 
-            if (type.isUndefined()) {
                 type = valueType;
             }
         } else if (type.isUndefined()) {
@@ -109,7 +117,7 @@ public class Binding extends RuleElement
     {
         if (isBindVar()) {
             Object result = value.interpret(helper);
-            helper.bindVariable(getName(), result);
+            helper.setBinding(getName(), result);
             return result;
         }
         return null;
@@ -134,8 +142,8 @@ public class Binding extends RuleElement
             if (type.isPrimitive()) {
                 compileBox(Type.boxType(type), mv, currentStackHeights, maxStackHeights);
             }
-            // compile a bindVariable call pops 3 from stack height
-            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "bindVariable", "(Ljava/lang/String;Ljava/lang/Object;)V");
+            // compile a setBinding call pops 3 from stack height
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V");
             currentStackHeights.addStackCount(-3);
 
             // check the max height was enough for 3 extra values
@@ -253,6 +261,25 @@ public class Binding extends RuleElement
         this.descriptor = desc;
     }
 
+    /**
+     * record that this binding occurs on the LHS of an assignment
+     */
+    public void setUpdated()
+    {
+        updated = true;
+        if (alias != null) {
+            alias.setUpdated();
+        }
+    }
+
+    /**
+     * record that this binding occurs on the LHS of an assignment
+     */
+    public boolean isUpdated()
+    {
+        return updated;
+    }
+
     public void writeTo(StringWriter stringWriter)
     {
         if (isHelper()) {
@@ -281,6 +308,9 @@ public class Binding extends RuleElement
     {
         if (this.isLocalVar()) {
             this.alias = alias;
+            if (this.updated) {
+                alias.updated = true;
+            }
         } else {
             System.out.println("Binding : attempt to alias non-local var " + getName() + " to " + alias.getName());
         }
@@ -315,4 +345,5 @@ public class Binding extends RuleElement
     // the offset into the stack at which a local var is located
     private int localIndex;
     private Binding alias; // aliases $x to $n where x is a method parameter name and n its index in the parameter list
+    boolean updated; // records whether this binding occurs on the lhs of an assignment
 }

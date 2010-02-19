@@ -97,6 +97,11 @@ public class PlusExpression extends BinaryOperExpression
                 int i2 = n2.intValue();
                 int result = (i1 + i2);
                 return new Integer(result);
+            }  else if (type == Type.J) {
+                long l1 = n1.longValue();
+                long l2 = n2.longValue();
+                long result = (l1 + l2);
+                return new Long(result);
             } else if (type == Type.F) {
                 float f1 = n1.floatValue();
                 float f2 = n2.floatValue();
@@ -163,7 +168,7 @@ public class PlusExpression extends BinaryOperExpression
             currentStackHeights.addStackCount(-1);
         } else if (type == Type.J) {
             // add two longs leaving one long
-            expected = 1;
+            expected = 2;
             mv.visitInsn(Opcodes.LADD);
             currentStackHeights.addStackCount(-2);
         } else if (type == Type.F) {
@@ -173,13 +178,13 @@ public class PlusExpression extends BinaryOperExpression
             currentStackHeights.addStackCount(-1);
         } else if (type == Type.D) {
             // add two doubles leaving one double
-            expected = 1;
+            expected = 2;
             mv.visitInsn(Opcodes.FADD);
             currentStackHeights.addStackCount(-2);
         }
 
         if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("PlusExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+            throw new CompileException("PlusExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
         }
 
         // we need room for 2 * expected words at our maximum

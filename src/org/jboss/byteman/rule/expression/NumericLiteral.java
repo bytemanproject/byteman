@@ -55,9 +55,9 @@ public class NumericLiteral extends Expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind() {
+    public void bind() throws TypeException
+    {
         // no bindings to check
-        return true;
     }
 
     public Type typeCheck(Type expected) throws TypeException {

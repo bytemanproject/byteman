@@ -72,7 +72,7 @@ public class Type {
     public Type arrayType(Class clazz)
     {
         if (this.arrayType ==  null) {
-            arrayType = new Type(typeName + "[]", clazz, F_ARRAY, 1, this);
+            arrayType = new Type(typeName + "[]", clazz, F_ARRAY, 4, this);
         }
         return arrayType;
     }

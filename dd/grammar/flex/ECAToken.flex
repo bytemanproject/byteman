@@ -129,6 +129,8 @@ Float = {Sign}? {PosFloat}
 	
 "THROW"|"throw"	{ return symbol(sym.THROW); }
 
+"NEW"|"new"	{ return symbol(sym.NEW); }
+
 /* various bracket pairs */
 	
 "("		{ return symbol(sym.LPAREN); }
@@ -224,6 +226,8 @@ Float = {Sign}? {PosFloat}
 "$" "!" { return symbol(sym.DOLLAR, yytext()); }
 
 /* identifiers */
+
+"NULL" | "null" { return symbol(sym.NULL_LITERAL); }
 
 {Identifier}		{ return symbol(sym.IDENTIFIER, yytext()); }
 

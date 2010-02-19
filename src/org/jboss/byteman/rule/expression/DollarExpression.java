@@ -50,7 +50,7 @@ import java.io.StringWriter;
  *
  * At present there are no special variables but we may need to add some later
  */
-public class DollarExpression extends Expression
+public class DollarExpression extends AssignableExpression
 {
     public DollarExpression(Rule rule, Type type, ParseNode token, int index)
     {
@@ -63,6 +63,7 @@ public class DollarExpression extends Expression
             name = "$" + Integer.toString(index);
         }
         this.index = index;
+        this.binding = null;
     }
 
     public DollarExpression(Rule rule, Type type, ParseNode token, String name)
@@ -70,6 +71,7 @@ public class DollarExpression extends Expression
         super(rule, type, token);
         this.index = BINDING_IDX;
         this.name = "$" + name;
+        this.binding = null;
     }
 
     /**
@@ -81,12 +83,34 @@ public class DollarExpression extends Expression
      * been detected during inference/validation.
      */
 
-    public boolean bind() {
+    public void  bind() throws TypeException
+    {
+        bind(false);
+    }
+
+    /**
+     * verify that variables mentioned in this expression are actually available in the supplied
+     * bindings list. infer/validate the type of this expression or its subexpressions
+     * where possible
+
+     * @return true if all variables in this expression are bound and non-final and no type mismatches have
+     * been detected during inference/validation.
+     */
+
+    public void bindAssign() throws TypeException
+    {
+        if (name.equals("$0") || name.equals("$this")){
+            throw new TypeException("invalid assignment to final variable " + name + getPos());
+        }
+        bind(true);
+    }
+
+    public void bind(boolean isUpdateable) throws TypeException
+    {
         // ensure that there is a binding in the bindings set for this parameter
         // we will type check the binding later
 
         Bindings bindings = getBindings();
-        Binding binding;
 
         binding = bindings.lookup(name);
 
@@ -94,19 +118,21 @@ public class DollarExpression extends Expression
             binding = new Binding(rule, name, null);
             bindings.append(binding);
         }
-
-        return true;
+        
+        if (isUpdateable) {
+            binding.setUpdated();
+        }
     }
 
     public Type typeCheck(Type expected) throws TypeException {
-        // ensure there is a parameter with the relevant name in the bindings
-        Binding binding;
-        binding = getBindings().lookup(name);
+        // if the associated binding is an alias then dereference it
 
-        if (binding == null) {
-            throw new TypeException("DollarExpression.typeCheck : invalid bound parameter " + name + getPos());
+        if (binding.isAlias()) {
+            binding = binding.getAlias();
         }
+
         type = binding.getType();
+        
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
             throw new TypeException("DollarExpression.typeCheck : invalid expected type " + expected.getName() + " for bound parameter " + name + getPos());            
         }
@@ -115,11 +141,13 @@ public class DollarExpression extends Expression
 
     public Object interpret(HelperAdapter helper) throws ExecuteException
     {
-        return helper.getBinding(name);
+        return helper.getBinding(binding.getName());
     }
 
     public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
     {
+        String targetName = binding.getName();
+
         int currentStack = currentStackHeights.stackCount;
 
         if (index == HELPER_IDX) {
@@ -136,7 +164,7 @@ public class DollarExpression extends Expression
             // stack the name for the variable
             // call the getBinding method
             mv.visitVarInsn(Opcodes.ALOAD, 0);
-            mv.visitLdcInsn(name);
+            mv.visitLdcInsn(targetName);
             mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "getBinding", "(Ljava/lang/String;)Ljava/lang/Object;");
             // ok, we added 2 to the stack and then popped them leaving 1
             currentStackHeights.addStackCount(1);
@@ -158,6 +186,82 @@ public class DollarExpression extends Expression
         }
     }
 
+    @Override
+    public Object interpretAssign(HelperAdapter helperAdapter, Object value) throws ExecuteException
+    {
+        helperAdapter.setBinding(binding.getName(), value);
+        return value;
+    }
+
+    @Override
+    public void compileAssign(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        String targetName = binding.getName();
+
+        int currentStack = currentStackHeights.stackCount;
+        int size = ((type.getNBytes() > 4) ? 2 : 1);
+        int max;
+
+        if (index == HELPER_IDX) {
+            // not allowed to reassign the helper binding
+            throw new CompileException("DollarExpression.compileAssign : invalid assignment to helper binding $$");
+        } else {
+            // value to be assigned is TOS and will already be coerced to the correct value type
+            // copy it so we leave it as a a return value on the stack
+            if (size == 2) {
+                mv.visitInsn(Opcodes.DUP2);
+            } else {
+                mv.visitInsn(Opcodes.DUP);
+            }
+            // stack the current helper then insert it below the value
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            if (size == 2) {
+                // use a DUP_X2 to push a copy below the value then pop the redundant value
+                mv.visitInsn(Opcodes.DUP_X2);
+                mv.visitInsn(Opcodes.POP);
+            } else {
+                // we can just swap the two values
+                mv.visitInsn(Opcodes.SWAP);
+            }
+            // stack the name for the variable and swap below the value
+            mv.visitLdcInsn(targetName);
+            if (size == 2) {
+                // use a DUP_X2 to push a copy below the value then pop the redundant value
+                mv.visitInsn(Opcodes.DUP_X2);
+                // this is the high water mark
+                // at this point the stack has gone from [ .. val1 val2]  to [.. val1 val2 helper name val1 val2 name]
+                max = 3 + size;
+                mv.visitInsn(Opcodes.POP);
+            } else {
+                // this is the high water mark
+                // at this point the stack has gone from [ .. val]  to [.. val helper val name]
+                max = 2 + size;
+                // we can just swap the two values
+                mv.visitInsn(Opcodes.SWAP);
+            }
+            // update the stack count for the value and two extra words before we attempt a type conversion
+            currentStackHeights.addStackCount(2 + size);
+            // ensure we have an object
+            compileObjectConversion(type, Type.OBJECT, mv, currentStackHeights, maxStackHeights);
+
+            // call the setBinding method
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V");
+
+            // the call will remove 3 from the stack height
+            currentStackHeights.addStackCount(-3);
+
+            // ok, the stack height should be as it was
+            if (currentStackHeights.stackCount != currentStack) {
+                throw new CompileException("variable.compileAssignment : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack);
+            }
+            // make sure we left room for the right number of working slots at our maximum
+            int overflow = (currentStack + max - maxStackHeights.stackCount);
+            if (overflow > 0) {
+                maxStackHeights.addStackCount(overflow);
+            }
+        }
+    }
+
     public void writeTo(StringWriter stringWriter) {
         stringWriter.write(name);
     }
@@ -168,6 +272,8 @@ public class DollarExpression extends Expression
      * the current helper, the return value on the stack in an AT EXIT rule or a local or BIND variable
      */
     private int index;
+
+    private Binding binding;
 
     public final static int HELPER_IDX = -1;
     public final static int BINDING_IDX = -2;

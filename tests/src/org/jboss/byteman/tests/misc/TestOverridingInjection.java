@@ -1,8 +1,32 @@
+/*
+ * JBoss, Home of Professional Open Source
+ * Copyright 2009-10, Red Hat Middleware LLC, and individual contributors
+ * by the @authors tag. See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ *
+ * (C) 2009-10,
+ * @authors Andrew Dinn
+ */
+
 package org.jboss.byteman.tests.misc;
 
 import org.jboss.byteman.tests.Test;
 import org.jboss.byteman.tests.auxiliary.TestEntryExitAuxiliarySub;
-import org.jboss.byteman.tests.auxiliary.TestEntryExitAuxiliary;
 
 /**
  * Test class to ensure injection into overriding methods works as expected
@@ -20,12 +44,16 @@ public class TestOverridingInjection extends Test
         // rule trace into both constructors. ditto for both implementations of testMethod.
 
         try {
-        TestEntryExitAuxiliary testAuxiliary;
+
+        // n.b. it is important that we do not employ the parent class TestEntryExitAuxiliary
+        // in the code here. that guarantees when we create the subclass instance here
+        // that the parent class has not yet been loaded. this verifies the fix to BYTEMAN-80
+        TestEntryExitAuxiliarySub testAuxiliarySub;
         log("creating TestEntryExitAuxiliarySub");
-        testAuxiliary = new TestEntryExitAuxiliarySub(this);
+        testAuxiliarySub = new TestEntryExitAuxiliarySub(this);
         log("created TestEntryExitAuxiliarySub");
         log("calling TestEntryExitAuxiliarySub.testMethod");
-        testAuxiliary.testMethod();
+        testAuxiliarySub.testMethod();
         log("called TestEntryExitAuxiliarySub.testMethod");
         } catch (Exception e) {
             log(e);

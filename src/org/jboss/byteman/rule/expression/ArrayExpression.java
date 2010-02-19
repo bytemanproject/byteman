@@ -61,20 +61,17 @@ public class ArrayExpression extends Expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind() {
+    public void bind() throws TypeException
+    {
         // we  have to make sure that any names occuring in the array reference are bound
         // and that the index expressions contain valid bindings
-        boolean valid = true;
-
-        valid = arrayRef.bind();
+        arrayRef.bind();
 
         Iterator<Expression> iterator = idxList.iterator();
 
         while (iterator.hasNext()) {
-            valid &= iterator.next().bind();
+            iterator.next().bind();
         }
-
-        return valid;
     }
 
     public Type typeCheck(Type expected) throws TypeException {

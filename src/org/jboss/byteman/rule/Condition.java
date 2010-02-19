@@ -77,9 +77,8 @@ public class Condition extends RuleElement
         super(rule);
         int tag = conditionTree.getTag();
         condition = ExpressionHelper.createExpression(rule, rule.getBindings(), conditionTree, Type.BOOLEAN);
-        if (!condition.bind()) {
-            throw new TypeException("ExpressionHelper.createExpression : unknown reference in expression" + condition.getPos());
-        }
+        // check bindings
+        condition.bind();
     }
     
     protected Condition(Rule rule)

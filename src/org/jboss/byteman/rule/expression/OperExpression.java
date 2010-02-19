@@ -130,7 +130,9 @@ public abstract class OperExpression extends Expression
     final public static int MINUS       = 0x0204 | BINARY;
     final public static int MOD         = 0x0205 | BINARY;
 
-    final public static int COND        = 0x0400 | TERNARY;
+    final public static int ASSIGN      = 0x0401 | BINARY;
+
+    final public static int COND        = 0x0800 | TERNARY;
 
     final private static int[] operands = {
             NOT,
@@ -152,7 +154,8 @@ public abstract class OperExpression extends Expression
             PLUS,
             MINUS,
             MOD,
-            COND
+            ASSIGN,
+            COND,
     };
 
     /* parser operands are not allocated rationally so we convert using this table */
@@ -177,6 +180,7 @@ public abstract class OperExpression extends Expression
             org.jboss.byteman.rule.grammar.ParseNode.PLUS,
             org.jboss.byteman.rule.grammar.ParseNode.MINUS,
             org.jboss.byteman.rule.grammar.ParseNode.MOD,
+            org.jboss.byteman.rule.grammar.ParseNode.ASSIGN,
             org.jboss.byteman.rule.grammar.ParseNode.TERNOP
     };
 
@@ -200,6 +204,7 @@ public abstract class OperExpression extends Expression
             "+",
             "-",
             "%",
+            "=",
             "? :"
     };
 }

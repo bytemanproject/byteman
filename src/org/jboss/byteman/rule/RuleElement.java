@@ -150,7 +150,7 @@ public abstract class RuleElement {
             } else if (toType == Type.I){
                 mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Number", "intValue", "()I");
             } else if (toType == Type.J){
-                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Number", "longValue", "()L");
+                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Number", "longValue", "()J");
                 currentStackHeights.addStackCount(1);
                 if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
                     maxStackHeights.stackCount = currentStackHeights.stackCount;
@@ -192,11 +192,13 @@ public abstract class RuleElement {
         } else if (toType == Type.INTEGER) {
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;");
         } else if (toType == Type.LONG) {
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Long", "valueOf", "(L)Ljava/lang/Long;");
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;");
+            currentStackHeights.addStackCount(-1);
         } else if (toType == Type.FLOAT) {
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;");
         } else if (toType == Type.DOUBLE) {
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;");
+            currentStackHeights.addStackCount(-1);
         }
     }
 
@@ -236,7 +238,7 @@ public abstract class RuleElement {
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Integer", "toString", "(I)Ljava/lang/String;");
         } else if (fromType == Type.J) {
             // use the toString method
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Long", "toString", "(L)Ljava/lang/String;");
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Long", "toString", "(J)Ljava/lang/String;");
             currentStackHeights.addStackCount(-1);
         } else if (fromType == Type.F) {
             // use the toString method

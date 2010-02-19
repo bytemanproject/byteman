@@ -23,6 +23,8 @@
 */
 package org.jboss.byteman.agent;
 
+import org.jboss.byteman.agent.check.ClassChecker;
+import org.jboss.byteman.agent.check.LoadCache;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.rule.exception.ParseException;
@@ -31,6 +33,7 @@ import org.jboss.byteman.agent.adapter.RuleTriggerAdapter;
 import org.jboss.byteman.agent.adapter.RuleCheckAdapter;
 import org.objectweb.asm.*;
 
+import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
@@ -57,6 +60,7 @@ public class Transformer implements ClassFileTransformer {
         this.inst = inst;
         this.isRedefine = isRedefine;
         scriptRepository = new ScriptRepository(skipOverrideRules());
+        loadCache = new LoadCache(inst);
 
         Iterator<String> scritpsIter = scriptTexts.iterator();
         Iterator<String> filesIter = scriptPaths.iterator();
@@ -165,7 +169,7 @@ public class Transformer implements ClassFileTransformer {
      * has the same effect as returning null but facilitates the
      * logging or debugging of format corruptions.
      *
-     * @param loader              the defining loader of the class to be transformed,
+     * @param originalLoader      the defining loader of the class to be transformed,
      *                            may be <code>null</code> if the bootstrap loader
      * @param className           the name of the class in the internal form of fully
      *                            qualified class and interface names as defined in
@@ -182,7 +186,7 @@ public class Transformer implements ClassFileTransformer {
      * @see java.lang.instrument.Instrumentation#redefineClasses
      */
 
-    public byte[] transform(ClassLoader loader,
+    public byte[] transform(ClassLoader originalLoader,
                             String className,
                             Class<?> classBeingRedefined,
                             ProtectionDomain protectionDomain,
@@ -190,6 +194,7 @@ public class Transformer implements ClassFileTransformer {
             throws IllegalClassFormatException
     {
         boolean enabled = true;
+        ClassLoader loader = originalLoader;
         try {
             enabled = Rule.disableTriggersInternal();
 
@@ -204,13 +209,13 @@ public class Transformer implements ClassFileTransformer {
 
             // we will need the super class name any outer class name and the name of the interfaces the class implements
 
-            ClassChecker checker = new ClassChecker(newBuffer);
+            ClassChecker checker = getClassChecker(newBuffer);// new ClassChecker(newBuffer);
 
             if (checker.isInterface()) {
                 return null;
             }
 
-            if (checker.getOuterClass() != null) {
+            if (checker.hasOuterClass()) {
                 // we don't transform inner classes for now
                 // TODO -- see if we can match and transform inner classes via the outer class
                 return null;
@@ -240,10 +245,10 @@ public class Transformer implements ClassFileTransformer {
                 // n.b. resist the temptation to call classBeingRedefined.getInterfaces() as this will
                 // cause the class to be resolved, losing any changes we install
 
-                String[] interfaceNames = checker.getInterfaces();
+                int interfaceCount = checker.getInterfaceCount();
 
-                for (int i = 0; i < interfaceNames.length; i++) {
-                    String interfaceName = interfaceNames[i];
+                for (int i = 0; i < interfaceCount; i++) {
+                    String interfaceName = checker.getInterface(i);
                     String internalInterfaceName = TypeHelper.internalizeClass(interfaceName);
                     newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalInterfaceName, true);
                     dotIdx = internalInterfaceName.lastIndexOf('.');
@@ -256,37 +261,34 @@ public class Transformer implements ClassFileTransformer {
             // checking supers is expensive so we obey the switch which disables it
             
             if (!skipOverrideRules()) {
-                // ok, now find the superclass for this class and check the superclass chain
+                // ok, now check the superclass for this class and so on
 
-                String superName = TypeHelper.internalizeClass(checker.getSuper());
-                Class superClazz = null;
+                String superName = checker.getSuper();
 
-                if (superName != null) {
-                    try {
-                        superClazz = loader.loadClass(superName);
-                    } catch (ClassNotFoundException e) {
-                        // should not happen!
-                        // TODO - what happens when the bytecode is for class Object? is the supername null? or ""?
-                        System.err.println("Transformer.transform : error looking up superclass!");
-                        e.printStackTrace(System.err);
+                while (superName != null) {
+                    // we need to check the super class structure
+                    // n.b. we use the original loader here because we don't want to search the system loader
+                    // when we have a class in the bootstrap loader
+                    checker = getClassChecker(superName, originalLoader);
+
+                    if (checker == null || checker.hasOuterClass()) {
+                        // we don't transform inner classes for now
+                        // TODO -- see if we can match and transform inner classes via the outer class
                     }
-                }
 
-                while (superClazz != null) {
                     newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, superName, false, true);
                     dotIdx = superName.lastIndexOf('.');
                     if (dotIdx > 0) {
                         newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, superName.substring(dotIdx + 1), false, true);
                     }
 
-                    // ok, now check any interfaces implemented by the superclass
-                    Class[] interfaces = superClazz.getInterfaces();
+                    int interfaceCount = checker.getInterfaceCount();
 
-                    for (int i = 0; i < interfaces.length; i++) {
+                    for (int i = 0; i < interfaceCount; i++) {
+                        String interfaceName = checker.getInterface(i);
                         // TODO -- do we ever find that a super declares an interface also declared by its subclass
                         // TODO -- we probably don't want to inject twice in such cases so we ought to remember whether
                         // TODO -- we have seen an interface before
-                        String interfaceName = interfaces[i].getName();
                         newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, interfaceName, true, true);
                         dotIdx = interfaceName.lastIndexOf('.');
                         if (dotIdx >= 0) {
@@ -294,18 +296,14 @@ public class Transformer implements ClassFileTransformer {
                         }
                     }
 
-                    superClazz = superClazz.getSuperclass();
-                    if (superClazz != null) {
-                        superName = superClazz.getName();
-                    }
+                    // move on to the next super
+                    superName = checker.getSuper();
                 }
             }
 
             if (newBuffer != classfileBuffer) {
                 // see if we need to dump the transformed bytecode for checking
-                if (dumpGeneratedClasses) {
-                    dumpClass(internalName, newBuffer, classfileBuffer);
-                }
+                maybeDumpClass(internalName, newBuffer);
                 return newBuffer;
             } else {
                 return null;
@@ -372,6 +370,11 @@ public class Transformer implements ClassFileTransformer {
      * system property set (to any value) in order to switch on dumping of generated bytecode to .class files
      */
     public static final String DUMP_GENERATED_CLASSES = BYTEMAN_PACKAGE_PREFIX + "dump.generated.classes";
+
+    /**
+     * system property set (to any value) in order to switch on dumping of intermediate generated bytecode to .class files
+     */
+    public static final String DUMP_GENERATED_CLASSES_INTERMEDIATE = BYTEMAN_PACKAGE_PREFIX + "dump.generated.classes.intermediate";
 
     /**
      * system property identifying directory in which to dump generated bytecode .class files
@@ -574,6 +577,14 @@ public class Transformer implements ClassFileTransformer {
 
         return true;
     }
+    
+    public static void maybeDumpClassIntermediate(String fullName, byte[] bytes)
+    {
+        if (dumpGeneratedClassesIntermediate) {
+            dumpClass(fullName, bytes, true);
+        }
+    }
+
     public static void maybeDumpClass(String fullName, byte[] bytes)
     {
         if (dumpGeneratedClasses) {
@@ -724,6 +735,8 @@ public class Transformer implements ClassFileTransformer {
 //            if (isVerbose()) {
 //                System.out.println("tryTransform : " + name + " for " + key);
 //            }
+            int counter = 0;
+
             for (RuleScript ruleScript : ruleScripts) {
                 try {
                     // we only transform via isOverride rules if isOverride is true
@@ -732,6 +745,7 @@ public class Transformer implements ClassFileTransformer {
                         // only do the transform if the script has not been deleted
                         synchronized (ruleScript) {
                             if (!ruleScript.isDeleted()) {
+                                maybeDumpClassIntermediate(name, newBuffer);
                                 newBuffer = transform(ruleScript, loader, name, classBeingRedefined, newBuffer);
                             }
                         }
@@ -802,108 +816,69 @@ public class Transformer implements ClassFileTransformer {
     }
 
     /**
-     * a simple adapter used to scan a class's bytecode definition for the name of its superclass, its enclosing
-     * class and the interfaces it implements directly
+     * return a checker object which can be used to retrieve the super and interfaces of a class from its defining bytecode
+     * @param bytecode
+     * @return
      */
-    
-    private static class ClassCheckAdapter implements ClassVisitor
+    private org.jboss.byteman.agent.check.ClassChecker getClassChecker(byte[] bytecode)
     {
-        private boolean isInterface = false;
-        private String[] interfaces = null;
-        private String superName = null;
-        private String outerClass = null;
-
-        public boolean isInterface() {
-            return isInterface;
-        }
-
-        public String getSuper()
-        {
-            return superName;
-        }
-
-        public String getOuterClass()
-        {
-            return outerClass;
-        }
-
-        public String[] getInterfaces()
-        {
-            return interfaces;
-        }
-
-        public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-            this.isInterface = (access & Opcodes.ACC_INTERFACE) != 0;
-            this.interfaces = interfaces;
-            this.superName = superName;
-        }
-
-        public void visitSource(String source, String debug) {
-            // do nothimg
-        }
-
-        public void visitOuterClass(String owner, String name, String desc) {
-            outerClass = owner;
-        }
-
-        public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-            return null;
-        }
-
-        public void visitAttribute(Attribute attr) {
-            // do nothimg
-        }
-
-        public void visitInnerClass(String name, String outerName, String innerName, int access) {
-            // do nothimg
-        }
-
-        public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-            return null;
-        }
-
-        public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-            return null;
-        }
-
-        public void visitEnd() {
-            // do nothimg
-        }
+        return new org.jboss.byteman.agent.check.BytecodeChecker(bytecode);
     }
 
     /**
-     * a private class which can be used to derive the super and interfaces of a class from its defining bytecode
+     * return a checker object which can be used to retrieve the super and interfaces of a class from its name and
+     * classloader, identifying it from the Class instance if it the class is already loaded otherwise loading
+     * the corresponding bytecode and parsing it to obtain the relevant details.
+     *
+     * @param name the name of the superclass being checked
+     * @param baseLoader the class loader of the subclass's bytecode
+     * @return the requisite checker or null if the class does not need to be checked or cannot be loaded
      */
-    private static class ClassChecker
+    private org.jboss.byteman.agent.check.ClassChecker getClassChecker(String name, ClassLoader baseLoader)
     {
-        ClassCheckAdapter adapter;
+        // we would like to just do this
+        // Class superClazz = baseLoader.loadClass(name)
+        // and then access the details using methods of Class
+        // however, this fails because we are in the middle of transforming the subclass and the classloader
+        // may not have loaded the super. if we force a load now then transforms will not be performed on
+        // the super class. this may cause us to miss the chance to apply rule injection into the super
 
-        public ClassChecker(byte[] buffer)
-        {
-            // run a pass over the bytecode to identify the interfaces
-            ClassReader cr = new ClassReader(buffer);
-            adapter = new ClassCheckAdapter();
-            cr.accept(adapter, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+        ClassLoader loader = baseLoader;
+        Class clazz = loadCache.lookupClass(name, loader);
+
+        if (clazz != null) {
+            return new org.jboss.byteman.agent.check.LoadedClassChecker(clazz);
         }
 
-        public boolean isInterface()
-        {
-            return adapter.isInterface();
-        }
+        // ok, instead try loading the bytecode as a resource - user-defined loaders may not support this but
+        // at least the JVM system and boot loaders should
 
-        public String getSuper()
-        {
-            return adapter.getSuper();
-        }
-
-        public String getOuterClass()
-        {
-            return adapter.getOuterClass();
-        }
-
-        public String[] getInterfaces()
-        {
-            return adapter.getInterfaces();
+        String resourceName = name.replaceAll("\\.", "/") + ".class";
+        try {
+            InputStream is = baseLoader.getResourceAsStream(resourceName);
+            if (is != null) {
+                int length = is.available();
+                int count = 0;
+                byte[] bytecode = new byte[length];
+                while (count < length) {
+                    int read = is.read(bytecode, count, length - count);
+                    if (read < 0) {
+                        throw new IOException("unexpected end of file");
+                    }
+                    count += read;
+                }
+                return new org.jboss.byteman.agent.check.BytecodeChecker(bytecode);
+            } else {
+                // throw new IOException("unable to load bytecode for for class " + name);
+                if (isVerbose()) {
+                    System.out.println("Transformer.getClassChecker : unable to load bytecode for for class " + name);
+                }
+                return null;
+            }
+        } catch (IOException e) {
+            // log the exception and return null
+            e.printStackTrace();
+            return null;
         }
     }
 
@@ -933,6 +908,13 @@ public class Transformer implements ClassFileTransformer {
      */
 
     protected final ScriptRepository scriptRepository;
+
+    /**
+     * a cache tracking which classes have been loaded by which class loaders which is used when
+     * attempting to resolve a superName to a superclass.
+     */
+
+    protected final LoadCache loadCache;
 
     /* configuration values defined via system property settings */
 
@@ -970,6 +952,11 @@ public class Transformer implements ClassFileTransformer {
      *  switch to control dumping of generated bytecode to .class files
      */
     private static boolean dumpGeneratedClasses = computeDumpGeneratedClasses();
+
+    /**
+     *  switch to control dumping of generated bytecode to .class files
+     */
+    private static boolean dumpGeneratedClassesIntermediate = computeDumpGeneratedClassesIntermediate();
 
     /**
      *  directory in which to dump generated bytecode .class files (defaults to "."
@@ -1028,6 +1015,11 @@ public class Transformer implements ClassFileTransformer {
     public static boolean computeDumpGeneratedClasses()
     {
         return System.getProperty(DUMP_GENERATED_CLASSES) != null;
+    }
+
+    public static boolean computeDumpGeneratedClassesIntermediate()
+    {
+        return System.getProperty(DUMP_GENERATED_CLASSES_INTERMEDIATE) != null;
     }
 
     public static String computeDumpGeneratedClassesDir()
@@ -1139,41 +1131,49 @@ public class Transformer implements ClassFileTransformer {
     
     private static void dumpClass(String fullName, byte[] bytes)
     {
-        dumpClass(fullName, bytes, null);
+        dumpClass(fullName, bytes, false);
     }
 
-    private static void dumpClass(String fullName, byte[] bytes, byte[] oldBytes)
+    private static void dumpClass(String fullName, byte[] bytes, boolean intermediate)
     {
-        int dotIdx = fullName.lastIndexOf('.');
-
-        String name = (dotIdx < 0 ? fullName : fullName.substring(dotIdx + 1));
-        String prefix = (dotIdx > 0 ? fullName.substring(0, dotIdx) : "");
-        String dir = dumpGeneratedClassesDir + File.separator + prefix.replaceAll("\\.", File.separator);
-        if (!ensureDumpDirectory(dir)) {
-            System.out.println("org.jboss.byteman.agent.Transformer : Cannot dump transformed bytes to directory " + dir + File.separator + prefix);
-            return;
-        }
-        String newname = dir + File.separator + name + ".class";
-        System.out.println("org.jboss.byteman.agent.Transformer : Saving transformed bytes to " + newname);
+        // wrap this in a try catch in case the file i/o code generates a runtime exception
+        // this may happen e.g. because of a security restriction
         try {
-            FileOutputStream fio = new FileOutputStream(newname);
-            fio.write(bytes);
-            fio.close();
-        } catch (IOException ioe) {
-            System.out.println("Error saving transformed bytes to" + newname);
-            ioe.printStackTrace(System.out);
-        }
-        if (oldBytes != null) {
-            String oldname = dir + File.separator + name + "_orig.class";
-            System.out.println("org.jboss.byteman.agent.Transformer : Saving original bytes to " + oldname);
+            int dotIdx = fullName.lastIndexOf('.');
+
+            String name = (dotIdx < 0 ? fullName : fullName.substring(dotIdx + 1));
+            String prefix = (dotIdx > 0 ? fullName.substring(0, dotIdx) : "");
+            String dir = dumpGeneratedClassesDir + File.separator + prefix.replaceAll("\\.", File.separator);
+            if (!ensureDumpDirectory(dir)) {
+                System.out.println("org.jboss.byteman.agent.Transformer : Cannot dump transformed bytes to directory " + dir + File.separator + prefix);
+                return;
+            }
+            String newname;
+            if (intermediate) {
+                int counter = 0;
+                // add _<n> prefix until we come up with a new name
+                newname = dir + File.separator + name + "_" + counter + ".class";
+                File file = new File(newname);
+                while (file.exists()) {
+                    counter++;
+                    newname = dir + File.separator + name + "_" + counter + ".class";
+                    file = new File(newname);
+                }
+            } else {
+                newname = dir + File.separator + name + ".class";
+            }
+            System.out.println("org.jboss.byteman.agent.Transformer : Saving transformed bytes to " + newname);
             try {
-                FileOutputStream fio = new FileOutputStream(oldname);
-                fio.write(oldBytes);
+                FileOutputStream fio = new FileOutputStream(newname);
+                fio.write(bytes);
                 fio.close();
             } catch (IOException ioe) {
-                System.out.println("Error saving transformed bytes to" + oldname);
+                System.out.println("Error saving transformed bytes to" + newname);
                 ioe.printStackTrace(System.out);
             }
+        } catch (Throwable th) {
+            System.out.println("org.jboss.byteman.agent.Transformer : Error saving transformed bytes for class " + fullName);
+            th.printStackTrace(System.out);
         }
     }
 

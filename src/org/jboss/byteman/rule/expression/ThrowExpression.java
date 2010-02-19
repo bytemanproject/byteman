@@ -70,17 +70,15 @@ public class ThrowExpression extends Expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind() {
+    public void bind() throws TypeException
+    {
         // check that the recipient and argument expressions have valid bindings
 
-        boolean valid = true;
         Iterator<Expression> iterator = arguments.iterator();
 
-        while (valid && iterator.hasNext()) {
-            valid &= iterator.next().bind();
+        while (iterator.hasNext()) {
+            iterator.next().bind();
         }
-
-        return valid;
     }
 
     /**

@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.grammar.ParseNode;
@@ -48,9 +49,9 @@ public abstract class UnaryOperExpression extends OperExpression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind() {
+    public void bind() throws TypeException {
         // we just need to ensure that the operand can find its bindings
-        return operand.bind();
+        operand.bind();
     }
 
     /**

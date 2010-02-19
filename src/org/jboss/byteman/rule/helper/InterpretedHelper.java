@@ -55,28 +55,26 @@ import java.util.Iterator;
 public class InterpretedHelper extends Helper implements HelperAdapter
 {
     protected HashMap<String, Object> bindingMap;
-    private HashMap<String, Type> bindingTypeMap;
 
     public InterpretedHelper(Rule rule)
     {
         super(rule);
         bindingMap = new HashMap<String, Object>();
-        bindingTypeMap = new HashMap<String, Type>();
     }
 
     /**
      * install values into the bindings map and then call the execute0 method
      * to actually execute the rule
-     * @param bindings
      * @param recipient
      * @param args
      */
-    public void execute(Bindings bindings, Object recipient, Object[] args)
+    public void execute(Object recipient, Object[] args)
             throws ExecuteException
     {
         if (Transformer.isVerbose()) {
             System.out.println(rule.getName() + " execute");
         }
+        Bindings bindings = rule.getBindings();
         Iterator<Binding> iterator = bindings.iterator();
         while (iterator.hasNext()) {
             Binding binding = iterator.next();
@@ -86,22 +84,39 @@ public class InterpretedHelper extends Helper implements HelperAdapter
                 // so use the value and type associated with the alias
                 binding = binding.getAlias();
             }
-            Type type = binding.getType();
             if (binding.isHelper()) {
                 bindingMap.put(name, this);
-                bindingTypeMap.put(name, type);
             } else if (binding.isRecipient()) {
                 bindingMap.put(name, recipient);
-                bindingTypeMap.put(name, type);
             } else if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
                 bindingMap.put(name, args[binding.getCallArrayIndex()]);
-                bindingTypeMap.put(name, type);
             }
         }
 
         // now do the actual execution
 
         execute0();
+
+        // now restore update bindings
+
+        iterator = bindings.iterator();
+
+        while (iterator.hasNext()) {
+            Binding binding = iterator.next();
+            String name = binding.getName();
+            if (binding.isAlias()) {
+                binding = binding.getAlias();
+            }
+
+            if (binding.isUpdated()) {
+                if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
+                    Object value = bindingMap.get(name);
+                    int idx = binding.getCallArrayIndex();
+                    args[idx] = value;
+                }
+            }
+        }
+
     }
 
     /**
@@ -120,7 +135,7 @@ public class InterpretedHelper extends Helper implements HelperAdapter
         }
     }
 
-    public void bindVariable(String name, Object value)
+    public void setBinding(String name, Object value)
     {
         bindingMap.put(name, value);
     }

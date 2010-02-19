@@ -197,9 +197,9 @@ public class Event extends RuleElement {
         Expression expr;
 
         expr = ExpressionHelper.createExpression(rule, bindings, exprTree, binding.getType());
-        if (!expr.bind()) {
-            throw new TypeException("ExpressionHelper.createExpression : unknown reference in expression" + expr.getPos());
-        }
+
+        // check bindings
+        expr.bind();
 
         String name = binding.getName();
 

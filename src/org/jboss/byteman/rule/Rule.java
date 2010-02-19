@@ -629,7 +629,7 @@ public class Rule
                 helper = (HelperAdapter)constructor.newInstance(this);
                 //helper = (RuleHelper)helperClass.newInstance();
                 //helper.setRule(this);
-                helper.execute(bindings, recipient, args);
+                helper.execute(recipient, args);
             } catch (NoSuchMethodException e) {
                 // should not happen!!!
                 System.out.println("cannot find constructor " + helperImplementationClass.getCanonicalName() + "(Rule) for helper class");

@@ -63,13 +63,12 @@ public class ReturnExpression extends Expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind() {
+    public void bind() throws TypeException
+    {
         if (returnValue != null) {
             // ensure the return value expression has all its bindings
-            return returnValue.bind();
+            returnValue.bind();
         }
-
-        return true;
     }
 
     /**

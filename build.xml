@@ -19,13 +19,14 @@
   @author JBoss Inc.
 -->
 
-<project name="byteman" default="jar" basedir=".">
+<project name="byteman" default="install" basedir=".">
 
-    <!-- the directory in which your installed app server resides -->
+    <!-- define property obfuscate.3rd.party to hide 3rd party packages -->
+
     <property environment="env"/>
 
     <!-- version string stamped inside the manifests -->
-    <property name="version" value="1.2.1"/>
+    <property name="version" value="1.2.2.SNAPSHOT"/>
 
     <property name="ext.asm.jars" value="asm-all-3.0.jar"/>
 
@@ -61,7 +62,8 @@
     <property name="byteman.jar" value="byteman.jar"/>
     <property name="byteman-submit.jar" value="byteman-submit.jar"/>
     <property name="byteman.bin.scripts" value="bytemancheck.sh submit.sh bmjava.sh"/>
-    <property name="byteman.doc.files" value="ProgrammersGuide.pdf"/>
+    <property name="byteman.doc.files" value="ProgrammersGuide.pdf copyright.txt"/>
+    <property name="byteman.ext.lib.doc.files" value="third_party_licenses.txt"/>
     <property name="manifest.file" value="${dd.dir}/META-INF/MANIFEST.MF"/>
 
     <property name="javac.debug" value="on"/>
@@ -133,25 +135,47 @@
         </javac>
     </target>
 
-    <target name="jar" depends="compile">
-        <!--
-         <unjar src="${ext.lib.dir}/junit.jar" dest="${build.classes.dir}"/>
-         -->
-         <unjar src="${ext.lib.dir}/javacuprt.jar" dest="${build.classes.dir}"/>
-         <unjar src="${ext.lib.dir}/asm-all-3.0.jar" dest="${build.classes.dir}"/>
-         <jar jarfile="${build.lib.dir}/${byteman.jar}" manifest="${manifest.file}">
-             <fileset dir="${build.classes.dir}" includes="**/*"/>
-             <manifest>
-                 <attribute name="Implementation-Version" value="${version}"/>
-             </manifest>
-         </jar>
-         <jar jarfile="${build.lib.dir}/${byteman-submit.jar}">
-             <fileset dir="${build.classes.dir}" includes="**/Submit*.class"/>
-             <manifest>
-                 <attribute name="Main-Class" value="org.jboss.byteman.agent.submit.Submit"/>
-                 <attribute name="Implementation-Version" value="${version}"/>
-             </manifest>
-         </jar>
+    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+       classpath="${ext.lib.dir}/jarjar-1.0.jar"/>
+
+   <target name="jar" depends="compile, byteman.jar, submit.jar">
+   </target>
+
+    <target name="byteman.jar.obfuscated" if="obfuscate.3rd.party">
+        <jarjar jarfile="${build.lib.dir}/${byteman.jar}" manifest="${manifest.file}">
+            <fileset dir="${build.classes.dir}" includes="**/*"/>
+            <zipfileset src="${ext.lib.dir}/asm-all-3.0.jar"/>
+            <zipfileset src="${ext.lib.dir}/javacuprt.jar"/>
+            <rule pattern="org.objectweb.asm.**" result="org.jboss.byteman.org.objectweb.asm.@1"/>
+            <rule pattern="java_cup.runtime.**" result="org.jboss.byteman.java_cup.runtime.@1"/>
+            <manifest>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+        </jarjar>
+    </target>
+
+    <target name="byteman.jar.clear" unless="obfuscate.3rd.party">
+        <jarjar jarfile="${build.lib.dir}/${byteman.jar}" manifest="${manifest.file}">
+            <fileset dir="${build.classes.dir}" includes="**/*"/>
+            <zipfileset src="${ext.lib.dir}/asm-all-3.0.jar"/>
+            <zipfileset src="${ext.lib.dir}/javacuprt.jar"/>
+            <manifest>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+        </jarjar>
+    </target>
+
+    <target name="byteman.jar" depends="byteman.jar.obfuscated, byteman.jar.clear">
+    </target>
+
+    <target  name="submit.jar">
+        <jar jarfile="${build.lib.dir}/${byteman-submit.jar}">
+            <fileset dir="${build.classes.dir}" includes="**/Submit*.class"/>
+            <manifest>
+                <attribute name="Main-Class" value="org.jboss.byteman.agent.submit.Submit"/>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+        </jar>
     </target>
 
     <!-- installation targets -->
@@ -175,6 +199,9 @@
         </copy>
         <copy todir="${install.docs.dir}">
             <fileset dir="${docs.src.dir}" includes="${byteman.doc.files}"/>
+        </copy>
+        <copy todir="${install.docs.dir}">
+            <fileset dir="${ext.lib.dir}" includes="${byteman.ext.lib.doc.files}"/>
         </copy>
     </target>
 

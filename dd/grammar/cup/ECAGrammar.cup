@@ -218,6 +218,9 @@ terminal	SEMI, COMMA, DOT;
 /* assignment */
 terminal	ASSIGN;
 
+/* instance creation */
+terminal	NEW;
+
 /* operators of various flavours */
 
 /* ternary operators */
@@ -254,6 +257,8 @@ terminal	UMINUS;
 terminal	DOLLAR;
 
 /* literals. strings and identifiers */
+
+terminal	NULL_LITERAL;
 
 terminal	Float FLOAT_LITERAL;
 
@@ -294,7 +299,9 @@ non terminal ParseNode field_expr;
 non terminal ParseNode expr_field_expr;
 non terminal ParseNode meth_expr;
 non terminal ParseNode expr_meth_expr;
+non terminal ParseNode new_expr;
 non terminal ParseNode simple_expr;
+non terminal ParseNode null_expr;
 
 non terminal ParseNode array_idx_list;
 non terminal ParseNode array_idx;
@@ -474,6 +481,10 @@ throw_return_expr
 		{: RESULT = node(ParseNode.THROW, ileft, iright, i, null); :}
 	|	THROW name:i LPAREN expr_list:args RPAREN 
 		{: RESULT = node(ParseNode.THROW, ileft, iright, i, args); :}
+	|	THROW NEW name:i LPAREN RPAREN
+		{: RESULT = node(ParseNode.THROW, ileft, iright, i, null); :}
+	|	THROW NEW name:i LPAREN expr_list:args RPAREN 
+		{: RESULT = node(ParseNode.THROW, ileft, iright, i, args); :}
 	;
 
 expr_list
@@ -491,8 +502,13 @@ expr
 	|	array_expr:e {: RESULT = e; :}
 	|	field_expr:e {: RESULT = e; :}
 	|	meth_expr:e {: RESULT = e; :}
+	|   new_expr:ne {: RESULT = ne; :}
 	|	simple_expr:e {: RESULT = e; :}
+	|   null_expr:e {: RESULT = e; :}
 	|	simple_name:n {: RESULT = n; :}
+	|   simple_name:s ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, sleft, sright, s, e); :}
+	|   DOLLAR:d ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, dleft, dright, node(ParseNode.DOLLAR, dleft, dright, d), e); :}
+	|   field_expr:f ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, fleft, fright, f, e); :}
 	|   error:err expr:e {: error("invalid expression", errleft, errright); RESULT = e; :}
 	;
 
@@ -596,6 +612,13 @@ expr_meth_expr
 		{: RESULT = node(ParseNode.METH, mleft, mright, m, efe, args); :}
 	;
 
+new_expr
+    ::=	NEW name:i LPAREN RPAREN
+		{: RESULT = node(ParseNode.NEW, ileft, iright, i, null); :}
+	|	NEW name:i LPAREN expr_list:args RPAREN
+		{: RESULT = node(ParseNode.NEW, ileft, iright, i, args); :}
+	;
+
 simple_expr
 	::=	INTEGER_LITERAL:i
 		{: RESULT =  node(ParseNode.INTEGER_LITERAL, ileft, iright, i); :}
@@ -610,6 +633,12 @@ simple_expr
 	|	LPAREN expr:e RPAREN
 		{: RESULT = e; :}
 	;
+
+null_expr
+    ::=	NULL_LITERAL:n
+		{: RESULT = node(ParseNode.NULL_LITERAL, nleft, nright); :}
+	;
+
 name	::=	simple_name:n
 		{: RESULT = n; :}
 	|	path:p DOT IDENTIFIER:i

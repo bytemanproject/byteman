@@ -42,7 +42,7 @@ import java.io.StringWriter;
  * binding in the rule's event or as an RVALUE mentioned in the RHS of an event binding or in thre
  * rule's conditon or action.
  */
-public class Variable extends Expression
+public class Variable extends AssignableExpression
 {
     public Variable(Rule rule, Type type, ParseNode token) {
         super(rule, type, token);
@@ -62,15 +62,40 @@ public class Variable extends Expression
      * @return true if all variables in this expression are bound and no type mismatches have
      *         been detected during inference/validation.
      */
-    public boolean bind() {
+    public void bind() throws TypeException
+    {
+        bind(false);
+    }
+
+    /**
+     * verify that variables mentioned in this expression are actually available in the supplied
+     * bindings list. infer/validate the type of this expression or its subexpressions
+     * where possible
+
+     * @return true if all variables in this expression are bound and non-final and no type mismatches have
+     * been detected during inference/validation.
+     */
+
+    public void bindAssign() throws TypeException
+    {
+        bind(true);
+    }
+
+    private boolean bind(boolean isUpdateable)throws TypeException
+    {
         // ensure that there is a binding with this name
 
         Binding binding = getBindings().lookup(name);
 
         if (binding == null) {
-            System.err.println("Variable.bind : unbound variable " + name + getPos());
-            return false;
+            throw new TypeException("Variable.bind : unbound variable " + name + getPos());
         }
+
+        // if necessary tag it as updateable
+        if (isUpdateable) {
+            binding.setUpdated();
+        }
+        
         // adopt the binding type
 
         this.type = binding.getType();
@@ -122,6 +147,78 @@ public class Variable extends Expression
         }
         // make sure we have room for 2 working slots
         int overflow = (currentStack + 2 - maxStackHeights.stackCount);
+        if (overflow > 0) {
+            maxStackHeights.addStackCount(overflow);
+        }
+    }
+
+    @Override
+    public Object interpretAssign(HelperAdapter helperAdapter, Object value) throws ExecuteException
+    {
+        helperAdapter.setBinding(name, value);
+        return value;
+    }
+
+    @Override
+    public void compileAssign(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    {
+        int currentStack = currentStackHeights.stackCount;
+        int size = ((type.getNBytes() > 4) ? 2 : 1);
+        int max;
+
+        // value to be assigned is TOS and will already be coerced to the correct value type
+        // copy it so we leave it as a a return value on the stack
+        if (size == 2) {
+            mv.visitInsn(Opcodes.DUP2);
+        } else {
+            mv.visitInsn(Opcodes.DUP);
+        }
+        // stack the current helper then insert it below the value
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        if (size == 2) {
+            // use a DUP_X2 to push a copy below the value then pop the redundant value
+            mv.visitInsn(Opcodes.DUP_X2);
+            mv.visitInsn(Opcodes.POP);
+        } else {
+            // we can just swap the two values
+            mv.visitInsn(Opcodes.SWAP);
+        }
+        // stack the name for the variable and swap below the value
+        mv.visitLdcInsn(name);
+        if (size == 2) {
+            // use a DUP_X2 to push a copy below the value then pop the redundant value
+            mv.visitInsn(Opcodes.DUP_X2);
+            // this is the high water mark
+            // at this point the stack has gone from [ .. val1 val2]  to [.. val1 val2 helper name val1 val2 name]
+            max = 3 + size;
+            mv.visitInsn(Opcodes.POP);
+            // and now we have the desired arrangement for the call[.. val1 val2 helper name val]
+        } else {
+            // this is the high water mark
+            // at this point the stack has gone from [ .. val]  to [.. val helper val name]
+            max = 2 + size;
+            // we can just swap the two values
+            mv.visitInsn(Opcodes.SWAP);
+            // and now we have the desired arrangement for the call[.. val helper name val]
+        }
+        // update the stack count for the value and two extra words before we attempt a type conversion
+        currentStackHeights.addStackCount(2 + size);
+        // ensure we have an object
+        compileObjectConversion(type, Type.OBJECT, mv, currentStackHeights, maxStackHeights);
+
+        // call the setBinding method
+        mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V");
+
+        // the call will remove 3 from the stack height
+        currentStackHeights.addStackCount(-3);
+
+        // ok, the stack height should be as it was
+        if (currentStackHeights.stackCount != currentStack) {
+            throw new CompileException("variable.compileAssignment : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack);
+        }
+        // make sure we left room for the right number of working slots at our maximum
+        // at the high water mark we had
+        int overflow = (currentStack + max - maxStackHeights.stackCount);
         if (overflow > 0) {
             maxStackHeights.addStackCount(overflow);
         }
