@@ -89,7 +89,7 @@
     <property name="tag" value="Byteman_1_2_2"/>
     <!-- The file name base for the user downloadable files. Derive it
     from the tag -->
-    <property name="filename" value="1.2.2"/>
+    <property name="version" value="1.2.2"/>
     <!-- the location the Byteman web site content svn is checked out to -->
     <property name="cmsdir" value="/home/adinn/jboss/byteman/"/>
     <!-- the location the maven repository svn is checked out to.
@@ -116,27 +116,34 @@
         </exec>
 
         <!-- package the byteman source release (all src tree) -->
-        <delete file="${workdir}/byteman-${filename}-src.zip"/>
+        <delete file="${workdir}/byteman-${version}-src.zip"/>
 
-        <zip basedir="${workdir}" destfile="${workdir}/byteman-${filename}-src.zip"
+        <zip basedir="${workdir}" destfile="${workdir}/byteman-${version}-src.zip"
              includes="${tag}/**"/>
         <!-- build the binary release -->
-        <delete file="${workdir}/byteman-${filename}.zip"/>
+        <delete file="${workdir}/byteman-${version}.zip"/>
         <ant dir="${workdir}/${tag}" antfile="build.xml" target="zip">
-            <property name="tag" value="${tag}"/>
+            <property name="version" value="${version}"/>
+            <property name="obfuscate.3rd.party" value="true"/>
         </ant>
-        <copy tofile="${workdir}/byteman-${filename}.zip" file="${workdir}/${tag}/build/byteman.zip">
+        <copy tofile="${workdir}/byteman-${version}.zip" file="${workdir}/${tag}/build/byteman.zip">
         </copy>
     </target>
 
+    <target name="test">
+        <ant dir="." antfile="build.xml" target="zip">
+            <property name="version" value="${version}"/>
+            <property name="obfuscate.3rd.party" value="true"/>
+        </ant>
+    </target>
     <!-- copy the release into the cms svn tree (http://www.jboss.org/jbosstm web site content) -->
     <target name="cms-repository" description="copy release bundles to JBossTS web site content">
-        <mkdir dir="${cmsdir}/downloads/${filename}"/>
-        <copy todir="${cmsdir}/downloads/${filename}">
-            <fileset dir="${workdir}" includes="byteman-${filename}-src.zip"/>
+        <mkdir dir="${cmsdir}/downloads/${version}"/>
+        <copy todir="${cmsdir}/downloads/${version}">
+            <fileset dir="${workdir}" includes="byteman-${version}-src.zip"/>
         </copy>
-        <copy todir="${cmsdir}/downloads/${filename}">
-            <fileset dir="${workdir}" includes="byteman-${filename}.zip"/>
+        <copy todir="${cmsdir}/downloads/${version}">
+            <fileset dir="${workdir}" includes="byteman-${version}.zip"/>
         </copy>
         <!-- TODO: notes dir, xml generation? project.xml edits -->
     </target>
@@ -149,7 +156,7 @@
         <!-- now package the Byteman release -->
 
         <delete dir="${workdir}/build/${tag}"/>
-        <unzip src="${workdir}/byteman-${filename}.zip" dest="${workdir}/build"/>
+        <unzip src="${workdir}/byteman-${version}.zip" dest="${workdir}/build"/>
 
         <exec executable="mvn" dir="${workdir}">
             <arg value="deploy:deploy-file"/>
@@ -159,7 +166,7 @@
             <arg value="-DrepositoryId=${mvn.repositoryId}"/>
             <arg value="-DgroupId=org.jboss.byteman"/>
             <arg value="-DartifactId=byteman"/>
-            <arg value="-Dversion=${filename}"/>
+            <arg value="-Dversion=${version}"/>
             <arg value="-DgeneratePom=true"/>
         </exec>
     </target>
