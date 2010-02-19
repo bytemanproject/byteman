@@ -91,7 +91,7 @@
     from the tag -->
     <property name="version" value="1.0.3.CP02"/>
     <!-- the location the Byteman web site content svn is checked out to -->
-    <property name="cmsdir" value="/home/adinn/jboss/workspace/adinn/byteman/"/>
+    <property name="cmsdir" value="/home/adinn/jboss/byteman/"/>
     <!-- the location the maven repository svn is checked out to.
         Hint: checkout only the subtree you need, the full thing is huge -->
     <property name="mvn.repodir" value="/home/adinn/jboss/repository.jboss.org/maven2"/>
