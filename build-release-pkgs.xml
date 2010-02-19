@@ -74,7 +74,7 @@
 <!--
     <property name="svnbase" value="https://svn.jboss.org/repos/labs/labs/jbosstm/workspace/adinn/byteman/tags"/>
     <property name="tag" value="trunk"/>
-    <property name="filename" value="1.0.3.SNAPSHOT"/>
+    <property name="version" value="1.0.3.SNAPSHOT"/>
     <property name="mvn.repositoryId" value="snapshots.jboss.org"/>
     <property name="mvn.url" value="dav:https://snapshots.jboss.org/maven2"/>
 -->
@@ -86,10 +86,10 @@
     <property name="svnbase"
     value="https://svn.jboss.org/repos/labs/labs/jbosstm/workspace/adinn/byteman/tags"/>
     <!-- The tag as it appears under svnbase -->
-    <property name="tag" value="Byteman_1_0_3"/>
+    <property name="tag" value="Byteman_1_0_3_CP02"/>
     <!-- The file name base for the user downloadable files. Derive it
     from the tag -->
-    <property name="filename" value="1.0.3"/>
+    <property name="version" value="1.0.3.CP02"/>
     <!-- the location the Byteman web site content svn is checked out to -->
     <property name="cmsdir" value="/home/adinn/jboss/workspace/adinn/byteman/"/>
     <!-- the location the maven repository svn is checked out to.
@@ -115,31 +115,32 @@
         </exec>
 
         <!-- package the byteman source release (all src tree) -->
-        <delete file="${workdir}/byteman-${filename}-src.zip"/>
-        <zip basedir="${workdir}" destfile="${workdir}/byteman-${filename}-src.zip"
+        <delete file="${workdir}/byteman-${version}-src.zip"/>
+        <zip basedir="${workdir}" destfile="${workdir}/byteman-${version}-src.zip"
              includes="${tag}/**"/>
 
         <!-- build the binary release -->
         <delete dir="${workdir}/build"/>
         <mkdir dir="${workdir}/build"/>
-        <unzip src="${workdir}/byteman-${filename}-src.zip" dest="${workdir}/build"/>
+        <unzip src="${workdir}/byteman-${version}-src.zip" dest="${workdir}/build"/>
         <ant dir="${workdir}/build/${tag}" antfile="build.xml" target="install">
-            <property name="tag" value="${tag}"/>
+            <property name="version" value="${version}"/>
+            <property name="obfuscate.3rd.party" value="true"/>
         </ant>
 
         <!-- package the binary release -->
-	<delete file="${workdir}/build/${tag}/build/byteman-${filename}.zip"/>
-        <copy toFile="${workdir}/byteman-${filename}.zip" file="${workdir}/build/${tag}/build/byteman.zip"/>
+	<delete file="${workdir}/build/${tag}/build/byteman-${version}.zip"/>
+        <copy toFile="${workdir}/byteman-${version}.zip" file="${workdir}/build/${tag}/build/byteman.zip"/>
     </target>
 
     <!-- copy the release into the cms svn tree (http://www.jboss.org/jbosstm web site content) -->
     <target name="cms-repository" description="copy release bundles to JBossTS web site content">
-        <mkdir dir="${cmsdir}/downloads/${filename}"/>
-        <copy todir="${cmsdir}/downloads/${filename}">
-            <fileset dir="${workdir}" includes="byteman-${filename}-src.zip"/>
+        <mkdir dir="${cmsdir}/downloads/${version}"/>
+        <copy todir="${cmsdir}/downloads/${version}">
+            <fileset dir="${workdir}" includes="byteman-${version}-src.zip"/>
         </copy>
-        <copy todir="${cmsdir}/downloads/${filename}">
-            <fileset dir="${workdir}" includes="byteman-${filename}.zip"/>
+        <copy todir="${cmsdir}/downloads/${version}">
+            <fileset dir="${workdir}" includes="byteman-${version}.zip"/>
         </copy>
         <!-- TODO: notes dir, xml generation? project.xml edits -->
     </target>
@@ -152,7 +153,7 @@
         <!-- now package the Byteman release -->
 
         <delete dir="${workdir}/build/${tag}"/>
-        <unzip src="${workdir}/byteman-${filename}.zip" dest="${workdir}/build"/>
+        <unzip src="${workdir}/byteman-${version}.zip" dest="${workdir}/build"/>
 
         <exec executable="mvn" dir="${workdir}">
             <arg value="deploy:deploy-file"/>
@@ -162,7 +163,7 @@
             <arg value="-DrepositoryId=${mvn.repositoryId}"/>
             <arg value="-DgroupId=org.jboss.byteman"/>
             <arg value="-DartifactId=byteman"/>
-            <arg value="-Dversion=${filename}"/>
+            <arg value="-Dversion=${version}"/>
             <arg value="-DgeneratePom=true"/>
         </exec>
     </target>

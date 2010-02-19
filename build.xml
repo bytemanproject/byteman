@@ -24,6 +24,9 @@
     <!-- the directory in which your installed app server resides -->
     <property environment="env"/>
 
+    <!-- version string stamped inside the manifests -->
+    <property name="version" value="1.0.3.CP02"/>
+
     <property name="ext.asm.jars" value="asm-all-3.0.jar"/>
 
     <property name="src.dir"           value="src"/>
@@ -108,15 +111,40 @@
         </javac>
     </target>
 
-     <target name="jar" depends="compile">
-       <!--
-         <unjar src="${ext.lib.dir}/junit.jar" dest="${build.classes.dir}"/>
-	 -->
-         <unjar src="${ext.lib.dir}/javacuprt.jar" dest="${build.classes.dir}"/>
-         <unjar src="${ext.lib.dir}/asm-all-3.0.jar" dest="${build.classes.dir}"/>
-         <jar jarfile="${build.lib.dir}/byteman.jar" manifest="${dd.dir}/META-INF/MANIFEST.MF">
-             <fileset dir="${build.classes.dir}" includes="**/*"/>
-         </jar>
+    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+       classpath="${ext.lib.dir}/jarjar-1.0.jar"/>
+
+    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+       classpath="${ext.lib.dir}/jarjar-1.0.jar"/>
+
+   <target name="jar" depends="compile, byteman.jar">
+   </target>
+
+    <target name="byteman.jar.obfuscated" if="obfuscate.3rd.party">
+        <jarjar jarfile="${build.lib.dir}/byteman.jar"  manifest="${dd.dir}/META-INF/MANIFEST.MF">
+            <fileset dir="${build.classes.dir}" includes="**/*"/>
+            <zipfileset src="${ext.lib.dir}/asm-all-3.0.jar"/>
+            <zipfileset src="${ext.lib.dir}/javacuprt.jar"/>
+            <rule pattern="org.objectweb.asm.**" result="org.jboss.byteman.org.objectweb.asm.@1"/>
+            <rule pattern="java_cup.runtime.**" result="org.jboss.byteman.java_cup.runtime.@1"/>
+            <manifest>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+        </jarjar>
+    </target>
+
+    <target name="byteman.jar.clear" unless="obfuscate.3rd.party">
+        <jarjar jarfile="${build.lib.dir}/byteman.jar" manifest="${dd.dir}/META-INF/MANIFEST.MF">
+            <fileset dir="${build.classes.dir}" includes="**/*"/>
+            <zipfileset src="${ext.lib.dir}/asm-all-3.0.jar"/>
+            <zipfileset src="${ext.lib.dir}/javacuprt.jar"/>
+            <manifest>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+        </jarjar>
+    </target>
+
+    <target name="byteman.jar" depends="byteman.jar.obfuscated, byteman.jar.clear">
     </target>
 
     <target name="install" depends="jar">

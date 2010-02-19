@@ -155,7 +155,7 @@ public class Helper
                 // need to do the close while synchornized so we ensure an open cannot
                 // proceed until we have flushed all changes to disk
                 ps.close();
-                traceMap.put(identifier, null);
+                traceMap.remove(identifier);
                 return true;
             }
         }
@@ -813,7 +813,7 @@ public class Helper
         synchronized (counterMap) {
             Counter counter = counterMap.get(o);
             if  (counter != null) {
-                counterMap.put(o, null);
+                counterMap.remove(o);
                 return true;
             } else {
                 return false;
