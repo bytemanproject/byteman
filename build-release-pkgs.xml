@@ -72,7 +72,7 @@
             http://www.jboss.org/community/docs/DOC-11381 -->
 
 <!--
-    <property name="svnbase" value="https://svn.jboss.org/repos/labs/labs/jbosstm/workspace/adinn/byteman/tags"/>
+    <property name="svnbase" value="https://svn.jboss.org/repos/byteman/tags"/>
     <property name="tag" value="trunk"/>
     <property name="version" value="1.0.3.SNAPSHOT"/>
     <property name="mvn.repositoryId" value="snapshots.jboss.org"/>
@@ -84,7 +84,7 @@
     <property name="workdir" location="/tmp/packaged_builds"/>
     <!-- where to get the source -->
     <property name="svnbase"
-    value="https://svn.jboss.org/repos/labs/labs/jbosstm/workspace/adinn/byteman/tags"/>
+    value="https://svn.jboss.org/repos/byteman/tags"/>
     <!-- The tag as it appears under svnbase -->
     <property name="tag" value="Byteman_1_0_3_CP02"/>
     <!-- The file name base for the user downloadable files. Derive it
