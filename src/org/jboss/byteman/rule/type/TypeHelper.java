@@ -120,7 +120,7 @@ public class TypeHelper {
      */
     public static String externalizeClass(String className)
     {
-        return className.replaceAll("\\.", "/");
+        return className.replace('.', '/');
     }
 
     /**
@@ -137,7 +137,7 @@ public class TypeHelper {
         if (result.charAt(length - 1) == ';') {
             result = result.substring(1, length - 2);
         }
-        result = result.replaceAll("/", "\\.");
+        result = result.replace('/', '.');
         return result;
     }
 

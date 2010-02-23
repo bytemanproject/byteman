@@ -63,7 +63,7 @@ public class Compiler implements Opcodes
             }
 
             byte[] classBytes = compileBytes(rule, helperClass, helperName, compiledHelperName, compileToBytecode);
-            String externalName = compiledHelperName.replaceAll("/", ".");
+            String externalName = compiledHelperName.replace('/', '.');
             // dump the compiled class bytes if required
             Transformer.maybeDumpClass(externalName, classBytes);
             // ensure the class is loaded
