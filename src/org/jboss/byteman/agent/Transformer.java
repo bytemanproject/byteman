@@ -1142,7 +1142,7 @@ public class Transformer implements ClassFileTransformer {
             int dotIdx = fullName.lastIndexOf('.');
 
             String name = (dotIdx < 0 ? fullName : fullName.substring(dotIdx + 1));
-            String prefix = (dotIdx > 0 ? File.separator + fullName.substring(0, dotIdx - 1) : "");
+            String prefix = (dotIdx > 0 ? File.separator + fullName.substring(0, dotIdx) : "");
             String dir = dumpGeneratedClassesDir + prefix.replace('.', File.separatorChar);
             if (!ensureDumpDirectory(dir)) {
                 System.out.println("org.jboss.byteman.agent.Transformer : Cannot dump transformed bytes to directory " + dir + File.separator + prefix);
