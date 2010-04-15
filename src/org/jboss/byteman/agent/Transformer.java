@@ -855,7 +855,12 @@ public class Transformer implements ClassFileTransformer {
 
         String resourceName = name.replace('.', '/') + ".class";
         try {
-            InputStream is = baseLoader.getResourceAsStream(resourceName);
+            InputStream is;
+            if (baseLoader != null) {
+                is = baseLoader.getResourceAsStream(resourceName);
+            } else {
+                is = ClassLoader.getSystemClassLoader().getResourceAsStream(resourceName);
+            }
             if (is != null) {
                 int length = is.available();
                 int count = 0;
