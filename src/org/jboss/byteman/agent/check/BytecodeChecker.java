@@ -46,7 +46,11 @@ public class BytecodeChecker implements ClassChecker {
     }
 
     public String getSuper() {
-        return TypeHelper.internalizeClass(adapter.getSuper());
+        String supername = adapter.getSuper();
+        if (supername != null) {
+            supername = TypeHelper.internalizeClass(adapter.getSuper());
+        }
+        return supername;
     }
 
     public boolean hasOuterClass() {
