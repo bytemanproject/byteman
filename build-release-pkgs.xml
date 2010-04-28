@@ -74,9 +74,9 @@
 <!--
     <property name="svnbase" value="https://svn.jboss.org/repos/byteman"/>
     <property name="tag" value="trunk"/>
-    <property name="filename" value="1.1.1.SNAPSHOT"/>
-    <property name="mvn.repositoryId" value="snapshots.jboss.org"/>
-    <property name="mvn.url" value="dav:https://snapshots.jboss.org/maven2"/>
+    <property name="filename" value="X.Y.Z.SNAPSHOT"/>
+    <property name="mvn.repo.id" value="jboss-snapshots-repository"/>
+    <property name="mvn.url" value="https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/"/>
 -->
 
     <!-- a working direrctory for the process. Can contain output from
@@ -92,14 +92,10 @@
     <property name="version" value="1.2.2.1"/>
     <!-- the location the Byteman web site content svn is checked out to -->
     <property name="cmsdir" value="/home/adinn/jboss/byteman/"/>
-    <!-- the location the maven repository svn is checked out to.
-        Hint: checkout only the subtree you need, the full thing is huge -->
-    <property name="mvn.repodir" value="/home/adinn/jboss/repository.jboss.org/maven2"/>
-
     <!-- you probably don't need to change anything below here -->
 
-    <property name="mvn.repositoryId" value="repository.jboss.org"/>
-    <property name="mvn.url" value="file:///${mvn.repodir}"/>
+    <property name="mvn.repo.id" value="jboss-releases-repository"/>
+    <property name="mvn.repo.url" value="https://repository.jboss.org/nexus/content/repositories/snapshots/"/>
 
     <target name="init">
         <tstamp/>
@@ -156,8 +152,8 @@
             <arg value="deploy:deploy-file"/>
             <arg value="-Dfile=${workdir}/build/lib/byteman.jar"/>
             <arg value="-Dpackaging=jar"/>
-            <arg value="-Durl=${mvn.url}"/>
-            <arg value="-DrepositoryId=${mvn.repositoryId}"/>
+            <arg value="-Durl=${mvn.repo.url}"/>
+            <arg value="-DrepositoryId=${mvn.repo.id}"/>
             <arg value="-DgroupId=org.jboss.byteman"/>
             <arg value="-DartifactId=byteman"/>
             <arg value="-Dversion=${version}"/>
