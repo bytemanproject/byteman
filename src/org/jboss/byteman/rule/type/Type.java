@@ -126,7 +126,7 @@ public class Type {
         } else {
             String name = aliasFor.getTargetClass().getCanonicalName();
             if (slashSeparate) {
-                name = name.replaceAll("\\.", "/");
+                name = name.replace('.', '/');
             }
             if (forDescriptor) {
                 name = "L" + name + ";";
@@ -681,7 +681,7 @@ public class Type {
                     if (endIdx < 0) {
                         return null;
                     }
-                    String baseType = descriptor.substring(idx+1, endIdx).replaceAll("/", ".");
+                    String baseType = descriptor.substring(idx+1, endIdx).replace('/', '.');
                     argTypes.add(fixArrayType(baseType, arrayDepth));
                     arrayDepth = 0;
                     idx = endIdx + 1;
@@ -782,7 +782,7 @@ public class Type {
                     if (endIdx < 0) {
                         return null;
                     }
-                    String baseType = descriptor.substring(idx+1, endIdx).replaceAll("/", ".");
+                    String baseType = descriptor.substring(idx+1, endIdx).replace('/', '.');
                     return(fixArrayType(baseType, arrayDepth));
                 }
                 case '[':
@@ -862,7 +862,7 @@ public class Type {
                     if (endIdx < 0) {
                         return "void";
                     }
-                    String baseType = descriptor.substring(idx+1, endIdx).replaceAll("/", ".");
+                    String baseType = descriptor.substring(idx+1, endIdx).replace('/', '.');
                     return fixArrayType(baseType, arrayDepth);
                 }
                 case '[':
@@ -906,9 +906,9 @@ public class Type {
             Class base = clazz.getComponentType();
             return "[" + internalName(base, true);
         } else if (forField) {
-            return "L" + clazz.getName().replaceAll("\\.", "/") + ";";
+            return "L" + clazz.getName().replace('.', '/') + ";";
         } else {
-            return clazz.getName().replaceAll("\\.", "/");
+            return clazz.getName().replace('.', '/');
         }
     }
 

@@ -46,19 +46,22 @@ public class Waiter
     public void waitFor(long millisecs)
     {
         long start = System.currentTimeMillis();
-        long waitFor = millisecs == 0 ? 0 : millisecs;
+        long waitForMillis = millisecs;
         synchronized(this) {
             waiting = true;
-            while (!signalled && waitFor >= 0){
+            while (!signalled && waitForMillis >= 0){
                 try {
-                    this.wait(waitFor);
+                	if (waitForMillis == 0 && millisecs > 0) {
+                		break;
+                	}
+                	this.wait(waitForMillis);
                 } catch (InterruptedException e) {
                     // ignore
                 }
                 
                 if (!signalled)
                 {
-                   waitFor = millisecs == 0 ? 0 : millisecs + start - System.currentTimeMillis();
+                   waitForMillis = (millisecs == 0) ? 0 : millisecs + start - System.currentTimeMillis();
                 }
             }
             if (signalled) {

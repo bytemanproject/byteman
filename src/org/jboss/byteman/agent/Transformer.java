@@ -853,9 +853,14 @@ public class Transformer implements ClassFileTransformer {
         // ok, instead try loading the bytecode as a resource - user-defined loaders may not support this but
         // at least the JVM system and boot loaders should
 
-        String resourceName = name.replaceAll("\\.", "/") + ".class";
+        String resourceName = name.replace('.', '/') + ".class";
         try {
-            InputStream is = baseLoader.getResourceAsStream(resourceName);
+            InputStream is;
+            if (baseLoader != null) {
+                is = baseLoader.getResourceAsStream(resourceName);
+            } else {
+                is = ClassLoader.getSystemClassLoader().getResourceAsStream(resourceName);
+            }
             if (is != null) {
                 int length = is.available();
                 int count = 0;
@@ -1142,8 +1147,8 @@ public class Transformer implements ClassFileTransformer {
             int dotIdx = fullName.lastIndexOf('.');
 
             String name = (dotIdx < 0 ? fullName : fullName.substring(dotIdx + 1));
-            String prefix = (dotIdx > 0 ? fullName.substring(0, dotIdx) : "");
-            String dir = dumpGeneratedClassesDir + File.separator + prefix.replaceAll("\\.", File.separator);
+            String prefix = (dotIdx > 0 ? File.separator + fullName.substring(0, dotIdx) : "");
+            String dir = dumpGeneratedClassesDir + prefix.replace('.', File.separatorChar);
             if (!ensureDumpDirectory(dir)) {
                 System.out.println("org.jboss.byteman.agent.Transformer : Cannot dump transformed bytes to directory " + dir + File.separator + prefix);
                 return;
