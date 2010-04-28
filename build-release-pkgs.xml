@@ -76,15 +76,14 @@
     <property name="tag" value="trunk"/>
     <property name="filename" value="X.Y.Z.SNAPSHOT"/>
     <property name="mvn.repo.id" value="jboss-snapshots-repository"/>
-    <property name="mvn.url" value="https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/"/>
+    <property name="mvn.repo.url" value="https://repository.jboss.org/nexus/content/repositories/snapshots/"/>
 -->
 
     <!-- a working direrctory for the process. Can contain output from
     previous releases if you like to keep them archived locally. -->
     <property name="workdir" location="/tmp/packaged_builds"/>
     <!-- where to get the source -->
-    <property name="svnbase"
-    value="https://svn.jboss.org/repos/byteman/tags"/>
+    <property name="svnbase" value="https://svn.jboss.org/repos/byteman/tags"/>
     <!-- The tag as it appears under svnbase -->
     <property name="tag" value="Byteman_1_2_2_1"/>
     <!-- The file name base for the user downloadable files. Derive it
@@ -95,7 +94,7 @@
     <!-- you probably don't need to change anything below here -->
 
     <property name="mvn.repo.id" value="jboss-releases-repository"/>
-    <property name="mvn.repo.url" value="https://repository.jboss.org/nexus/content/repositories/snapshots/"/>
+    <property name="mvn.repo.url" value="https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/"/>
 
     <target name="init">
         <tstamp/>
