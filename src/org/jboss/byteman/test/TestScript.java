@@ -35,6 +35,7 @@ import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.agent.*;
 import org.objectweb.asm.Opcodes;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -58,24 +59,54 @@ public class TestScript
 
     public static void main(String[] args)
     {
-        if (args.length == 0 || args[0].equals("-h")) {
-            System.out.println("usage : java org.jboss.byteman.TestScript [-v] scriptfile1 ...");
-            System.out.println("        -v display parsed rules");
-            System.out.println("        n.b. place the byteman jar and classes mentioned in the ");
-            System.out.println("        scripts in the classpath");
-            return;
-        }
+        int length = args.length;
+        List<String> packages = new LinkedList<String>();
+        
         int start =  0;
         boolean verbose = false;
-        if (args[0].equals("-v")) {
-            start = 1;
-            verbose  = true;
+
+        while (start < length) {
+            if (args[start].equals("-p"))  {
+                start++;
+                if (start == length) {
+                    usage();
+                    return;
+                }
+                String packageName = args[start++];
+                packages.add(packageName);
+            } else if (args[start].equals("-v")) {
+                start++;
+                verbose = true;
+            } else if (args[start].equals("-h")) {
+                usage();
+                return;
+            } else {
+                break;
+            }
         }
+
+        // must have some  args
+        if (start == length) {
+            usage();
+            return;
+        }
+
+
         TestScript testScript = new TestScript(verbose);
-        testScript.testScript(args, start);
+        String[] packagesArray = new String[packages.size()];
+        testScript.testScript(packages.toArray(packagesArray), args, start);
     }
 
-    public void testScript(String[] files, int firstFile)
+    public static void usage()
+    {
+        System.out.println("usage : java org.jboss.byteman.TestScript [-p <package>]* [-v] scriptfile1 ...");
+        System.out.println("        -p specify package to lookup non-package qualified classnames");
+        System.out.println("        -v display parsed rules");
+        System.out.println("        n.b. place the byteman jar and classes mentioned in the ");
+        System.out.println("        scripts in the classpath");
+    }
+
+    public void testScript(String[] packages, String[] files, int firstFile)
     {
         List<String> ruleTexts = new ArrayList<String>();
         List<String> ruleFiles = new ArrayList<String>();
@@ -102,12 +133,12 @@ public class TestScript
                 System.err.println("TestScript: unable to open file : " + file);
             }
         }
-        checkRules(ruleTexts, ruleFiles);
+        checkRules(packages, ruleTexts, ruleFiles);
     }
 
 
 
-    private void checkRules(List<String> ruleTexts, List<String> ruleFiles)
+    private void checkRules(String[] packages, List<String> ruleTexts, List<String> ruleFiles)
     {
         ClassLoader loader = getClass().getClassLoader();
 
@@ -147,6 +178,28 @@ public class TestScript
             try {
                 targetClass = loader.loadClass(targetClassName);
             } catch (ClassNotFoundException e) {
+                // hmm, maybe need to try one of the supplied packages
+            }
+
+            if (targetClass == null && targetClassName.indexOf('.') < 0) {
+                for (int i = 0; i < packages.length; i++) {
+                    String qualifiedName = packages[i] + "." + targetClassName;
+                    try {
+                        targetClass = loader.loadClass(qualifiedName);
+                    } catch (ClassNotFoundException e) {
+                        // hmm, need to check if it is in one of the supplied packages
+                    } catch (Exception e) {
+                        // eeuuurrrgghh must be a bad package name
+                        System.out.println("TestScript: unexpected error looking up " + targetClassName + " in package " + packages[i]);
+                        return;
+                    }
+                    if (targetClass != null) {
+                        break;
+                    }
+                }
+            }
+
+            if (targetClass == null) {
                 System.out.println("TestScript : Could not load class " + targetClassName + " declared in rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                 errorCount++;
                 continue;
@@ -206,7 +259,7 @@ public class TestScript
                 // ok, we try transforming the actual class mentioned in the rule -- this may be an interface
                 // or an abstract class so we may not get any results out of the transform
 
-                bytes = transformer.transform(script, loader, targetClassName, targetClass, bytes);
+                bytes = transformer.transform(script, loader, targetClass.getName(), targetClass, bytes);
             }
 
             // see if we have a record of any transform
