@@ -63,6 +63,7 @@ public class ScriptRepository
             String targetClass = null;
             String targetMethod = null;
             String targetHelper = null;
+            String defaultHelper = null;
             LocationType locationType = null;
             Location targetLocation = null;
             boolean isInterface = false;
@@ -87,6 +88,16 @@ public class ScriptRepository
                     if (name.equals("")) {
                         throw new Exception("org.jboss.byteman.agent.Transformer : RULE with no name at line " + lineNumber + " in script " + scriptFile);
                     }
+                } else if (line.startsWith("HELPER ")) {
+                    if (inRule) {
+                        targetHelper = line.substring(7).trim();
+                    } else {
+                        defaultHelper = line.substring(7).trim();
+                        // empty classanme resets to the default
+                        if (defaultHelper.length() == 0) {
+                            defaultHelper = null;
+                        }
+                    }
                 } else if (!inRule) {
                     if (!line.equals("")) {
                         throw new Exception("org.jboss.byteman.agent.Transformer : invalid text outside of RULE/ENDRULE " + "at line " + lineNumber + " in script " + scriptFile);
@@ -106,8 +117,6 @@ public class ScriptRepository
                     }
                 } else if (line.startsWith("METHOD ")) {
                     targetMethod = line.substring(7).trim();
-                } else if (line.startsWith("HELPER ")) {
-                    targetHelper = line.substring(7).trim();
                 } else if ((locationType = LocationType.type(line)) != null) {
                     String parameters = LocationType.parameterText(line);
                     targetLocation = Location.create(locationType, parameters);
@@ -125,12 +134,16 @@ public class ScriptRepository
                         if (targetLocation == null) {
                             targetLocation = Location.create(LocationType.ENTRY, "");
                         }
+                        if (targetHelper == null) {
+                            targetHelper = defaultHelper;
+                        }
                         ruleScripts.add(new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetLocation, nextRule, startNumber, scriptFile));
                     }
                     name = null;
                     targetClass = null;
                     targetMethod = null;
                     targetLocation = null;
+                    targetHelper = null;
                     nextRule = "";
                     sepr = "";
                     inRule = false;
