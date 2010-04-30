@@ -175,7 +175,89 @@ public class Submit
      * @throws Exception
      *             if the request failed
      */
-    public Map<String, String> getAllScripts() throws Exception {
+    public List<ScriptText> getAllScripts() throws Exception {
+        // we use this to retain the order in which script file names occur
+        List<String> scriptFileNames = new ArrayList<String>();
+        Map<String, String> rulesByScript = new HashMap<String, String>();
+
+        Pattern scriptHeaderPattern = Pattern.compile("# File (.*) line \\d+\\s*");
+        Pattern ruleNamePattern = Pattern.compile("\\s*RULE\\s+(.+)\\s*");
+        Pattern endRuleNamePattern = Pattern.compile("\\s*ENDRULE\\s*");
+        Matcher matcher;
+
+        String currentScriptName = null;
+        String currentRuleName = null; // will be non-null while we are parsing actual rule code
+        StringBuilder currentScriptText = new StringBuilder();
+
+        String allRules = listAllRules();
+        BufferedReader reader = new BufferedReader(new StringReader(allRules));
+        String line = reader.readLine();
+        while (line != null) {
+            matcher = scriptHeaderPattern.matcher(line);
+            if (matcher.matches()) {
+                // found a new script header; squirrel away the current script text
+                // and get ready for this new script
+                if (currentScriptName != null) {
+                    rulesByScript.put(currentScriptName, currentScriptText.toString());
+                }
+                currentScriptName = matcher.group(1);
+                if (rulesByScript.containsKey(currentScriptName)) {
+                    currentScriptText = new StringBuilder(rulesByScript.get(currentScriptName));
+                } else {
+                    currentScriptText = new StringBuilder();
+                    // track the new file name
+                    scriptFileNames.add(currentScriptName);
+                }
+            } else {
+                matcher = ruleNamePattern.matcher(line);
+                if (matcher.matches()) {
+                    // found a new rule; definition that follows belong to this new rule
+                    currentRuleName = matcher.group(1);
+                    currentScriptText.append(line).append('\n');
+                } else {
+                    matcher = endRuleNamePattern.matcher(line);
+                    if (matcher.matches()) {
+                        // reached the end of the current rule
+                        if (currentRuleName != null) {
+                            currentRuleName = null;
+                            currentScriptText.append(line).append('\n');
+                        }
+                    } else {
+                        // line is basic rule text, a comment or miscellaneous.
+                        // if we are currently processing inside a rule, we'll add the line to the script
+                        // otherwise, we ignore the line since its not part of a rule definition.
+                        if (currentRuleName != null) {
+                            currentScriptText.append(line).append('\n');
+                        }
+                    }
+                }
+            }
+            line = reader.readLine();
+        }
+
+        // finish up by adding the last script we encountered
+        if (currentScriptName != null && currentScriptText.length() > 0) {
+            rulesByScript.put(currentScriptName, currentScriptText.toString());
+        }
+
+        // now create a script text object for each script file we found
+
+        List<ScriptText> scriptTexts = new ArrayList<ScriptText>(scriptFileNames.size());
+        for (String fileName : scriptFileNames) {
+            String text = rulesByScript.get(fileName);
+            scriptTexts.add(new ScriptText(fileName, text));
+        }
+
+        return scriptTexts;
+    }
+
+    /**
+     * old version which returns a map rather than a list of scripts
+     * @return
+     * @throws Exception
+     */
+    @Deprecated
+    public Map<String,String> getAllRules() throws Exception {
         Map<String, String> rulesByScript = new HashMap<String, String>();
 
         Pattern scriptHeaderPattern = Pattern.compile("# File (.*) line \\d+\\s*");
@@ -448,29 +530,48 @@ public class Submit
      *             if the request failed
      */
     public String addRulesFromFiles(List<String> filePaths) throws Exception {
-        Map<String, String> rules = getRulesFromRuleFiles(filePaths);
-        return addRules(rules);
+        List<ScriptText> scripts = getRulesFromRuleFiles(filePaths);
+        return addScripts(scripts);
     }
 
     /**
-     * Deploys rules into Byteman, where the rule definitions are found in the
-     * given map's value set. The names of the rule definitions are found as
-     * keys in the given map.
+     * Deploys rule scripts into Byteman
      *
-     * @param rules
-     *            rules to be deployed to Byteman (key=rule name, value=rule
-     *            definition)
+     * @param scripts
+     *            scripts to be deployed to Byteman
      *
      * @return the results of the deployment
      *
      * @throws Exception
      *             if the request failed
      */
-    public String addRules(Map<String, String> rules) throws Exception {
-        if (rules == null || rules.size() == 0) {
+    public String addScripts(List<ScriptText> scripts) throws Exception {
+        if (scripts == null || scripts.size() == 0) {
             return "";
         }
 
+        StringBuilder str = new StringBuilder("LOAD\n");
+        for (ScriptText scriptText : scripts) {
+            str.append("SCRIPT " + scriptText.getFileName() + '\n');
+            str.append(scriptText.getText()).append('\n');
+            str.append("ENDSCRIPT\n");
+        }
+        str.append("ENDLOAD\n");
+
+        return submitRequest(str.toString());
+    }
+
+    /**
+     * old version which uses a Map
+     * @param rules
+     * @return
+     * @throws Exception
+     */
+    @Deprecated
+    public String addRules(Map<String,String> rules) throws Exception {
+        if (rules == null || rules.size() == 0) {
+            return "";
+        }
         StringBuilder str = new StringBuilder("LOAD\n");
         for (Map.Entry<String, String> entry : rules.entrySet()) {
             str.append("SCRIPT " + entry.getKey() + '\n');
@@ -501,30 +602,48 @@ public class Submit
      *             if the request failed
      */
     public String deleteRulesFromFiles(List<String> filePaths) throws Exception {
-        Map<String, String> rules = getRulesFromRuleFiles(filePaths);
-        return deleteRules(rules);
+        List<ScriptText> scripts = getRulesFromRuleFiles(filePaths);
+        return deleteScripts(scripts);
     }
 
     /**
-     * Deletes rules from Byteman, where the rule definitions are found in the
-     * given map's value set. The names of the rule definitions are found as
-     * keys in the given map. After this method is done, the given rules will no
-     * longer be processed by Byteman.
+     * Deletes rules from Byteman.
      *
-     * @param rules
-     *            rules to be deleted from Byteman (key=rule name, value=rule
-     *            definition)
+     * @param scripts
+     *            rule scripts to be deleted from Byteman
      *
      * @return the results of the deletion
      *
      * @throws Exception
      *             if the request failed
      */
-    public String deleteRules(Map<String, String> rules) throws Exception {
-        if (rules == null || rules.size() == 0) {
+    public String deleteScripts(List<ScriptText> scripts) throws Exception {
+        if (scripts == null || scripts.size() == 0) {
             return "";
         }
 
+        StringBuilder str = new StringBuilder("DELETE\n");
+        for (ScriptText scriptText : scripts) {
+            str.append("SCRIPT " + scriptText.getFileName() + '\n');
+            str.append(scriptText.getText()).append('\n');
+            str.append("ENDSCRIPT\n");
+        }
+        str.append("ENDDELETE\n");
+
+        return submitRequest(str.toString());
+    }
+
+    /**
+     * old version which uses a Map
+     * @param rules
+     * @return
+     * @throws Exception
+     */
+    @Deprecated
+    public String deleteRules(Map<String,String> rules) throws Exception {
+        if (rules == null || rules.size() == 0) {
+            return "";
+        }
         StringBuilder str = new StringBuilder("DELETE\n");
         for (Map.Entry<String, String> entry : rules.entrySet()) {
             str.append("SCRIPT " + entry.getKey() + '\n');
@@ -535,7 +654,6 @@ public class Submit
 
         return submitRequest(str.toString());
     }
-
     /**
      * Sets system properties in the Byteman agent VM.
      * If Byteman was configured for strict mode, only Byteman related
@@ -611,40 +729,40 @@ public class Submit
         }
     }
 
-    private Map<String, String> getRulesFromRuleFiles(List<String> filePaths) throws Exception {
+    private List<ScriptText> getRulesFromRuleFiles(List<String> filePaths) throws Exception {
         if (filePaths == null || filePaths.size() == 0) {
-            return new HashMap<String, String>(0);
+            return new ArrayList<ScriptText>(0);
         }
 
         final char[] readBuffer = new char[4096];
-        Map<String, String> rules = new HashMap<String, String>(filePaths.size());
+        List<ScriptText> scripts = new ArrayList<ScriptText>(filePaths.size());
 
         for (String filePath : filePaths) {
-            // abort if a rule file was invalid - we never submit the request if at least one was invalid
+            // abort if a script file was invalid - we never submit the request if at least one was invalid
             if (!confirmRuleFileValidity(filePath)) {
                 throw new Exception("Invalid rule file: " + filePath);
             }
 
             // read in the current rule file
-            StringBuilder ruleText = new StringBuilder();
+            StringBuilder scriptText = new StringBuilder();
             try {
                 FileInputStream fis = new FileInputStream(filePath);
                 InputStreamReader reader = new InputStreamReader(fis);
                 int read = reader.read(readBuffer);
                 while (read > 0) {
-                    ruleText.append(readBuffer, 0, read);
+                    scriptText.append(readBuffer, 0, read);
                     read = reader.read(readBuffer);
                 }
                 reader.close();
 
                 // put the current rule definition in our list of rules to add
-                rules.put(filePath, ruleText.toString());
+                scripts.add(new ScriptText(filePath, scriptText.toString()));
             } catch (IOException e) {
                 throw new Exception("Error reading from rule file: " + filePath, e);
             }
         }
 
-        return rules;
+        return scripts;
     }
 
     private boolean confirmRuleFileValidity(String path) {
