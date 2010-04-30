@@ -75,6 +75,13 @@ public class TypeGroup {
 
         typeTable.put("java.lang.String", Type.STRING);
         typeTable.put("String", Type.STRING);
+
+        typeTable.put("java.lang.Object", Type.OBJECT);
+        typeTable.put("Object", Type.OBJECT);
+
+        typeTable.put("java.lang.Number", Type.NUMBER);
+        typeTable.put("Number", Type.NUMBER);
+
         typeTable.put("void", Type.VOID);
 
         this.loader = loader;
