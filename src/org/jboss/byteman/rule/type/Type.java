@@ -296,18 +296,24 @@ public class Type {
             return true;
         } else if (isPrimitive()) {
            if (!type.isPrimitive()) {
-               // see if we can arrive at the correct type by boxing or unboxing
-               Type boxedType = boxedTypes.get(type);
-               return (boxedType == this);
+               // see if we can arrive at the correct type by unboxing
+               Type unboxedType = boxedTypes.get(type);
+               return (unboxedType == this);
            } else {
                return false;
            }
         } else if (type.isPrimitive()) {
-            // see if we can arrive at the correct type by boxing or unboxing
+            // see if we can arrive at the correct type by boxing
             Type boxedType = boxedTypes.get(type);
-            return (boxedType == this);
+            if (boxedType == this) {
+                return true;
+            } else {
+                // we only get here if we have a known type i.e. both clazz values are non-null
+                // see if the supplied type is assignable from this type's class
+                return (this.clazz.isAssignableFrom(boxedType.clazz));
+            }
         } else if (isObject()) {
-            // we only get here if we have a known type i.e. both clazz values ar enon-null
+            // we only get here if we have a known type i.e. both clazz values are non-null
             // see if the supplied type is assignable from this type's class
             return (this.clazz.isAssignableFrom(type.clazz));
         } else {
