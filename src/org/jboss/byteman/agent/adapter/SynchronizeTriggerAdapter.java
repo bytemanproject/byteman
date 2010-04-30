@@ -77,10 +77,10 @@ public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
             if (whenComplete) {
                 super.visitInsn(opcode);
             }
-            if (opcode == Opcodes.MONITORENTER && visitedCount < count) {
+            if (opcode == Opcodes.MONITORENTER && (count == 0 || visitedCount < count)) {
                 // a relevant invocation occurs in the called method
                 visitedCount++;
-                if (visitedCount == count) {
+                if (count == 0 || visitedCount == count) {
                     injectTriggerPoint();
                 }
             }

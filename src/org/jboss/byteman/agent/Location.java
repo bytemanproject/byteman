@@ -277,12 +277,17 @@ public abstract class Location
             if (text.contains(" ")) {
                 int spaceIdx = text.lastIndexOf(" ");
                 String countText = text.substring(spaceIdx).trim();
-                try {
-                    count = Integer.valueOf(countText);
-                } catch (NumberFormatException nfe) {
-                    return null;
+                if (countText.equals("ALL")) {
+                    // a zero count means match all
+                    count = 0;
+                } else {
+                    try {
+                        count = Integer.valueOf(countText);
+                    } catch (NumberFormatException nfe) {
+                        return null;
+                    }
+                    text = text.substring(0, spaceIdx).trim();
                 }
-                text = text.substring(0, spaceIdx).trim();
             } else {
                 count = 1;
             }
@@ -360,7 +365,11 @@ public abstract class Location
             text += fieldName;
 
             if (count != 1) {
-                text += " " + count;
+                if (count == 0) {
+                    text += " ALL";
+                } else {
+                    text += " " + count;
+                }
             }
 
             return text;
@@ -437,10 +446,15 @@ public abstract class Location
                 int tailIdx = text.lastIndexOf(")");
                 String countText = text.substring(tailIdx + 1).trim();
                 if (!countText.equals("")) {
-                    try {
-                        count = Integer.valueOf(countText);
-                    } catch (NumberFormatException nfe) {
-                        return null;
+                    if (countText.equals("ALL")) {
+                        // a zero count means all
+                        count = 0;
+                    } else {
+                        try {
+                            count = Integer.valueOf(countText);
+                        } catch (NumberFormatException nfe) {
+                            return null;
+                        }
                     }
                 } else {
                     count = 1;
@@ -450,10 +464,15 @@ public abstract class Location
                 int tailIdx = text.lastIndexOf(" ");
                 String countText = text.substring(tailIdx + 1).trim();
                 if (!countText.equals("")) {
-                    try {
-                        count = Integer.valueOf(countText);
-                    } catch (NumberFormatException nfe) {
-                        return null;
+                    if (countText.equals("ALL")) {
+                        // a zero count means all
+                        count = 0;
+                    } else {
+                        try {
+                            count = Integer.valueOf(countText);
+                        } catch (NumberFormatException nfe) {
+                            return null;
+                        }
                     }
                 } else {
                     count = 1;
@@ -528,7 +547,11 @@ public abstract class Location
             }
             
             if (count != 1) {
-                text += " " + count;
+                if (count == 0) {
+                    text += " ALL";
+                } else {
+                    text += " " + count;
+                }
             }
 
             return text;
@@ -578,10 +601,15 @@ public abstract class Location
 
             // check for count
             if (text.length() != 0) {
-                try {
-                    count = Integer.valueOf(text);
-                } catch (NumberFormatException nfe) {
-                    return null;
+                if (text.equals("ALL")) {
+                    // a zero count means all
+                    count = 0;
+                } else {
+                    try {
+                        count = Integer.valueOf(text);
+                    } catch (NumberFormatException nfe) {
+                        return null;
+                    }
                 }
             } else {
                 count = 1;
@@ -626,7 +654,11 @@ public abstract class Location
             }
 
             if (count != 1) {
-                text += " " + count;
+                if (count == 0) {
+                    text += " ALL";
+                } else {
+                    text += " " + count;
+                }
             }
 
             return text;
@@ -667,34 +699,22 @@ public abstract class Location
         protected static Location create(String parameters)
         {
             String text = parameters.trim();
-            String typeName;
-            String signature;
+            String typeName = "";
             int count;
 
-            // check for trailing count
-            if (text.contains(" ")) {
-                int tailIdx = text.lastIndexOf(" ");
-                String countText = text.substring(tailIdx + 1).trim();
-                try {
-                    count = Integer.valueOf(countText);
-                } catch (NumberFormatException nfe) {
-                    return null;
-                }
-                text = text.substring(0, tailIdx).trim();
-            } else {
+            // text may be either blank, a count or ALL
+            if (text.equals("")) {
+                // count defaults to 1
                 count = 1;
-            }
-
-            // text may be either a count or a type name
-            if (text.equals("") || !Character.isDigit(text.charAt(0))) {
-                typeName = text;
+            } else if (text.equals("ALL")) {
+                // a zero count means all
+                count = 0;
             } else {
                 try {
                     count = Integer.valueOf(text);
                 } catch (NumberFormatException nfe) {
                     return null;
                 }
-                typeName="";
             }
 
             // TODO sanity check type name
@@ -728,7 +748,11 @@ public abstract class Location
             String text = "AT THROW";
 
             if (count != 1) {
-                text += " " + count;
+                if (count == 0) {
+                    text += " ALL";
+                } else {
+                    text += " " + count;
+                }
             }
 
             return text;

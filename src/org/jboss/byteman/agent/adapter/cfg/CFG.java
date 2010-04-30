@@ -23,9 +23,11 @@
 */
 package org.jboss.byteman.agent.adapter.cfg;
 
+import org.jboss.byteman.rule.type.TypeHelper;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
 import org.jboss.byteman.agent.Transformer;
+import org.objectweb.asm.Type;
 
 import java.util.*;
 
@@ -183,6 +185,30 @@ import java.util.*;
  */
 public class CFG
 {
+    /**
+     * Type identifying execute exceptions thrown by runtime
+     */
+    public final static Type EXECUTE_EXCEPTION_TYPE = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.exception.ExecuteException"));
+    /**
+     * Type identifying return exceptions thrown by runtime
+     */
+    public final static Type EARLY_RETURN_EXCEPTION_TYPE = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.exception.EarlyReturnException"));
+    /**
+     * Type identifying throw exceptions thrown by runtime
+     */
+    public final static Type THROW_EXCEPTION_TYPE = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.exception.ThrowException"));
+    /**
+     * name of type identifying execute exceptions thrown by runtime
+     */
+    public final static String EXECUTE_EXCEPTION_TYPE_NAME = EXECUTE_EXCEPTION_TYPE.getInternalName();
+    /**
+     * name of type identifying return exceptions thrown by runtime
+     */
+    public final static String EARLY_RETURN_EXCEPTION_TYPE_NAME = EARLY_RETURN_EXCEPTION_TYPE.getInternalName();
+    /**
+     * name of type identifying throw exceptions thrown by runtime
+     */
+    public final static String THROW_EXCEPTION_TYPE_NAME = THROW_EXCEPTION_TYPE.getInternalName();
     /**
      * the name of the method for which this is a CFG
      */
@@ -1184,10 +1210,38 @@ public class CFG
     }
 
     /**
+     * check if the current block is a byteman-generated handler i.e. one which was created to
+     * catch an exception thrown by the byteman runtime. n.b. a byteman handler only ever spans
+     * one block.
+     * @return true if the current block is a byteman-generated handler
+     */
+    public boolean inBytemanHandler()
+    {
+        // we just need to check whether the current block has a handler with a byteman exception type
+
+        Iterator<TryCatchDetails> handlerStarts = current.getTryHandlerStarts();
+        while (handlerStarts.hasNext()) {
+            TryCatchDetails details = handlerStarts.next();
+            // any trigger we have planted will be tagged as such
+            if (details.isTriggerHandler()) {
+                return true;
+            }
+            // handlers planted by previous transforms will not be tagged but will be for a byteman exception type
+            String typeName = details.getType();
+            if (typeName.equals(CFG.EARLY_RETURN_EXCEPTION_TYPE_NAME) ||
+                    typeName.equals(CFG.EXECUTE_EXCEPTION_TYPE_NAME) ||
+                    typeName.equals(CFG.THROW_EXCEPTION_TYPE_NAME)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    /**
      * return true if the current block is a rethrow handler i.e. one which was created to close a monitor
      * exit instruction and then rethrow an exception. n.b. this must only be called when the next instruction
      * to be added to the byetcode sequence is an ATHROW
-     * @return
+     * @return true if the current block is a rethrow handler
      */
     public boolean inRethrowHandler()
     {

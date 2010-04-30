@@ -90,10 +90,10 @@ public class InvokeCheckAdapter extends RuleCheckAdapter
             final String name,
             final String desc)
         {
-            if (visitedCount < count && matchCall(owner, name, desc)) {
+            if ((count == 0 || visitedCount < count) && matchCall(owner, name, desc)) {
                 // a relevant invocation occurs in the called method
                 visitedCount++;
-                if (visitedCount == count) {
+                if (count ==  0 || visitedCount == count) {
                     setTriggerPoint();
                 }
             }

@@ -81,10 +81,10 @@ public class SynchronizeCheckAdapter extends RuleCheckAdapter
 
         @Override
         public void visitInsn(int opcode) {
-            if (opcode == Opcodes.MONITORENTER && visitedCount < count) {
+            if (opcode == Opcodes.MONITORENTER && (count ==  0 || visitedCount < count)) {
                 // a synchronized block occurs in the called method
                 visitedCount++;
-                if (visitedCount == count) {
+                if (count == 0 || visitedCount == count) {
                     // and we have enough occurences to match the count
                     setTriggerPoint();
                 }

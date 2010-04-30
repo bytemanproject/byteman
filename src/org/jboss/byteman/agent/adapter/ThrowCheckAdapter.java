@@ -84,9 +84,9 @@ public class ThrowCheckAdapter extends RuleCheckAdapter
             if (opcode == Opcodes.ATHROW) {
                 // ok, we have hit a throw -- for now we just count any throw
                 // later we will try to match the exception class
-                if (visitedCount < count) {
+                if (count == 0 || visitedCount < count) {
                     visitedCount++;
-                    if (visitedCount == count) {
+                    if (count == 0 || visitedCount == count) {
                         // and we have enough occurences to match the count
                         setTriggerPoint();
                     }

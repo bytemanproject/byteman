@@ -194,6 +194,7 @@ public class Rule
         event = Event.create(this, eventTree);
         condition = Condition.create(this, conditionTree);
         action = Action.create(this, actionTree);
+        key = null;
     }
 
     public TypeGroup getTypeGroup()
@@ -675,6 +676,10 @@ public class Rule
 
     public String getKey()
     {
+        if (key != null) {
+            return key;
+        }
+        
         String key = getName() + "_" + nextId();
         this.key = key;
         ruleKeyMap.put(key, this);

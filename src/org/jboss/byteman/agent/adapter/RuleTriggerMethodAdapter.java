@@ -379,6 +379,15 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         }
     }
     /**
+     * return true if the current block is a handler which catches a byteman exception thrown by the byteman runtime
+     * @return
+     */
+    protected boolean inBytemanHandler()
+    {
+        return cfg.inBytemanHandler();
+    }
+
+    /**
      * return true if the current block is handler which catches a thrown exception within the scope
      * of a monitor enter in order to be able exit the monitor and rethrow the exception
      * @return
@@ -404,13 +413,6 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
     private boolean bindReturnValue;
 
     private CFG cfg;
-
-    private final static Type EXECUTE_EXCEPTION_TYPE = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.exception.ExecuteException"));
-    private final static Type EARLY_RETURN_EXCEPTION_TYPE = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.exception.EarlyReturnException"));
-    private final static Type THROW_EXCEPTION_TYPE = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.exception.ThrowException"));
-    private final static String EXECUTE_EXCEPTION_TYPE_NAME = EXECUTE_EXCEPTION_TYPE.getInternalName();
-    private final static String EARLY_RETURN_EXCEPTION_TYPE_NAME = EARLY_RETURN_EXCEPTION_TYPE.getInternalName();
-    private final static String THROW_EXCEPTION_TYPE_NAME = THROW_EXCEPTION_TYPE.getInternalName();
 
     // methdos copied from GeneratorAdapter but modified so they invoke local MethodVisitor
     // method implementations rather than delegating to the next MethodVisitor in line
@@ -634,9 +636,9 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
 
         Label end = new Label();
 
-        visitTryCatchBlock(details.getStart(), end, returnHandler, EARLY_RETURN_EXCEPTION_TYPE_NAME);
-        visitTryCatchBlock(details.getStart(), end, throwHandler, THROW_EXCEPTION_TYPE_NAME);
-        visitTryCatchBlock(details.getStart(), end, executeHandler, EXECUTE_EXCEPTION_TYPE_NAME);
+        visitTryCatchBlock(details.getStart(), end, returnHandler, CFG.EARLY_RETURN_EXCEPTION_TYPE_NAME);
+        visitTryCatchBlock(details.getStart(), end, throwHandler, CFG.THROW_EXCEPTION_TYPE_NAME);
+        visitTryCatchBlock(details.getStart(), end, executeHandler, CFG.EXECUTE_EXCEPTION_TYPE_NAME);
 
         // ok this fixes the  handler end label at the same pont as the trigger end label
         
@@ -744,10 +746,10 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                 // call super method to avoid creating new blocks
                 visitInsn(Opcodes.ATHROW);
                 // add try catch blocks for each of the exception types
-                visitTryCatchBlock(newStart, newEnd, newEarlyReturn, EARLY_RETURN_EXCEPTION_TYPE_NAME);
-                visitTryCatchBlock(newStart, newEnd, newThrow, THROW_EXCEPTION_TYPE_NAME);
+                visitTryCatchBlock(newStart, newEnd, newEarlyReturn, CFG.EARLY_RETURN_EXCEPTION_TYPE_NAME);
+                visitTryCatchBlock(newStart, newEnd, newThrow, CFG.THROW_EXCEPTION_TYPE_NAME);
                 // this comes last because it is the superclass of the previous two
-                visitTryCatchBlock(newStart, newEnd, newExecute, EXECUTE_EXCEPTION_TYPE_NAME);
+                visitTryCatchBlock(newStart, newEnd, newExecute, CFG.EXECUTE_EXCEPTION_TYPE_NAME);
                 // now visit label so they get processed
                 visitLabel(newEnd);
                 // and update the details so it will catch these exceptions
@@ -783,7 +785,7 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         } else {
             // fetch value from exception, unbox if needed and return value
             Method getReturnValueMethod = Method.getMethod("Object getReturnValue()");
-            invokeVirtual(EARLY_RETURN_EXCEPTION_TYPE, getReturnValueMethod);
+            invokeVirtual(CFG.EARLY_RETURN_EXCEPTION_TYPE, getReturnValueMethod);
             unbox(returnType);
             returnValue();
         }
@@ -802,7 +804,7 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         }
         // fetch value from exception, unbox if needed and return value
         Method getThrowableMethod = Method.getMethod("Throwable getThrowable()");
-        invokeVirtual(THROW_EXCEPTION_TYPE, getThrowableMethod);
+        invokeVirtual(CFG.THROW_EXCEPTION_TYPE, getThrowableMethod);
         throwException();
 
         // execute exception  comes last because it is the super of the othher two classes

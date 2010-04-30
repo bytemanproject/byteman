@@ -317,9 +317,9 @@ public class TransformListener extends Thread
             String script = stringBuffer.toString();
             scripts.add(script);
             scriptNames.add(scriptName);
-        }
 
-        line = in.readLine();
+            line = in.readLine();
+        }
 
         if ((doDelete && !line.equals("ENDDELETE")) ||
                 (!doDelete && !line.equals("ENDLOAD"))) {

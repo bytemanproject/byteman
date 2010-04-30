@@ -49,7 +49,6 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         if (matchTargetMethod(name, desc)) {
-            Rule rule = getRule(name, desc);
             if (name.equals("<init>")) {
                 return new ThrowTriggerConstructorAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
             } else {
@@ -82,12 +81,12 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
             if (opcode == Opcodes.ATHROW) {
                 // ok, we have hit a throw -- for now we just count any throw
                 // later we will try to match the exception class
-                if (visitedCount < count) {
+                if (count == 0 || visitedCount < count) {
                     // a relevant invocation occurs in the called method
                     // check whether this is a real throw or a rethrow after a monitorexit
-                    if (!inRethrowHandler()) {
+                    if (!inRethrowHandler() && !inBytemanHandler()) {
                         visitedCount++;
-                        if (!latched && visitedCount == count) {
+                        if (!latched && (count == 0 || visitedCount == count)) {
                             injectTriggerPoint();
                         }
                     }

@@ -93,10 +93,10 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
                 // access the field before generating the trigger call
                 super.visitFieldInsn(opcode, owner, name, desc);
             }
-            if (visitedCount < count && matchCall(opcode, owner, name, desc)) {
+            if ((count == 0 ||visitedCount < count) && matchCall(opcode, owner, name, desc)) {
                 // a relevant invocation occurs in the called method
                 visitedCount++;
-                if (!latched && visitedCount == count) {
+                if (!latched && (count == 0 || visitedCount == count)) {
                     injectTriggerPoint();
                 }
             }

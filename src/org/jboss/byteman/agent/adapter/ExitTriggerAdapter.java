@@ -24,26 +24,15 @@
 package org.jboss.byteman.agent.adapter;
 
 import org.objectweb.asm.*;
-import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.agent.RuleScript;
 import org.jboss.byteman.agent.TransformContext;
-
-import java.util.Vector;
 
 /**
  * asm Adapter class used to add a rule event trigger call to a method of some given class
  */
 public class ExitTriggerAdapter extends RuleTriggerAdapter
 {
-    /**
-     * table used to track which returns have been added because of exception handling code
-     */
-
-    private Vector<Label> earlyReturnHandlers;
-
     public ExitTriggerAdapter(ClassVisitor cv, TransformContext transformContext) {
         super(cv, transformContext);
-        this.earlyReturnHandlers = new Vector<Label>();
     }
 
     public MethodVisitor visitMethod(
@@ -73,50 +62,6 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
         }
 
         /**
-         * Visits a try catch block and records the label of the handler start if the
-         * exception type EarlyReturnException so we can later avoid inserting a rule
-         * trigger.
-         *
-         * @param start beginning of the exception handler's scope (inclusive).
-         * @param end end of the exception handler's scope (exclusive).
-         * @param handler beginning of the exception handler's code.
-         * @param type internal name of the type of exceptions handled by the
-         *        handler, or <tt>null</tt> to catch any exceptions (for "finally"
-         *        blocks).
-         * @throws IllegalArgumentException if one of the labels has already been
-         *         visited by this visitor (by the {@link #visitLabel visitLabel}
-         *         method).
-         */
-        public void visitTryCatchBlock(Label start, Label end, Label handler, String type)
-        {
-            // check whether type is one of ours and if so add the labels to the
-            // return table
-
-            if (type != null && type.equals("org/jboss/byteman/rule/exception/EarlyReturnException")) {
-                earlyReturnHandlers.add(handler);
-            }
-            super.visitTryCatchBlock(start, end, handler, type);
-        }
-
-        /**
-         * each time we visit a label we set or clear flag inhibit depending upon whether the label
-         * identifies an EarlyReturnException block or not in order to avoid inserting triggers
-         * for returns added by our own exception handling code
-         *
-         * @param label
-         */
-        public void visitLabel(Label label)
-        {
-            if (earlyReturnHandlers.contains(label)) {
-                inhibit = true;
-            } else {
-                inhibit = false;
-            }
-
-            super.visitLabel(label);
-        }
-
-        /**
          * we need to identify return instructions which are inserted because of other rules
          *
          * @param opcode
@@ -130,7 +75,7 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
                 case Opcodes.LRETURN: // 2 before n/a after
                 case Opcodes.DRETURN: // 2 before n/a after
                 {
-                    if (!inhibit) {
+                    if (!inBytemanHandler()) {
                         injectTriggerPoint();
                     }
                 }
@@ -139,7 +84,5 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
 
             super.visitInsn(opcode);
         }
-
-        private boolean inhibit;
     }
 }

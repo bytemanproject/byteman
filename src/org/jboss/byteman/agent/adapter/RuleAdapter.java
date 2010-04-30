@@ -48,17 +48,6 @@ public class RuleAdapter extends ClassAdapter
         return transformContext.matchTargetMethod(name, desc);
     }
     
-    protected Rule getRule(String name, String desc)
-    {
-        Rule rule =   null;
-        try {
-            rule = transformContext.getRule(name, desc);
-        } catch(Throwable th) {
-            // will not happen
-        }
-        return rule;
-    }
-
     protected TransformContext getTransformContext()
     {
         return transformContext;

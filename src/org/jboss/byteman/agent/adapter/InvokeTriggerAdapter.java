@@ -95,10 +95,10 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
                 // invoke the method before generating the trigger call
                 super.visitMethodInsn(opcode, owner, name, desc);
             }
-            if (visitedCount < count && matchCall(owner, name, desc)) {
+            if ((count == 0 || visitedCount < count) && matchCall(owner, name, desc)) {
                 // a relevant invocation occurs in the called method
                 visitedCount++;
-                if (!latched && visitedCount == count) {
+                if (!latched && (count == 0 || visitedCount == count)) {
                     injectTriggerPoint();
                 }
             }
