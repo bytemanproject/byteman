@@ -69,15 +69,25 @@ public class Binding extends RuleElement
             // $$ references the helper implicitly associated with a builtin call
             index = HELPER;
         } else if (name.equals("$!")) {
-            // $! refers to the current return value for the triggger method and is only valid when
+            // $! refers to the current return value for the trigger method and is only valid when
             // the rule is triggered AT EXIT
-            index = RETURN;
+            index = RETURN_VAR;
+        } else if (name.equals("$^")) {
+            // $^ refers to the current throwable value for the trigger method and is only valid when
+            // the rule is triggered AT THROW
+            index = THROWABLE_VAR;
+        } else if (name.equals("$#")) {
+            // $# refers to the parameter count for the trigger method
+            index = PARAM_COUNT_VAR;
+        } else if (name.equals("$*")) {
+            // $* refers to the parameters for the trigger method supplied as an Object array
+            index = PARAM_ARRAY_VAR;
         } else if (name.matches("\\$[A-Za-z].*")) {
            // $AAAAA refers  to a local variable in the trigger method
-            index = LOCALVAR;
+            index = LOCAL_VAR;
         } else {
             // anything else must be a variable introduced in the BINDS clause
-            index = BINDVAR;
+            index = BIND_VAR;
         }
         this.callArrayIndex = 0;
 
@@ -233,19 +243,34 @@ public class Binding extends RuleElement
         return index == HELPER;
     }
 
-    public boolean isReturn()
+    public boolean isBindVar()
     {
-        return index == RETURN;
+        return index == BIND_VAR;
     }
 
     public boolean isLocalVar()
     {
-        return index == LOCALVAR;
+        return index == LOCAL_VAR;
     }
 
-    public boolean isBindVar()
+    public boolean isReturn()
     {
-        return index <= BINDVAR;
+        return index == RETURN_VAR;
+    }
+
+    public boolean isThrowable()
+    {
+        return index == THROWABLE_VAR;
+    }
+
+    public boolean isParamCount()
+    {
+        return index == PARAM_COUNT_VAR;
+    }
+
+    public boolean isParamArray()
+    {
+        return index == PARAM_ARRAY_VAR;
     }
 
     public int getIndex()
@@ -329,9 +354,12 @@ public class Binding extends RuleElement
     // special index values for non-positional parameters
 
     private final static int HELPER = -1;
-    private final static int RETURN = -2;
-    private final static int LOCALVAR = -3;
-    private final static int BINDVAR = -4;
+    private final static int BIND_VAR = -2;
+    private final static int LOCAL_VAR = -3;
+    private final static int RETURN_VAR = -4;
+    private final static int THROWABLE_VAR = -5;
+    private final static int PARAM_COUNT_VAR = -6;
+    private final static int PARAM_ARRAY_VAR = -7;
 
     private String name;
     private String descriptor; // supplied when the binding is for a local var

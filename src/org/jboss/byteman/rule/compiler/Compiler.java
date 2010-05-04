@@ -220,7 +220,9 @@ public class Compiler implements Opcodes
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
                     mv.visitInsn(POP);
-                } else if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
+                // } else if (binding.isParam() || binding.isLocalVar() || binding.isReturn() ||
+                //             binding.isThrowable() || binding.isParamCount() || binding.isParamArray()) {
+                } else if (!binding.isBindVar()) {
                     // bindingMap.put(name, args[binding.getCallArrayIndex()]);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
@@ -249,8 +251,8 @@ public class Compiler implements Opcodes
                 String name = binding.getName();
 
                 if (binding.isUpdated()) {
-                    if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
-
+                    // if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
+                    if (!binding.isBindVar()) {
                         int idx = binding.getCallArrayIndex();
                         // Object value = bindingMap.get(name);
                         // args[idx] = value;

@@ -54,7 +54,7 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         this.argumentTypes = Type.getArgumentTypes(descriptor);
         this.argLocalIndices = new int[argumentTypes.length];
         this.bindingsDone = false;
-        this.bindReturnValue = false;
+        this.bindReturnOrThrowableValue = false;
     }
 
     private void setBindingIndices()
@@ -110,16 +110,27 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                 callArrayBindings.add(binding);
             } else if (binding.isReturn()) {
                 // in order to be able to add the return value to the args array
-                // we have to add a local var to store the return value so track that requirement
-                bindReturnValue = true;
+                // we have to add a local var to store the value so track that requirement
+                bindReturnOrThrowableValue = true;
+                saveValueType = returnType;
+                callArrayBindings.add(binding);
+            } else if (binding.isThrowable()) {
+                // in order to be able to add the return value or throwabel value to the args array
+                // we have to add a local var to store the value so track that requirement
+                bindReturnOrThrowableValue = true;
+                // TODO -- allow type to be more accurately identified than this
+                saveValueType = Type.getType("Ljava/lang/Throwable;");
+                callArrayBindings.add(binding);
+            } else if (binding.isParamCount() || binding.isParamArray()) {
                 callArrayBindings.add(binding);
             }
         }
-        // we don't have to do this but it makes debgging easier
+        // we don't have to do this but it makes debugging easier
         
         if (true) {
             // ok now sort the callArrayBindings for later use
-            // we sort param bindings before local bindings before the return binding
+            // we sort param bindings before local bindings before the param count
+            // and param array before the throwable or return binding
             // within param bindings we sort by param idx
             // within local bindings we sort by local var idx
 
@@ -146,8 +157,28 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                             int i2 = b2.getLocalIndex();
                             return (i1 < i2 ? -1 : (i1 > i2 ? 1 : 0));
                         } else {
-                            // return var always sort last
+                            // local vars precede all remaining types
+                            return -1;
+                        }
+                    } else if (b1.isParamCount()){
+                        if (b2.isParam() || b2.isLocalVar()) {
+                            // param and local bindings precede param count
                             return 1;
+                        } else if (b2.isParamCount()) {
+                            return 0;
+                        } else {
+                            // param count vars precede all remaining types
+                            return -1;
+                        }
+                    } else if (b1.isParamArray()){
+                        if (b2.isParam() || b2.isLocalVar() || b2.isParamCount()) {
+                            // param, local and param count bindings precede param array
+                            return 1;
+                        } else if (b2.isParamArray()) {
+                            return 0;
+                        } else {
+                            // param array vars precede all remaining types
+                            return -1;
                         }
                     } else {
                         // return var always sorts last
@@ -207,7 +238,7 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         return null;
     }
 
-    private int doReturnSave()
+    private int doReturnOrThrowSave()
     {
         // ensure all the bindings have been processed
         
@@ -216,20 +247,20 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
             bindingsDone = true;
         }
 
-        // if we need to save the return value then allocate a slot for it now
+        // if we need to save the return or throwable value then allocate a slot for it now
         // stash the value into the slot and return the slot idx otherwise return
         // an invalid idx
 
-        if (bindReturnValue) {
-            int returnSlot = newLocal(returnType);
-            if (returnType.getSize() == 2) {
+        if (bindReturnOrThrowableValue) {
+            int saveValueSlot = newLocal(saveValueType);
+            if (saveValueType.getSize() == 2) {
                 visitInsn(Opcodes.DUP2);
             } else {
                 visitInsn(Opcodes.DUP);
             }
-            storeLocal(returnSlot);
+            storeLocal(saveValueSlot);
 
-            return returnSlot;
+            return saveValueSlot;
         } else {
             return -1;
         }
@@ -240,13 +271,14 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
      * in the rule or a null pointer if no bindings are required. this method also inserts a copy of the array
      * below the initial two top entries if any of the bindings can potentially be updated by the rule, allowing
      * the updated values to be written back on return from the call to the rule engine.
-     * @param returnSlot a local variable slot containing the return value which the trigger method is about to
-     * return. this is only valid if the rule location is AT EXIT and the rule body contains a reference to the
-     * return value ($!).
+     * @param saveSlot a local variable slot containing either the return value which the trigger method is about
+     * to return or the Throwable the method is about to throw. this is only valid if, respectively, the rule
+     * location is AT EXIT or AT THROW and the rule body contains a reference to the return value ($!) or throwable
+     * value ($@).
      * @return true if the rule may update the argument array and hence if a copy of the array has been inserted
      * below the initial two top entries otherwise false.
      */
-    private boolean doArgLoad(int returnSlot)
+    private boolean doArgLoad(int saveSlot)
     {
         if (callArrayBindings.size() ==  0) {
             push((org.objectweb.asm.Type)null);
@@ -294,9 +326,24 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                 int idx = binding.getLocalIndex();
                 loadLocal(idx);
                 box(getLocalType(idx));
-            } else {
-                loadLocal(returnSlot);
-                box(returnType);
+            } else if (binding.isParamCount()){
+                int count = argumentTypes.length;
+                push(count);
+                box(Type.INT_TYPE);
+            } else if (binding.isParamArray()){
+                int count = argumentTypes.length;
+                push(count);
+                newArray(objectType);
+                for (int idx = 0; idx < count; idx++) {
+                    dup();
+                    push(idx);
+                    loadArg(idx);
+                    box(argumentTypes[idx]);
+                    arrayStore(objectType);
+                }
+            } else if (binding.isThrowable() | binding.isReturn()){
+                loadLocal(saveSlot);
+                box(saveValueType);
             }
             arrayStore(objectType);
         }
@@ -332,7 +379,7 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         }
         
         // if the return value is updated it gets done last
-        if (returnIdx >- 0) {
+        if (returnIdx >= 0) {
             lastUpdated = returnIdx;
         }
 
@@ -407,10 +454,11 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
     protected String[] exceptions;
     private Type returnType;
     private Type[] argumentTypes;
+    private Type saveValueType;
     private int[] argLocalIndices;
     private List<Binding> callArrayBindings;
     private boolean bindingsDone;
-    private boolean bindReturnValue;
+    private boolean bindReturnOrThrowableValue;
 
     private CFG cfg;
 
@@ -860,7 +908,7 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         Label startLabel = newLabel();
         Label endLabel = newLabel();
         visitTriggerStart(startLabel);
-        int returnSlot = doReturnSave();
+        int saveValueSlot = doReturnOrThrowSave();
         push(key);
         if ((access & Opcodes.ACC_STATIC) == 0) {
             loadThis();
@@ -868,7 +916,7 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
             push((Type)null);
         }
         boolean handleUpdates;
-        handleUpdates = doArgLoad(returnSlot);
+        handleUpdates = doArgLoad(saveValueSlot);
         invokeStatic(ruleType, method);
         // if the rule can modify local variables then generate code to perform the update
         if (handleUpdates) {

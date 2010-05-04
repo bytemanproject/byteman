@@ -561,6 +561,14 @@ public class Rule
                 binding.setType(paramType);
             } else if (binding.isReturn()) {
                 binding.setType(returnType);
+            } else if (binding.isThrowable()) {
+                // TODO -- enable a more precise specification of the throwable type
+                // we need to be able to obtain the type descriptor for the throw operation
+                binding.setType(typeGroup.ensureType(Throwable.class));
+            } else if (binding.isParamCount()) {
+                binding.setType(Type.I);
+            } else if (binding.isParamArray()) {
+                binding.setType(Type.OBJECT.arrayType());
             }
         }
     }

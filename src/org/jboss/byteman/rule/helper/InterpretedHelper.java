@@ -88,7 +88,9 @@ public class InterpretedHelper extends Helper implements HelperAdapter
                 bindingMap.put(name, this);
             } else if (binding.isRecipient()) {
                 bindingMap.put(name, recipient);
-            } else if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
+            // } else if (!binding.isParam() || binding.isLocalVar() || binding.isReturn() ||
+            //         binding.isThrowable() || binding.isParamCount() || binding.isParamArray()) {
+            } else if (!binding.isBindVar()) {
                 bindingMap.put(name, args[binding.getCallArrayIndex()]);
             }
         }
@@ -109,7 +111,8 @@ public class InterpretedHelper extends Helper implements HelperAdapter
             }
 
             if (binding.isUpdated()) {
-                if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
+                // if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
+                if (!binding.isBindVar()) {
                     Object value = bindingMap.get(name);
                     int idx = binding.getCallArrayIndex();
                     args[idx] = value;

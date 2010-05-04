@@ -61,7 +61,7 @@ public class NumericLiteral extends Expression
     }
 
     public Type typeCheck(Type expected) throws TypeException {
-        if (!expected.isNumeric() && !expected.isUndefined() && !expected.isVoid() && expected != Type.OBJECT) {
+        if (!expected.isNumeric() && !expected.isUndefined() && !expected.isVoid() && expected != Type.OBJECT && expected != Type.STRING) {
             throw new TypeException("NumericLiteral.typeCheck : invalid expected type " + expected.getName() + getPos());
         }
         return type;

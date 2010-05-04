@@ -219,11 +219,29 @@ Float = {Sign}? {PosFloat}
 
 /* dollar prefixed symbols */
 
+/* trigger method recipient and params */
+
 "$" {Integer} { return symbol(sym.DOLLAR, yytext()); }
+
+/* trigger method local variable */
 
 "$" {Identifier} { return symbol(sym.DOLLAR, yytext()); }
 
+/* return value on stack in AT EXIT rule */
+
 "$" "!" { return symbol(sym.DOLLAR, yytext()); }
+
+/* throwable on stack in AT THROW rule */
+
+"$" "^" { return symbol(sym.DOLLAR, yytext()); }
+
+/* trigger method parameter count */
+
+"$" "#" { return symbol(sym.DOLLAR, yytext()); }
+
+/* trigger method parameter array */
+
+"$" "*" { return symbol(sym.DOLLAR, yytext()); }
 
 /* identifiers */
 

@@ -26,7 +26,6 @@ package org.jboss.byteman.agent.adapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
-import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.binding.Bindings;
 import org.jboss.byteman.rule.binding.Binding;
@@ -99,6 +98,17 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                     System.out.println("RuleCheckMethodAdapter.checkBindings : found return value binding $! in non-EXIT rule " + rule.getName());
                     return false;
                 }
+            } else if (binding.isThrowable()) {
+                // we can only allow reference to the current throwable in an AT THROW rule
+                if (rule.getTargetLocation().getLocationType() != LocationType.THROW) {
+                    System.out.println("RuleCheckMethodAdapter.checkBindings : found throwable value binding $@ in non-THROW rule " + rule.getName());
+                    return false;
+                }
+                // we will need to set the descriptor at some point
+            } else if (binding.isParamArray()) {
+                // this is ok
+            } else if (binding.isParamCount()) {
+                // this is ok
             } else if (binding.isLocalVar()){
                 // make sure we have a local variable with the correct name
                 String localVarName = binding.getName().substring(1);

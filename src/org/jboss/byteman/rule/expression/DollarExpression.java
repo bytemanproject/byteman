@@ -52,6 +52,13 @@ import java.io.StringWriter;
  */
 public class DollarExpression extends AssignableExpression
 {
+    /**
+     * constructor for param bindings or special bindings
+     * @param rule
+     * @param type
+     * @param token
+     * @param index
+     */
     public DollarExpression(Rule rule, Type type, ParseNode token, int index)
     {
         super(rule, type, token);
@@ -59,6 +66,12 @@ public class DollarExpression extends AssignableExpression
             name = "$$";
         } else if (index == RETURN_VALUE_IDX){
             name = "$!";
+        } else if (index == THROWABLE_VALUE_IDX){
+            name = "$^";
+        } else if (index == PARAM_COUNT_IDX){
+            name = "$#";
+        } else if (index == PARAM_ARRAY_IDX){
+            name = "$*";
         } else {
             name = "$" + Integer.toString(index);
         }
@@ -66,10 +79,17 @@ public class DollarExpression extends AssignableExpression
         this.binding = null;
     }
 
+    /**
+     * constructor for local var bindings 
+     * @param rule
+     * @param type
+     * @param token
+     * @param name
+     */
     public DollarExpression(Rule rule, Type type, ParseNode token, String name)
     {
         super(rule, type, token);
-        this.index = BINDING_IDX;
+        this.index = LOCAL_IDX;
         this.name = "$" + name;
         this.binding = null;
     }
@@ -101,6 +121,16 @@ public class DollarExpression extends AssignableExpression
     {
         if (name.equals("$0") || name.equals("$this")){
             throw new TypeException("invalid assignment to final variable " + name + getPos());
+        }
+        if (name.equals("$^")){
+            // TODO -- see if it is possible to allow update to the throwable variable
+            throw new TypeException("invalid assignment to throwable variable " + name + getPos());
+        }
+        if (name.equals("$#")){
+            throw new TypeException("invalid assignment to param count variable " + name + getPos());
+        }
+        if (name.equals("$*")){
+            throw new TypeException("invalid assignment to param array variable " + name + getPos());
         }
         bind(true);
     }
@@ -275,7 +305,28 @@ public class DollarExpression extends AssignableExpression
 
     private Binding binding;
 
+    /**
+     * index of $$ variable which is bound to the current helper instance
+     */
     public final static int HELPER_IDX = -1;
-    public final static int BINDING_IDX = -2;
-    public final static int RETURN_VALUE_IDX = -3;
+    /**
+     * index for any local variable which must be further identified via its name
+     */
+    public final static int LOCAL_IDX = -3;
+    /**
+     * index of $! variable which is bound to the current return value on stack in AT RETURN rule
+     */
+    public final static int RETURN_VALUE_IDX = -4;
+    /**
+     * index of $@ variable which is bound to the current throwable on stack in AT THROW rule
+     */
+    public final static int THROWABLE_VALUE_IDX = -5;
+    /**
+     * index of $# variable which is bound to the count of number of trigger method params
+     */
+    public final static int PARAM_COUNT_IDX = -6;
+    /**
+     * index of $* variable which is bound to an array of the trigger method params
+     */
+    public final static int PARAM_ARRAY_IDX = -7;
 }
