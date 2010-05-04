@@ -206,7 +206,7 @@ public abstract class RuleElement {
             throws CompileException
     {
         assert toType == Type.STRING;
-        if (fromType.isObject() || fromType.isArray()) {
+        if (fromType.isObject() || fromType.isArray() || (fromType.isNumeric() && !fromType.isPrimitive())) {
             // use the toString method if the object is non null otherwise just replace it with null
             Label elseLabel = new Label();
             Label endLabel = new Label();
