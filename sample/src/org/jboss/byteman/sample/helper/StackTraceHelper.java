@@ -298,12 +298,12 @@ public class StackTraceHelper extends Helper
 
     /**
      * print all stack frames between the frames which match start and end to System.out preceded by prefix
-     * by calling traceStackMatching(from, to, null, "out")
+     * by calling traceStackMatching(from, to, prefix, "out")
      */
 
     public void traceStackBetween(String from, String to, String prefix)
     {
-        traceStackBetween(from, to, null, "out");
+        traceStackBetween(from, to, prefix, "out");
     }
 
     /**
