@@ -75,12 +75,12 @@ public class TestParamBinding extends Test
         logExpected("calling TestThrowBinding.triggerMethod(0)");
         logExpected("inside TestThrowBinding.triggerMethod()");
         logExpected("triggerMethod : triggered with 1 params");
-        logExpected("triggerMethod : $*[0] = 0");
+        logExpected("triggerMethod : $*[1] = 0");
         logExpected("called TestThrowBinding.triggerMethod(0) ==> 0");
         logExpected("calling TestThrowBinding.triggerMethod(1)");
         logExpected("inside TestThrowBinding.triggerMethod()");
         logExpected("triggerMethod : triggered with 1 params");
-        logExpected("triggerMethod : $*[0] = 1");
+        logExpected("triggerMethod : $*[1] = 1");
         logExpected("called TestThrowBinding.triggerMethod(1) ==> 2");
 
         return super.getExpected();

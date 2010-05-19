@@ -34,5 +34,5 @@ AFTER CALL log
 BIND test = $0
 IF TRUE
 DO test.log("triggerMethod : triggered with " + $# + " params"),
-   test.log("triggerMethod : $*[0] = " + $*[0])
+   test.log("triggerMethod : $*[1] = " + $*[1])
 ENDRULE

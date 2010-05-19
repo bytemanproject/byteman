@@ -332,11 +332,19 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                 box(Type.INT_TYPE);
             } else if (binding.isParamArray()){
                 int count = argumentTypes.length;
-                push(count);
+                push(count + 1);
                 newArray(objectType);
+                dup();
+                push(0);
+                if ((access & Opcodes.ACC_STATIC) == 0) {
+                    loadThis();
+                } else {
+                    push((Type)null);
+                }
+                arrayStore(objectType);
                 for (int idx = 0; idx < count; idx++) {
                     dup();
-                    push(idx);
+                    push(idx + 1);
                     loadArg(idx);
                     box(argumentTypes[idx]);
                     arrayStore(objectType);
