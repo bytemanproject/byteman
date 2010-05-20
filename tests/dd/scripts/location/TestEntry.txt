@@ -51,3 +51,13 @@ BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("ENTRY triggered in TestEntryExitAuxiliary.testMethod")
 ENDRULE
+
+RULE test entry trigger for superclass method 2
+CLASS TestEntryExitAuxiliary
+METHOD testMethod()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("ENTRY 2 triggered in TestEntryExitAuxiliary.testMethod")
+ENDRULE

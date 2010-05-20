@@ -62,10 +62,10 @@ public class Transformer implements ClassFileTransformer {
         scriptRepository = new ScriptRepository(skipOverrideRules());
         loadCache = new LoadCache(inst);
 
-        Iterator<String> scritpsIter = scriptTexts.iterator();
+        Iterator<String> scriptsIter = scriptTexts.iterator();
         Iterator<String> filesIter = scriptPaths.iterator();
-        while (scritpsIter.hasNext()) {
-            String scriptText = scritpsIter.next();
+        while (scriptsIter.hasNext()) {
+            String scriptText = scriptsIter.next();
             String file = filesIter.next();
             List<RuleScript> ruleScripts = scriptRepository.processScripts(scriptText, file);
             for (RuleScript ruleScript : ruleScripts) {

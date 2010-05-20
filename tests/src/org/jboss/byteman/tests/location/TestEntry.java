@@ -70,6 +70,7 @@ public class TestEntry extends Test
         logExpected("inside TestEntryExitAuxiliarySub.testMethod");
         logExpected("calling TestEntryExitAuxiliary.testMethod");
         logExpected("ENTRY triggered in TestEntryExitAuxiliary.testMethod");
+        logExpected("ENTRY 2 triggered in TestEntryExitAuxiliary.testMethod");
         logExpected("inside TestEntryExitAuxiliary.testMethod");
         logExpected("called TestEntryExitAuxiliary.testMethod");
         logExpected("called TestEntryExitAuxiliarySub.testMethod");

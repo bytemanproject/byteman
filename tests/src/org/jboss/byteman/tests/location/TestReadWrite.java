@@ -61,11 +61,15 @@ public class TestReadWrite extends Test
         logExpected("calling TestReadWriteAuxiliary.testMethod");
         logExpected("inside TestReadWriteAuxiliary.testMethod");
         logExpected("AT READ 1 triggered in TestReadWriteAuxiliary.testMethod : counter == 0");
+        logExpected("AT READ 1 again triggered in TestReadWriteAuxiliary.testMethod : counter == 0");
         logExpected("1: currentCounter == 0");
         logExpected("AT WRITE 1 triggered in TestReadWriteAuxiliary.testMethod : counter == 0");
+        logExpected("AT WRITE 1 again triggered in TestReadWriteAuxiliary.testMethod : counter == 0");
         logExpected("2: currentCounter == 1");
+        logExpected("AFTER READ 2 again triggered in TestReadWriteAuxiliary.testMethod : counter == 1");
         logExpected("AFTER READ 2 triggered in TestReadWriteAuxiliary.testMethod : counter == 1");
         // AFTER
+        logExpected("AFTER WRITE 2 again triggered in TestReadWriteAuxiliary.testMethod : counter == 2");
         logExpected("AFTER WRITE 2 triggered in TestReadWriteAuxiliary.testMethod : counter == 2");
         logExpected("3: currentCounter == 2");
         logExpected("called TestReadWriteAuxiliary.testMethod");

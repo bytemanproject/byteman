@@ -137,7 +137,8 @@ public class ScriptRepository
                         if (targetHelper == null) {
                             targetHelper = defaultHelper;
                         }
-                        ruleScripts.add(new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetLocation, nextRule, startNumber, scriptFile));
+                        RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetLocation, nextRule, startNumber, scriptFile);
+                        ruleScripts.add(ruleScript);
                     }
                     name = null;
                     targetClass = null;
@@ -148,7 +149,7 @@ public class ScriptRepository
                     sepr = "";
                     inRule = false;
                     isInterface = false;
-                    // reset start nuuber so we pick up the next rule text line
+                    // reset start number so we pick up the next rule text line
                     startNumber = -1;
                 } else if (lineNumber == maxLines && !nextRule.trim().equals("")) {
                     throw new Exception("org.jboss.byteman.agent.Transformer : no matching ENDRULE for RULE " + name + " in script " + scriptFile);
@@ -464,10 +465,10 @@ public class ScriptRepository
                 // always create a new list so that we don't affect any in progress iteration of the previous value
                 if (entry == null) {
                     entry = new ArrayList();
-                    entry.add(script);
+                    add(entry, script);
                 } else {
                     entry = new ArrayList(entry);
-                    entry.add(script);
+                    add(entry, script);
                 }
                 index.put(key, entry);
             }
@@ -527,12 +528,12 @@ public class ScriptRepository
 
                             // always create a new list so that we don't affect any in progress iteration of the previous value
                             entry = new ArrayList<RuleScript>(entry);
-                            entry.add(script);
+                            add(entry, script);
                         } else {
                             // always create a new list so that we don't affect any in progress iteration of the previous value
                             entry = new ArrayList(entry);
                             entry.remove(previous);
-                            entry.add(script);
+                            add(entry, script);
                         }
                         index.put(key, entry);
                     } else {
@@ -558,7 +559,7 @@ public class ScriptRepository
                         } else {
                             entry = new ArrayList<RuleScript>(entry);
                         }
-                        entry.add(script);
+                        add(entry, script);
                         index.put(key, entry);
                     }
                 }
@@ -566,6 +567,23 @@ public class ScriptRepository
         }
     }
 
+    /**
+     * add a rule script to start or end of the index list according to its location type. AT ENTRY rules
+     * are pushed so they are sorted in reverse load order. other rules are appended so they are sorted
+     * in load order.
+     * @param entries
+     * @param script
+     */
+    private void add(List<RuleScript> entries, RuleScript script)
+    {
+        // ENTRY rules are pushed so they are sorted in reverse load order
+        // other rules are appended so they are sorted in load order
+        if (script.getTargetLocation().getLocationType() == LocationType.ENTRY) {
+            entries.add(0, script);
+        } else {
+            entries.add(script);
+        }
+    }
     /**
      * a 1-1 mapping from target class names which appear in rules to a script object holding the
      * rule details
