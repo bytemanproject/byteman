@@ -62,6 +62,9 @@ public class StringLiteral extends Expression
     }
 
     public Type typeCheck(Type expected) throws TypeException {
+        if (!expected.isUndefined() && !expected.isVoid() && expected != Type.OBJECT && expected != Type.STRING) {
+            throw new TypeException("StringLiteral.typeCheck : invalid expected type " + expected.getName() + getPos());
+        }
         return type;
     }
 
