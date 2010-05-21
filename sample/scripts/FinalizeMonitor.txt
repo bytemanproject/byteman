@@ -30,21 +30,15 @@
 #  -- set the directory in which byteman has been installed
 #  BYTEMAN_HOME= ...
 #
-#   -- identify the samples jar to the boot path
-#   SAMPLE_JAR=${BYTEMAN_HOME}/sample/lib/byteman-sample.jar
-#
 #   -- identify this script
 #   SCRIPT={BYTEMAN_HOME}/sample/scripts/FinalizeMonitor.txt
 #
-#  ${BYTEMAN_HOME}/bin/bmjava.sh -l $SCRIPT -b $SAMPLE_JAR org.my.App
+#  ${BYTEMAN_HOME}/bin/bmjava.sh -l $SCRIPT org.my.App
 #
 # alternatively to load the script dynamically
 #
 #   -- start the program with the agent
 #  ${BYTEMAN_HOME}/bin/bmjava.sh org.my.App
-#
-#   -- install the helper library into the bootstrap classpath
-#  ${BYTEMAN_HOME}/bin/submit.sh -b $SAMPLE_JAR
 #
 #   -- install the script
 #  ${BYTEMAN_HOME}/bin/submit.sh -l $SCRIPT
@@ -58,7 +52,6 @@
 RULE FinalizeMonitor trace finalize
 CLASS ^java.lang.Object
 METHOD finalize
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT RETURN
 IF TRUE
 DO traceStack("finalizing " + $0, 1)

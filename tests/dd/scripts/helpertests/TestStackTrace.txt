@@ -1,0 +1,86 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2010, Red Hat and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+
+RULE test stacktrace two frames
+CLASS TestStackTrace
+METHOD triggerMethod1()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestStackTrace = $0
+IF TRUE
+DO test.log(formatStack("stacktrace two frames\n", 2))
+ENDRULE
+
+RULE test stacktrace matching frames
+CLASS TestStackTrace
+METHOD triggerMethod211()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestStackTrace = $0
+IF TRUE
+DO test.log(formatStackMatching("triggerMethod2.*", "stacktrace matching frames\n"))
+ENDRULE
+
+RULE test stacktrace matching frames with class
+CLASS TestStackTrace
+METHOD triggerMethod212()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestStackTrace = $0
+IF TRUE
+DO test.log(formatStackMatching("TestStackTrace\.triggerMethod2.*", true, false, "stacktrace matching frames with class\n"))
+ENDRULE
+
+RULE test stacktrace three frames
+CLASS TestStackTrace
+METHOD triggerMethod311()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestStackTrace = $0
+IF TRUE
+DO test.log(formatStack("stacktrace three frames\n", 3))
+ENDRULE
+
+RULE test stacktrace matching frames with class and package
+CLASS TestStackTrace
+METHOD triggerMethod3111()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestStackTrace = $0
+IF TRUE
+DO test.log(formatStackMatching("org\.jboss\.byteman\.tests\.helpertests\.TestStackTrace\.triggerMethod3.*",
+                                true, true, "stacktrace matching frames with class and package\n"))
+ENDRULE
+
+RULE test stacktrace between frames
+CLASS TestStackTrace
+METHOD triggerMethod3111()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT EXIT
+BIND test : TestStackTrace = $0
+IF TRUE
+DO test.log(formatStackBetween("org\.jboss\.byteman\.tests\.helpertests\.TestStackTrace\.triggerMethod3111",
+                                "org\.jboss\.byteman\.tests\.helpertests\.TestStackTrace\.triggerMethod3",
+                                true, true, "stacktrace between frames\n"))
+ENDRULE

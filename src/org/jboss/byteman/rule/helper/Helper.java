@@ -980,6 +980,696 @@ public class Helper
         java.lang.Runtime.getRuntime().halt(-1);
     }
 
+    // call stack management support
+    //
+    // matching caller frames
+
+    /**
+     * test whether the name of the method which called the the trigger method matches the supplied regular
+     * by calling callerMatches(regExp, false)
+     */
+    public boolean callerMatches(String regExp)
+    {
+        return callerMatches(regExp, false);
+    }
+
+    /**
+     * test whether the name of method which called the the trigger method matches the supplied regular
+     * expression by calling callerMatches(regExp, includeClass, false)
+     * @return true if the name of the method which called the the trigger method matches the supplied regular
+     * expression otherwise false
+     */
+    public boolean callerMatches(String regExp, boolean includeClass)
+    {
+        return callerMatches(regExp, includeClass, false);
+    }
+
+    /**
+     * test whether the name of method which called the the trigger method matches the supplied regular
+     * expression by calling callerMatches(regExp, includeClass, includePackage, 1)
+     * @return true if the name of the method which called the the trigger method matches the supplied regular
+     * expression otherwise false
+     */
+    public boolean callerMatches(String regExp, boolean includeClass, boolean includePackage)
+    {
+        return callerMatches(regExp, includeClass, includePackage, 1);
+    }
+
+    /**
+     * test whether the name of any of the selected methods in the stack which called the trigger method
+     * matches the supplied regular expression by calling
+     * callerMatches(regExp, includeClass, includePackage, 1, frameCount)
+     */
+    public boolean callerMatches(String regExp, boolean includeClass, boolean includePackage, int frameCount)
+    {
+        return callerMatches(regExp, includeClass, includePackage, 1, frameCount);
+    }
+
+    /**
+     * test whether the name of any of the selected methods in the stack which called the trigger method
+     * matches the supplied regular expression by calling callerMatches(regExp, 1, frameCount)
+     */
+    public boolean callerMatches(String regExp, int frameCount)
+    {
+        return callerMatches(regExp, 1, frameCount);
+    }
+
+    /**
+     * test whether the name of any of the selected methods in the stack which called the trigger method
+     * matches the supplied regular expression by calling callerMatches(regExp, false, startFrame, frameCount)
+     */
+    public boolean callerMatches(String regExp, int startFrame, int frameCount)
+    {
+        return callerMatches(regExp, false, startFrame, frameCount);
+    }
+
+    /**
+     * test whether the name of any of the selected methods in the stack which called the trigger method
+     * matches the supplied regular expression by calling
+     * callerMatches(regExp, includeClass, false, startFrame, frameCount)
+     */
+    public boolean callerMatches(String regExp, boolean includeClass, int startFrame, int frameCount)
+    {
+        return callerMatches(regExp, includeClass, false, startFrame, frameCount);
+    }
+
+    /**
+     * test whether the name of any of the selected methods in the stack which called the trigger method
+     * matches the supplied regular expression.
+     * @param regExp an expression which wil lbe matched against the name of the method which called
+     * the trigger method
+     * @param includeClass true if the match should be against the class qualified method name
+     * @param includePackage true if the match should be against the package and class qualified method name.
+     * ignored if includeClass is  not also true.
+     * @param startFrame identifies the first frame which frame which should be considered. 0 identifies
+     * the trigger frame, 1 the frame for the caller of the trigger method etc. If startFrame is negative
+     * false is returned.
+     * @param frameCount counts the frames which should be checked starting from the first caller. if
+     * this is non-positive or exceeds the actual number of callers above the start frame then all frames in
+     * the stack are tested.
+     * @return true if the name of one of the selected methods in the call stack starting from the trigger
+     * method matches the supplied regular expression otherwise false
+     */
+    public boolean callerMatches(String regExp, boolean includeClass, boolean includePackage, int startFrame, int frameCount)
+    {
+        StackTraceElement[] stack = getStack();
+        int triggerIndex = triggerIndex(stack);
+        if (startFrame < 0) {
+            return false;
+        }
+        int lastIndex;
+        if (frameCount <= 0) {
+            lastIndex = Integer.MAX_VALUE;
+        } else {
+            lastIndex = startFrame + frameCount;
+        }
+        int matched = matchIndex(stack, regExp, includeClass, includePackage, triggerIndex + startFrame, triggerIndex + lastIndex);
+
+        return (matched >= 0);
+    }
+
+    // call stack management support
+    //
+    // tracing caller frames
+
+    /**
+     * print a stack trace to System.out by calling traceStack(null)
+     */
+    public void traceStack()
+    {
+        traceStack(null);
+    }
+
+    /**
+     * print a stack trace to System.out by calling traceStack(prefix, "out")
+     */
+    public void traceStack(String prefix)
+    {
+        traceStack(prefix, "out");
+    }
+
+    /**
+     * print a stack trace to System.out by calling traceStack(prefix, key, 0)
+     */
+    public void traceStack(String prefix, Object key)
+    {
+        traceStack(prefix, key, 0);
+    }
+
+    /**
+     * print a stack trace to System.out by calling traceStack(null, maxFrames)
+     */
+    public void traceStack(int maxFrames)
+    {
+        traceStack(null, maxFrames);
+    }
+
+    /**
+     * print a stack trace to System.out by calling traceStack(prefix, "out", maxFrames)
+     */
+    public void traceStack(String prefix, int maxFrames)
+    {
+        traceStack(prefix, "out", maxFrames);
+    }
+
+    /**
+     * print a stack trace to the trace stream identified by key
+     *
+     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
+     * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + "\n" is used
+     * @param key an object identifying the trace stream to which output should be generated
+     * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
+     */
+    public void traceStack(String prefix, Object key, int maxFrames)
+    {
+        String stackTrace = formatStack(prefix, key, maxFrames);
+        trace(key, stackTrace);
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out by calling traceStackMatching(pattern, null)
+     */
+
+    public void traceStackMatching(String pattern)
+    {
+        traceStackMatching(pattern, null);
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out preceded by prefix by calling
+     * traceStackMatching(pattern, prefix, "out")
+     */
+
+    public void traceStackMatching(String pattern, String prefix)
+    {
+        traceStackMatching(pattern, prefix, "out");
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out preceded by prefix by calling
+     * traceStackMatching(pattern, false, prefix, "out")
+     */
+
+    public void traceStackMatching(String pattern, String prefix, Object key)
+    {
+        traceStackMatching(pattern, false, prefix, key);
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out preceded by prefix by calling
+     * traceStackMatching(pattern, includeClass, false, prefix, "out")
+     */
+
+    public void traceStackMatching(String pattern, boolean includeClass, String prefix, Object key)
+    {
+        traceStackMatching(pattern, includeClass, false, prefix, key);
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out by calling
+     * traceStackMatching(pattern, includeClass, false)
+     */
+
+    public void traceStackMatching(String pattern, boolean includeClass)
+    {
+        traceStackMatching(pattern, includeClass, false);
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out by calling
+     * traceStackMatching(pattern, includeClass, includePackage, null)
+     */
+
+    public void traceStackMatching(String pattern, boolean includeClass, boolean includePackage)
+    {
+        traceStackMatching(pattern, includeClass, includePackage, null);
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out preceded by prefix by calling
+     * traceStackMatching(pattern, includeClass, , includePackage, prefix, "out")
+     */
+
+    public void traceStackMatching(String pattern, boolean includeClass, boolean includePackage, String prefix)
+    {
+        traceStackMatching(pattern, includeClass, includePackage, prefix, "out");
+    }
+
+    /**
+     * print all stack frames which match pattern to the trace stream identified by key preceded by prefix.
+     *
+     * @param pattern a pattern which will be matched against the method name of the stack frame by calling
+     * String.matches()
+     * @param includeClass true if the match should be against the package and class qualified method name
+     * @param includePackage true if the match should be against the package and class qualified method name.
+     * ignored if includeClass is  not also true.
+     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
+     * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + " matching " + pattern + "\n" is used
+     * @param key an object identifying the trace stream to which output should be generated
+     */
+
+    public void traceStackMatching(String pattern, boolean includeClass, boolean includePackage, String prefix, Object key)
+    {
+        String stackTrace = formatStackMatching(pattern, includeClass, includePackage, prefix, key);
+        trace(key, stackTrace);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out by calling
+     * traceStackMatching(from, to, null)
+     */
+
+    public void traceStackBetween(String from, String to)
+    {
+        traceStackBetween(from, to, null);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out preceded by prefix
+     * by calling traceStackMatching(from, to, prefix, "out")
+     */
+
+    public void traceStackBetween(String from, String to, String prefix)
+    {
+        traceStackBetween(from, to, prefix, "out");
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out preceded by prefix
+     * by calling traceStackMatching(from, to, false, prefix, key)
+     */
+
+    public void traceStackBetween(String from, String to, String prefix, Object key)
+    {
+        traceStackBetween(from, to, false, prefix, "out");
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out preceded by prefix
+     * by calling traceStackMatching(from, to, false, false, prefix, key)
+     */
+
+    public void traceStackBetween(String from, String to, boolean includeClass, String prefix, Object key)
+    {
+        traceStackBetween(from, to, includeClass, false, prefix, "out");
+    }
+    /**
+     * print all stack frames between the frames which match start and end to System.out by calling
+     * traceStackMatching(from, to, includeClass, false)
+     */
+
+    public void traceStackBetween(String from, String to, boolean includeClass)
+    {
+        traceStackBetween(from, to, includeClass, false);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out by calling
+     * traceStackMatching(from, to, includeClass, includePackage, null)
+     */
+
+    public void traceStackBetween(String from, String to, boolean includeClass, boolean includePackage)
+    {
+        traceStackBetween(from, to, includeClass, includePackage, null);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out preceded by prefix
+     * by calling traceStackMatching(from, to, includeClass, prefix, "out")
+     */
+
+    public void traceStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix)
+    {
+        traceStackBetween(from, to, includeClass, includePackage, prefix, "out");
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to the trace stream identified by key
+     * preceded by prefix.
+     *
+     * @param from a pattern which identifies the first frame which should be printed. from will be matched against
+     * the concatenated classname and method name of each successive stack frame by calling String.matches().
+     * If null is supplied then the trigger frame will be used as the first frame to print. If a non-null value
+     * is supplied and no match is foudn then no farmes will be printed.
+     * @param to a pattern which identifies the last frame which should be printed. to will be matched against
+     * the concatenated classname and method name of each successive stack frame by calling String.matches().
+     * If null is supplied or no match is found then the bottom frame will be used as the last frame to print.
+     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
+     * then the prefix "Stack trace (restricted) for " + Thread.currentThread().getName() + "\n" is used
+     * @param key an object identifying the trace stream to which output should be generated
+     */
+
+    public void traceStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix, Object key)
+    {
+        String stackTrace = formatStackBetween(from, to, includeClass, includePackage, prefix, key);
+        trace(key, stackTrace);
+    }
+
+    // call stack management support
+    //
+    // retrieving caller frames
+
+    /**
+     * return a stack trace by calling formatStack(null)
+     */
+    public String formatStack()
+    {
+        return formatStack(null);
+    }
+
+    /**
+     * return a stack trace by calling formatStack(prefix, "out")
+     */
+    public String formatStack(String prefix)
+    {
+        return formatStack(prefix, "out");
+    }
+
+    /**
+     * return a stack trace by calling formatStack(prefix, key, 0)
+     */
+    public String formatStack(String prefix, Object key)
+    {
+        return formatStack(prefix, key, 0);
+    }
+
+    /**
+     * return a stack trace by calling formatStack(null, maxFrames)
+     */
+    public String formatStack(int maxFrames)
+    {
+        return formatStack(null, maxFrames);
+    }
+
+    /**
+     * return a stack trace by calling formatStack(prefix, "out", maxFrames)
+     */
+    public String formatStack(String prefix, int maxFrames)
+    {
+        return formatStack(prefix, "out", maxFrames);
+    }
+
+    /**
+     * print a stack trace to the trace stream identified by key
+     *
+     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
+     * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + "\n" is used
+     * @param key an object identifying the trace stream to which output should be generated
+     * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
+     */
+    public String formatStack(String prefix, Object key, int maxFrames)
+    {
+        StringBuffer buffer = new StringBuffer();
+        StackTraceElement[] stack = getStack();
+        int l = stack.length;
+        int i = triggerIndex(stack);
+
+        if (i < 0) {
+            return "";
+        }
+
+        if (prefix != null) {
+            buffer.append(prefix);
+        } else {
+            buffer.append("Stack trace for thread ");
+            buffer.append(Thread.currentThread().getName());
+            buffer.append('\n');
+        }
+        boolean dotdotdot = false;
+
+        if (maxFrames > 0 && (i + maxFrames) < l) {
+            l = i + maxFrames;
+            dotdotdot = true;
+        }
+
+        for (; i < l; i++) {
+            printlnFrame(buffer, stack[i]);
+        }
+        if (dotdotdot) {
+            buffer.append("  . . .\n");
+        }
+
+        return buffer.toString();
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out by calling formatStackMatching(pattern, null)
+     */
+
+    public String formatStackMatching(String pattern)
+    {
+        return formatStackMatching(pattern, null);
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out preceded by prefix by calling
+     * formatStackMatching(pattern, prefix, "out")
+     */
+
+    public String formatStackMatching(String pattern, String prefix)
+    {
+        return formatStackMatching(pattern, prefix, "out");
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out preceded by prefix by calling
+     * formatStackMatching(pattern, false, prefix, "out")
+     */
+
+    public String formatStackMatching(String pattern, String prefix, Object key)
+    {
+        return formatStackMatching(pattern, false, prefix, key);
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out preceded by prefix by calling
+     * formatStackMatching(pattern, includeClass, false, prefix, "out")
+     */
+
+    public String formatStackMatching(String pattern, boolean includeClass, String prefix, Object key)
+    {
+        return formatStackMatching(pattern, includeClass, false, prefix, key);
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out by calling
+     * formatStackMatching(pattern, includeClass, false)
+     */
+
+    public String formatStackMatching(String pattern, boolean includeClass)
+    {
+        return formatStackMatching(pattern, includeClass, false);
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out by calling
+     * formatStackMatching(pattern, includeClass, includePackage, null)
+     */
+
+    public String formatStackMatching(String pattern, boolean includeClass, boolean includePackage)
+    {
+        return formatStackMatching(pattern, includeClass, includePackage, null);
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out preceded by prefix by calling
+     * formatStackMatching(pattern, includeClass, , includePackage, prefix, "out")
+     */
+
+    public String formatStackMatching(String pattern, boolean includeClass, boolean includePackage, String prefix)
+    {
+        return formatStackMatching(pattern, includeClass, includePackage, prefix, "out");
+    }
+
+    /**
+     * print all stack frames which match pattern to the trace stream identified by key preceded by prefix.
+     *
+     * @param pattern a pattern which will be matched against the method name of the stack frame by calling
+     * String.matches()
+     * @param includeClass true if the match should be against the package and class qualified method name
+     * @param includePackage true if the match should be against the package and class qualified method name.
+     * ignored if includeClass is  not also true.
+     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
+     * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + " matching " + pattern + "\n" is used
+     * @param key an object identifying the trace stream to which output should be generated
+     */
+
+    public String formatStackMatching(String pattern, boolean includeClass, boolean includePackage, String prefix, Object key)
+    {
+        StringBuffer buffer = new StringBuffer();
+        StackTraceElement[] stack = getStack();
+        int l = stack.length;
+        int i = triggerIndex(stack);
+
+        if (i < 0) {
+            return "";
+        }
+
+        if (prefix != null) {
+            buffer.append(prefix);
+        } else {
+            buffer.append("Stack trace for thread ");
+            buffer.append(Thread.currentThread().getName());
+            buffer.append(" matching ");
+            buffer.append(pattern);
+            buffer.append('\n');
+        }
+        for (; i < l; i++) {
+            String fullName;
+            if (includeClass) {
+                String className = stack[i].getClassName();
+                if (!includePackage) {
+                    int dotIdx = className.lastIndexOf('.');
+                    if (dotIdx >= 0) {
+                     className  = className.substring(dotIdx + 1);
+                    }
+                }
+                fullName = className + "." + stack[i].getMethodName();
+            } else {
+                fullName = stack[i].getMethodName();
+            }
+
+            if (fullName.matches(pattern)) {
+                printlnFrame(buffer, stack[i]);
+            }
+        }
+
+        return buffer.toString();
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out by calling
+     * formatStackBetween(from, to, null)
+     */
+
+    public String formatStackBetween(String from, String to)
+    {
+        return formatStackBetween(from, to, null);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out preceded by prefix
+     * by calling formatStackBetween(from, to, prefix, "out")
+     */
+
+    public String formatStackBetween(String from, String to, String prefix)
+    {
+        return formatStackBetween(from, to, prefix, "out");
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out preceded by prefix
+     * by calling formatStackBetween(from, to, false, prefix, key)
+     */
+
+    public String formatStackBetween(String from, String to, String prefix, Object key)
+    {
+        return formatStackBetween(from, to, false, prefix, "out");
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out preceded by prefix
+     * by calling formatStackBetween(from, to, false, false, prefix, key)
+     */
+
+    public String formatStackBetween(String from, String to, boolean includeClass, String prefix, Object key)
+    {
+        return formatStackBetween(from, to, includeClass, false, prefix, "out");
+    }
+    /**
+     * print all stack frames between the frames which match start and end to System.out by calling
+     * formatStackBetween(from, to, includeClass, false)
+     */
+
+    public String formatStackBetween(String from, String to, boolean includeClass)
+    {
+        return formatStackBetween(from, to, includeClass, false);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out by calling
+     * formatStackBetween(from, to, includeClass, includePackage, null)
+     */
+
+    public String formatStackBetween(String from, String to, boolean includeClass, boolean includePackage)
+    {
+        return formatStackBetween(from, to, includeClass, includePackage, null);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out preceded by prefix
+     * by calling formatStackBetween(from, to, includeClass, prefix, "out")
+     */
+
+    public String formatStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix)
+    {
+        return formatStackBetween(from, to, includeClass, includePackage, prefix, "out");
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to the trace stream identified by key
+     * preceded by prefix.
+     *
+     * @param from a pattern which identifies the first frame which should be printed. from will be matched against
+     * the concatenated classname and method name of each successive stack frame by calling String.matches().
+     * If null is supplied then the trigger frame will be used as the first frame to print. If a non-null value
+     * is supplied and no match is foudn then no farmes will be printed.
+     * @param to a pattern which identifies the last frame which should be printed. to will be matched against
+     * the concatenated classname and method name of each successive stack frame by calling String.matches().
+     * If null is supplied or no match is found then the bottom frame will be used as the last frame to print.
+     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
+     * then the prefix "Stack trace (restricted) for " + Thread.currentThread().getName() + "\n" is used
+     * @param key an object identifying the trace stream to which output should be generated
+     */
+
+    public String formatStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix, Object key)
+    {
+        StringBuffer buffer = new StringBuffer();
+        StackTraceElement[] stack = getStack();
+        int l = stack.length;
+        int i = triggerIndex(stack);
+        if (i < 0) {
+            return "";
+        }
+
+        int first;
+        if (from != null) {
+            first = matchIndex(stack, from, includeClass, includePackage, i, l);
+            if (first < 0) {
+                return "";
+            }
+        } else {
+            first = i;
+        }
+
+        int last;
+        if (to != null) {
+            last = matchIndex(stack, to, includeClass, includePackage, first + 1, l);
+            if (last < 0) {
+                last = l - 1;
+            }
+        } else {
+            last = l - 1;
+        }
+
+        if (prefix != null) {
+            buffer.append(prefix);
+        } else {
+            buffer.append("Stack trace (restricted) for ");
+            buffer.append(Thread.currentThread().getName());
+            buffer.append('\n');
+        }
+        // n.b. the range includes the last matched frame
+        
+        for (i = first; i <= last; i++) {
+            printlnFrame(buffer, stack[i]);
+        }
+
+        return buffer.toString();
+    }
+
+    // trigger management
+    
     /**
      * enable or disable recursive triggering of rules by subsequent operations performed during binding,
      * testing or firing of the current rule in the current thread.
@@ -1005,6 +1695,152 @@ public class Helper
     public String toString()
     {
         return rule.getName();
+    }
+
+    //  private and protected implementation
+
+    private StackTraceElement[] stack = null;
+
+    /**
+     * access to the current stack frames
+     *
+     * @return
+     */
+    protected StackTraceElement[] getStack()
+    {
+        if (stack == null) {
+            synchronized (this) {
+                stack = Thread.currentThread().getStackTrace();
+            }
+        }
+        return stack;
+    }
+
+    private static String RULE_CLASS_NAME = Rule.class.getCanonicalName();
+    private static String RULE_EXECUTE_METHOD_NAME = "execute";
+
+    /**
+     * return the index of the frame in stack for the trigger method below which the rule system
+     * was entered or -1 if it cannot be found
+     * @return the index of the frame for the trigger method or -1 if it cannot be found
+     */
+    protected int triggerIndex(StackTraceElement[] stack)
+    {
+        int l= stack.length;
+        int i;
+        // find the trigger method frame above the rule engine entry point
+        // we should see two calls to rule.execute()
+        for (i = 0; i < l; i++) {
+            if (RULE_CLASS_NAME.equals(stack[i].getClassName()) &&
+                    RULE_EXECUTE_METHOD_NAME.equals(stack[i].getMethodName())) {
+                break;
+            }
+        }
+
+        if (i >= l - 1 ||
+                !RULE_CLASS_NAME.equals(stack[i].getClassName()) ||
+                !RULE_EXECUTE_METHOD_NAME.equals(stack[i].getMethodName())) {
+            // illegal usage
+            new ExecuteException("Helper.formatStack : can only be called below Rule.execute()").printStackTrace();
+            return -1;
+        }
+
+        return  i + 2;
+    }
+
+    /**
+     * return the index of the first frame at or below index start which matches pattern by calling
+     * matchIndex(stack, pattern, false, start, limit)
+     */
+    protected int matchIndex(StackTraceElement[] stack, String pattern, int start, int limit)
+    {
+        return matchIndex(stack, pattern, false, start, limit);
+    }
+
+    /**
+     * return the index of the first frame at or below index start which matches pattern by calling
+     * matchIndex(stack, pattern, includeClass, false, start, limit)
+     */
+    protected int matchIndex(StackTraceElement[] stack, String pattern, boolean includeClass, int start, int limit)
+    {
+        return matchIndex(stack, pattern, includeClass, false, start, limit);
+    }
+
+    /**
+     * return the index of the first frame at or below index start which matches pattern
+     * @param pattern a pattern to be matched against the concatenated frame method name using String.matches()
+     * @param includeClass true if the method name should be qualified with the package and class name
+     * @param start the index of the first frame which should be tested for a match. this must be greater than
+     * or equal to the trigger index.
+     * @param limit the index of the first frame which should not be tested for a match. this must be less than
+     * or equal to the stack length
+     * @return the index of the matching frame between start and limit - 1 or -1 if it no match found
+     */
+    protected int matchIndex(StackTraceElement[] stack, String pattern, boolean includeClass,
+                             boolean includePackage, int start, int limit)
+    {
+        int l= stack.length;
+        int i = start;
+        if (limit > l) {
+            limit = l;
+        }
+        // find the trigger method frame above the rule engine entry point
+        // we should see two calls to rule.execute()
+        for (; i < limit; i++) {
+            String fullName;
+            if (includeClass) {
+                String className = stack[i].getClassName();
+                if (!includePackage) {
+                    int dotIdx = className.lastIndexOf('.');
+                    if (dotIdx >= 0) {
+                     className  = className.substring(dotIdx + 1);
+                    }
+                }
+                fullName = className + "." + stack[i].getMethodName();
+            } else {
+                fullName = stack[i].getMethodName();
+            }
+
+            if (fullName.matches(pattern)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * print the details of stack frame followed by a newline to buffer by calling
+     * printlnFrame(buffer, frame) then buffer.append('\n')
+     * @param buffer
+     * @param frame
+     */
+    protected void printlnFrame(StringBuffer buffer, StackTraceElement frame)
+    {
+        printFrame(buffer, frame);
+        buffer.append('\n');
+    }
+
+    /**
+     * print the details of stack frame to buffer
+     * @param buffer
+     * @param frame
+     */
+    protected void printFrame(StringBuffer buffer, StackTraceElement frame)
+    {
+        buffer.append(frame.getClassName());
+        buffer.append(".");
+        buffer.append(frame.getMethodName());
+        String fileName = frame.getFileName();
+        if (fileName != null) {
+            buffer.append("(");
+            buffer.append(fileName);
+            buffer.append(":");
+            buffer.append(frame.getLineNumber());
+            buffer.append(")");
+        } else {
+            buffer.append(" (Unknown Source)");
+        }
     }
 
     /**

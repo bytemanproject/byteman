@@ -31,21 +31,15 @@
 #  -- set the directory in which byteman has been installed
 #  BYTEMAN_HOME= ...
 #
-#   -- identify the samples jar to the boot path
-#   SAMPLE_JAR=${BYTEMAN_HOME}/sample/lib/byteman-sample.jar
-#
 #   -- identify this script
 #   SCRIPT={BYTEMAN_HOME}/sample/scripts/FileMonitor.txt
 #
-#  ${BYTEMAN_HOME}/bin/bmjava.sh -l $SCRIPT -b $SAMPLE_JAR org.my.App
+#  ${BYTEMAN_HOME}/bin/bmjava.sh -l $SCRIPT org.my.App
 #
 # alternatively to load the script dynamically
 #
 #   -- start the program with the agent
 #  ${BYTEMAN_HOME}/bin/bmjava.sh org.my.App
-#
-#   -- install the helper library into the bootstrap classpath
-#  ${BYTEMAN_HOME}/bin/submit.sh -b $SAMPLE_JAR
 #
 #   -- install the script
 #  ${BYTEMAN_HOME}/bin/submit.sh -l $SCRIPT
@@ -58,7 +52,6 @@
 RULE FileMonitor trace FileInputStream create from File
 CLASS java.io.FileInputStream
 METHOD <init>(java.io.File)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT RETURN
 IF TRUE
 DO traceStack("*** Opened " + $1.getPath() + " for read in thread " + Thread.currentThread().getName() + "\n", 10)
@@ -72,7 +65,6 @@ ENDRULE
 RULE FileMonitor trace FileInputStream close
 CLASS java.io.FileInputStream
 METHOD close
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT RETURN
 IF TRUE
 DO traceStack("*** Closed " + $0 + " in thread " + Thread.currentThread().getName() + "\n", 10)
@@ -86,7 +78,6 @@ ENDRULE
 RULE FileMonitor trace FileOutputStream create from File
 CLASS java.io.FileOutputStream
 METHOD <init>(java.io.File)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT RETURN
 IF TRUE
 DO traceStack("*** Opened " + $1.getPath() + " for write in thread " + Thread.currentThread().getName() + "\n", 10)
@@ -100,7 +91,6 @@ ENDRULE
 RULE FileMonitor trace FileOutputStream create from String
 CLASS java.io.FileOutputStream
 METHOD <init>(String, boolean)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT RETURN
 IF TRUE
 DO traceStack("*** Opened " + $1 + " for " + ($2 ? "write" : "append") +" in thread " + Thread.currentThread().getName() + "\n", 10)
@@ -114,7 +104,6 @@ ENDRULE
 RULE FileMonitor trace FileOutputStream close
 CLASS java.io.FileOutputStream
 METHOD <init>(String, boolean)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT RETURN
 IF TRUE
 DO traceStack("*** Closed " + $0 + " in thread " + Thread.currentThread().getName() + "\n", 10)

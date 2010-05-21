@@ -1,11 +1,12 @@
 package org.jboss.byteman.sample.helper;
 
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.rule.helper.Helper;
 
 /**
  * Helper class used by ThreadMonitorHelper script to trace thread operations
  */
-public class ThreadMonitorHelper extends StackTraceHelper
+public class ThreadMonitorHelper extends Helper
 {
     protected ThreadMonitorHelper(Rule rule) {
         super(rule);
@@ -31,13 +32,14 @@ public class ThreadMonitorHelper extends StackTraceHelper
     public void traceCreate(Thread thread, Object key)
     {
         StringBuffer buffer = new StringBuffer();
+        StackTraceElement[] stack = getStack();
         int l = stack.length;
-        int t = triggerIndex();
+        int t = triggerIndex(stack);
         if (t < 0) {
             return;
         }
 
-        int i = matchIndex("java.lang.Thread.<init>", t, l);
+        int i = matchIndex(stack, "java\\.lang\\.Thread\\.<init>", true, true, t, l);
         if (i < 0) {
             // illegal usage
             traceStack("ThreadMonitorHelper.traceCreate : should only be triggered below Thread.<init>\n", key);
@@ -51,7 +53,7 @@ public class ThreadMonitorHelper extends StackTraceHelper
 
         // find bottommost constructor invocation
         i++;
-        while (i < l && matchIndex(".*<init>", i, i) >= 0) {
+        while (i < l && matchIndex(stack, ".*<init>", true, i, i) >= 0) {
             i++;
         }
         if (i == l) {
@@ -59,7 +61,7 @@ public class ThreadMonitorHelper extends StackTraceHelper
             buffer.append("    from VM runtime\n");
         } else {
             buffer.append("    from ");
-            printlnFrame(buffer, i);
+            printlnFrame(buffer, stack[i]);
         }
         trace(key, buffer.toString());
     }
@@ -87,13 +89,14 @@ public class ThreadMonitorHelper extends StackTraceHelper
     public void traceStart(Thread thread, Object key)
     {
         StringBuffer buffer = new StringBuffer();
+        StackTraceElement[] stack = getStack();
         int l = stack.length;
-        int t = triggerIndex();
+        int t = triggerIndex(stack);
         if (t < 0) {
             return;
         }
 
-        int i = matchIndex("java.lang.Thread.start", t, l);
+        int i = matchIndex(stack, "java\\.lang\\.Thread\\.start", true, true, t, l);
         if (i < 0) {
             // illegal usage
             traceStack("ThreadMonitorHelper.traceStart : should only be triggered below Thread.start\n", key);
@@ -105,7 +108,6 @@ public class ThreadMonitorHelper extends StackTraceHelper
         buffer.append(" ");
         buffer.append(thread.getClass().getCanonicalName());
         buffer.append('\n');
-        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
 
         if (++i == l) {
             // should not happen
@@ -114,7 +116,7 @@ public class ThreadMonitorHelper extends StackTraceHelper
         }
 
         buffer.append("    from ");
-        printlnFrame(buffer, i);
+        printlnFrame(buffer, stack[i]);
         trace(key, buffer.toString());
     }
 
@@ -141,12 +143,13 @@ public class ThreadMonitorHelper extends StackTraceHelper
     public void traceExit(Thread thread, Object key)
     {
         StringBuffer buffer = new StringBuffer();
+        StackTraceElement[] stack = getStack();
         int l = stack.length;
-        int t = triggerIndex();
-        if (triggerIndex() < 0) {
+        int t = triggerIndex(stack);
+        if (triggerIndex(stack) < 0) {
             return;
         }
-        int i = matchIndex("java.lang.Thread.exit", t, l);
+        int i = matchIndex(stack, "java.lang.Thread.exit", true, true, t, l);
         if (i < 0) {
             // illegal usage
             traceStack("ThreadMonitorHelper.traceExit : should only be triggered below Thread.exit\n", key);
@@ -185,13 +188,14 @@ public class ThreadMonitorHelper extends StackTraceHelper
     public void traceRun(Runnable runnable, Object key)
     {
         StringBuffer buffer = new StringBuffer();
+        StackTraceElement[] stack = getStack();
         int l = stack.length;
-        int t = triggerIndex();
+        int t = triggerIndex(stack);
         if (t < 0) {
             return;
         }
 
-        int i = matchIndex(".*run", t, l);
+        int i = matchIndex(stack, "run", t, l);
         if (i < 0) {
             // illegal usage
             traceStack("ThreadMonitorHelper.traceRun : should only be triggered below Runnable.run\n", key);
@@ -210,11 +214,10 @@ public class ThreadMonitorHelper extends StackTraceHelper
         }
         buffer.append(runnable.getClass().getCanonicalName());
         buffer.append('\n');
-        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
 
         buffer.append("    from ");
         if (i < l - 1) {
-            printlnFrame(buffer, i + 1);
+            printlnFrame(buffer, stack[i + 1]);
         } else {
             buffer.append(" VM runtime\n");
         }

@@ -30,21 +30,15 @@
 #  -- set the directory in which byteman has been installed
 #  BYTEMAN_HOME= ...
 #
-#   -- identify the samples jar to the boot path
-#   SAMPLE_JAR=${BYTEMAN_HOME}/sample/lib/byteman-sample.jar
-#
 #   -- identify this script
 #   SCRIPT={BYTEMAN_HOME}/sample/scripts/SocketMonitor.txt
 #
-#  ${BYTEMAN_HOME}/bin/bmjava.sh -l $SCRIPT -b $SAMPLE_JAR org.my.App
+#  ${BYTEMAN_HOME}/bin/bmjava.sh -l $SCRIPT -b org.my.App
 #
 # alternatively to load the script dynamically
 #
 #   -- start the program with the agent
 #  ${BYTEMAN_HOME}/bin/bmjava.sh org.my.App
-#
-#   -- install the helper library into the bootstrap classpath
-#  ${BYTEMAN_HOME}/bin/submit.sh -b $SAMPLE_JAR
 #
 #   -- install the script
 #  ${BYTEMAN_HOME}/bin/submit.sh -l $SCRIPT
@@ -57,7 +51,6 @@
 RULE ServerSocket trace create
 CLASS java.net.ServerSocket
 METHOD <init>(int, int, InetAddress)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
 DO traceStack("*** server create " + $0, 15)
@@ -71,7 +64,6 @@ ENDRULE
 RULE ServerSocket trace create failed with invalid port
 CLASS java.net.ServerSocket
 METHOD <init>(int, int, InetAddress)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT THROW 1
 IF TRUE
 DO traceStack("*** server create failed with invalid port " + $0, 15)
@@ -85,7 +77,6 @@ ENDRULE
 RULE ServerSocket trace create failed with security exception
 CLASS java.net.ServerSocket
 METHOD <init>(int, int, InetAddress)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT THROW 2
 IF TRUE
 DO traceStack("*** server create failed with security exception " + $0, 15)
@@ -99,7 +90,6 @@ ENDRULE
 RULE ServerSocket trace create failed with IOException
 CLASS java.net.ServerSocket
 METHOD <init>(int, int, InetAddress)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT THROW 3
 IF TRUE
 DO traceStack("*** server create failed with IOException " + $0, 15)
@@ -113,7 +103,6 @@ ENDRULE
 RULE ServerSocket trace bind
 CLASS ^java.net.ServerSocket
 METHOD bind(SocketAddress, int)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
 DO traceStack("*** server bind " + $0, 15)
@@ -127,7 +116,6 @@ ENDRULE
 RULE ServerSocket trace accept
 CLASS ^java.net.ServerSocket
 METHOD accept()
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
 DO traceStack("*** server accept " + $0, 15)
@@ -143,7 +131,6 @@ ENDRULE
 RULE ServerSocket trace close
 CLASS ^java.net.ServerSocket
 METHOD close
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT CALL close
 IF TRUE
 DO traceStack("*** server close " + $0, 15)
@@ -157,7 +144,6 @@ ENDRULE
 RULE Socket trace create
 CLASS java.net.Socket
 METHOD <init>(SocketAddress, SocketAddress, boolean)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
 DO traceStack("*** create " + $0, 15)
@@ -171,7 +157,6 @@ ENDRULE
 RULE Socket trace create failed with invalid address
 CLASS java.net.Socket
 METHOD <init>(SocketAddress, SocketAddress, boolean)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT THROW 1
 IF TRUE
 DO traceStack("*** create failed with invalid address exception " + $0, 15)
@@ -185,7 +170,6 @@ ENDRULE
 RULE Socket trace create failed with IOException
 CLASS java.net.Socket
 METHOD <init>(SocketAddress, SocketAddress, boolean)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT THROW 2
 IF TRUE
 DO traceStack("*** create failed with IOException " + $0, 15)
@@ -199,7 +183,6 @@ ENDRULE
 RULE Socket trace bind
 CLASS ^java.net.Socket
 METHOD bind(SocketAddress)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
 DO traceStack("*** bind " + $0, 15)
@@ -213,7 +196,6 @@ ENDRULE
 RULE Socket trace connect
 CLASS ^java.net.Socket
 METHOD connect(SocketAddress, int)
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT EXIT
 IF TRUE
 DO traceStack("*** connect " + $0, 15)
@@ -229,7 +211,6 @@ ENDRULE
 RULE Socket trace close
 CLASS ^java.net.Socket
 METHOD close()
-HELPER org.jboss.byteman.sample.helper.StackTraceHelper
 AT CALL close
 IF TRUE
 DO traceStack("*** close " + $0, 15)
