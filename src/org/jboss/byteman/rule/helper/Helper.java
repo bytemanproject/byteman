@@ -1786,6 +1786,16 @@ public class Helper
 
     /**
      * return a String tracing the stack between the frames which match start and end by calling
+     * formatStackBetween(from, to, includeClass, false, prefix)
+     */
+
+    public String formatStackBetween(String from, String to, boolean includeClass, String prefix)
+    {
+        return formatStackBetween(from, to, includeClass, false, prefix);
+    }
+
+    /**
+     * return a String tracing the stack between the frames which match start and end by calling
      * formatStackBetween(from, to, includeClass, includePackage, null)
      */
 
@@ -1834,6 +1844,16 @@ public class Helper
     public String formatStackBetweenMatches(String from, String to, boolean includeClass)
     {
         return formatStackBetweenMatches(from, to, includeClass, false);
+    }
+
+    /**
+     * return a String tracing the stack between the frames which match start and end by calling
+     * formatStackBetweenMatches(from, to, includeClass, false, prefix)
+     */
+
+    public String formatStackBetweenMatches(String from, String to, boolean includeClass, String prefix)
+    {
+        return formatStackBetweenMatches(from, to, includeClass, false, prefix);
     }
 
     /**
