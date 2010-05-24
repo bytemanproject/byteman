@@ -994,6 +994,24 @@ public class Helper
     }
 
     /**
+     * test whether the name of any of the selected methods in the stack which called the trigger method
+     * matches the supplied regular expression by calling callerEquals(name, 1, frameCount)
+     */
+    public boolean callerEquals(String name, int frameCount)
+    {
+        return callerEquals(name, 1, frameCount);
+    }
+
+    /**
+     * test whether the name of any of the selected methods in the stack which called the trigger method
+     * matches the supplied regular expression by calling callerEquals(name, false, startFrame, frameCount)
+     */
+    public boolean callerEquals(String name, int startFrame, int frameCount)
+    {
+        return callerEquals(name, false, startFrame, frameCount);
+    }
+
+    /**
      * test whether the name of method which called the the trigger method matches the supplied regular
      * expression by calling callerEquals(name, includeClass, false)
      * @return true if the name of the method which called the the trigger method matches the supplied regular
@@ -1002,6 +1020,28 @@ public class Helper
     public boolean callerEquals(String name, boolean includeClass)
     {
         return callerEquals(name, includeClass, false);
+    }
+
+    /**
+     * test whether the name of method which called the the trigger method matches the supplied regular
+     * expression by calling callerEquals(name, includeClass, false, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied regular
+     * expression otherwise false
+     */
+    public boolean callerEquals(String name, boolean includeClass, int frameCount)
+    {
+        return callerEquals(name, includeClass, false, frameCount);
+    }
+
+    /**
+     * test whether the name of method which called the the trigger method matches the supplied regular
+     * expression by calling callerEquals(name, includeClass, false, startFrame, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied regular
+     * expression otherwise false
+     */
+    public boolean callerEquals(String name, boolean includeClass, int startFrame, int frameCount)
+    {
+        return callerEquals(name, includeClass, false, startFrame, frameCount);
     }
 
     /**
@@ -1027,30 +1067,12 @@ public class Helper
 
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
-     * matches the supplied regular expression by calling callerEquals(name, 1, frameCount)
-     */
-    public boolean callerEquals(String name, int frameCount)
-    {
-        return callerEquals(name, 1, frameCount);
-    }
-
-    /**
-     * test whether the name of any of the selected methods in the stack which called the trigger method
-     * matches the supplied regular expression by calling callerEquals(name, false, startFrame, frameCount)
-     */
-    public boolean callerEquals(String name, int startFrame, int frameCount)
-    {
-        return callerEquals(name, false, startFrame, frameCount);
-    }
-
-    /**
-     * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied regular expression by calling
      * callerCheck(name, false, includeClass, false, startFrame, frameCount)
      */
-    public boolean callerEquals(String name, boolean includeClass, int startFrame, int frameCount)
+    public boolean callerEquals(String name, boolean includeClass, boolean includePackage, int startFrame, int frameCount)
     {
-        return callerCheck(name, false, includeClass, false, startFrame, frameCount);
+        return callerCheck(name, false, includeClass, includePackage, startFrame, frameCount);
     }
 
 
@@ -1063,38 +1085,6 @@ public class Helper
     public boolean callerMatches(String regExp)
     {
         return callerMatches(regExp, false);
-    }
-
-    /**
-     * test whether the name of method which called the the trigger method matches the supplied regular
-     * expression by calling callerMatches(regExp, includeClass, false)
-     * @return true if the name of the method which called the the trigger method matches the supplied regular
-     * expression otherwise false
-     */
-    public boolean callerMatches(String regExp, boolean includeClass)
-    {
-        return callerMatches(regExp, includeClass, false);
-    }
-
-    /**
-     * test whether the name of method which called the the trigger method matches the supplied regular
-     * expression by calling callerMatches(regExp, includeClass, includePackage, 1)
-     * @return true if the name of the method which called the the trigger method matches the supplied regular
-     * expression otherwise false
-     */
-    public boolean callerMatches(String regExp, boolean includeClass, boolean includePackage)
-    {
-        return callerMatches(regExp, includeClass, includePackage, 1);
-    }
-
-    /**
-     * test whether the name of any of the selected methods in the stack which called the trigger method
-     * matches the supplied regular expression by calling
-     * callerCheck(regExp, true, includeClass, includePackage, 1, frameCount)
-     */
-    public boolean callerMatches(String regExp, boolean includeClass, boolean includePackage, int frameCount)
-    {
-        return callerCheck(regExp, true, includeClass, includePackage, 1, frameCount);
     }
 
     /**
@@ -1116,13 +1106,68 @@ public class Helper
     }
 
     /**
-     * test whether the name of any of the selected methods in the stack which called the trigger method
-     * matches the supplied regular expression by calling
-     * callerCheck(regExp, true, includeClass, false, startFrame, frameCount)
+     * test whether the name of method which called the the trigger method matches the supplied regular
+     * expression by calling callerMatches(regExp, includeClass, false)
+     * @return true if the name of the method which called the the trigger method matches the supplied regular
+     * expression otherwise false
+     */
+    public boolean callerMatches(String regExp, boolean includeClass)
+    {
+        return callerMatches(regExp, includeClass, false);
+    }
+
+    /**
+     * test whether the name of method which called the the trigger method matches the supplied regular
+     * expression by calling callerMatches(regExp, includeClass, false, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied regular
+     * expression otherwise false
+     */
+    public boolean callerMatches(String regExp, boolean includeClass, int frameCount)
+    {
+        return callerMatches(regExp, includeClass, false, frameCount);
+    }
+
+    /**
+     * test whether the name of method which called the the trigger method matches the supplied regular
+     * expression by calling callerMatches(regExp, includeClass, false, startFrame, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied regular
+     * expression otherwise false
      */
     public boolean callerMatches(String regExp, boolean includeClass, int startFrame, int frameCount)
     {
-        return callerCheck(regExp, true, includeClass, false, startFrame, frameCount);
+        return callerMatches(regExp, includeClass, false, startFrame, frameCount);
+    }
+
+    /**
+     * test whether the name of method which called the the trigger method matches the supplied regular
+     * expression by calling callerMatches(regExp, includeClass, includePackage, 1)
+     * @return true if the name of the method which called the the trigger method matches the supplied regular
+     * expression otherwise false
+     */
+    public boolean callerMatches(String regExp, boolean includeClass, boolean includePackage)
+    {
+        return callerMatches(regExp, includeClass, includePackage, 1);
+    }
+
+    /**
+     * test whether the name of method which called the the trigger method matches the supplied regular
+     * expression by calling callerMatches(regExp, includeClass, includePackage, 1, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied regular
+     * expression otherwise false
+     */
+    public boolean callerMatches(String regExp, boolean includeClass, boolean includePackage, int frameCount)
+    {
+        return callerMatches(regExp, includeClass, includePackage, 1, frameCount);
+    }
+
+    /**
+     * test whether the name of any of the selected methods in the stack which called the trigger method
+     * matches the supplied regular expression by calling
+     * callerCheck(regExp, true, includeClass, includePackage, 1, frameCount)
+     */
+    public boolean callerMatches(String regExp, boolean includeClass, boolean includePackage, int startFrame, int frameCount)
+    {
+        return callerCheck(regExp, true, includeClass, includePackage, startFrame, frameCount);
     }
 
     /**
@@ -1253,16 +1298,6 @@ public class Helper
     }
 
     /**
-     * print all stack frames which match pattern to System.out preceded by prefix by calling
-     * traceStackMatching(pattern, includeClass, false, prefix, key)
-     */
-
-    public void traceStackMatching(String regExp, boolean includeClass, String prefix, Object key)
-    {
-        traceStackMatching(regExp, includeClass, false, prefix, key);
-    }
-
-    /**
      * print all stack frames which match pattern to System.out by calling
      * traceStackMatching(pattern, includeClass, false)
      */
@@ -1270,6 +1305,26 @@ public class Helper
     public void traceStackMatching(String regExp, boolean includeClass)
     {
         traceStackMatching(regExp, includeClass, false);
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out preceded by prefix by calling
+     * traceStackMatching(pattern, includeClass, false, prefix)
+     */
+
+    public void traceStackMatching(String regExp, boolean includeClass, String prefix)
+    {
+        traceStackMatching(regExp, includeClass, false, prefix);
+    }
+
+    /**
+     * print all stack frames which match pattern to System.out preceded by prefix by calling
+     * traceStackMatching(pattern, includeClass, false, prefix, key)
+     */
+
+    public void traceStackMatching(String regExp, boolean includeClass, String prefix, Object key)
+    {
+        traceStackMatching(regExp, includeClass, false, prefix, key);
     }
 
     /**
@@ -1344,26 +1399,6 @@ public class Helper
     }
 
     /**
-     * print all stack frames between the frames which match start and end preceded by prefix
-     * by calling traceStackBetween(from, to, includeClass, false, prefix, key)
-     */
-
-    public void traceStackBetween(String from, String to, boolean includeClass, String prefix, Object key)
-    {
-        traceStackBetween(from, to, includeClass, false, prefix, key);
-    }
-
-    /**
-     * print all stack frames between the frames which match start and end preceded by prefix
-     * by calling traceStackBetween(from, to, false, includeClass, includePackage, prefix, key)
-     */
-
-    public void traceStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix, Object key)
-    {
-        traceStackRange(from, to, false, includeClass, includePackage, prefix, key);
-    }
-
-    /**
      * print all stack frames between the frames which match start and end to System.out by calling
      * traceStackBetween(from, to, includeClass, false)
      */
@@ -1371,6 +1406,26 @@ public class Helper
     public void traceStackBetween(String from, String to, boolean includeClass)
     {
         traceStackBetween(from, to, includeClass, false);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out by calling
+     * traceStackBetween(from, to, includeClass, false, prefix)
+     */
+
+    public void traceStackBetween(String from, String to, boolean includeClass, String prefix)
+    {
+        traceStackBetween(from, to, includeClass, false, prefix);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end preceded by prefix
+     * by calling traceStackBetween(from, to, includeClass, false, prefix, key)
+     */
+
+    public void traceStackBetween(String from, String to, boolean includeClass, String prefix, Object key)
+    {
+        traceStackBetween(from, to, includeClass, false, prefix, key);
     }
 
     /**
@@ -1391,6 +1446,16 @@ public class Helper
     public void traceStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix)
     {
         traceStackBetween(from, to, includeClass, includePackage, prefix, "out");
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end preceded by prefix
+     * by calling traceStackBetween(from, to, false, includeClass, includePackage, prefix, key)
+     */
+
+    public void traceStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix, Object key)
+    {
+        traceStackRange(from, to, false, includeClass, includePackage, prefix, key);
     }
 
     // tracing stack range by regular expression  match
@@ -1422,7 +1487,27 @@ public class Helper
 
     public void traceStackBetweenMatches(String from, String to, String prefix, Object key)
     {
-        traceStackBetweenMatches(from, to, false, prefix, "out");
+        traceStackBetweenMatches(from, to, false, prefix, key);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out by calling
+     * traceStackBetweenMatches(from, to, includeClass, false)
+     */
+
+    public void traceStackBetweenMatches(String from, String to, boolean includeClass)
+    {
+        traceStackBetweenMatches(from, to, includeClass, false);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out by calling
+     * traceStackBetweenMatches(from, to, includeClass, false, prefix)
+     */
+
+    public void traceStackBetweenMatches(String from, String to, boolean includeClass, String prefix)
+    {
+        traceStackBetweenMatches(from, to, includeClass, false, prefix);
     }
 
     /**
@@ -1433,25 +1518,6 @@ public class Helper
     public void traceStackBetweenMatches(String from, String to, boolean includeClass, String prefix, Object key)
     {
         traceStackBetweenMatches(from, to, includeClass, false, prefix, key);
-    }
-
-    /**
-     * print all stack frames between the frames which match start and end preceded by prefix
-     * by calling traceStackRange(from, to, true, includeClass, includePackage, prefix, key)
-     */
-
-    public void traceStackBetweenMatches(String from, String to, boolean includeClass, boolean includePackage, String prefix, Object key)
-    {
-        traceStackRange(from, to, true, includeClass, includePackage, prefix, key);
-    }
-    /**
-     * print all stack frames between the frames which match start and end to System.out by calling
-     * traceStackBetweenMatches(from, to, includeClass, false)
-     */
-
-    public void traceStackBetweenMatches(String from, String to, boolean includeClass)
-    {
-        traceStackBetweenMatches(from, to, includeClass, false);
     }
 
     /**
@@ -1472,6 +1538,16 @@ public class Helper
     public void traceStackBetweenMatches(String from, String to, boolean includeClass, boolean includePackage, String prefix)
     {
         traceStackBetweenMatches(from, to, includeClass, includePackage, prefix, "out");
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end preceded by prefix
+     * by calling traceStackRange(from, to, true, includeClass, includePackage, prefix, key)
+     */
+
+    public void traceStackBetweenMatches(String from, String to, boolean includeClass, boolean includePackage, String prefix, Object key)
+    {
+        traceStackRange(from, to, true, includeClass, includePackage, prefix, key);
     }
     /**
      * print all stack frames between the frames which match start and end to the trace stream identified by key
@@ -1593,22 +1669,22 @@ public class Helper
 
     /**
      * return a String tracing all stack frames which match pattern by calling
-     * formatStackMatching(pattern, includeClass, false, prefix)
-     */
-
-    public String formatStackMatching(String regExp, boolean includeClass, String prefix)
-    {
-        return formatStackMatching(regExp, includeClass, false, prefix);
-    }
-
-    /**
-     * return a String tracing all stack frames which match pattern by calling
      * formatStackMatching(pattern, includeClass, false)
      */
 
     public String formatStackMatching(String regExp, boolean includeClass)
     {
         return formatStackMatching(regExp, includeClass, false);
+    }
+
+    /**
+     * return a String tracing all stack frames which match pattern by calling
+     * formatStackMatching(pattern, includeClass, false, prefix)
+     */
+
+    public String formatStackMatching(String regExp, boolean includeClass, String prefix)
+    {
+        return formatStackMatching(regExp, includeClass, false, prefix);
     }
 
     /**
