@@ -39,7 +39,7 @@ public class ThreadMonitorHelper extends Helper
             return;
         }
 
-        int i = matchIndex(stack, "java\\.lang\\.Thread\\.<init>", true, true, t, l);
+        int i = matchIndex(stack, "java.lang.Thread.<init>", false, true, true, t, l);
         if (i < 0) {
             // illegal usage
             traceStack("ThreadMonitorHelper.traceCreate : should only be triggered below Thread.<init>\n", key);
@@ -53,7 +53,7 @@ public class ThreadMonitorHelper extends Helper
 
         // find bottommost constructor invocation
         i++;
-        while (i < l && matchIndex(stack, ".*<init>", true, i, i) >= 0) {
+        while (i < l && matchIndex(stack, "<init>", true, false, false, i, i+1) >= 0) {
             i++;
         }
         if (i == l) {
@@ -96,7 +96,7 @@ public class ThreadMonitorHelper extends Helper
             return;
         }
 
-        int i = matchIndex(stack, "java\\.lang\\.Thread\\.start", true, true, t, l);
+        int i = matchIndex(stack, "java.lang.Thread.start", false, true, true, t, l);
         if (i < 0) {
             // illegal usage
             traceStack("ThreadMonitorHelper.traceStart : should only be triggered below Thread.start\n", key);
@@ -149,7 +149,7 @@ public class ThreadMonitorHelper extends Helper
         if (triggerIndex(stack) < 0) {
             return;
         }
-        int i = matchIndex(stack, "java.lang.Thread.exit", true, true, t, l);
+        int i = matchIndex(stack, "java.lang.Thread.exit", false, true, true, t, l);
         if (i < 0) {
             // illegal usage
             traceStack("ThreadMonitorHelper.traceExit : should only be triggered below Thread.exit\n", key);
@@ -195,7 +195,7 @@ public class ThreadMonitorHelper extends Helper
             return;
         }
 
-        int i = matchIndex(stack, "run", t, l);
+        int i = matchIndex(stack, "run", false, true, true, t, l);
         if (i < 0) {
             // illegal usage
             traceStack("ThreadMonitorHelper.traceRun : should only be triggered below Runnable.run\n", key);

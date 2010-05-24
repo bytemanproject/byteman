@@ -982,7 +982,79 @@ public class Helper
 
     // call stack management support
     //
-    // matching caller frames
+    // matching caller frames against exact name
+
+    /**
+     * test whether the name of the method which called the the trigger method matches the supplied regular
+     * by calling callerEquals(name, false)
+     */
+    public boolean callerEquals(String name)
+    {
+        return callerEquals(name, false);
+    }
+
+    /**
+     * test whether the name of method which called the the trigger method matches the supplied regular
+     * expression by calling callerEquals(name, includeClass, false)
+     * @return true if the name of the method which called the the trigger method matches the supplied regular
+     * expression otherwise false
+     */
+    public boolean callerEquals(String name, boolean includeClass)
+    {
+        return callerEquals(name, includeClass, false);
+    }
+
+    /**
+     * test whether the name of method which called the the trigger method matches the supplied regular
+     * expression by calling callerEquals(name, includeClass, includePackage, 1)
+     * @return true if the name of the method which called the the trigger method matches the supplied regular
+     * expression otherwise false
+     */
+    public boolean callerEquals(String name, boolean includeClass, boolean includePackage)
+    {
+        return callerEquals(name, includeClass, includePackage, 1);
+    }
+
+    /**
+     * test whether the name of any of the selected methods in the stack which called the trigger method
+     * matches the supplied regular expression by calling
+     * callerCheck(name, false, includeClass, includePackage, 1, frameCount)
+     */
+    public boolean callerEquals(String name, boolean includeClass, boolean includePackage, int frameCount)
+    {
+        return callerCheck(name, false, includeClass, includePackage, 1, frameCount);
+    }
+
+    /**
+     * test whether the name of any of the selected methods in the stack which called the trigger method
+     * matches the supplied regular expression by calling callerEquals(name, 1, frameCount)
+     */
+    public boolean callerEquals(String name, int frameCount)
+    {
+        return callerEquals(name, 1, frameCount);
+    }
+
+    /**
+     * test whether the name of any of the selected methods in the stack which called the trigger method
+     * matches the supplied regular expression by calling callerEquals(name, false, startFrame, frameCount)
+     */
+    public boolean callerEquals(String name, int startFrame, int frameCount)
+    {
+        return callerEquals(name, false, startFrame, frameCount);
+    }
+
+    /**
+     * test whether the name of any of the selected methods in the stack which called the trigger method
+     * matches the supplied regular expression by calling
+     * callerCheck(name, false, includeClass, false, startFrame, frameCount)
+     */
+    public boolean callerEquals(String name, boolean includeClass, int startFrame, int frameCount)
+    {
+        return callerCheck(name, false, includeClass, false, startFrame, frameCount);
+    }
+
+
+    // matching caller frames against reg exp
 
     /**
      * test whether the name of the method which called the the trigger method matches the supplied regular
@@ -1018,11 +1090,11 @@ public class Helper
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied regular expression by calling
-     * callerMatches(regExp, includeClass, includePackage, 1, frameCount)
+     * callerCheck(regExp, true, includeClass, includePackage, 1, frameCount)
      */
     public boolean callerMatches(String regExp, boolean includeClass, boolean includePackage, int frameCount)
     {
-        return callerMatches(regExp, includeClass, includePackage, 1, frameCount);
+        return callerCheck(regExp, true, includeClass, includePackage, 1, frameCount);
     }
 
     /**
@@ -1046,18 +1118,20 @@ public class Helper
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied regular expression by calling
-     * callerMatches(regExp, includeClass, false, startFrame, frameCount)
+     * callerCheck(regExp, true, includeClass, false, startFrame, frameCount)
      */
     public boolean callerMatches(String regExp, boolean includeClass, int startFrame, int frameCount)
     {
-        return callerMatches(regExp, includeClass, false, startFrame, frameCount);
+        return callerCheck(regExp, true, includeClass, false, startFrame, frameCount);
     }
 
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied regular expression.
-     * @param regExp an expression which wil lbe matched against the name of the method which called
+     * @param match an expression which will be matched against the name of the method which called
      * the trigger method
+     * @param isRegExp true if match should be matched as a regular expression and false if it should be matched
+     * using a String equals comparison.
      * @param includeClass true if the match should be against the class qualified method name
      * @param includePackage true if the match should be against the package and class qualified method name.
      * ignored if includeClass is  not also true.
@@ -1070,7 +1144,9 @@ public class Helper
      * @return true if the name of one of the selected methods in the call stack starting from the trigger
      * method matches the supplied regular expression otherwise false
      */
-    public boolean callerMatches(String regExp, boolean includeClass, boolean includePackage, int startFrame, int frameCount)
+    public boolean callerCheck(String match, boolean isRegExp,
+                               boolean includeClass, boolean includePackage,
+                               int startFrame, int frameCount)
     {
         StackTraceElement[] stack = getStack();
         int triggerIndex = triggerIndex(stack);
@@ -1083,7 +1159,8 @@ public class Helper
         } else {
             lastIndex = startFrame + frameCount;
         }
-        int matched = matchIndex(stack, regExp, includeClass, includePackage, triggerIndex + startFrame, triggerIndex + lastIndex);
+        int matched = matchIndex(stack, match, isRegExp, includeClass, includePackage,
+                triggerIndex + startFrame, triggerIndex + lastIndex);
 
         return (matched >= 0);
     }
@@ -1142,7 +1219,7 @@ public class Helper
      */
     public void traceStack(String prefix, Object key, int maxFrames)
     {
-        String stackTrace = formatStack(prefix, key, maxFrames);
+        String stackTrace = formatStack(prefix, maxFrames);
         trace(key, stackTrace);
     }
 
@@ -1150,9 +1227,9 @@ public class Helper
      * print all stack frames which match pattern to System.out by calling traceStackMatching(pattern, null)
      */
 
-    public void traceStackMatching(String pattern)
+    public void traceStackMatching(String regExp)
     {
-        traceStackMatching(pattern, null);
+        traceStackMatching(regExp, null);
     }
 
     /**
@@ -1160,29 +1237,29 @@ public class Helper
      * traceStackMatching(pattern, prefix, "out")
      */
 
-    public void traceStackMatching(String pattern, String prefix)
+    public void traceStackMatching(String regExp, String prefix)
     {
-        traceStackMatching(pattern, prefix, "out");
+        traceStackMatching(regExp, prefix, "out");
     }
 
     /**
      * print all stack frames which match pattern to System.out preceded by prefix by calling
-     * traceStackMatching(pattern, false, prefix, "out")
+     * traceStackMatching(pattern, false, prefix, key)
      */
 
-    public void traceStackMatching(String pattern, String prefix, Object key)
+    public void traceStackMatching(String regExp, String prefix, Object key)
     {
-        traceStackMatching(pattern, false, prefix, key);
+        traceStackMatching(regExp, false, prefix, key);
     }
 
     /**
      * print all stack frames which match pattern to System.out preceded by prefix by calling
-     * traceStackMatching(pattern, includeClass, false, prefix, "out")
+     * traceStackMatching(pattern, includeClass, false, prefix, key)
      */
 
-    public void traceStackMatching(String pattern, boolean includeClass, String prefix, Object key)
+    public void traceStackMatching(String regExp, boolean includeClass, String prefix, Object key)
     {
-        traceStackMatching(pattern, includeClass, false, prefix, key);
+        traceStackMatching(regExp, includeClass, false, prefix, key);
     }
 
     /**
@@ -1190,9 +1267,9 @@ public class Helper
      * traceStackMatching(pattern, includeClass, false)
      */
 
-    public void traceStackMatching(String pattern, boolean includeClass)
+    public void traceStackMatching(String regExp, boolean includeClass)
     {
-        traceStackMatching(pattern, includeClass, false);
+        traceStackMatching(regExp, includeClass, false);
     }
 
     /**
@@ -1200,9 +1277,9 @@ public class Helper
      * traceStackMatching(pattern, includeClass, includePackage, null)
      */
 
-    public void traceStackMatching(String pattern, boolean includeClass, boolean includePackage)
+    public void traceStackMatching(String regExp, boolean includeClass, boolean includePackage)
     {
-        traceStackMatching(pattern, includeClass, includePackage, null);
+        traceStackMatching(regExp, includeClass, includePackage, null);
     }
 
     /**
@@ -1210,16 +1287,16 @@ public class Helper
      * traceStackMatching(pattern, includeClass, , includePackage, prefix, "out")
      */
 
-    public void traceStackMatching(String pattern, boolean includeClass, boolean includePackage, String prefix)
+    public void traceStackMatching(String regExp, boolean includeClass, boolean includePackage, String prefix)
     {
-        traceStackMatching(pattern, includeClass, includePackage, prefix, "out");
+        traceStackMatching(regExp, includeClass, includePackage, prefix, "out");
     }
 
     /**
      * print all stack frames which match pattern to the trace stream identified by key preceded by prefix.
      *
-     * @param pattern a pattern which will be matched against the method name of the stack frame by calling
-     * String.matches()
+     * @param regExp a pattern which will be matched against the method name of the stack frame as a
+     * regular expression by calling String.matches()
      * @param includeClass true if the match should be against the package and class qualified method name
      * @param includePackage true if the match should be against the package and class qualified method name.
      * ignored if includeClass is  not also true.
@@ -1228,15 +1305,17 @@ public class Helper
      * @param key an object identifying the trace stream to which output should be generated
      */
 
-    public void traceStackMatching(String pattern, boolean includeClass, boolean includePackage, String prefix, Object key)
+    public void traceStackMatching(String regExp, boolean includeClass, boolean includePackage, String prefix, Object key)
     {
-        String stackTrace = formatStackMatching(pattern, includeClass, includePackage, prefix, key);
+        String stackTrace = formatStackMatching(regExp, includeClass, includePackage, prefix);
         trace(key, stackTrace);
     }
 
+    // tracing stack range by exact match
+
     /**
      * print all stack frames between the frames which match start and end to System.out by calling
-     * traceStackMatching(from, to, null)
+     * traceStackBetween(from, to, null)
      */
 
     public void traceStackBetween(String from, String to)
@@ -1246,7 +1325,7 @@ public class Helper
 
     /**
      * print all stack frames between the frames which match start and end to System.out preceded by prefix
-     * by calling traceStackMatching(from, to, prefix, "out")
+     * by calling traceStackBetween(from, to, prefix, "out")
      */
 
     public void traceStackBetween(String from, String to, String prefix)
@@ -1255,27 +1334,38 @@ public class Helper
     }
 
     /**
-     * print all stack frames between the frames which match start and end to System.out preceded by prefix
-     * by calling traceStackMatching(from, to, false, prefix, key)
+     * print all stack frames between the frames which match start and end preceded by prefix
+     * by calling traceStackBetween(from, to, false, prefix, key)
      */
 
     public void traceStackBetween(String from, String to, String prefix, Object key)
     {
-        traceStackBetween(from, to, false, prefix, "out");
+        traceStackBetween(from, to, false, prefix, key);
     }
 
     /**
-     * print all stack frames between the frames which match start and end to System.out preceded by prefix
-     * by calling traceStackMatching(from, to, false, false, prefix, key)
+     * print all stack frames between the frames which match start and end preceded by prefix
+     * by calling traceStackBetween(from, to, includeClass, false, prefix, key)
      */
 
     public void traceStackBetween(String from, String to, boolean includeClass, String prefix, Object key)
     {
-        traceStackBetween(from, to, includeClass, false, prefix, "out");
+        traceStackBetween(from, to, includeClass, false, prefix, key);
     }
+
+    /**
+     * print all stack frames between the frames which match start and end preceded by prefix
+     * by calling traceStackBetween(from, to, false, includeClass, includePackage, prefix, key)
+     */
+
+    public void traceStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix, Object key)
+    {
+        traceStackRange(from, to, false, includeClass, includePackage, prefix, key);
+    }
+
     /**
      * print all stack frames between the frames which match start and end to System.out by calling
-     * traceStackMatching(from, to, includeClass, false)
+     * traceStackBetween(from, to, includeClass, false)
      */
 
     public void traceStackBetween(String from, String to, boolean includeClass)
@@ -1285,7 +1375,7 @@ public class Helper
 
     /**
      * print all stack frames between the frames which match start and end to System.out by calling
-     * traceStackMatching(from, to, includeClass, includePackage, null)
+     * traceStackBetween(from, to, includeClass, includePackage, null)
      */
 
     public void traceStackBetween(String from, String to, boolean includeClass, boolean includePackage)
@@ -1295,7 +1385,7 @@ public class Helper
 
     /**
      * print all stack frames between the frames which match start and end to System.out preceded by prefix
-     * by calling traceStackMatching(from, to, includeClass, prefix, "out")
+     * by calling traceStackBetween(from, to, includeClass, includePackage, prefix, "out")
      */
 
     public void traceStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix)
@@ -1303,25 +1393,110 @@ public class Helper
         traceStackBetween(from, to, includeClass, includePackage, prefix, "out");
     }
 
+    // tracing stack range by regular expression  match
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out by calling
+     * traceStackBetweenMatches(from, to, null)
+     */
+
+    public void traceStackBetweenMatches(String from, String to)
+    {
+        traceStackBetweenMatches(from, to, null);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out preceded by prefix
+     * by calling traceStackBetweenMatches(from, to, prefix, "out")
+     */
+
+    public void traceStackBetweenMatches(String from, String to, String prefix)
+    {
+        traceStackBetweenMatches(from, to, prefix, "out");
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out preceded by prefix
+     * by calling traceStackBetweenMatches(from, to, false, prefix, key)
+     */
+
+    public void traceStackBetweenMatches(String from, String to, String prefix, Object key)
+    {
+        traceStackBetweenMatches(from, to, false, prefix, "out");
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end preceded by prefix
+     * by calling traceStackBetween(from, to, includeClass, false, prefix, key)
+     */
+
+    public void traceStackBetweenMatches(String from, String to, boolean includeClass, String prefix, Object key)
+    {
+        traceStackBetweenMatches(from, to, includeClass, false, prefix, key);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end preceded by prefix
+     * by calling traceStackRange(from, to, true, includeClass, includePackage, prefix, key)
+     */
+
+    public void traceStackBetweenMatches(String from, String to, boolean includeClass, boolean includePackage, String prefix, Object key)
+    {
+        traceStackRange(from, to, true, includeClass, includePackage, prefix, key);
+    }
+    /**
+     * print all stack frames between the frames which match start and end to System.out by calling
+     * traceStackBetweenMatches(from, to, includeClass, false)
+     */
+
+    public void traceStackBetweenMatches(String from, String to, boolean includeClass)
+    {
+        traceStackBetweenMatches(from, to, includeClass, false);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out by calling
+     * traceStackBetweenMatches(from, to, includeClass, includePackage, null)
+     */
+
+    public void traceStackBetweenMatches(String from, String to, boolean includeClass, boolean includePackage)
+    {
+        traceStackBetweenMatches(from, to, includeClass, includePackage, null);
+    }
+
+    /**
+     * print all stack frames between the frames which match start and end to System.out preceded by prefix
+     * by calling traceStackBetweenMatches(from, to, true, includeClass, includePackage, prefix, "out");
+     */
+
+    public void traceStackBetweenMatches(String from, String to, boolean includeClass, boolean includePackage, String prefix)
+    {
+        traceStackBetweenMatches(from, to, includeClass, includePackage, prefix, "out");
+    }
     /**
      * print all stack frames between the frames which match start and end to the trace stream identified by key
      * preceded by prefix.
      *
      * @param from a pattern which identifies the first frame which should be printed. from will be matched against
-     * the concatenated classname and method name of each successive stack frame by calling String.matches().
-     * If null is supplied then the trigger frame will be used as the first frame to print. If a non-null value
-     * is supplied and no match is foudn then no farmes will be printed.
+     * the name of each successive stack frame from the trigger methdo frame until a matching frame is found. If null
+     * is supplied then the trigger frame will be used as the first frame to print. If a non-null value is supplied
+     * and no match is found then no frames will be printed.
      * @param to a pattern which identifies the last frame which should be printed. to will be matched against
-     * the concatenated classname and method name of each successive stack frame by calling String.matches().
+     * the name of each successive stack frame following the first matched frame until a matching frame is found.
      * If null is supplied or no match is found then the bottom frame will be used as the last frame to print.
+     * @param isRegExp true if from and true should be matched as regular expressions or false if they should be
+     * matched using a String equals comparison.
+     * @param includeClass true if the match should be against the package and class qualified method name
+     * @param includePackage true if the match should be against the package and class qualified method name.
+     * ignored if includeClass is  not also true.
      * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
      * then the prefix "Stack trace (restricted) for " + Thread.currentThread().getName() + "\n" is used
      * @param key an object identifying the trace stream to which output should be generated
      */
 
-    public void traceStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix, Object key)
+    public void traceStackRange(String from, String to, boolean isRegExp, boolean includeClass, boolean includePackage, String prefix, Object key)
     {
-        String stackTrace = formatStackBetween(from, to, includeClass, includePackage, prefix, key);
+        String stackTrace = formatStackRange(from, to, isRegExp, includeClass, includePackage, prefix);
         trace(key, stackTrace);
     }
 
@@ -1338,19 +1513,11 @@ public class Helper
     }
 
     /**
-     * return a stack trace by calling formatStack(prefix, "out")
+     * return a stack trace by calling formatStack(prefix, 0)
      */
     public String formatStack(String prefix)
     {
-        return formatStack(prefix, "out");
-    }
-
-    /**
-     * return a stack trace by calling formatStack(prefix, key, 0)
-     */
-    public String formatStack(String prefix, Object key)
-    {
-        return formatStack(prefix, key, 0);
+        return formatStack(prefix, 0);
     }
 
     /**
@@ -1362,22 +1529,13 @@ public class Helper
     }
 
     /**
-     * return a stack trace by calling formatStack(prefix, "out", maxFrames)
-     */
-    public String formatStack(String prefix, int maxFrames)
-    {
-        return formatStack(prefix, "out", maxFrames);
-    }
-
-    /**
      * print a stack trace to the trace stream identified by key
      *
      * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
      * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + "\n" is used
-     * @param key an object identifying the trace stream to which output should be generated
      * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
      */
-    public String formatStack(String prefix, Object key, int maxFrames)
+    public String formatStack(String prefix, int maxFrames)
     {
         StringBuffer buffer = new StringBuffer();
         StackTraceElement[] stack = getStack();
@@ -1412,89 +1570,70 @@ public class Helper
         return buffer.toString();
     }
 
+    // retrieving caller frames which match a regular expression
+
     /**
-     * print all stack frames which match pattern to System.out by calling formatStackMatching(pattern, null)
+     * return a String tracing all stack frames which match pattern by calling formatStackMatching(pattern, null)
      */
 
-    public String formatStackMatching(String pattern)
+    public String formatStackMatching(String regExp)
     {
-        return formatStackMatching(pattern, null);
+        return formatStackMatching(regExp, null);
     }
 
     /**
-     * print all stack frames which match pattern to System.out preceded by prefix by calling
-     * formatStackMatching(pattern, prefix, "out")
+     * return a String tracing all stack frames which match pattern by calling
+     * formatStackMatching(pattern, false, prefix)
      */
 
-    public String formatStackMatching(String pattern, String prefix)
+    public String formatStackMatching(String regExp, String prefix)
     {
-        return formatStackMatching(pattern, prefix, "out");
+        return formatStackMatching(regExp, false, prefix);
     }
 
     /**
-     * print all stack frames which match pattern to System.out preceded by prefix by calling
-     * formatStackMatching(pattern, false, prefix, "out")
+     * return a String tracing all stack frames which match pattern by calling
+     * formatStackMatching(pattern, includeClass, false, prefix)
      */
 
-    public String formatStackMatching(String pattern, String prefix, Object key)
+    public String formatStackMatching(String regExp, boolean includeClass, String prefix)
     {
-        return formatStackMatching(pattern, false, prefix, key);
+        return formatStackMatching(regExp, includeClass, false, prefix);
     }
 
     /**
-     * print all stack frames which match pattern to System.out preceded by prefix by calling
-     * formatStackMatching(pattern, includeClass, false, prefix, "out")
-     */
-
-    public String formatStackMatching(String pattern, boolean includeClass, String prefix, Object key)
-    {
-        return formatStackMatching(pattern, includeClass, false, prefix, key);
-    }
-
-    /**
-     * print all stack frames which match pattern to System.out by calling
+     * return a String tracing all stack frames which match pattern by calling
      * formatStackMatching(pattern, includeClass, false)
      */
 
-    public String formatStackMatching(String pattern, boolean includeClass)
+    public String formatStackMatching(String regExp, boolean includeClass)
     {
-        return formatStackMatching(pattern, includeClass, false);
+        return formatStackMatching(regExp, includeClass, false);
     }
 
     /**
-     * print all stack frames which match pattern to System.out by calling
+     * return a String tracing all stack frames which match pattern by calling
      * formatStackMatching(pattern, includeClass, includePackage, null)
      */
 
-    public String formatStackMatching(String pattern, boolean includeClass, boolean includePackage)
+    public String formatStackMatching(String regExp, boolean includeClass, boolean includePackage)
     {
-        return formatStackMatching(pattern, includeClass, includePackage, null);
+        return formatStackMatching(regExp, includeClass, includePackage, null);
     }
 
     /**
-     * print all stack frames which match pattern to System.out preceded by prefix by calling
-     * formatStackMatching(pattern, includeClass, , includePackage, prefix, "out")
-     */
-
-    public String formatStackMatching(String pattern, boolean includeClass, boolean includePackage, String prefix)
-    {
-        return formatStackMatching(pattern, includeClass, includePackage, prefix, "out");
-    }
-
-    /**
-     * print all stack frames which match pattern to the trace stream identified by key preceded by prefix.
+     * return a String tracing all stack frames which match pattern.
      *
-     * @param pattern a pattern which will be matched against the method name of the stack frame by calling
-     * String.matches()
+     * @param regExp a pattern which will be matched against the method name of the stack frame as a
+     * regular expression by calling String.matches()
      * @param includeClass true if the match should be against the package and class qualified method name
      * @param includePackage true if the match should be against the package and class qualified method name.
      * ignored if includeClass is  not also true.
      * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
      * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + " matching " + pattern + "\n" is used
-     * @param key an object identifying the trace stream to which output should be generated
      */
 
-    public String formatStackMatching(String pattern, boolean includeClass, boolean includePackage, String prefix, Object key)
+    public String formatStackMatching(String regExp, boolean includeClass, boolean includePackage, String prefix)
     {
         StringBuffer buffer = new StringBuffer();
         StackTraceElement[] stack = getStack();
@@ -1511,7 +1650,7 @@ public class Helper
             buffer.append("Stack trace for thread ");
             buffer.append(Thread.currentThread().getName());
             buffer.append(" matching ");
-            buffer.append(pattern);
+            buffer.append(regExp);
             buffer.append('\n');
         }
         for (; i < l; i++) {
@@ -1529,7 +1668,7 @@ public class Helper
                 fullName = stack[i].getMethodName();
             }
 
-            if (fullName.matches(pattern)) {
+            if (fullName.matches(regExp)) {
                 printlnFrame(buffer, stack[i]);
             }
         }
@@ -1537,8 +1676,10 @@ public class Helper
         return buffer.toString();
     }
 
+    // retrieving caller frames between exact matched start and end frame
+
     /**
-     * print all stack frames between the frames which match start and end to System.out by calling
+     * return a String tracing the stack between the frames which match start and end by calling
      * formatStackBetween(from, to, null)
      */
 
@@ -1548,36 +1689,17 @@ public class Helper
     }
 
     /**
-     * print all stack frames between the frames which match start and end to System.out preceded by prefix
-     * by calling formatStackBetween(from, to, prefix, "out")
+     * return a String tracing the stack between the frames which match start and end
+     * by calling formatStackBetween(from, to, false, false, false, prefix)
      */
 
     public String formatStackBetween(String from, String to, String prefix)
     {
-        return formatStackBetween(from, to, prefix, "out");
+        return formatStackBetween(from, to, false, false, prefix);
     }
 
     /**
-     * print all stack frames between the frames which match start and end to System.out preceded by prefix
-     * by calling formatStackBetween(from, to, false, prefix, key)
-     */
-
-    public String formatStackBetween(String from, String to, String prefix, Object key)
-    {
-        return formatStackBetween(from, to, false, prefix, "out");
-    }
-
-    /**
-     * print all stack frames between the frames which match start and end to System.out preceded by prefix
-     * by calling formatStackBetween(from, to, false, false, prefix, key)
-     */
-
-    public String formatStackBetween(String from, String to, boolean includeClass, String prefix, Object key)
-    {
-        return formatStackBetween(from, to, includeClass, false, prefix, "out");
-    }
-    /**
-     * print all stack frames between the frames which match start and end to System.out by calling
+     * return a String tracing the stack between the frames which match start and end by calling
      * formatStackBetween(from, to, includeClass, false)
      */
 
@@ -1587,7 +1709,7 @@ public class Helper
     }
 
     /**
-     * print all stack frames between the frames which match start and end to System.out by calling
+     * return a String tracing the stack between the frames which match start and end by calling
      * formatStackBetween(from, to, includeClass, includePackage, null)
      */
 
@@ -1597,32 +1719,88 @@ public class Helper
     }
 
     /**
-     * print all stack frames between the frames which match start and end to System.out preceded by prefix
-     * by calling formatStackBetween(from, to, includeClass, prefix, "out")
+     * return a String tracing the stack between the frames which match start and end by calling
+     * formatStackRange(from, to, false, includeClass, includePackage, prefix)
      */
 
     public String formatStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix)
     {
-        return formatStackBetween(from, to, includeClass, includePackage, prefix, "out");
+        return formatStackRange(from, to, false, includeClass, includePackage, prefix);
+    }
+
+    // retrieving caller frames between regular expression  matched start and end frame
+
+    /**
+     * return a String tracing the stack between the frames which match start and end by calling
+     * formatStackBetweenMatches(from, to, null)
+     */
+
+    public String formatStackBetweenMatches(String from, String to)
+    {
+        return formatStackBetweenMatches(from, to, null);
     }
 
     /**
-     * print all stack frames between the frames which match start and end to the trace stream identified by key
-     * preceded by prefix.
-     *
-     * @param from a pattern which identifies the first frame which should be printed. from will be matched against
-     * the concatenated classname and method name of each successive stack frame by calling String.matches().
-     * If null is supplied then the trigger frame will be used as the first frame to print. If a non-null value
-     * is supplied and no match is foudn then no farmes will be printed.
-     * @param to a pattern which identifies the last frame which should be printed. to will be matched against
-     * the concatenated classname and method name of each successive stack frame by calling String.matches().
-     * If null is supplied or no match is found then the bottom frame will be used as the last frame to print.
-     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
-     * then the prefix "Stack trace (restricted) for " + Thread.currentThread().getName() + "\n" is used
-     * @param key an object identifying the trace stream to which output should be generated
+     * return a String tracing the stack between the frames which match start and end
+     * by calling formatStackBetweenMatches(from, to, false, false, false, prefix)
      */
 
-    public String formatStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix, Object key)
+    public String formatStackBetweenMatches(String from, String to, String prefix)
+    {
+        return formatStackBetweenMatches(from, to, false, false, prefix);
+    }
+
+    /**
+     * return a String tracing the stack between the frames which match start and end by calling
+     * formatStackBetweenMatches(from, to, includeClass, false)
+     */
+
+    public String formatStackBetweenMatches(String from, String to, boolean includeClass)
+    {
+        return formatStackBetweenMatches(from, to, includeClass, false);
+    }
+
+    /**
+     * return a String tracing the stack between the frames which match start and end by calling
+     * formatStackBetweenMatches(from, to, includeClass, includePackage, null)
+     */
+
+    public String formatStackBetweenMatches(String from, String to, boolean includeClass, boolean includePackage)
+    {
+        return formatStackBetweenMatches(from, to, includeClass, includePackage, null);
+    }
+
+    /**
+     * return a String tracing the stack between the frames which match start and end by calling
+     * formatStackRange(from, to, true, includeClass, includePackage, prefix)
+     */
+
+    public String formatStackBetweenMatches(String from, String to, boolean includeClass, boolean includePackage, String prefix)
+    {
+        return formatStackRange(from, to, true, includeClass, includePackage, prefix);
+    }
+
+    /**
+     * return a String tracing the stack between the frames which match start and end.
+     *
+     * @param from a pattern which identifies the first frame which should be printed. from will be matched against
+     * the name of each successive stack frame from the trigger methdo frame until a matching frame is found. If null
+     * is supplied then the trigger frame will be used as the first frame to print. If a non-null value is supplied
+     * and no match is found then no frames will be printed.
+     * @param to a pattern which identifies the last frame which should be printed. to will be matched against
+     * the name of each successive stack frame following the first matched frame until a matching frame is found.
+     * If null is supplied or no match is found then the bottom frame will be used as the last frame to print.
+     * @param isRegExp true if from and true should be matched as regular expressions or false if they should be
+     * matched using a String equals comparison.
+     * @param includeClass true if the match should be against the package and class qualified method name
+     * @param includePackage true if the match should be against the package and class qualified method name.
+     * ignored if includeClass is  not also true.
+     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
+     * then the prefix "Stack trace (restricted) for " + Thread.currentThread().getName() + "\n" is used
+     */
+
+    public String formatStackRange(String from, String to, boolean isRegExp,
+                                   boolean includeClass, boolean includePackage, String prefix)
     {
         StringBuffer buffer = new StringBuffer();
         StackTraceElement[] stack = getStack();
@@ -1634,7 +1812,7 @@ public class Helper
 
         int first;
         if (from != null) {
-            first = matchIndex(stack, from, includeClass, includePackage, i, l);
+            first = matchIndex(stack, from, isRegExp, includeClass, includePackage, i, l);
             if (first < 0) {
                 return "";
             }
@@ -1644,7 +1822,7 @@ public class Helper
 
         int last;
         if (to != null) {
-            last = matchIndex(stack, to, includeClass, includePackage, first + 1, l);
+            last = matchIndex(stack, to, isRegExp, includeClass, includePackage, first + 1, l);
             if (last < 0) {
                 last = l - 1;
             }
@@ -1749,26 +1927,10 @@ public class Helper
     }
 
     /**
-     * return the index of the first frame at or below index start which matches pattern by calling
-     * matchIndex(stack, pattern, false, start, limit)
-     */
-    protected int matchIndex(StackTraceElement[] stack, String pattern, int start, int limit)
-    {
-        return matchIndex(stack, pattern, false, start, limit);
-    }
-
-    /**
-     * return the index of the first frame at or below index start which matches pattern by calling
-     * matchIndex(stack, pattern, includeClass, false, start, limit)
-     */
-    protected int matchIndex(StackTraceElement[] stack, String pattern, boolean includeClass, int start, int limit)
-    {
-        return matchIndex(stack, pattern, includeClass, false, start, limit);
-    }
-
-    /**
      * return the index of the first frame at or below index start which matches pattern
      * @param pattern a pattern to be matched against the concatenated frame method name using String.matches()
+     * @param isRegExp true if the pattern should be matched as a regular expression or false if it should
+     * be matched using a String equals comparison
      * @param includeClass true if the method name should be qualified with the package and class name
      * @param start the index of the first frame which should be tested for a match. this must be greater than
      * or equal to the trigger index.
@@ -1776,8 +1938,8 @@ public class Helper
      * or equal to the stack length
      * @return the index of the matching frame between start and limit - 1 or -1 if it no match found
      */
-    protected int matchIndex(StackTraceElement[] stack, String pattern, boolean includeClass,
-                             boolean includePackage, int start, int limit)
+    protected int matchIndex(StackTraceElement[] stack, String pattern, boolean isRegExp,
+                             boolean includeClass, boolean includePackage, int start, int limit)
     {
         int l= stack.length;
         int i = start;
@@ -1801,8 +1963,14 @@ public class Helper
                 fullName = stack[i].getMethodName();
             }
 
-            if (fullName.matches(pattern)) {
-                return i;
+            if (isRegExp) {
+                if (fullName.matches(pattern)) {
+                    return i;
+                }
+            } else {
+                if (fullName.equals(pattern)) {
+                    return i;
+                }
             }
         }
 

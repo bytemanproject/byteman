@@ -73,6 +73,18 @@ DO test.log(formatStackMatching("org\.jboss\.byteman\.tests\.helpertests\.TestSt
                                 true, true, "stacktrace matching frames with class and package\n"))
 ENDRULE
 
+RULE test stacktrace between frames matches
+CLASS TestStackTrace
+METHOD triggerMethod3111()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT EXIT
+BIND test : TestStackTrace = $0
+IF TRUE
+DO test.log(formatStackBetweenMatches("triggerMethod3111",
+                                      "triggerMethod31",
+                                       "stacktrace between frames matches\n"))
+ENDRULE
+
 RULE test stacktrace between frames
 CLASS TestStackTrace
 METHOD triggerMethod3111()
@@ -80,7 +92,7 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AT EXIT
 BIND test : TestStackTrace = $0
 IF TRUE
-DO test.log(formatStackBetween("org\.jboss\.byteman\.tests\.helpertests\.TestStackTrace\.triggerMethod3111",
-                                "org\.jboss\.byteman\.tests\.helpertests\.TestStackTrace\.triggerMethod3",
+DO test.log(formatStackBetween("org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod3111",
+                                "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod3",
                                 true, true, "stacktrace between frames\n"))
 ENDRULE

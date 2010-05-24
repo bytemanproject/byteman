@@ -28,7 +28,7 @@ METHOD triggerMethod1()
 HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : TestCallerMatches = $0
-IF callerMatches("test")
+IF callerEquals("test")
 DO test.log("caller match first caller")
 ENDRULE
 
@@ -38,7 +38,7 @@ METHOD triggerMethod2()
 HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : TestCallerMatches = $0
-IF callerMatches("TestCallerMatches\.test", true)
+IF callerEquals("TestCallerMatches.test", true)
 DO test.log("caller match first caller with class")
 ENDRULE
 
@@ -58,7 +58,7 @@ METHOD triggerMethod211()
 HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : TestCallerMatches = $0
-IF callerMatches("triggerMethod2", 1, 2)
+IF callerEquals("triggerMethod2", 1, 2)
 DO test.log("caller match 2nd caller in range")
 ENDRULE
 
@@ -68,7 +68,7 @@ METHOD triggerMethod212()
 HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : TestCallerMatches = $0
-IF callerMatches("triggerMethod21", 1, 2)
+IF callerEquals("triggerMethod21", 1, 2)
 DO test.log("caller match 1st caller in range")
 ENDRULE
 

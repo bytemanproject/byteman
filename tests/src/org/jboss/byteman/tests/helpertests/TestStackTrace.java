@@ -180,6 +180,10 @@ public class TestStackTrace extends Test
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod31(TestStackTrace.java:119)\n" +
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod3(TestStackTrace.java:113)\n");
                 logExpected("inside TestStackTrace.triggerMethod3111");
+                logExpected("stacktrace between frames matches\n" +
+                        "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod3111(TestStackTrace.java:131)\n" +
+                        "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod311(TestStackTrace.java:125)\n" +
+                        "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod31(TestStackTrace.java:119)\n");
                 logExpected("stacktrace between frames\n" +
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod3111(TestStackTrace.java:131)\n" +
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod311(TestStackTrace.java:125)\n" +
