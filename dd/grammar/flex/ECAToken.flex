@@ -243,6 +243,10 @@ Float = {Sign}? {PosFloat}
 
 "$" "*" { return symbol(sym.DOLLAR, yytext()); }
 
+/* invoked method parameter array -- for use in AT INVOKE rules */
+
+"$" "@" { return symbol(sym.DOLLAR, yytext()); }
+
 /* identifiers */
 
 "NULL" | "null" { return symbol(sym.NULL_LITERAL); }

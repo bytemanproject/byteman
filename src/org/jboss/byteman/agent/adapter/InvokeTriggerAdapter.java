@@ -82,6 +82,23 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
             latched = false;
         }
 
+        @Override
+        public Type[] getInvokedTypes()
+        {
+            Type ownerType = (matchedClass != null ? Type.getType(TypeHelper.externalizeType(matchedClass)) : null);
+            Type[] argTypes = Type.getArgumentTypes(matchedMethodDescriptor);
+            Type returnType = Type.getReturnType(matchedMethodDescriptor);
+            int numArgs = argTypes.length;
+            Type[] result = new Type[numArgs + 2];
+            result[0] = ownerType;
+            for (int i = 0; i < numArgs; i++) {
+                result[i + 1] = argTypes[i];
+            }
+            result[numArgs + 1] = returnType;
+
+            return result;
+        }
+
         // somewhere we need to add a catch exception block
         // super.catchException(startLabel, endLabel, new Type("org.jboss.byteman.rule.exception.ExecuteException")));
 
@@ -135,6 +152,9 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
                 }
             }
 
+            matchedClass = TypeHelper.internalizeClass(owner);
+            matchedMethodName = name;
+            matchedMethodDescriptor = desc;
             return true;
         }
     }
@@ -171,6 +191,9 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
     private String calledClass;
     private String calledMethodName;
     private String calledMethodDescriptor;
+    private String matchedClass;
+    private String matchedMethodName;
+    private String matchedMethodDescriptor;
     private int count;
     private boolean whenComplete;
 

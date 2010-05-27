@@ -101,7 +101,7 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
             } else if (binding.isThrowable()) {
                 // we can only allow reference to the current throwable in an AT THROW rule
                 if (rule.getTargetLocation().getLocationType() != LocationType.THROW) {
-                    System.out.println("RuleCheckMethodAdapter.checkBindings : found throwable value binding $@ in non-THROW rule " + rule.getName());
+                    System.out.println("RuleCheckMethodAdapter.checkBindings : found throwable value binding $^ in non-THROW rule " + rule.getName());
                     return false;
                 }
                 // we will need to set the descriptor at some point
@@ -109,6 +109,12 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                 // this is ok
             } else if (binding.isParamCount()) {
                 // this is ok
+            } else if (binding.isInvokeParamArray()) {
+                // we can only allow reference to the invoked method parameters in an AT INVOKE rule
+                if (rule.getTargetLocation().getLocationType() != LocationType.INVOKE) {
+                    System.out.println("RuleCheckMethodAdapter.checkBindings : found invoke parameter array binding $@ in non-AT INVOKE rule " + rule.getName());
+                    return false;
+                }
             } else if (binding.isLocalVar()){
                 // make sure we have a local variable with the correct name
                 String localVarName = binding.getName().substring(1);

@@ -72,6 +72,8 @@ public class DollarExpression extends AssignableExpression
             name = "$#";
         } else if (index == PARAM_ARRAY_IDX){
             name = "$*";
+        } else if (index == INVOKE_PARAM_ARRAY_IDX){
+            name = "$@";
         } else {
             name = "$" + Integer.toString(index);
         }
@@ -131,6 +133,9 @@ public class DollarExpression extends AssignableExpression
         }
         if (name.equals("$*")){
             throw new TypeException("invalid assignment to param array variable " + name + getPos());
+        }
+        if (name.equals("$@")){
+            throw new TypeException("invalid assignment to invoke param array variable " + name + getPos());
         }
         bind(true);
     }
@@ -310,6 +315,10 @@ public class DollarExpression extends AssignableExpression
      */
     public final static int HELPER_IDX = -1;
     /**
+     * index for any variable introduced in a BINDS clause
+     */
+    public final static int BIND_IDX = -2;
+    /**
      * index for any local variable which must be further identified via its name
      */
     public final static int LOCAL_IDX = -3;
@@ -329,4 +338,8 @@ public class DollarExpression extends AssignableExpression
      * index of $* variable which is bound to an array of the trigger method params
      */
     public final static int PARAM_ARRAY_IDX = -7;
+    /**
+     * index of $@ variable which is bound to an array of the invoked method params in an AT INVOKE rule
+     */
+    public final static int INVOKE_PARAM_ARRAY_IDX = -8;
 }

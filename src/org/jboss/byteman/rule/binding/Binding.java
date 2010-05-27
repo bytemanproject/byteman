@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.rule.binding;
 
+import org.jboss.byteman.rule.expression.DollarExpression;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.expression.Expression;
 import org.jboss.byteman.rule.exception.TypeException;
@@ -67,27 +68,30 @@ public class Binding extends RuleElement
             index = Integer.valueOf(name.substring(1));
         } else if (name.equals("$$")) {
             // $$ references the helper implicitly associated with a builtin call
-            index = HELPER;
+            index = DollarExpression.HELPER_IDX;
         } else if (name.equals("$!")) {
             // $! refers to the current return value for the trigger method and is only valid when
             // the rule is triggered AT EXIT
-            index = RETURN_VAR;
+            index = DollarExpression.RETURN_VALUE_IDX;
         } else if (name.equals("$^")) {
             // $^ refers to the current throwable value for the trigger method and is only valid when
             // the rule is triggered AT THROW
-            index = THROWABLE_VAR;
+            index = DollarExpression.THROWABLE_VALUE_IDX;
         } else if (name.equals("$#")) {
             // $# refers to the parameter count for the trigger method
-            index = PARAM_COUNT_VAR;
+            index = DollarExpression.PARAM_COUNT_IDX;
         } else if (name.equals("$*")) {
             // $* refers to the parameters for the trigger method supplied as an Object array
-            index = PARAM_ARRAY_VAR;
+            index = DollarExpression.PARAM_ARRAY_IDX;
+        } else if (name.equals("$@")) {
+            // $* refers to the parameters for the trigger method supplied as an Object array
+            index = DollarExpression.INVOKE_PARAM_ARRAY_IDX;
         } else if (name.matches("\\$[A-Za-z].*")) {
            // $AAAAA refers  to a local variable in the trigger method
-            index = LOCAL_VAR;
+            index = DollarExpression.LOCAL_IDX;
         } else {
             // anything else must be a variable introduced in the BINDS clause
-            index = BIND_VAR;
+            index = DollarExpression.BIND_IDX;
         }
         this.callArrayIndex = 0;
 
@@ -240,37 +244,42 @@ public class Binding extends RuleElement
 
     public boolean isHelper()
     {
-        return index == HELPER;
+        return index == DollarExpression.HELPER_IDX;
     }
 
     public boolean isBindVar()
     {
-        return index == BIND_VAR;
+        return index == DollarExpression.BIND_IDX;
     }
 
     public boolean isLocalVar()
     {
-        return index == LOCAL_VAR;
+        return index == DollarExpression.LOCAL_IDX;
     }
 
     public boolean isReturn()
     {
-        return index == RETURN_VAR;
+        return index == DollarExpression.RETURN_VALUE_IDX;
     }
 
     public boolean isThrowable()
     {
-        return index == THROWABLE_VAR;
+        return index == DollarExpression.THROWABLE_VALUE_IDX;
     }
 
     public boolean isParamCount()
     {
-        return index == PARAM_COUNT_VAR;
+        return index == DollarExpression.PARAM_COUNT_IDX;
     }
 
     public boolean isParamArray()
     {
-        return index == PARAM_ARRAY_VAR;
+        return index == DollarExpression.PARAM_ARRAY_IDX;
+    }
+
+    public boolean isInvokeParamArray()
+    {
+        return index == DollarExpression.INVOKE_PARAM_ARRAY_IDX;
     }
 
     public int getIndex()
@@ -360,6 +369,7 @@ public class Binding extends RuleElement
     private final static int THROWABLE_VAR = -5;
     private final static int PARAM_COUNT_VAR = -6;
     private final static int PARAM_ARRAY_VAR = -7;
+    private final static int INVOKE_PARAM_ARRAY_VAR = -8;
 
     private String name;
     private String descriptor; // supplied when the binding is for a local var

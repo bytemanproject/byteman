@@ -56,12 +56,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.LocalVariablesSorter;
+import org.jboss.byteman.agent.TransformContext;
+import org.objectweb.asm.*;
 import org.objectweb.asm.commons.Method;
 import org.objectweb.asm.commons.TableSwitchGenerator;
 
@@ -69,16 +65,29 @@ import org.objectweb.asm.commons.TableSwitchGenerator;
  * A modified version of the asm 3.0 GeneratorAdapter class which dispatches calls to methods of
  * MethodVisitor to this rather than to the encapsulated MethodVisitor instance in field mv.
  * Doing so gives the current instance a chance to observe all visit operations. Without it
- * the current instane only sees visit operations invoked directly by previous visitors in
+ * the current instance only sees visit operations invoked directly by previous visitors in
  * the chain. This is necessary in order for the RuleTriggerAdapter to build a complete CFG
  * for the method being visited.
+ *
+ * As a consequence of the above change this class cannot inherit the methods from LocalVariableSorter
+ * which allow introduction of new local variables. That's not actually much of a loss since the
+ * functionality provided by that class is of limited utility -- it only allows local variables to
+ * be introduced via a prior pipeline stage. Instead this class provides methods to track the number
+ * of locals employed so far and supports temporary introduction and removal of locals inside injected
+ * trigger or handler code. See methods {@link #newLocal(org.objectweb.asm.Type)}, {@link #popLocal(int)},
+ * {@link #loadLocal(int)} and {@link #storeLocal(int)}.
+ *
+ * Another reason to transplant code to this class is because it inherits functionality from
+ * RuleMethodAdapter which is used by RuleCheckAdapter and RuleTriggerAdapter to identify
+ * and classify local variables but provides functionality to modify bytecode which is only
+ * needed by RuleTriggerAdapter. So, the original class would have needed reparenting anyway.
  *
  * @author Andrew Dinn
  * @author Juozas Baliuka
  * @author Chris Nokleberg
  * @author Eric Bruneton
  */
-public class RuleGeneratorAdapter extends LocalVariablesSorter {
+public class RuleGeneratorAdapter extends RuleMethodAdapter {
 
     private final static Type BYTE_TYPE = Type.getObjectType("java/lang/Byte");
 
@@ -203,9 +212,9 @@ public class RuleGeneratorAdapter extends LocalVariablesSorter {
     public final static int LE = Opcodes.IFLE;
 
     /**
-     * Access flags of the method visited by this adapter.
+     * Argument types of the method visited by this adapter.
      */
-    private final int access;
+    private final Type[] argumentTypes;
 
     /**
      * Return type of the method visited by this adapter.
@@ -213,14 +222,19 @@ public class RuleGeneratorAdapter extends LocalVariablesSorter {
     private final Type returnType;
 
     /**
-     * Argument types of the method visited by this adapter.
-     */
-    private final Type[] argumentTypes;
-
-    /**
      * Types of the local variables of the method visited by this adapter.
      */
-    private final List localTypes = new ArrayList();
+    private final List localTypes;
+
+    /**
+     * used to track active local variable slots
+     */
+    private int nextLocal;
+
+    /**
+     * used to track maximum number of local variable slots
+     */
+    private int localHighWater;
 
     /**
      * Creates a new {@link RuleGeneratorAdapter}.
@@ -232,57 +246,32 @@ public class RuleGeneratorAdapter extends LocalVariablesSorter {
      */
     public RuleGeneratorAdapter(
         final MethodVisitor mv,
+        final TransformContext transformContext,
         final int access,
         final String name,
         final String desc)
     {
-        super(access, desc, mv);
-        this.access = access;
-        this.returnType = Type.getReturnType(desc);
+        super(mv, transformContext, access, name, desc);
         this.argumentTypes = Type.getArgumentTypes(desc);
+        this.returnType = Type.getReturnType(desc);
+        localTypes = new ArrayList();
+        initLocalTypes();
     }
 
     /**
-     * Creates a new {@link RuleGeneratorAdapter}.
-     *
-     * @param access access flags of the adapted method.
-     * @param method the adapted method.
-     * @param mv the method visitor to which this adapter delegates calls.
+     * initialise the local slot types array with the types of the method target and parameters.
+     * this is needed because we are only sent an initial frame identifying the local slots
+     * which belong to the method if a stackmap table  has been included in the bytecode and this
+     * is nto always the case.
      */
-    public RuleGeneratorAdapter(
-        final int access,
-        final Method method,
-        final MethodVisitor mv)
+    private void initLocalTypes()
     {
-        super(access, method.getDescriptor(), mv);
-        this.access = access;
-        this.returnType = method.getReturnType();
-        this.argumentTypes = method.getArgumentTypes();
-    }
-
-    /**
-     * Creates a new {@link RuleGeneratorAdapter}.
-     *
-     * @param access access flags of the adapted method.
-     * @param method the adapted method.
-     * @param signature the signature of the adapted method (may be
-     *        <tt>null</tt>).
-     * @param exceptions the exceptions thrown by the adapted method (may be
-     *        <tt>null</tt>).
-     * @param cv the class visitor to which this adapter delegates calls.
-     */
-    public RuleGeneratorAdapter(
-        final int access,
-        final Method method,
-        final String signature,
-        final Type[] exceptions,
-        final ClassVisitor cv)
-    {
-        this(access, method, cv.visitMethod(access,
-                method.getName(),
-                method.getDescriptor(),
-                signature,
-                getInternalNames(exceptions)));
+        // owner of this method is an object
+        localTypes.add(Type.getType(Object.class));
+        for (int i = 0; i < argumentTypes.length; i++) {
+            localTypes.add(argumentTypes[i]);
+        }
+        nextLocal = localHighWater = localTypes.size();
     }
 
     /**
@@ -506,75 +495,6 @@ public class RuleGeneratorAdapter extends LocalVariablesSorter {
      */
     public void storeArg(final int arg) {
         storeInsn(argumentTypes[arg], getArgIndex(arg));
-    }
-
-    // ------------------------------------------------------------------------
-    // Instructions to load and store local variables
-    // ------------------------------------------------------------------------
-
-    /**
-     * Returns the type of the given local variable.
-     *
-     * @param local a local variable identifier, as returned by
-     *        {@link org.objectweb.asm.commons.LocalVariablesSorter#newLocal(org.objectweb.asm.Type) newLocal()}.
-     * @return the type of the given local variable.
-     */
-    public Type getLocalType(final int local) {
-        return (Type) localTypes.get(local - firstLocal);
-    }
-
-    protected void setLocalType(final int local, final Type type) {
-        int index = local - firstLocal;
-        while (localTypes.size() < index + 1) {
-            localTypes.add(null);
-        }
-        localTypes.set(index, type);
-    }
-
-    /**
-     * Generates the instruction to load the given local variable on the stack.
-     *
-     * @param local a local variable identifier, as returned by
-     *        {@link org.objectweb.asm.commons.LocalVariablesSorter#newLocal(org.objectweb.asm.Type) newLocal()}.
-     */
-    public void loadLocal(final int local) {
-        loadInsn(getLocalType(local), local);
-    }
-
-    /**
-     * Generates the instruction to load the given local variable on the stack.
-     *
-     * @param local a local variable identifier, as returned by
-     *        {@link org.objectweb.asm.commons.LocalVariablesSorter#newLocal(org.objectweb.asm.Type) newLocal()}.
-     * @param type the type of this local variable.
-     */
-    public void loadLocal(final int local, final Type type) {
-        setLocalType(local, type);
-        loadInsn(type, local);
-    }
-
-    /**
-     * Generates the instruction to store the top stack value in the given local
-     * variable.
-     *
-     * @param local a local variable identifier, as returned by
-     *        {@link org.objectweb.asm.commons.LocalVariablesSorter#newLocal(org.objectweb.asm.Type) newLocal()}.
-     */
-    public void storeLocal(final int local) {
-        storeInsn(getLocalType(local), local);
-    }
-
-    /**
-     * Generates the instruction to store the top stack value in the given local
-     * variable.
-     *
-     * @param local a local variable identifier, as returned by
-     *        {@link org.objectweb.asm.commons.LocalVariablesSorter#newLocal(org.objectweb.asm.Type) newLocal()}.
-     * @param type the type of this local variable.
-     */
-    public void storeLocal(final int local, final Type type) {
-        setLocalType(local, type);
-        storeInsn(type, local);
     }
 
     /**
@@ -1430,5 +1350,256 @@ public class RuleGeneratorAdapter extends LocalVariablesSorter {
         final Type exception)
     {
         visitTryCatchBlock(start, end, mark(), exception.getInternalName());
+    }
+
+    // local variable handling
+
+    /**
+     * override this so we can see track which local var slots are in use and avoid overwriting them
+     * @param opcode
+     * @param var
+     */
+    public void visitVarInsn(final int opcode, final int var)
+    {
+        if (var >= nextLocal || localTypes.get(var) == null) {
+            int size = 1;
+            Type type = null;
+            switch(opcode) {
+                case Opcodes.ISTORE:
+                    type = Type.INT_TYPE;
+                break;
+                case Opcodes.LSTORE:
+                    type = Type.LONG_TYPE;
+                    size = 2;
+                break;
+                case Opcodes.FSTORE:
+                    type = Type.FLOAT_TYPE;
+                break;
+                case Opcodes.DSTORE:
+                    type = Type.DOUBLE_TYPE;
+                    size = 2;
+                break;
+                case Opcodes.ASTORE:
+                    // we don't know exactly what type this is but at least we know it is an object
+                    type = Type.getType(Object.class);
+                break;
+            }
+            if (var <  nextLocal) {
+                // just fill in the missing type
+                localTypes.set(var, type);
+            } else {
+
+                // we may not have seen some of the locals so leave a blank spot for them in the types array
+                for (int i = nextLocal; i < var; i++) {
+                    localTypes.add(null);
+                }
+                // now add entry for var
+                
+                localTypes.add(type);
+                if (size > 1) {
+                    localTypes.add(null);
+                }
+                nextLocal = var + size;
+
+                if (nextLocal > localHighWater) {
+                    localHighWater = nextLocal;
+                }
+            }
+        }
+        super.visitVarInsn(opcode, var);
+    }
+
+    /**
+     * return a new local slot index for a local var not currently in use. this must be released
+     * using popLocal before a new frame can be notified which means that the slot should only be
+     * allocated inside a generated trigger section and should be released before the trigger
+     * end of the trigger section by calling popLocal.
+     * @param valueType the type of the value to be stored in the local slot
+     * @return the index for the new slot
+     */
+    public int newLocal(Type valueType)
+    {
+        int localIndex = nextLocal++;
+        localTypes.add(valueType);
+
+        if (valueType.getSize() > 1) {
+            nextLocal++;
+            localTypes.add(null);
+        }
+
+        if (nextLocal > localHighWater) {
+            localHighWater = nextLocal;
+        }
+
+        return localIndex;
+    }
+
+    /**
+     * free a previously allocated local slot
+     * @param local the slot to be released
+     */
+    public void popLocal(int local)
+    {
+        Type type = (Type)localTypes.get(local);
+        int size = type.getSize();
+        if (nextLocal != local + size) {
+            throw new IndexOutOfBoundsException("popLocal was expecting " + (nextLocal - size ) + " but got " + local + " instead!");
+        }
+        
+        if (size > 1) {
+            nextLocal--;
+            localTypes.remove(nextLocal);
+        }
+
+        nextLocal--;
+        localTypes.remove(nextLocal);
+    }
+
+    /**
+     * load a value onto the stack from a local var slot which can obtained from a call to newLocal or
+     * from a lcoal variable table entry.
+     * @param local the slot to load from
+     */
+
+    public void loadLocal(int local)
+    {
+        Type type = (Type)localTypes.get(local);
+        visitVarInsn(type.getOpcode(Opcodes.ILOAD), local);
+    }
+    /**
+     * save a value on the stack to a local var slot
+     * @param local the slot to save to
+     */
+
+    public void storeLocal(int local)
+    {
+        Type type = (Type)localTypes.get(local);
+        visitVarInsn(type.getOpcode(Opcodes.ISTORE), local);
+    }
+
+    public Type getLocalType(int local)
+    {
+        return (Type)localTypes.get(local);
+    }
+
+    /**
+     * ensure we allow enough room for any extra locals on the stack
+     * 
+     * @param maxStack
+     * @param maxLocals
+     */
+    public void visitMaxs(final int maxStack, final int maxLocals) {
+        if (localHighWater < maxLocals) {
+            localHighWater = maxLocals;
+        }
+        
+        mv.visitMaxs(maxStack, localHighWater);
+    }
+
+    private void dumpFrame(int nLocal, Object[] local, int nStack, Object[] stack)
+    {
+        StringBuffer buffer = new StringBuffer();
+        String sepr;
+        Label l = new Label();
+        visitLabel(l);
+        buffer.append("Frame ");
+        buffer.append(l.getOffset());
+        buffer.append("\n");
+        buffer.append("  locals ");
+        buffer.append(nLocal);
+        buffer.append("\n    ");
+        sepr = "";
+        for (int i = 0; i < nLocal; i++) {
+            buffer.append(sepr);
+            dumpType(buffer, local[i]);
+            sepr=",\n    ";
+        }
+        buffer.append("\n  stack ");
+        buffer.append(nStack);
+        buffer.append("\n    ");
+        sepr = "";
+        for (int i = 0; i < nStack; i++) {
+            buffer.append(sepr);
+            dumpType(buffer, stack[i]);
+            sepr=",\n    ";
+        }
+        System.out.println(buffer.toString());
+    }
+
+    private void dumpType(StringBuffer buffer, Object t)
+    {
+
+        if (t == Opcodes.TOP) {
+            buffer.append("TOP");
+        } else if (t == null) {
+            buffer.append("null");
+        } else if (t == Opcodes.INTEGER) {
+            buffer.append("int");
+        } else if (t == Opcodes.FLOAT) {
+            buffer.append("float");
+        } else if (t == Opcodes.DOUBLE) {
+            buffer.append("double");
+        } else if (t == Opcodes.LONG) {
+            buffer.append("long");
+        } else if (t == Opcodes.NULL) {
+            buffer.append("null");
+        } else if (t == Opcodes.UNINITIALIZED_THIS) {
+            buffer.append("uninit_this");
+        } else if (t instanceof String) {
+            buffer.append((String)t);
+        } else {
+            buffer.append(((Label)t).getOffset());
+        }
+    }
+
+    public void visitFrame(
+        final int type,
+        final int nLocal,
+        final Object[] local,
+        final int nStack,
+        final Object[] stack)
+    {
+        if (type != Opcodes.F_NEW) { // uncompressed frame
+            throw new IllegalStateException("ClassReader.accept() should be called with EXPAND_FRAMES flag");
+        }
+
+        // dumpFrame(nLocal, local, nStack, stack);
+
+        // adjust the local types array
+
+        int toRemove = localTypes.size();
+
+        for (int i = toRemove; i > 0; i--) {
+            localTypes.remove(i - 1);
+        }
+
+        for (int i = 0; i < nLocal; i++) {
+            Object t = local[i];
+            if (t == Opcodes.TOP) {
+                // ignore
+            } else if (t == null) {
+                localTypes.add(null);
+            } else if (t == Opcodes.INTEGER) {
+                localTypes.add(Type.INT_TYPE);
+            } else if (t == Opcodes.FLOAT) {
+                localTypes.add(Type.FLOAT_TYPE);
+            } else if (t == Opcodes.DOUBLE) {
+                localTypes.add(Type.DOUBLE_TYPE);
+            } else if (t == Opcodes.LONG) {
+                localTypes.add(Type.LONG_TYPE);
+            } else if (t == Opcodes.NULL) {
+                localTypes.add(null);
+            } else if (t == Opcodes.UNINITIALIZED_THIS) {
+                localTypes.add(null);
+            } else if (t instanceof String) {
+                localTypes.add(Type.getObjectType((String)t));
+            } else {
+                localTypes.add(null);
+            }
+        }
+        
+        nextLocal = nLocal;
+
+        mv.visitFrame(type, nLocal, local, nStack, stack);
     }
 }

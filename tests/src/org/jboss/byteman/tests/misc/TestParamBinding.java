@@ -42,16 +42,16 @@ public class TestParamBinding extends Test
         String result;
 
         try {
-            log("calling TestThrowBinding.triggerMethod(0)");
+            log("calling TestParamBinding.triggerMethod(0)");
             result = triggerMethod(0);
-            log("called TestThrowBinding.triggerMethod(0) ==> " + result);
+            log("called TestParamBinding.triggerMethod(0) ==> " + result);
         } catch (Exception e) {
             log(e);
         }
         try {
-            log("calling TestThrowBinding.triggerMethod(1)");
+            log("calling TestParamBinding.triggerMethod(1)");
             result = triggerMethod(1);
-            log("called TestThrowBinding.triggerMethod(1) ==> " + result);
+            log("called TestParamBinding.triggerMethod(1) ==> " + result);
         } catch (Exception e) {
             log(e);
         }
@@ -61,7 +61,7 @@ public class TestParamBinding extends Test
 
     public String triggerMethod(int i) throws Exception
     {
-        log("inside TestThrowBinding.triggerMethod()");
+        log("inside TestParamBinding.triggerMethod()");
         if (i == 0) {
             return "" + i;
         } else {
@@ -72,16 +72,16 @@ public class TestParamBinding extends Test
 
     @Override
     public String getExpected() {
-        logExpected("calling TestThrowBinding.triggerMethod(0)");
-        logExpected("inside TestThrowBinding.triggerMethod()");
+        logExpected("calling TestParamBinding.triggerMethod(0)");
+        logExpected("inside TestParamBinding.triggerMethod()");
         logExpected("triggerMethod : triggered with 1 params");
         logExpected("triggerMethod : $*[1] = 0");
-        logExpected("called TestThrowBinding.triggerMethod(0) ==> 0");
-        logExpected("calling TestThrowBinding.triggerMethod(1)");
-        logExpected("inside TestThrowBinding.triggerMethod()");
+        logExpected("called TestParamBinding.triggerMethod(0) ==> 0");
+        logExpected("calling TestParamBinding.triggerMethod(1)");
+        logExpected("inside TestParamBinding.triggerMethod()");
         logExpected("triggerMethod : triggered with 1 params");
         logExpected("triggerMethod : $*[1] = 1");
-        logExpected("called TestThrowBinding.triggerMethod(1) ==> 2");
+        logExpected("called TestParamBinding.triggerMethod(1) ==> 2");
 
         return super.getExpected();
     }

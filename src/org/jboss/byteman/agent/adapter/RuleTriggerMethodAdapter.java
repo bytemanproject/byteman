@@ -42,7 +42,7 @@ import java.io.PrintStream;
 /**
  * class which provides base functionality extended by all the location-specific method trigger adapters
  */
-public class RuleTriggerMethodAdapter extends RuleMethodAdapter
+public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
 {
     RuleTriggerMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
     {
@@ -53,12 +53,26 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         this.returnType = Type.getReturnType(descriptor);
         this.argumentTypes = Type.getArgumentTypes(descriptor);
         this.argLocalIndices = new int[argumentTypes.length];
-        this.bindingsDone = false;
         this.bindReturnOrThrowableValue = false;
+        this.bindInvokeParams = false;
+        this.bindingIndicesSet =  false;
+    }
+
+    /**
+     * method overridden by AT INVOKE method adapter allowing types for the invoked method owner,
+     * parameters and return value to be identified. this default version should never get invoked
+     * @return an array containing the types of the invoked method owner, parameters and return value
+     */
+    public Type[] getInvokedTypes()    {
+        throw new RuntimeException("RuleTriggerMethodAdapter.getInvokedTypes() : should never get called!");
     }
 
     private void setBindingIndices()
     {
+        if (bindingIndicesSet) {
+            return;
+        }
+
         Bindings bindings = rule.getBindings();
         Iterator<Binding> iterator = bindings.iterator();
         List<Binding> aliasBindings = new ArrayList<Binding>();
@@ -115,7 +129,7 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                 saveValueType = returnType;
                 callArrayBindings.add(binding);
             } else if (binding.isThrowable()) {
-                // in order to be able to add the return value or throwabel value to the args array
+                // in order to be able to add the return value or throwable value to the args array
                 // we have to add a local var to store the value so track that requirement
                 bindReturnOrThrowableValue = true;
                 // TODO -- allow type to be more accurately identified than this
@@ -123,6 +137,11 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                 callArrayBindings.add(binding);
             } else if (binding.isParamCount() || binding.isParamArray()) {
                 callArrayBindings.add(binding);
+            } else if (binding.isInvokeParamArray()) {
+                // in order to be able to ad th einvoke parameters to the args array we
+                // have to add a local var to store the value so track that requirement
+                callArrayBindings.add(binding);
+                bindInvokeParams = true;
             }
         }
         // we don't have to do this but it makes debugging easier
@@ -180,6 +199,16 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                             // param array vars precede all remaining types
                             return -1;
                         }
+                    } else if (b1.isInvokeParamArray()){
+                        if (b2.isParam() || b2.isLocalVar() || b2.isParamCount() || b2.isParamArray()) {
+                            // param, local and param count and param array bindings precede invoke param array
+                            return 1;
+                        } else if (b2.isInvokeParamArray()) {
+                            return 0;
+                        } else {
+                            // invoke param array vars precede all remaining types
+                            return -1;
+                        }
                     } else {
                         // return var always sorts last
                         return 1;
@@ -195,6 +224,8 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         for (int i = 0; i < n; i++) {
             callArrayBindings.get(i).setCallArrayIndex(i);
         }
+
+        bindingIndicesSet = true;
     }
 
     private Binding alias(Binding binding, Bindings bindings, int localIdx)
@@ -240,30 +271,136 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
 
     private int doReturnOrThrowSave()
     {
-        // ensure all the bindings have been processed
-        
-        if (!bindingsDone) {
-            setBindingIndices();
-            bindingsDone = true;
-        }
+        // allocate a slot for the return or throwable on top of the stack
+        // stash the value into the slot and return the slot idx
 
-        // if we need to save the return or throwable value then allocate a slot for it now
-        // stash the value into the slot and return the slot idx otherwise return
-        // an invalid idx
-
-        if (bindReturnOrThrowableValue) {
-            int saveValueSlot = newLocal(saveValueType);
-            if (saveValueType.getSize() == 2) {
-                visitInsn(Opcodes.DUP2);
-            } else {
-                visitInsn(Opcodes.DUP);
-            }
-            storeLocal(saveValueSlot);
-
-            return saveValueSlot;
+        int saveValueSlot = newLocal(saveValueType);
+        if (saveValueType.getSize() == 2) {
+            visitInsn(Opcodes.DUP2);
         } else {
-            return -1;
+            visitInsn(Opcodes.DUP);
         }
+        storeLocal(saveValueSlot);
+
+        return saveValueSlot;
+    }
+
+    private int doInvokeBindingsSave()
+    {
+        // allocate a slot for the invoke parameters array,
+        // construct the array
+        // stash it into the slot and return the slot idx
+
+        Type objectType = Type.getType(Object.class);
+        Type objectArrayType = Type.getType("[Ljava/lang/Object;");
+        Type[] invokeParamTypes = getInvokedTypes();
+        // n.b. ignore return type on end of type array
+        int savedValueCount = invokeParamTypes.length - 1;
+
+        // create the array and save it in a local var slot
+
+        int arrayValueSlot = newLocal(objectArrayType);
+        push(savedValueCount);
+        newArray(objectType);
+        storeLocal(arrayValueSlot);
+
+        // pop the arguments off the stack into the invoke parameters array
+        // n.b. the top one is the last parameter
+
+        for (int i = savedValueCount - 1; i >= 0; i--) {
+            Type type = invokeParamTypes[i];
+            if (type != null) {
+                // convert value to object if needed
+                box(type);
+                // load array and  swap under value
+                loadLocal(arrayValueSlot);
+                swap(objectArrayType, objectType);
+                // load index and swap under value
+                push(i);
+                swap(Type.INT_TYPE, objectType);
+            } else {
+                // this is a static method and index is 0 so we install null in the array
+                // load array index and then null
+                loadLocal(arrayValueSlot);
+                push(i);
+                push((Type)null);
+            }
+            // store the value in the array as an object
+            arrayStore(objectType);
+        }
+
+        // now restore the arguments from the array in increasing order
+
+        for (int i = 0; i < savedValueCount; i++) {
+            Type type = invokeParamTypes[i];
+            if (type != null) {
+                // load the array, retrieve the object and unbox if needed
+                loadLocal(arrayValueSlot);
+                push(i);
+                arrayLoad(objectType);
+                //if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
+                    unbox(type);
+                //}
+            } else {
+                // this is a static method so no target instance to stack
+            }
+        }
+
+/*
+        // pop each argument into a local var slot so we can restore it later
+        int argSlots[] = new int[savedValueCount];
+        // n.b. count down because args are on stack in reverse order
+        for (int i = savedValueCount - 1; i >= 0; i--) {
+            Type paramType = invokeParamTypes[i];
+            if (paramType == null) {
+                // recipient of static method no need to allocate slot
+            } else {
+                int argSlot = newLocal(paramType);
+                argSlots[i] = argSlot;
+                storeLocal(argSlot);
+            }
+        }
+
+        // now reload the saved values and insert them into the object array
+
+        for (int i = 0; i < savedValueCount; i++) {
+            loadLocal(arrayValueSlot);
+            push(i);
+            Type paramType = invokeParamTypes[i];
+            if (paramType == null) {
+                // recipient of static method no need to allocate slot just install a null
+                push((Type)null);
+            } else {
+                int argSlot = argSlots[i];
+                loadLocal(argSlot);
+                box(paramType);
+            }
+            arrayStore(objectType);
+        }
+
+        // now restack the arguments in increasing order
+        
+        for (int i = 0; i < savedValueCount; i++) {
+            Type paramType = invokeParamTypes[i];
+            if (paramType == null) {
+                // recipient of static method no need to allocate slot just install a null
+                push((Type)null);
+            } else {
+                int argSlot = argSlots[i];
+                loadLocal(argSlot);
+            }
+        }
+        // release the local variable slots in reverse order of allocation
+
+        for (int i = 0; i < savedValueCount; i++) {
+            Type paramType = invokeParamTypes[i];
+            if (paramType != null) {
+                popLocal(argSlots[i]);
+            }
+        }
+*/
+
+        return arrayValueSlot;
     }
 
     /**
@@ -349,6 +486,8 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
                     box(argumentTypes[idx]);
                     arrayStore(objectType);
                 }
+            } else if (binding.isInvokeParamArray()){
+                loadLocal(saveSlot);
             } else if (binding.isThrowable() | binding.isReturn()){
                 loadLocal(saveSlot);
                 box(saveValueType);
@@ -465,8 +604,9 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
     private Type saveValueType;
     private int[] argLocalIndices;
     private List<Binding> callArrayBindings;
-    private boolean bindingsDone;
     private boolean bindReturnOrThrowableValue;
+    private boolean bindInvokeParams;
+    private boolean bindingIndicesSet;
 
     private CFG cfg;
 
@@ -916,7 +1056,23 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         Label startLabel = newLabel();
         Label endLabel = newLabel();
         visitTriggerStart(startLabel);
-        int saveValueSlot = doReturnOrThrowSave();
+
+        // ensure binding indices have been installed
+        
+        setBindingIndices();
+
+        // a local var slot to store a value for $! (AT RETURN), $^ (AT THROW) or $@ (AT INVOKE)
+        // note that only one of these can appear in any given rule so we only need one slot
+
+        int saveValueSlot;
+
+        if (bindReturnOrThrowableValue) {
+            saveValueSlot = doReturnOrThrowSave();
+        } else if (bindInvokeParams) {
+            saveValueSlot = doInvokeBindingsSave();
+        } else {
+            saveValueSlot = -1;
+        }
         push(key);
         if ((access & Opcodes.ACC_STATIC) == 0) {
             loadThis();
@@ -925,6 +1081,10 @@ public class RuleTriggerMethodAdapter extends RuleMethodAdapter
         }
         boolean handleUpdates;
         handleUpdates = doArgLoad(saveValueSlot);
+        // free the local slot if we need to
+        if (saveValueSlot >= 0) {
+            popLocal(saveValueSlot);
+        }
         invokeStatic(ruleType, method);
         // if the rule can modify local variables then generate code to perform the update
         if (handleUpdates) {

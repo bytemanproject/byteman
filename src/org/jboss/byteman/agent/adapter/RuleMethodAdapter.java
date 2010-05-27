@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.agent.adapter;
 
+import org.objectweb.asm.MethodAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Label;
 import org.jboss.byteman.rule.Rule;
@@ -38,9 +39,9 @@ import java.util.List;
  */
 
 // public class RuleMethodAdapter extends GeneratorAdapter {
-public class RuleMethodAdapter extends RuleGeneratorAdapter {
+public class RuleMethodAdapter extends MethodAdapter {
     public RuleMethodAdapter(final MethodVisitor mv, final TransformContext transformContext, final int access, final String name, final String desc) {
-        super(mv, access, name, desc);
+        super(mv);
         this.access = access;
         this.name = name;
         this.descriptor = desc;

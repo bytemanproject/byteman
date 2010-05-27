@@ -207,6 +207,8 @@ public class ExpressionHelper
                     expr = new DollarExpression(rule, Type.I, exprTree, DollarExpression.PARAM_COUNT_IDX);
                 } else if (text.equals("$*")) {
                     expr = new DollarExpression(rule, rule.getTypeGroup().createArray(Type.OBJECT), exprTree, DollarExpression.PARAM_ARRAY_IDX);
+                } else if (text.equals("$@")) {
+                    expr = new DollarExpression(rule, rule.getTypeGroup().createArray(Type.OBJECT), exprTree, DollarExpression.INVOKE_PARAM_ARRAY_IDX);
                 } else {
                     expr = new DollarExpression(rule, type, exprTree, text.substring(1));
                 }
@@ -427,6 +429,8 @@ public class ExpressionHelper
                         expr = new DollarExpression(rule, Type.I, exprTree, DollarExpression.PARAM_COUNT_IDX);
                     } else if (child1.getText().equals("*")) {
                         expr = new DollarExpression(rule, rule.getTypeGroup().createArray(Type.OBJECT), exprTree, DollarExpression.PARAM_ARRAY_IDX);
+                    } else if (child1.getText().equals("@")) {
+                        expr = new DollarExpression(rule, rule.getTypeGroup().createArray(Type.OBJECT), exprTree, DollarExpression.INVOKE_PARAM_ARRAY_IDX);
                     } else {
                         expr = new DollarExpression(rule, type, exprTree, child1.getText());
                     }
@@ -650,6 +654,8 @@ public class ExpressionHelper
                     expr = new DollarExpression(rule, Type.I, exprTree, DollarExpression.PARAM_COUNT_IDX);
                 } else if (text.equals("$*")) {
                     expr = new DollarExpression(rule, rule.getTypeGroup().createArray(Type.OBJECT), exprTree, DollarExpression.PARAM_ARRAY_IDX);
+                } else if (text.equals("$@")) {
+                    expr = new DollarExpression(rule, rule.getTypeGroup().createArray(Type.OBJECT), exprTree, DollarExpression.INVOKE_PARAM_ARRAY_IDX);
                 } else {
                     expr = new DollarExpression(rule, type, exprTree, text.substring(1));
                 }

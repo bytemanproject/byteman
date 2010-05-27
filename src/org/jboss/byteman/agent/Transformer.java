@@ -304,6 +304,7 @@ public class Transformer implements ClassFileTransformer {
             if (newBuffer != classfileBuffer) {
                 // see if we need to dump the transformed bytecode for checking
                 maybeDumpClass(internalName, newBuffer);
+                newBuffer = maybeVerifyTransformedBytes(originalLoader, internalName, protectionDomain, newBuffer);
                 return newBuffer;
             } else {
                 return null;
@@ -401,6 +402,12 @@ public class Transformer implements ClassFileTransformer {
      * will be gettable/settable via a client using the LISTSYSPROPS and SETSYSPROPS commands.
      */
     public static final String SYSPROPS_STRICT_MODE = BYTEMAN_PACKAGE_PREFIX + "sysprops.strict";
+
+    /**
+     * system property which enables the restriction that only byteman specific system properties
+     * will be gettable/settable via a client using the LISTSYSPROPS and SETSYSPROPS commands.
+     */
+    public static final String VERIFY_TRANSFORMED_BYTES = BYTEMAN_PACKAGE_PREFIX + "verify.transformed.bytes";
 
     /**
      * system property which determines whether or not byteman configuration can be updated at runtime
@@ -639,7 +646,7 @@ public class Transformer implements ClassFileTransformer {
 
         ClassReader cr = new ClassReader(targetClassBytes);
         // need to provide a real writer here so that labels get resolved
-        ClassWriter dummy = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        ClassWriter dummy = getNonLoadingClassWriter(ClassWriter.COMPUTE_MAXS);
         RuleCheckAdapter checkAdapter = handlerLocation.getRuleCheckAdapter(dummy, transformContext);
         try {
             cr.accept(checkAdapter, ClassReader.EXPAND_FRAMES);
@@ -655,7 +662,7 @@ public class Transformer implements ClassFileTransformer {
                 System.out.println("org.jboss.byteman.agent.Transformer : possible trigger for rule " + ruleScript.getName() + " in class " + className);
             }
             cr = new ClassReader(targetClassBytes);
-            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+            ClassWriter cw = getNonLoadingClassWriter(ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
             RuleTriggerAdapter adapter = handlerLocation.getRuleAdapter(cw, transformContext);
             try {
                 cr.accept(adapter, ClassReader.EXPAND_FRAMES);
@@ -888,6 +895,72 @@ public class Transformer implements ClassFileTransformer {
     }
 
     /**
+     * classloader used by transformer when verification is switched on to detect errors in transformed bytecode 
+     */
+
+    private class VerifyLoader extends ClassLoader
+    {
+        public VerifyLoader(ClassLoader parent)
+        {
+            super(parent);
+        }
+
+        /**
+         * use the supplied bytes to define a class and try creating an instance via the empty constructor
+         * printing details of any errors which occur
+         * @param classname
+         * @param protectionDomain
+         * @param bytes
+         * @return the bytes if all goes well otherwise null
+         */
+        public byte[] verify(String classname, ProtectionDomain protectionDomain, byte[] bytes)
+        {
+            try {
+                Class clazz = super.defineClass(classname, bytes, 0, bytes.length, protectionDomain);
+                clazz.newInstance();
+            } catch (Throwable th) {
+                System.out.println("Transformer:verifyTransformedBytes " + th);
+                return null;
+            }
+            return bytes;
+        }
+    }
+
+    /**
+     * return the result from calling verifyTransformedBytes if verification is enabled otherwise just return
+     * the supplied bytecode
+     * @param loader
+     * @param classname
+     * @param protectionDomain
+     * @param bytes
+     * @return
+     */
+    private byte[] maybeVerifyTransformedBytes(ClassLoader loader, String classname, ProtectionDomain protectionDomain, byte[] bytes)
+    {
+        if (verifyTransformedBytes) {
+            return verifyTransformedBytes(loader, classname, protectionDomain, bytes);
+        } else {
+            return bytes;
+        }
+    }
+
+    /**
+     * verify the supplied bytecode by converting it to a class and calling newInstance with no args to instantiate.
+     * since not all transformed classes have an empty constructor this should only be enabled for testing of Byteman
+     * itself in cases where a transformed class is known to have an empty constructor.
+     * @param loader
+     * @param classname
+     * @param protectionDomain
+     * @param bytes
+     * @return the supplied bytecode if verification succeeds or null if it fails
+     */
+    private byte[] verifyTransformedBytes(ClassLoader loader, String classname, ProtectionDomain protectionDomain, byte[] bytes)
+    {
+        VerifyLoader verifyLoader =  new VerifyLoader(loader);
+        return verifyLoader.verify(classname, protectionDomain, bytes);
+    }
+
+    /**
      * test whether a class with a given name is located in the byteman package
      * @param className
      * @return true if a class is located in the byteman package otherwise return false
@@ -974,6 +1047,12 @@ public class Transformer implements ClassFileTransformer {
     private static boolean transformAll = computeTransformAll();
 
     /**
+     * switch to control whether we attempt to verify transformed bytecode before returning it by
+     * consructing a temporary class from it.
+     */
+    private static boolean verifyTransformedBytes = computeVerifyTransformedBytes();
+
+    /**
      * master switch which determines whether or not config values can be updated
      */
     private static boolean allowConfigUpdate = (System.getProperty(ALLOW_CONFIG_UPDATE) != null);
@@ -1045,6 +1124,11 @@ public class Transformer implements ClassFileTransformer {
     private static boolean computeTransformAll()
     {
         return System.getProperty(TRANSFORM_ALL) != null || System.getProperty(TRANSFORM_ALL_COMPATIBILITY) != null;
+    }
+
+    private static boolean computeVerifyTransformedBytes()
+    {
+        return System.getProperty(VERIFY_TRANSFORMED_BYTES) != null;
     }
 
     private void checkConfiguration(String property)
@@ -1199,4 +1283,23 @@ public class Transformer implements ClassFileTransformer {
     private final static Integer DISABLED_USER = new Integer(0);
     private final static Integer DISABLED = new Integer(1);
     private final static Integer ENABLED = null;
+
+    /**
+     * get a class writer which will not attempt to load classes.The default classwriter tries this when a
+     * reference type local var frame slot aligns with a slot of reference type in a successor block's
+     * frame. This is merely so it can optimize a slot out of the frame change set in the special case where
+     * f1[slot].type < f2[slot].type or vice versa by using whichever is the maximal class. We avoid classloading
+     * by returning class Object. 
+     * @param flags
+     * @return
+     */
+    private ClassWriter getNonLoadingClassWriter(int flags)
+    {
+        return new ClassWriter(flags) {
+            protected String getCommonSuperClass(final String type1, final String type2) {
+                // if we always return Object we cannot go wrong
+                return "java/lang/Object"; 
+            }
+        };
+    }
 }

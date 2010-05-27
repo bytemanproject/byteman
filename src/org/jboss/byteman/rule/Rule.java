@@ -567,7 +567,7 @@ public class Rule
                 binding.setType(typeGroup.ensureType(Throwable.class));
             } else if (binding.isParamCount()) {
                 binding.setType(Type.I);
-            } else if (binding.isParamArray()) {
+            } else if (binding.isParamArray() || binding.isInvokeParamArray()) {
                 binding.setType(Type.OBJECT.arrayType());
             }
         }
