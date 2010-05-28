@@ -1971,6 +1971,36 @@ public class Helper
         return rule.getName();
     }
 
+    // lifecycle management
+
+    public static void activated()
+    {
+        if (Transformer.isDebug()) {
+            System.out.println("Default helper activated");
+        }
+    }
+
+    public static void deactivated()
+    {
+        if (Transformer.isDebug()) {
+            System.out.println("Default helper deactivated");
+        }
+    }
+
+    public static void installed(Rule rule)
+    {
+        if (Transformer.isDebug()) {
+            System.out.println("Installed rule using default helper : " + rule.getName());
+        }
+    }
+
+    public static void uninstalled(Rule rule)
+    {
+        if (Transformer.isDebug()) {
+            System.out.println("Uninstalled rule using default helper : " + rule.getName());
+        }
+    }
+
     //  private and protected implementation
 
     private StackTraceElement[] stack = null;

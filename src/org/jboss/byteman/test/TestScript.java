@@ -319,7 +319,7 @@ public class TestScript
                 // ok, not necessarily a surprise - let's see if we can create a rule and parse/type check it
                 final Rule rule;
                 try {
-                    rule = Rule.create(script, loader);
+                    rule = Rule.create(script, loader, null);
                 } catch (ParseException pe) {
                     System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                     parseErrorCount++;
@@ -417,7 +417,7 @@ public class TestScript
                         // we need a new copy of the rule
 
                         try {
-                            rule = Rule.create(script, loader);
+                            rule = Rule.create(script, loader, null);
                         } catch (ParseException e) {
                             // will not happen
                         } catch (TypeException e) {

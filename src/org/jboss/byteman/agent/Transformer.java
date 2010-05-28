@@ -61,6 +61,7 @@ public class Transformer implements ClassFileTransformer {
         this.isRedefine = isRedefine;
         scriptRepository = new ScriptRepository(skipOverrideRules());
         loadCache = new LoadCache(inst);
+        helperManager = new HelperManager(inst);
 
         Iterator<String> scriptsIter = scriptTexts.iterator();
         Iterator<String> filesIter = scriptPaths.iterator();
@@ -601,6 +602,17 @@ public class Transformer implements ClassFileTransformer {
 
     /* implementation */
 
+    /**
+     * The routine which actually does the real bytecode transformation. this is public because it needs to be
+     * callable form the type checker script. In normal running the javaagent is the only class which has a handle
+     * on the registered transformer so it is the only one which can reach this point.
+     * @param ruleScript
+     * @param loader
+     * @param className
+     * @param classBeingRedefined
+     * @param targetClassBytes
+     * @return
+     */
     public byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
     {
         final String targetMethodSpec = ruleScript.getTargetMethod();
@@ -621,7 +633,8 @@ public class Transformer implements ClassFileTransformer {
 //            }
 //        }
 
-        TransformContext transformContext = new TransformContext(ruleScript, className, targetMethodSpec, loader);
+        TransformContext transformContext = new TransformContext(ruleScript, className, targetMethodSpec, loader, helperManager);
+        
         String ruleName = ruleScript.getName();
         try {
             transformContext.parseRule();
@@ -993,6 +1006,11 @@ public class Transformer implements ClassFileTransformer {
      */
 
     protected final LoadCache loadCache;
+
+    /**
+     * a manager for helper lifecycle events which can be safely handed on to rules
+     */
+    protected final HelperManager helperManager;
 
     /* configuration values defined via system property settings */
 

@@ -33,7 +33,6 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.*;
 
 import java.lang.reflect.Constructor;
-import java.util.HashMap;
 import java.util.Iterator;
 
 /**

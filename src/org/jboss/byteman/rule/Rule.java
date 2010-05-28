@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.rule;
 
+import org.jboss.byteman.agent.HelperManager;
 import org.jboss.byteman.rule.type.TypeGroup;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.*;
@@ -144,7 +145,12 @@ public class Rule
 
     private String key;
 
-    private Rule(RuleScript ruleScript, ClassLoader loader)
+    /**
+     * lifecycle event manager for rule helpers
+     */
+    private HelperManager helperManager;
+
+    private Rule(RuleScript ruleScript, ClassLoader loader, HelperManager helperManager)
             throws ParseException, TypeException, CompileException
     {
         ParseNode ruleTree;
@@ -161,6 +167,8 @@ public class Rule
         triggerDescriptor = null;
         triggerAccess = 0;
         returnType = null;
+        // this is only set when the rule is created via a real installed transformer
+        this.helperManager =  helperManager;
         ECAGrammarParser parser = null;
         try {
             String file = getFile();
@@ -282,10 +290,10 @@ public class Rule
         return loader;
     }
 
-    public static Rule create(RuleScript ruleScript, ClassLoader loader)
+    public static Rule create(RuleScript ruleScript, ClassLoader loader, HelperManager helperManager)
             throws ParseException, TypeException, CompileException
     {
-            return new Rule(ruleScript, loader);
+            return new Rule(ruleScript, loader, helperManager);
     }
 
     public void setEvent(String eventSpec) throws ParseException, TypeException
@@ -420,6 +428,7 @@ public class Rule
                 typeCheck();
                 compile();
                 checked = true;
+                installed();
             } catch (TypeException te) {
                 checkFailed = true;
                 StringWriter stringWriter = new StringWriter();
@@ -710,6 +719,9 @@ public class Rule
     public void purge()
     {
         ruleKeyMap.remove(key);
+        if (checked) {
+            uninstalled();
+        }
     }
 
     /**
@@ -809,4 +821,23 @@ public class Rule
      * flag true if debugging of rule parsing is desired and false if it should not be performed
      */
     private static boolean debugParse = (System.getProperty("org.jboss.byteman.rule.debug") != null ? true : false);
+
+    /**
+     * method called when the rule has been successfully injected into a class, type checked and compiled. it passes
+     * the message on to the Transformer so it can perform helper lifecycle management.
+     */
+    private void installed()
+    {
+        helperManager.installed(this);
+    }
+
+    /**
+     * method called when the rule has been uninstalled after previously being successfully injected into a class,
+     * type checked and compiled. it passes the message on to the Transformer so it can perform helper lifecycle
+     * management.
+     */
+    private void uninstalled()
+    {
+        helperManager.uninstalled(this);
+    }
 }

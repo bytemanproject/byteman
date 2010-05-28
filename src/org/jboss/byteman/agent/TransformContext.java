@@ -40,8 +40,9 @@ public class TransformContext
     private String targetMethodName;
     private String targetDescriptor;
     private ClassLoader loader;
+    HelperManager helperManager;
 
-    public TransformContext(RuleScript ruleScript, String triggerClass, String targetMethodSpec, ClassLoader loader)
+    public TransformContext(RuleScript ruleScript, String triggerClass, String targetMethodSpec, ClassLoader loader, HelperManager helperManager)
     {
         this.ruleScript =  ruleScript;
         this.triggerClass =  triggerClass;
@@ -49,13 +50,14 @@ public class TransformContext
         this.targetDescriptor = TypeHelper.parseMethodDescriptor(targetMethodSpec);
         this.loader = loader;
         this.ruleMap = new HashMap<String, Rule>();
+        this.helperManager = helperManager;
 
     }
 
     public void parseRule() throws Throwable
     {
         try {
-            Rule rule = Rule.create(ruleScript, loader);
+            Rule rule = Rule.create(ruleScript, loader, helperManager);
             // stash this rule away under the class name so we can reuse it for the first matching method
             ruleMap.put(triggerClass, rule);
         } catch (Throwable th) {
@@ -78,7 +80,7 @@ public class TransformContext
 
         if (rule == null) {
             try {
-                rule = Rule.create(ruleScript, loader);
+                rule = Rule.create(ruleScript, loader, helperManager);
             } catch(Throwable th) {
                 //  will not happen
             }

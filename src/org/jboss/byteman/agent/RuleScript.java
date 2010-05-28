@@ -25,13 +25,9 @@ package org.jboss.byteman.agent;
 
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.type.TypeHelper;
-import org.jboss.byteman.rule.exception.ParseException;
-import org.jboss.byteman.rule.exception.TypeException;
-import org.jboss.byteman.rule.exception.CompileException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.HashMap;
 import java.io.StringWriter;
 import java.io.PrintWriter;
 

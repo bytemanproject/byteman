@@ -25,9 +25,7 @@
 package org.jboss.byteman.agent;
 
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.lang.reflect.Method;
-import java.lang.instrument.Instrumentation;
 
 /**
  * Class to manage indexing and lookup of rule scripts by rule name and by either class or interface name
