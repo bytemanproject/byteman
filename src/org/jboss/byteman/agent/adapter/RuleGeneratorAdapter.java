@@ -1576,7 +1576,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
         for (int i = 0; i < nLocal; i++) {
             Object t = local[i];
             if (t == Opcodes.TOP) {
-                // ignore
+                localTypes.add(Type.getType(Object.class));
             } else if (t == null) {
                 localTypes.add(null);
             } else if (t == Opcodes.INTEGER) {
