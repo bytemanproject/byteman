@@ -48,7 +48,7 @@ public class SynchronizeCheckAdapter extends RuleCheckAdapter
         final String[] exceptions)
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if (matchTargetMethod(name, desc)) {
+        if ((access & (Opcodes.ACC_NATIVE|Opcodes.ACC_ABSTRACT|Opcodes.ACC_SYNTHETIC)) == 0 && matchTargetMethod(name, desc)) {
             return new SynchronizeCheckMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
         }
 
