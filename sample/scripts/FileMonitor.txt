@@ -77,23 +77,10 @@ ENDRULE
 
 RULE FileMonitor trace FileOutputStream create from File
 CLASS java.io.FileOutputStream
-METHOD <init>(java.io.File)
+METHOD <init>(java.io.File, boolean)
 AT RETURN
 IF TRUE
-DO traceStack("*** Opened " + $1.getPath() + " for write in thread " + Thread.currentThread().getName() + "\n", 10)
-ENDRULE
-
-########################################################################
-#
-# Rule to trace create of file output stream from String
-#
-
-RULE FileMonitor trace FileOutputStream create from String
-CLASS java.io.FileOutputStream
-METHOD <init>(String, boolean)
-AT RETURN
-IF TRUE
-DO traceStack("*** Opened " + $1 + " for " + ($2 ? "write" : "append") +" in thread " + Thread.currentThread().getName() + "\n", 10)
+      DO traceStack("*** Opened " + $1.getPath() + " for " + ($2 ? "write" : "append") +" in thread " + Thread.currentThread().getName() + "\n", 10)
 ENDRULE
 
 ########################################################################
@@ -103,7 +90,7 @@ ENDRULE
 
 RULE FileMonitor trace FileOutputStream close
 CLASS java.io.FileOutputStream
-METHOD <init>(String, boolean)
+METHOD close()
 AT RETURN
 IF TRUE
 DO traceStack("*** Closed " + $0 + " in thread " + Thread.currentThread().getName() + "\n", 10)
