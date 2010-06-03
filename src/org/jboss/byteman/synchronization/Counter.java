@@ -39,22 +39,38 @@ public class Counter
         this.count = count;
     }
 
-    public synchronized int count()
+    /**
+     * for backwards compatibility
+     * @return
+     */
+    public int count()
     {
+        return count(false);
+    }
+
+    public synchronized int count(boolean zero)
+    {
+        int result = count;
+        if (zero) {
+            count = 0;
+        }
+        return result;
+    }
+
+    public int increment()
+    {
+        return increment(1);
+    }
+
+    public synchronized int increment(int amount)
+    {
+        count += amount;
+
         return count;
     }
 
-    public synchronized int increment()
+    public int decrement()
     {
-        count++;
-
-        return count;
-    }
-
-    public synchronized int decrement()
-    {
-        count--;
-
-        return count;
+        return increment(-1);
     }
 }

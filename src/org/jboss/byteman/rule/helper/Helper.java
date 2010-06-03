@@ -825,10 +825,22 @@ public class Helper
     /**
      * read the value of the counter associated with given identifier, creating a new one with count zero
      * if none exists
-     * @param o the identifier for the coounter
+     * @param o the identifier for the counter
      * @return the value of the counter
      */
     public int readCounter(Object o)
+    {
+        return readCounter(o, false);
+    }
+
+    /**
+     * read and optionally reset to zero the value of the counter associated with given identifier, creating
+     * a new one with count zero if none exists
+     * @param o the identifier for the counter
+     * @param zero if true then zero the counter
+     * @return the value of the counter
+     */
+    public int readCounter(Object o, boolean zero)
     {
         synchronized (counterMap) {
             Counter counter = counterMap.get(o);
@@ -836,35 +848,40 @@ public class Helper
                 counter = new Counter();
                 counterMap.put(o, counter);
             }
-            return counter.count();
+            return counter.count(zero);
         }
     }
 
     /**
      * increment the value of the counter associated with given identifier, creating a new one with count zero
      * if none exists
-     * @param o the identifier for the coounter
+     * @param o the identifier for the counter
      * @return the value of the counter after the increment
      */
     public int incrementCounter(Object o)
     {
-        synchronized (counterMap) {
-            Counter counter = counterMap.get(o);
-            if (counter == null) {
-                counter = new Counter();
-                counterMap.put(o, counter);
-            }
-            return counter.increment();
-        }
+        return incrementCounter(o, 1);
     }
 
     /**
      * decrement the value of the counter associated with given identifier, creating a new one with count zero
      * if none exists
-     * @param o the identifier for the coounter
+     * @param o the identifier for the counter
      * @return the value of the counter after the decrement
      */
     public int decrementCounter(Object o)
+    {
+        return incrementCounter(o, -1);
+    }
+
+    /**
+     * increment the value of the counter associated with given identifier by the given amount, creating a new one
+     * with count zero if none exists
+     * @param o the identifier for the counter
+     * @param amount the amount to add to the counter
+     * @return the value of the counter after the increment
+     */
+    public int incrementCounter(Object o, int amount)
     {
         synchronized (counterMap) {
             Counter counter = counterMap.get(o);
@@ -872,7 +889,7 @@ public class Helper
                 counter = new Counter();
                 counterMap.put(o, counter);
             }
-            return counter.decrement();
+            return counter.increment(amount);
         }
     }
 
