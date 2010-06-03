@@ -53,7 +53,7 @@ public class ThreadMonitorHelper extends Helper
 
         // find bottommost constructor invocation
         i++;
-        while (i < l && matchIndex(stack, "<init>", true, false, false, i, i+1) >= 0) {
+        while (i < l && matchIndex(stack, "<init>", false, false, false, i, i+1) >= 0) {
             i++;
         }
         if (i == l) {
@@ -195,7 +195,7 @@ public class ThreadMonitorHelper extends Helper
             return;
         }
 
-        int i = matchIndex(stack, "run", false, true, true, t, l);
+        int i = matchIndex(stack, "run", false, false, false, t, l);
         if (i < 0) {
             // illegal usage
             traceStack("ThreadMonitorHelper.traceRun : should only be triggered below Runnable.run\n", key);
