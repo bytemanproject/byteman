@@ -9,7 +9,7 @@ import java.lang.reflect.Modifier;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * class used to  manage lifecycle events for rule helpers
+ * class used to manage lifecycle events for rule helpers
  */
 public class HelperManager
 {
@@ -28,12 +28,18 @@ public class HelperManager
     public void installed(Rule rule)
     {
         Class helperClass = rule.getHelperClass();
+        if (Transformer.isVerbose()) {
+            System.out.println("HelperManager.install for helper class" + helperClass.getName());
+        }
         // synchronize on the lifecycle class to ensure it is not uninstalled
         // while we are deciding whether or not to install it
         synchronized (helperClass) {
             LifecycleDetails details;
             details = getDetails(helperClass, true);
             if (details.installCount == 0 && details.activated != null) {
+                if (Transformer.isVerbose()) {
+                    System.out.println("calling activated() for helper class" + helperClass.getName());
+                }
                 try {
                     details.activated.invoke(null);
                 } catch (IllegalAccessException e) {
@@ -45,6 +51,9 @@ public class HelperManager
                 }
             }
             if (details.installed != null) {
+                if (Transformer.isVerbose()) {
+                    System.out.println("calling installed(" + rule.getName() + ") for helper class" + helperClass.getName());
+                }
                 try {
                     if (details.installedTakesRule) {
                         details.installed.invoke(null, rule);
@@ -65,7 +74,10 @@ public class HelperManager
 
     public void uninstalled(Rule rule)
     {
-          Class helperClass = rule.getHelperClass();
+        Class helperClass = rule.getHelperClass();
+        if (Transformer.isVerbose()) {
+            System.out.println("HelperManager.uninstall for helper class" + helperClass.getName());
+        }
         // synchronize on the lifecycle class to ensure it is not uninstalled
         // while we are deciding whether or not to install it
         synchronized (helperClass) {
@@ -77,6 +89,9 @@ public class HelperManager
             }
             details.installCount--;
             if (details.uninstalled != null) {
+                if (Transformer.isVerbose()) {
+                    System.out.println("calling uninstalled(" + rule.getName() + ") for helper class" + helperClass.getName());
+                }
                 try {
                     if (details.uninstalledTakesRule) {
                         details.uninstalled.invoke(null, rule);
@@ -92,6 +107,9 @@ public class HelperManager
                 }
             }
             if (details.installCount == 0 && details.deactivated != null) {
+                if (Transformer.isVerbose()) {
+                    System.out.println("calling deactivated() for helper class" + helperClass.getName());
+                }
                 try {
                     details.deactivated.invoke(null);
                 } catch (IllegalAccessException e) {
