@@ -259,7 +259,8 @@ public class TestScript
                 // ok, we try transforming the actual class mentioned in the rule -- this may be an interface
                 // or an abstract class so we may not get any results out of the transform
 
-                bytes = transformer.transform(script, loader, targetClass.getName(), targetClass, bytes);
+                System.out.println("checking rule " + script.getName());
+                bytes = transformer.transform(script, loader, targetClass.getName(), bytes);
             }
 
             // see if we have a record of any transform
@@ -289,7 +290,7 @@ public class TestScript
                         continue;
                     }
 
-                    System.out.println("parsed rule \"" + script.getName() + "\"");
+                    System.out.println("parsed rule \"" + script.getName() + "\" for class " + transform.getInternalClassName());
 
                     if (verbose) {
                         System.out.println("# File " + script.getFile() + " line " + script.getLine());

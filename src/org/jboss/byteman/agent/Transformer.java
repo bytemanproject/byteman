@@ -233,12 +233,12 @@ public class Transformer implements ClassFileTransformer {
 
             // TODO -- there are almost certainly concurrency issues to deal with here if rules are being loaded/unloaded
 
-            newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalName, false);
+            newBuffer = tryTransform(newBuffer, internalName, loader, internalName, false);
 
             int dotIdx = internalName.lastIndexOf('.');
 
             if (dotIdx > 0) {
-                newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalName.substring(dotIdx + 1), false);
+                newBuffer = tryTransform(newBuffer, internalName, loader, internalName.substring(dotIdx + 1), false);
             }
 
             if (scriptRepository.checkInterfaces()) {
@@ -251,10 +251,10 @@ public class Transformer implements ClassFileTransformer {
                 for (int i = 0; i < interfaceCount; i++) {
                     String interfaceName = checker.getInterface(i);
                     String internalInterfaceName = TypeHelper.internalizeClass(interfaceName);
-                    newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalInterfaceName, true);
+                    newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName, true);
                     dotIdx = internalInterfaceName.lastIndexOf('.');
                     if (dotIdx >= 0) {
-                        newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, internalInterfaceName.substring(dotIdx + 1), true);
+                        newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName.substring(dotIdx + 1), true);
                     }
                 }
             }
@@ -277,10 +277,10 @@ public class Transformer implements ClassFileTransformer {
                         // TODO -- see if we can match and transform inner classes via the outer class
                     }
 
-                    newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, superName, false, true);
+                    newBuffer = tryTransform(newBuffer, internalName, loader, superName, false, true);
                     dotIdx = superName.lastIndexOf('.');
                     if (dotIdx > 0) {
-                        newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, superName.substring(dotIdx + 1), false, true);
+                        newBuffer = tryTransform(newBuffer, internalName, loader, superName.substring(dotIdx + 1), false, true);
                     }
 
                     int interfaceCount = checker.getInterfaceCount();
@@ -290,10 +290,10 @@ public class Transformer implements ClassFileTransformer {
                         // TODO -- do we ever find that a super declares an interface also declared by its subclass
                         // TODO -- we probably don't want to inject twice in such cases so we ought to remember whether
                         // TODO -- we have seen an interface before
-                        newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, interfaceName, true, true);
+                        newBuffer = tryTransform(newBuffer, internalName, loader, interfaceName, true, true);
                         dotIdx = interfaceName.lastIndexOf('.');
                         if (dotIdx >= 0) {
-                            newBuffer = tryTransform(newBuffer, internalName, loader, classBeingRedefined, interfaceName.substring(dotIdx + 1), true, true);
+                            newBuffer = tryTransform(newBuffer, internalName, loader, interfaceName.substring(dotIdx + 1), true, true);
                         }
                     }
 
@@ -609,11 +609,10 @@ public class Transformer implements ClassFileTransformer {
      * @param ruleScript
      * @param loader
      * @param className
-     * @param classBeingRedefined
      * @param targetClassBytes
      * @return
      */
-    public byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, Class classBeingRedefined, byte[] targetClassBytes)
+    public byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, byte[] targetClassBytes)
     {
         final String targetMethodSpec = ruleScript.getTargetMethod();
         final Location handlerLocation = ruleScript.getTargetLocation();
@@ -664,10 +663,10 @@ public class Transformer implements ClassFileTransformer {
         try {
             cr.accept(checkAdapter, ClassReader.EXPAND_FRAMES);
         } catch (Throwable th) {
-	    if (isVerbose()) {
-		System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + ruleScript.getName() + " to class " + className + "\n" + th);
-		th.printStackTrace(System.out);
-	    }
+            if (isVerbose()) {
+                System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + ruleScript.getName() + " to class " + className + "\n" + th);
+                th.printStackTrace(System.out);
+            }
             transformContext.recordFailedTransform(th);
             return targetClassBytes;
         }
@@ -706,7 +705,7 @@ public class Transformer implements ClassFileTransformer {
             transformContext.recordFailedTransform(error);
             return targetClassBytes;
         }
-   }
+    }
 
     /**
      * check whether a class should not be considered for transformation
@@ -742,12 +741,12 @@ public class Transformer implements ClassFileTransformer {
         return false;
     }
 
-    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, Class classBeingRedefined, String key, boolean isInterface)
+    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, String key, boolean isInterface)
     {
-        return tryTransform(buffer, name, loader, classBeingRedefined, key, isInterface, false);
+        return tryTransform(buffer, name, loader, key, isInterface, false);
     }
 
-    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, Class classBeingRedefined, String key, boolean isInterface, boolean isOverride)
+    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, String key, boolean isInterface, boolean isOverride)
     {
         List<RuleScript> ruleScripts;
 
@@ -773,7 +772,7 @@ public class Transformer implements ClassFileTransformer {
                         synchronized (ruleScript) {
                             if (!ruleScript.isDeleted()) {
                                 maybeDumpClassIntermediate(name, newBuffer);
-                                newBuffer = transform(ruleScript, loader, name, classBeingRedefined, newBuffer);
+                                newBuffer = transform(ruleScript, loader, name, newBuffer);
                             }
                         }
                     }
