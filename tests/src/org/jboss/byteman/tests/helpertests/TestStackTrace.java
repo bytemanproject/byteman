@@ -137,7 +137,7 @@ public class TestStackTrace extends Test
             {
                 logExpected("calling TestStackTrace.triggerMethod1");
                 logExpected("stacktrace two frames\n" +
-                        "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod1(TestStackTrace.java:78)\n" +
+                        "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod1(TestStackTrace.java:-1)\n" +
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.test(TestStackTrace.java:45)\n" +
                         "  . . .\n");
                 logExpected("inside TestStackTrace.triggerMethod1");
@@ -150,12 +150,12 @@ public class TestStackTrace extends Test
                 logExpected("inside TestStackTrace.triggerMethod2");
                 logExpected("inside TestStackTrace.triggerMethod21");
                 logExpected("stacktrace matching frames\n" +
-                        "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod211(TestStackTrace.java:97)\n" +
+                        "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod211(TestStackTrace.java:-1)\n" +
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod21(TestStackTrace.java:91)\n" +
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod2(TestStackTrace.java:84)\n");
                 logExpected("inside TestStackTrace.triggerMethod211");
                 logExpected("stacktrace matching frames with class\n" +
-                        "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod212(TestStackTrace.java:102)\n" +
+                        "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod212(TestStackTrace.java:-1)\n" +
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod21(TestStackTrace.java:92)\n" +
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod2(TestStackTrace.java:84)\n");
                 logExpected("inside TestStackTrace.triggerMethod212");
@@ -169,13 +169,13 @@ public class TestStackTrace extends Test
                 logExpected("inside TestStackTrace.triggerMethod3");
                 logExpected("inside TestStackTrace.triggerMethod31");
                 logExpected("stacktrace three frames\n" +
-                        "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod311(TestStackTrace.java:124)\n" +
+                        "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod311(TestStackTrace.java:-1)\n" +
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod31(TestStackTrace.java:119)\n" +
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod3(TestStackTrace.java:113)\n" +
                         "  . . .\n");
                 logExpected("inside TestStackTrace.triggerMethod311");
                 logExpected("stacktrace matching frames with class and package\n" +
-                        "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod3111(TestStackTrace.java:130)\n" +
+                        "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod3111(TestStackTrace.java:-1)\n" +
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod311(TestStackTrace.java:125)\n" +
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod31(TestStackTrace.java:119)\n" +
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod3(TestStackTrace.java:113)\n");

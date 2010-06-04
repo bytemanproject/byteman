@@ -75,8 +75,27 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
             visited = false;
         }
 
-        // we need to override each visitXXXINsn operation so we see each instruction being generated. we
-        // inject a trigger point as soon as possible.
+        // if possible inject a trigger as soon as we visit the code. This will precede any visit to labels defined
+        // by the original program -- in particular the loop label for a while loop occuring at the start of the
+        // method body. if we don't do this then we can end up injecting the trigger into the body of the while
+        // loop
+
+        @Override
+        public void visitCode()
+        {
+            // call the super method first so we have a valid CFG and start label
+
+            super.visitCode();
+
+            if (unlatched && !visited) {
+                visited = true;
+                injectTriggerPoint();
+            }
+        }
+
+        // we will not be able to inject into a constructor at visitCode because we need to delay until
+        // we have run the super constructor. so we also need to override each visitXXXINsn operation
+        // and inject a trigger point as soon as possible after the constructor unlatches the adapter.
         
         @Override
         public void visitInsn(int opcode) {
