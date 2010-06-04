@@ -36,7 +36,18 @@ public class RuleCheckAdapter extends RuleAdapter
     protected RuleCheckAdapter(ClassVisitor cv, TransformContext transformContext)
     {
         super(cv, transformContext);
+        this.visited = false;
         this.visitOk = false;
+    }
+
+    public boolean isVisited()
+    {
+        return visited;
+    }
+
+    public void setVisited()
+    {
+        this.visited = true;
     }
 
     public boolean isVisitOk()
@@ -49,5 +60,6 @@ public class RuleCheckAdapter extends RuleAdapter
         visitOk = true;
     }
 
+    private boolean visited;
     private boolean visitOk;
 }

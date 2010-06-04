@@ -664,13 +664,18 @@ public class Transformer implements ClassFileTransformer {
         try {
             cr.accept(checkAdapter, ClassReader.EXPAND_FRAMES);
         } catch (Throwable th) {
-            System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + ruleScript.getName() + " to class " + className + "\n" + th);
-            th.printStackTrace(System.out);
+	    if (isVerbose()) {
+		System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + ruleScript.getName() + " to class " + className + "\n" + th);
+		th.printStackTrace(System.out);
+	    }
             transformContext.recordFailedTransform(th);
             return targetClassBytes;
         }
         // only insert the rule trigger call if there is a suitable location in the target method
-        if (checkAdapter.isVisitOk()) {
+        if (!checkAdapter.isVisited()) {
+            //  there was no matching method so ignore
+            return targetClassBytes;
+        } else if (checkAdapter.isVisitOk()) {
             if (isVerbose()) {
                 System.out.println("org.jboss.byteman.agent.Transformer : possible trigger for rule " + ruleScript.getName() + " in class " + className);
             }
@@ -680,8 +685,10 @@ public class Transformer implements ClassFileTransformer {
             try {
                 cr.accept(adapter, ClassReader.EXPAND_FRAMES);
             } catch (Throwable th) {
-                System.out.println("org.jboss.byteman.agent.Transformer : error injecting trigger for rule " + ruleScript.getName() + " into class " + className + "\n" +  th);
-                th.printStackTrace(System.out);
+                if (isVerbose()) {
+                    System.out.println("org.jboss.byteman.agent.Transformer : error injecting trigger for rule " + ruleScript.getName() + " into class " + className + "\n" +  th);
+                    th.printStackTrace(System.out);
+                }
                 transformContext.recordFailedTransform(th);
                 return targetClassBytes;
             }
@@ -690,16 +697,16 @@ public class Transformer implements ClassFileTransformer {
                 System.out.println("org.jboss.byteman.agent.Transformer : inserted trigger for " + ruleScript.getName() + " in class " + className);
             }
             return cw.toByteArray();
-        }
-        
-        // record a failed match with an ersatz error instance
 
-        Error error =  new Error("Failed to transform class " + className + " using rule " + ruleName);
-        error.setStackTrace(new StackTraceElement[0]);
-        transformContext.recordFailedTransform(error);
-        
-        return targetClassBytes;
-    }
+        } else {
+            // record a failed match with an ersatz error instance
+
+            Error error =  new Error("Failed to transform class " + className + " using rule " + ruleName);
+            error.setStackTrace(new StackTraceElement[0]);
+            transformContext.recordFailedTransform(error);
+            return targetClassBytes;
+        }
+   }
 
     /**
      * check whether a class should not be considered for transformation
