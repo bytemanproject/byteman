@@ -1051,7 +1051,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
         Method method = Method.getMethod("void execute(String, Object, Object[])");
         // we are at the relevant line in the method -- so add a trigger call here
         if (Transformer.isVerbose()) {
-            System.out.println("RuleTriggerMethodAdapter.injectTriggerPoint : inserting trigger into method " + getMethodName() + " for rule " + rule.getName());
+            System.out.println("RuleTriggerMethodAdapter.injectTriggerPoint : inserting trigger into " + getTriggerClass() + "." + getMethodName() + " for rule " + rule.getName());
         }
         Label startLabel = newLabel();
         Label endLabel = newLabel();
