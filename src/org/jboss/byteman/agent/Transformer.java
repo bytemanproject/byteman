@@ -330,6 +330,11 @@ public class Transformer implements ClassFileTransformer {
     public static final String BYTEMAN_TEST_PACKAGE_PREFIX = "org.jboss.byteman.tests.";
 
     /**
+     * prefix for byteman sample package
+     */
+    public static final String BYTEMAN_SAMPLE_PACKAGE_PREFIX = "org.jboss.byteman.sample.";
+
+    /**
      * prefix for org.jboss package
      */
     public static final String JAVA_LANG_PACKAGE_PREFIX = "java.lang.";
@@ -658,7 +663,7 @@ public class Transformer implements ClassFileTransformer {
 
         ClassReader cr = new ClassReader(targetClassBytes);
         // need to provide a real writer here so that labels get resolved
-        ClassWriter dummy = getNonLoadingClassWriter(ClassWriter.COMPUTE_MAXS);
+        ClassWriter dummy = getNonLoadingClassWriter(0);
         RuleCheckAdapter checkAdapter = handlerLocation.getRuleCheckAdapter(dummy, transformContext);
         try {
             cr.accept(checkAdapter, ClassReader.EXPAND_FRAMES);
@@ -986,7 +991,9 @@ public class Transformer implements ClassFileTransformer {
      */
     protected boolean isBytemanClass(String className)
     {
-        return className.startsWith(BYTEMAN_PACKAGE_PREFIX) && !className.startsWith(BYTEMAN_TEST_PACKAGE_PREFIX);
+        return className.startsWith(BYTEMAN_PACKAGE_PREFIX) &&
+                !className.startsWith(BYTEMAN_TEST_PACKAGE_PREFIX) &&
+                !className.startsWith(BYTEMAN_SAMPLE_PACKAGE_PREFIX);
     }
 
     /**
