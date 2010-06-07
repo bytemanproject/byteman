@@ -267,7 +267,9 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
     private void initLocalTypes()
     {
         // owner of this method is an object
-        localTypes.add(Type.getType(Object.class));
+        // localTypes.add(Type.getType(Object.class));
+        String name = getTriggerClass().replace('.', '/');
+        localTypes.add(Type.getType("L" + name + ";"));
         for (int i = 0; i < argumentTypes.length; i++) {
             localTypes.add(argumentTypes[i]);
         }
@@ -1381,7 +1383,11 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
                 break;
                 case Opcodes.ASTORE:
                     // we don't know exactly what type this is but at least we know it is an object
-                    type = Type.getType(Object.class);
+                {
+                    String name = getTriggerClass().replace('.', '/');
+                    type = Type.getType("L" + name + ";");
+                }
+                // type = Type.getType(Object.class);
                 break;
             }
             if (var <  nextLocal) {
@@ -1576,7 +1582,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
         for (int i = 0; i < nLocal; i++) {
             Object t = local[i];
             if (t == Opcodes.TOP) {
-                localTypes.add(Type.getType(Object.class));
+                localTypes.add(null);
             } else if (t == null) {
                 localTypes.add(null);
             } else if (t == Opcodes.INTEGER) {
