@@ -162,12 +162,11 @@ public class PeriodicHelper extends Helper
         public PeriodicHelperThread()
         {
             super("Periodic Helper Thread");
-
-            periodMilliSecs = getPeriod();
         }
 
         public void run()
         {
+            periodMilliSecs = getPeriod();
             setTriggering(false);
             while (doWait(periodMilliSecs)) {
                 setTriggering(true);
