@@ -621,7 +621,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
     {
         super.visitCode();
         // create a control flow graph for the method
-        String methodName = this.rule.getTargetClass() + "." + this.name + this.descriptor;
+        String methodName = getTriggerClass() + "." + this.name + this.descriptor;
         Label newStart = super.newLabel();
         this.cfg = new CFG(methodName, newStart);
         visitLabel(newStart);
