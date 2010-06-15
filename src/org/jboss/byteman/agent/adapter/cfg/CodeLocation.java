@@ -48,6 +48,11 @@ public class CodeLocation implements Comparable<CodeLocation>
         return block;
     }
 
+    public int getBlockIdx()
+    {
+        return block.getBlockIdx();
+    }
+
     public int getInstructionIdx()
     {
         return instructionIdx;
@@ -55,13 +60,13 @@ public class CodeLocation implements Comparable<CodeLocation>
 
     public String toString()
     {
-        return "BB" + block.getBlockIdx() + "." + getInstructionIdx();
+        return "BB" + getBlockIdx() + "." + getInstructionIdx();
     }
 
     public int compareTo(CodeLocation loc)
     {
-        int blockIdx = block.getBlockIdx();
-        int otherBlockIdx = loc.block.getBlockIdx();
+        int blockIdx = getBlockIdx();
+        int otherBlockIdx = loc.getBlockIdx();
         if (blockIdx < otherBlockIdx) {
             return -1;
         } else if (blockIdx > otherBlockIdx) {
@@ -84,5 +89,10 @@ public class CodeLocation implements Comparable<CodeLocation>
         } else {
             return false;
         }
+    }
+
+    public int hashCode()
+    {
+        return (block.getBlockIdx() << 16) ^ instructionIdx; 
     }
 }

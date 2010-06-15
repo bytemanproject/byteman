@@ -65,6 +65,13 @@ public class TryCatchDetails
     private boolean isTriggerHandler;
 
     /**
+     * A list of details for all the try catch regions which shadow this region i.e. which prevent exception
+     * control flow to it from an embedded region because they either catch everything or they catch the
+     * same type or a supertype of this exception.
+     */
+    private List<TryCatchDetails> shadowRegions;
+
+    /**
      * construct a try catch details instance
      * @param cfg
      * @param start
@@ -82,6 +89,7 @@ public class TryCatchDetails
         this.openEnters = new LinkedList<CodeLocation>();
         this.type = type;
         this.isTriggerHandler = isTriggerHandler;
+        this.shadowRegions  = null;
     }
 
     // accessors
@@ -108,11 +116,29 @@ public class TryCatchDetails
 
     /**
      * add a new monitor enter location to the list of open locations associated with this handler
+     * maintaining the reverse position ordering
      * @param openEnter
      */
     public void addOpenEnter(CodeLocation openEnter)
     {
-        openEnters.add(openEnter);
+        Iterator<CodeLocation> iterator = openEnters.iterator();
+        int pos = 0;
+        while (iterator.hasNext()) {
+            CodeLocation next = iterator.next();
+            int compare = openEnter.compareTo(next);
+            if (compare < 0) {
+                // need to insert after this one
+                pos++;
+            } else if (compare > 0) {
+                // need to insert before this one
+                break;
+            } else {
+                // already in list!
+                return;
+            }
+        }
+
+        openEnters.add(pos, openEnter);
     }
 
     /**
@@ -126,15 +152,57 @@ public class TryCatchDetails
 
     /**
      * add all the open locations associated with this handler to the supplied list of open locations
+     * maintaining the reverse position ordering
      * @param openMonitorEnters
      */
     public void addOpenLocations(List<CodeLocation> openMonitorEnters) {
         Iterator<CodeLocation> iterator = openEnters.iterator();
         while (iterator.hasNext()) {
             CodeLocation location = iterator.next();
-            if (!openMonitorEnters.contains(location)) {
-                openMonitorEnters.add(location);
+            Iterator<CodeLocation> iterator2 = openMonitorEnters.iterator();
+            int pos = 0;
+            while (iterator2.hasNext()) {
+                CodeLocation next = iterator2.next();
+                int compare = location.compareTo(next);
+                if (compare < 0) {
+                    // need to insert after this one
+                    pos++;
+                } else {
+                    // need to insert before this one unless it is already present
+                    if (compare > 0) {
+                        pos = -1;
+                    }
+                    break;
+                }
+            }
+            
+            if (pos >= 0) {
+                openMonitorEnters.add(pos, location);
             }
         }
+    }
+
+    public Iterator<CodeLocation> getOpenEnters()
+    {
+        return openEnters.iterator();
+    }
+
+    /**
+     * add a shadowing region to the list of regions which shadow this one
+     * @param tryCatchDetails
+     */
+    public void addShadowRegion(TryCatchDetails tryCatchDetails)
+    {
+        if (shadowRegions == null) {
+            shadowRegions = new LinkedList<TryCatchDetails>();
+        }
+        if (!shadowRegions.contains(tryCatchDetails)) {
+            shadowRegions.add(tryCatchDetails);
+        }
+    }
+
+    public List<TryCatchDetails> getShadowRegions()
+    {
+        return shadowRegions;
     }
 }

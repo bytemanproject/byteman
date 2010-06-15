@@ -90,16 +90,17 @@ public class BBlock
     /**
      * a list of all try catch blocks whose handlers start in this block
      */
-    private List<TryCatchDetails> tryHandlerStarts;
+    private List<TryCatchDetails> handlerStarts;
 
     /**
-     * a list of the location of all monitor enter instructions contained in this block
+     * a stack (reverse order list) containing the locations of all monitor enter instructions contained in this
+     * block excluding those which have been closed by a corresponding exit in this block
      */
-    private List<CodeLocation> monitorEnters;
+    private LinkedList<CodeLocation> monitorEnters;
     /**
      * a list of the location of all monitor exit instructions contained in this block
      */
-    private List<CodeLocation> monitorExits;
+    private LinkedList<CodeLocation> monitorExits;
 
     /**
      * construct a new basic block
@@ -114,10 +115,10 @@ public class BBlock
         this.instructions = new InstructionSequence();
         this.outGoing = new FanOut(start);
         this.blockIdx = blockIdx;
-        this.activeTryStarts = new LinkedList<TryCatchDetails>();
+        this.activeTryStarts = null;
         this.tryStarts = new LinkedList<TryCatchDetails>();
         this.tryEnds = new LinkedList<TryCatchDetails>();
-        this.tryHandlerStarts = new LinkedList<TryCatchDetails>();
+        this.handlerStarts = new LinkedList<TryCatchDetails>();
         this.monitorEnters = new LinkedList<CodeLocation>();
         this.monitorExits = new LinkedList<CodeLocation>();
     }
@@ -156,12 +157,21 @@ public class BBlock
      */
     public int append(int instruction)
     {
+        int index = instructions.add(instruction);
         if (instruction == Opcodes.MONITORENTER) {
-            monitorEnters.add(new CodeLocation(this, instructions.size()));
+            // push onto front of list
+            monitorEnters.push(new CodeLocation(this, index));
         } else if (instruction == Opcodes.MONITOREXIT) {
-            monitorExits.add(new CodeLocation(this, instructions.size()));
+            CodeLocation exit = new CodeLocation(this, index);
+            // we need to keep track of exits
+            monitorExits.add(exit);
+            // if there is an enter in this block then it belongs to this one so pop it and record the pairing
+            if (!monitorEnters.isEmpty()) {
+                CodeLocation enter = monitorEnters.pop();
+                cfg.addMonitorPair(enter, exit);
+            }
         }
-        return instructions.add(instruction);
+        return index;
     }
 
     /**
@@ -219,7 +229,6 @@ public class BBlock
     public void addTryStarts(List<TryCatchDetails> details)
     {
         tryStarts.addAll(details);
-        activeTryStarts.addAll(details);
     }
 
     /**
@@ -235,46 +244,18 @@ public class BBlock
      * record details of a try catch block handler which starts in this block
      * @param details
      */
-    public void addTryHandlerStarts(List<TryCatchDetails> details)
+    public void addHandlerStarts(List<TryCatchDetails> details)
     {
-        tryHandlerStarts.addAll(details);
+        handlerStarts.addAll(details);
     }
 
     /**
-     * merge a list of previously active try catch blocks into the list of try starts which are active somewhere
-     * in this block.
-     * @param extra
+     * set the list of try starts which are active somewhere in this block.
+     * @param active
      */
-    public void updateActiveTryStarts(List<TryCatchDetails> extra)
+    public void setActiveTryStarts(List<TryCatchDetails> active)
     {
-        activeTryStarts.addAll(extra);
-    }
-
-    /**
-     * merge the list of try catch blocks started in this block into the supplied carry froward list.
-     * @param carryList
-     */
-    public void carryTryStarts(List<TryCatchDetails> carryList)
-    {
-        carryList.addAll(tryStarts);
-    }
-
-    /**
-     * delete the list of try catch blocks ended in this block from the supplied carry forward list.
-     * @param carryList
-     */
-    public void removeTryEnds(List<TryCatchDetails> carryList)
-    {
-        carryList.removeAll(tryEnds);
-    }
-
-    /**
-     * retrieve details of all try catch blocks which start in this block
-     * @return
-     */
-    public Iterator<TryCatchDetails> getTryStarts()
-    {
-        return tryStarts.iterator();
+        activeTryStarts = active;
     }
 
     /**
@@ -290,22 +271,22 @@ public class BBlock
      * retrieve details of all try catch block handlers whcih start in this block
      * @return
      */
-    public Iterator<TryCatchDetails> getTryHandlerStarts()
+    public Iterator<TryCatchDetails> getHandlerStarts()
     {
-        return tryHandlerStarts.iterator();
+        return handlerStarts.iterator();
     }
 
     /**
      * retrieve details of all try catch blocks which are capable of generating an exception in this block
      * @return
      */
-    public Iterator<TryCatchDetails> getActiveTryStarts()
+    public List<TryCatchDetails> getActiveTryStarts()
     {
-        return activeTryStarts.iterator();
+        return activeTryStarts;
     }
 
     /**
-     * retrieve a list of all monitor enter instruction locations occuringin this block
+     * retrieve a list of all monitor enter instruction locations occurring in this block
      * @return
      */
     public Iterator<CodeLocation> getMonitorEnters()
@@ -314,7 +295,7 @@ public class BBlock
     }
 
     /**
-     * retrieve a list of all monitor exit instruction locations occuringin this block
+     * retrieve a list of all monitor exit instruction locations occurring in this block
      * @return
      */
     public Iterator<CodeLocation> getMonitorExits()
@@ -323,7 +304,7 @@ public class BBlock
     }
 
     /**
-     * retrieve a count of all monitor enter instruction locations occuring in this block
+     * retrieve a count of all monitor enter instruction locations occurring in this block
      * @return
      */
     public int getMonitorEnterCount()
@@ -567,8 +548,16 @@ public class BBlock
             switch (OpcodesHelper.insnType(opcode)) {
                 case OpcodesHelper.INSN_NONE:
                 {
-                    // just print the instruction name
+                    // print the instruction name
                     buf.append(OpcodesHelper.insnName(opcode));
+                    if (opcode == Opcodes.MONITOREXIT) {
+                        CodeLocation exit = new CodeLocation(this, i);
+                        CodeLocation enter = cfg.getPairedEnter(exit);
+                        // print the corresponding open instruction
+                        buf.append(" (enter: ");
+                        buf.append(enter);
+                        buf.append(")");
+                    }
                     buf.append("\n");
                 }
                 break;
@@ -1025,48 +1014,50 @@ public class BBlock
             }
         }
         // print the active starts for this block
-        Iterator<TryCatchDetails> activeStarts = this.getActiveTryStarts();
-        while (activeStarts.hasNext()) {
-            TryCatchDetails details = activeStarts.next();
-            Label label = details.getStart();
-            BBlock block = cfg.getBlock(label);
-            buf.append("try: ");
-            if (block != null) {
-                buf.append(label.getOffset());
+        if (activeTryStarts != null) {
+            Iterator<TryCatchDetails> activeStartsIter = activeTryStarts.iterator();
+            while (activeStartsIter.hasNext()) {
+                TryCatchDetails details = activeStartsIter.next();
+                Label label = details.getStart();
+                BBlock block = cfg.getBlock(label);
+                buf.append("try: ");
+                if (block != null) {
+                    buf.append(label.getOffset());
+                    buf.append(" ");
+                    buf.append(block.getBlockIdx());
+                    buf.append(".");
+                    buf.append(cfg.getBlockInstructionIdx(label));
+                } else {
+                    buf.append(label);
+                }
+                buf.append(" catch: ");
+                label = details.getEnd();
+                block = cfg.getBlock(label);
+                if (block != null) {
+                    buf.append(label.getOffset());
+                    buf.append(" ");
+                    buf.append(block.getBlockIdx());
+                    buf.append(".");
+                    buf.append(cfg.getBlockInstructionIdx(label));
+                } else {
+                    buf.append(label);
+                }
+                buf.append(" handle: ");
+                label = details.getHandler();
+                block = cfg.getBlock(label);
+                if (block != null) {
+                    buf.append(label.getOffset());
+                    buf.append(" ");
+                    buf.append(block.getBlockIdx());
+                    buf.append(".");
+                    buf.append(cfg.getBlockInstructionIdx(label));
+                } else {
+                    buf.append(label);
+                }
                 buf.append(" ");
-                buf.append(block.getBlockIdx());
-                buf.append(".");
-                buf.append(cfg.getBlockInstructionIdx(label));
-            } else {
-                buf.append(label);
+                buf.append(details.getType());
+                buf.append("\n");
             }
-            buf.append(" catch: ");
-            label = details.getEnd();
-            block = cfg.getBlock(label);
-            if (block != null) {
-                buf.append(label.getOffset());
-                buf.append(" ");
-                buf.append(block.getBlockIdx());
-                buf.append(".");
-                buf.append(cfg.getBlockInstructionIdx(label));
-            } else {
-                buf.append(label);
-            }
-            buf.append(" handle: ");
-            label = details.getHandler();
-            block = cfg.getBlock(label);
-            if (block != null) {
-                buf.append(label.getOffset());
-                buf.append(" ");
-                buf.append(block.getBlockIdx());
-                buf.append(".");
-                buf.append(cfg.getBlockInstructionIdx(label));
-            } else {
-                buf.append(label);
-            }
-            buf.append(" ");
-            buf.append(details.getType());
-            buf.append("\n");
         }
     }
 }

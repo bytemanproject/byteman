@@ -32,15 +32,17 @@ import org.objectweb.asm.Type;
 import java.util.*;
 
 /**
- * A control flow graph (cfg) for use by trigger method adapters. the trigger method adapter is required to
- * notify the CFG each time an instruction or label is visited and each time a try catch block is notified.
- * The cfg allows the rule trigger insertion adapter to identify whether or not an inserted rule trigger call
- * is within the scope of one or more synchronized blocks. The trigger injector may then protect the trigger
- * call with try catch handlers which ensure that any open monitor enters are rounded off with a corresponidng
- * monitor exit. the cfg is constructed dynamically as the code is visited in order to enable trigger insertion
- * to be performed during a single pass of the bytecode. See {@link org.jboss.byteman.agent.adapter.RuleTriggerMethodAdapter}
+ * A control flow graph (cfg) for use by trigger method adapters.<p/>
+ * A trigger method adapter is required to notify the CFG each time an instruction or label is visited and
+ * each time a try catch block is notified. It is also required to notify the CFG when trigger coe generartion
+ * begins and ends. The cfg allows the trigger method adapter to identify whether or not trigger code is
+ * within the scope of one or more synchronized blocks, allowing it to protect the trigger call with try catch
+ * handlers which ensure that any open monitor enters are rounded off with a corresponding monitor exit.
+ * <p/>
+ * A cfg is constructed dynamically as the code is visited in order to enable trigger insertion to be performed
+ * during a single pass of the bytecode. See {@link org.jboss.byteman.agent.adapter.RuleTriggerMethodAdapter}
  * for an example of how the methods provided by this class are invoked during visiting of the method byte code.
- * Methods provided for driving CFG construction include
+ * Methods provided for driving CFG construction include:
  * <ul>
  * <li> non-control instruction visit:
  *  {@link CFG#add(int)}, {@link CFG#add(int, int)},
@@ -60,22 +62,23 @@ import java.util.*;
  * {@link org.jboss.byteman.agent.adapter.cfg.CFG#visitMaxs()}, {@link org.jboss.byteman.agent.adapter.cfg.CFG#visitEnd()},
  * </ul>
  * <p/>
- * the cfg maintains the current instruction sequence for the method in encoded form as it is being generated.
- * It splits the instruction stream at control flow branch points, segmenting the instructions into basic blocks.
- * The control flow linkage between these basic blocks defines the graph structure. The cfg correlates labels
- * with i) blocks and ii) instruction offsets within those blocks as the labels are visited during bytecode visiting.
- * It also tracks the locations within blocks of try catch regions and their handlers and of monitor enter and exit
- * instructions.
+ * The cfg maintains the current instruction sequence for the method in encoded form as it is being generated.
+ * The cfg models both the linear instruction sequence and the directed graph of control flow through that sequence.
+ * It splits the instruction stream at control flow branch points, grouping instructions into basic blocks. A
+ * successor link relation between blocks retains the linear instruction sequence. Control flow links between
+ * basic blocks define the graph structure. The cfg correlates labels with i) blocks and ii) instruction offsets
+ * within those blocks as the labels are visited during bytecode visiting. It also tracks the locations within
+ * blocks of try catch regions and their handlers and of monitor enter and exit instructions.
  * <p/>
  * The lock propagation algorithm employed to track the extent of monitor enter/exit pairs and try/catch blocks is
  * the most complex aspect of this implementation, mainly because it has to be done in a single pass. This means
- * that the end location of a try catch block or the location of the (one or more) monitor exit(s) associated with a
- * monitor enter may not be known when a trigger point is reached. This algorithm is described below in detail.
+ * that the end location of a try catch block or the location of the (one or more) monitor exit(s) associated with
+ * a monitor enter may not be known when a trigger point is reached. This algorithm is described below in detail.
  * First an explanation of the CFG organization is provided.
  * </p>
  * <h3>Control flow graph model</h3>
- * The bytecode sequence is segmented into basic blocks at control flow barnches ensuring there is no explicit
- * control flow internal to a block. The only way normal control can flow from one block to another is via a
+ * The bytecode sequence is segmented into basic blocks at control flow branches ensuring there is no <em>explicit</em>
+ * control flow internal to a block. The only way <em>normal</em> control can flow from one block to another is via a
  * switch/goto/branch instruction occuring at the end of the block. So, basic blocks are the nodes of the CFG
  * and the links in the graph identify these control flow transitions.
  * <p>
@@ -87,36 +90,36 @@ import java.util.*;
  * </p>
  * The outgoing control flow link count can be obtained by calling method
  * {@link BBlock#nOuts()}. The label of the block to which control is transferred can be identified by calling
- * method {@link BBlock#nthOut(int)}. Once a label has been visited it can be resolved to a {@link CodeLocation}
- * by calling method {@link CFG#getLocation(org.objectweb.asm.Label)}. The returned value identifies both a
- * block and an instruction offset in the block.
+ * method {@link BBlock#nthOut(int)}. Note that valid link indices run from 1 to nOuts() (see below). Once
+ * a label has been visited it can be resolved to a {@link CodeLocation} by calling method
+ * {@link CFG#getLocation(org.objectweb.asm.Label)}. The returned value identifies both a block and an instruction
+ * offset in the block.
  * <p/>
  * Several caveats apply to this simple picture. Firstly, blocks ending in return or throw have no control flow -- they
  * pass control back to the caller rather than to another basic block. So, the count returned by {@link BBlock#nOuts()}
  * will be 0 for such blocks.
  * <p/>
- * Secondly, all blocks except the last have a distinguished link which identifies the
- * next generated block in bytecode order. This link can be obtained by supplying value 0 as argument to method
- * {@link BBlock#nthOut(int)}. Strictly this link is not a control flow link and it is <em>not</em> included in the
- * count returned by {@link BBlock#nOuts()} i.e. the nett effect is that the sequence of control flow links is
- * 1-based rather than 0-based.Note that where there is a control flow link to the next block in line (e.g. where
- * the block ends in an ifXX instruction) the label employed for the distinguished 0 link will also appear in the
- * set of control flow links (as link 1 in the case of an ifXX instrcution).
+ * Secondly, all blocks except the last have a distinguished link which identifies the block successor link
+ * relationship. The successor block can be obtained by supplying value 0 as argument to method
+ * {@link BBlock#nthOut(int)}. This link is <em>additional</em> to any control flow links and it is <em>not</em>
+ * included in the count returned by {@link BBlock#nOuts()}. Note that where there is a control flow link to the
+ * next block in line (e.g. where the block ends in an ifXX instruction) the label employed for the distinguished 0
+ * link will also appear in the set of control flow links (as link 1 in the case of an ifXX instruction).
  * <p/>
- * The final caveat is that
- * this graph model does not identify control flow which occurs as a consequence of generated exceptions.
+ * The final caveat is that this graph model does not identify control flow which occurs as a consequence of
+ * generated exceptions.
  * </p>
  * <h3>Exceptional Control Flow</h3>
- * Exception control flow is modelled independently from normal flow because it relates to regions in the graph
- * rather than individual instructions. A specific exception flow is associated with a each try catch block and the
- * target of the flow is the start of the handler block. The cfg maintains a list of {@link TryCatchDetails} which
- * identify the location of the try/catch start, end and handler start locations. Once again labels are used so as
- * to allow modelling of forward references to code locations which have not yet been generated.
+ * Exception control flow is modelled independently from normal flow because it relates to a segment of the
+ * instruction sequence rather than individual instructions. A specific exception flow is associated with a each
+ * try catch block and the target of the flow is the start of the handler block. The cfg maintains a list of
+ * {@link TryCatchDetails} which identify the location of the try/catch start, its end and the associated handler
+ * start location. Once again labels are used so as to allow modelling of forward references to code locations
+ * which have not yet been generated.
  * <p/>
- * Note that handler
- * start labels always refer to a code location which is at the start of a basic block. Start and end labels for a
- * given try/catch block may refer to code locations offset into their containing basic block and possibly in
- * distinct blocks.
+ * Note that handler start labels always refer to a code location which is at the start of a basic block. Start
+ * and end labels for a given try/catch block may refer to code locations offset into their containing basic block
+ * and possibly in distinct blocks.
  * <p/>
  * Methods {@link #tryCatchStart(org.objectweb.asm.Label)}, {@link #tryCatchEnd(org.objectweb.asm.Label)}
  * and {@link #tryCatchHandlerStart(org.objectweb.asm.Label)} can be called to determine whether a given label
@@ -131,7 +134,7 @@ import java.util.*;
  * provides method {@link CFG#getBlock(org.objectweb.asm.Label)} to resolve the primary label for a block (i.e. the
  * one supplied as argument to a split call) to the associated block. It also provides method
  * {@link CFG#getBlockInstructionIdx(org.objectweb.asm.Label)} to resolve a label to a {@link CodeLocation} i.e.
- * block and instruction index within a block. Both method return null if the label has not yet been visited.
+ * block and instruction index within a block. Both methods return null if the label has not yet been visited.
  * <p/>
  * Method {@link CFG#getContains(BBlock)} is also provided to obtain a list of all labels contained within a
  * specific block. There may be more than one label which resolves to a location within a specific block. For
@@ -141,47 +144,52 @@ import java.util.*;
  * <h3>lock propagation algorithm</h3>
  * The cfg tracks the occurence of monitor enter and monitor exit instructions as they are encountered during
  * the bytecode walk. Note that the relationship between enter and exit instructions is 1 to many. For any given
- * monitor enter there is a distinguished primary exit associated with the normal control flow path and zero
+ * monitor enter there are one or more exits associated with the normal control flow path and zero
  * or more alternative exits associated with exception control flow paths. The association between monitor
  * entry and monitor exit instructions is made available via methods {@link CFG#getPairedEnter(CodeLocation)},
- * and {@link CFG#getPairedExit(CodeLocation)}.
+ * and {@link CFG#getPairedExit(CodeLocation, BBlock)} 9note that a given enter will never have more than one
+ * exit in any given block).
  * <p/>
- * The cfg associates monitor enters and exits with their enclosing block, allowing it to identify the start and end
- * of synchronized regions within a specific block. This information can be propagated along control flow links
- * to identify the start and end of synchronized regions along control flow paths. Whenever a block is created
- * it is associated with a set of open enter instructions i.e. enter instructions occurring along the control flow
- * path to the block for which no corresponding exit has been executed.
+ * The cfg associates monitor enters and exits with their enclosing block, allowing it to identify the start and/or
+ * end of synchronized regions within a specific block. This information can be propagated along control flow links
+ * to identify outstanding monitor enters at any point in a given control flow path. Whenever a block is created
+ * it is associated with a set of open enter instructions i.e. enter instructions occurring along all control flow
+ * paths to the block for which no corresponding exit has been executed.
  * <p/>
- * For the initial block the open enters list is empty.
+ * <ul>
+ * <li>For the initial block the open enters list is empty.
  * <p/>
- * For a block reached by normal control flow the open enters list can be derived from any of the earlier blocks
- * which transfer control to it. It is computed by adding and removing entries to/from the preceding block's open
+ * <li>For a block reached by normal control flow the open enters list can be derived from any of the feed blocks
+ * which transfer control to it. It is computed by adding and removing entries to/from the feed block's open
  * enters list according to the order the enters or exits appear in the block. Any feed block is valid because
- * enters and exits are strictly nested so two paths to the same block cannot introduce different enters and exits.
- * Note also that this strict nesting also means that loop control flow will never require revision of a previously
- * visited block's open enters list.
+ * every enter must have a single corresponding exit on each valid path through the bytecode. Two paths to the
+ * same block cannot introduce different enters and exits without breaking this invariant. Also, enters and exits
+ * must be strictly nested so the set of open monitors can be tracked using a simple stack model.
  * <p/>
  * The algorithm propagates open enters along normal control flow paths whenever a split instruction is invoked
  * (splitting the instruction stream into a new block). The work is done in method {@link CFG#carryForward()}. This
  * method identifies the current block's open enters list (how will emerge below), updates it with any enters and
- * exits performed in the block and then, for each each outgoing link, associates the new block with the new list by
- * inserting the list into a hash table keyed by the link label. Clearly, if the old block was itself arrived at
- * via normal control flow then its open enters list will already be available in the hash table (it will be keyed
- * by a link contained in th eblock at offset 0 but not necessarily by the block's primary link). For blocks
- * which are the target of exception handlers a different lookup is required.
- * <p/>
- * Computing the open enters list for a block which is the target of exception control flow is also done in
- * method {@link CFG#carryForward()}. This requires identifying which try/catch regions are active in the block
- * and ensuring that the corresponding {@link TryCatchDetails} object are tagged with the location of all the block's
- * monitor enter instructions which lie between the try/catch start and end. If this is done for every block
- * encountered during the bytecode walk then at the point where the handler block is split all open instructions
- * which lie within the try/catch region will be listed in the {@link TryCatchDetails}. So, at the split point
+ * exits performed in the block and then, for each each outgoing control link, associates the new list with the
+ * linked block by inserting the list into a hash table keyed by the block label. Clearly, if the current block was
+ * itself arrived at via normal control flow then its open enters list will already be available in the hash table.
+ * Handler blocks require a different lookup.
+ *<li>
+ * Computing the open enters list for a handler block which is the target of exception control flow is also done in
+ * method {@link CFG#carryForward()}. This requires identifying all try/catch regions which enclose the block
+ * and tagging the corresponding {@link TryCatchDetails} object with the location of any monitor enter instructions
+ * which are open at some  point in the try catch region. If this is done for every block encountered during
+ * the bytecode walk then at the point where the handler block is split all enter instructions which are still open
+ * somewhere within the try/catch region will be listed in the {@link TryCatchDetails}. So, at the split point
  * the old block can be tested to see if it is labelled as a try/catch handler target and, if so, its open enters
  * list can be looked up by locating the {@link TryCatchDetails} associated with the handler start label.
- * <p/>
- * Note that there is no need to worry about nested try/catch regions shadowing outer try/catch handlers with the
- * same exception type. The bytecode format ensures that handlers of the same type are never nested (n.b. I am not
- * certain that this is not just bytecode generated by Sun's java compiler).
+ * </ul>
+ * Note that we still need to worry about nested try/catch regions shadowing outer try/catch handlers with a more
+ * specific exception type e.g. when a try region with a catch-all handler type is embedded within a try region with
+ * a specific exception type or, less commonly, when the inner block employs a super type of the outer block. In these
+ * cases exception flow from the inner region cannot reach the handler for the outer region. This means we must
+ * dispense with propagation of open monitor enters to the outer region since they will be closed by the inner
+ * handler.
+ * TODO -- implement this last check
  */
 public class CFG
 {
@@ -276,10 +284,10 @@ public class CFG
      */
     private Map<Label, List<TryCatchDetails>> tryCatchHandlers;
     /**
-     * a list of all try catch blocks which were open at the start of the block identified by current. this
-     * is kept up to date by method carryForward as blocks are split at control branch points.
+     * a list of all try catch blocks which are started but not ended. this is updated as tryStart and tryEnd
+     * labels are visited.
      */
-    private List<TryCatchDetails> openTryCatchStarts;
+    private List<TryCatchDetails> currentTryCatchStarts;
     /**
      * a map from block labels to any unclosed monitor enter instructions outstanding when the block is entered.
      * this is only valid for blocks which are arrived at via conventional control flow i.e. not direct targets
@@ -324,7 +332,7 @@ public class CFG
         setLocation(start);
         contains.put(current, new FanOut(start));
         openMonitorEnters.put(start, new LinkedList<CodeLocation>());
-        openTryCatchStarts = new LinkedList<TryCatchDetails>();
+        currentTryCatchStarts = new LinkedList<TryCatchDetails>();
     }
 
     /*
@@ -530,7 +538,7 @@ public class CFG
     /**
      * retrieve the list of monitor enter locations open at the start of a given block
      * @param block the block
-     * @return the list of open monitor enter locations
+     * @return the list of open monitor enter locations in reverse order of appearance in the bytecode
      */
     public List<CodeLocation> getOpenMonitorEnters(BBlock block)
     {
@@ -540,7 +548,7 @@ public class CFG
         // the open enters list can be constructed by combining the lists attached to the try catch
         // details.
 
-        Iterator<TryCatchDetails> iterator = block.getTryHandlerStarts();
+        Iterator<TryCatchDetails> iterator = block.getHandlerStarts();
 
         if (iterator.hasNext()) {
             // at least one try/catch targets this block as a handler
@@ -549,73 +557,51 @@ public class CFG
                 TryCatchDetails details = iterator.next();
                 details.addOpenLocations(blockMonitorEnters);
             }
+
+            return blockMonitorEnters;
         }
 
-        // if that failed then look for a control flow label with the propagated information
+        // ok that failed so look for a control flow label with the propagated information
         // any of them will do since they all *must* have the same open monitor list
 
-        if (blockMonitorEnters == null) {
-            FanOut fanOut = getContains(block);
-            int count = fanOut.getToCount();
-            for (int i = 0; i < count; i++) {
-                Label l = fanOut.getTo(i);
-                CodeLocation loc = getLocation(l);
-                if (loc.getInstructionIdx() > 0) {
-                    // nothing open on entry to this block
-                    break;
-                }
-                // see if we have an inherited list
-                blockMonitorEnters = getOpenMonitorEnters(l);
-                if (blockMonitorEnters != null) {
-                    break;
-                }
+        FanOut fanOut = getContains(block);
+        int count = fanOut.getToCount();
+        for (int i = 0; i < count; i++) {
+            Label l = fanOut.getTo(i);
+            CodeLocation loc = getLocation(l);
+            if (loc.getInstructionIdx() > 0) {
+                // nothing open on entry to this block
+                break;
+            }
+            // see if we have an inherited list
+            blockMonitorEnters = getOpenMonitorEnters(l);
+            if (blockMonitorEnters != null) {
+                return new LinkedList<CodeLocation>(blockMonitorEnters);
             }
         }
-        
-        return blockMonitorEnters;
+
+        // just return an empty list
+
+        return new LinkedList<CodeLocation>();
     }
 
     /**
-     * retrieve the list of monitor enter locations open at a particular trigger start location. this is called
-     * when we are inserting try catch handlers for trigger locations to determine whetehr they need
+     * retrieve the list of monitor enter locations associated with a trigger block. this is called
+     * when we are inserting try catch handlers for trigger locations to determine whether they need
      * to perform any monitor exit operations before executing the normal trigger exception handling code.
-     * @param triggerLocation the location of the trigger start
+     * @param triggerDetails the trigger being checked
      * @return the list of locations for monitor enters open at the trigger start
      */
-    public List<CodeLocation> getOpenMonitors(CodeLocation triggerLocation)
+    public Iterator<CodeLocation> getOpenMonitors(TriggerDetails triggerDetails)
     {
-        BBlock block = triggerLocation.getBlock();
-        List<CodeLocation> initialMonitors = getOpenMonitorEnters(block);
-        Iterator<CodeLocation> localMonitors = block.getMonitorEnters();
-        if ((initialMonitors == null || initialMonitors.size() == 0) && (!localMonitors.hasNext())) {
-            return null;
+        // there should be 3 try catch handlers associated with the trigger start label
+        List<TryCatchDetails> tryCatchDetails = tryCatchStartDetails(triggerDetails.getStart());
+        if (tryCatchDetails.size() != 3) {
+            // hmm, this is weird
+            System.out.println("unexpected handler count for trigger code try catch label" + tryCatchDetails.size());
         }
-        Iterator<CodeLocation> localExits = block.getMonitorExits();
-        List<CodeLocation> outStanding = new LinkedList<CodeLocation>();
-        int triggerIdx = triggerLocation.getInstructionIdx();
-        if (initialMonitors != null) {
-            outStanding.addAll(initialMonitors);
-        }
-        while (localMonitors.hasNext()) {
-            CodeLocation nextLocation = localMonitors.next();
-            int nextIdx = nextLocation.getInstructionIdx();
-            if (nextIdx <= triggerIdx) {
-                outStanding.add(nextLocation);
-            }
-        }
-        while (localExits.hasNext()) {
-            CodeLocation nextLocation = localExits.next();
-            CodeLocation enterLocation = getPairedEnter(nextLocation);
-            if (enterLocation != null) {
-                int nextIdx = nextLocation.getInstructionIdx();
-                if (nextIdx <= triggerIdx) {
-                    outStanding.remove(nextLocation);
-                }
-            } else {
-                System.out.println("floating monitor exit " + nextLocation);
-            }
-        }
-        return outStanding;
+        // all 3 handler should have the same open monitor enters list
+        return tryCatchDetails.get(0).getOpenEnters();
     }
 
     /**
@@ -623,7 +609,7 @@ public class CFG
      * @param enter
      * @param exit
      */
-    private void addMonitorPair(CodeLocation enter, CodeLocation exit)
+    void addMonitorPair(CodeLocation enter, CodeLocation exit)
     {
         List<CodeLocation> paired = monitorPairs.get(enter);
         if (paired == null) {
@@ -631,19 +617,25 @@ public class CFG
             monitorPairs.put(enter, paired);
         }
         paired.add(exit);
-        // we also need to be abel to query this relationship in reverse order
+        // we also need to be able to query this relationship in reverse order
         CodeLocation inverse = inverseMonitorPairs.put(exit, enter);
     }
 
     /**
-     * locate the first monitor exit instruction associated with a given monitor enter
+     * locate a monitor exit instruction in block associated with a given monitor enter
      * @param enter
      */
-    private CodeLocation getPairedExit(CodeLocation enter)
+    private CodeLocation getPairedExit(CodeLocation enter, BBlock block)
     {
         List<CodeLocation> paired = monitorPairs.get(enter);
         if (paired != null) {
-            return paired.get(0);
+            Iterator<CodeLocation> iter = paired.iterator();
+            while (iter.hasNext()) {
+                CodeLocation location = iter.next();
+                if (location.getBlock() == block) {
+                    return location;
+                }
+            }
         }
 
         return null;
@@ -653,7 +645,7 @@ public class CFG
      * locate the monitor enter instruction associated with a given monitor exit
      * @param exit
      */
-    private CodeLocation getPairedEnter(CodeLocation exit)
+    public CodeLocation getPairedEnter(CodeLocation exit)
     {
         return inverseMonitorPairs.get(exit);
     }
@@ -705,113 +697,158 @@ public class CFG
     private void carryForward()
     {
         if (Transformer.isDumpCFGPartial()) {
-            System.out.println("Carry forward for block " + current.getBlockIdx());
+            int blockIdx = current.getBlockIdx();
+            if (blockIdx ==  0) {
+                System.out.println("Intermediate Control Flow Graph for " + methodName);
+            }
+            System.out.println("Carry forward for block " + blockIdx);
         }
         
         Label label = current.getLabel();
         int nOuts = current.nOuts();
 
-        // the active try start list for the block is the list of all currently open starts
-        // minus those which are closed in the block at instruction index 0
+        // identify which try start regions overlap this block
+        //
+        // the current try start list will include try catch regions which subsume the whole of this block
+        // however, some regions may have partially overlapped so we need to add them too. to do this we need
+        // to add any starts which have block offset greater than 0
 
-        Iterator<TryCatchDetails> starts = current.getTryStarts();
+        List<TryCatchDetails> active = new ArrayList<TryCatchDetails>(currentTryCatchStarts);
+
         Iterator<TryCatchDetails> ends = current.getTryEnds();
 
         while (ends.hasNext()) {
             TryCatchDetails details = ends.next();
             CodeLocation location = getLocation(details.getEnd());
-            if (location.getInstructionIdx() == 0) {
-                openTryCatchStarts.remove(details);
+            if (location.getInstructionIdx() > 0) {
+                active.add(details);
             }
         }
 
         // any remaining starts are active somewhere in the block and hence indicate
         // possible exception control flow
 
-        current.updateActiveTryStarts(openTryCatchStarts);
+        current.setActiveTryStarts(active);
 
         if (Transformer.isDumpCFGPartial()) {
             System.out.println(current);
         }
 
-        // the new list of open starts is the old list plus any starts opened in the block
-        // minus any ends in the block
-
-        current.carryTryStarts(openTryCatchStarts);
-        current.removeTryEnds(openTryCatchStarts);
-
-        // now update the list of outstanding monitor enters calls
+        // now update the list of outstanding monitor enter calls
+        //
+        // any opens which were not closed in this block will have been retained in
+        // the monitorEnters list in reverse order of appearance.
+        //
+        // any opens which were closed in this block will have been installed as a pair with their
+        // corresponding close.
 
         Iterator<CodeLocation> entersIter = current.getMonitorEnters();
-        Iterator<CodeLocation> exitsIter = current.getMonitorExits();
-        List<CodeLocation> openEnters = getOpenMonitorEnters(current);
-        Iterator<CodeLocation> openEntersIter = (openEnters != null ? openEnters.iterator() : null);
 
-        int openEntersCount = (openEnters == null ? 0 : openEnters.size());
-        int entersCount = current.getMonitorEnterCount();
-        int exitsCount = current.getMonitorExitCount();
+        // any closes which occurred in this block will have been retained in
+        // the monitorExits list
+
+        Iterator<CodeLocation> exitsIter = current.getMonitorExits();
+
+        // opens which have been propagated to this block can be identified by calling getOpenMonitorEnters(current)
+
+        List<CodeLocation> openEnters = getOpenMonitorEnters(current);
+
+        Iterator<CodeLocation> openEntersIter = openEnters.iterator();
 
         if (Transformer.isDumpCFGPartial()) {
-            System.out.print("Carry forward open monitors for " + current.getBlockIdx() +" ==>" );
+            int openEntersCount = openEnters.size();
+
+            System.out.print("Carry forward open monitors for " + current.getBlockIdx() +" ==> {" );
+            String sepr = "";
             for (int i = 0; i < openEntersCount; i++) {
-                System.out.print(" ");
+                System.out.print(sepr);
                 System.out.print(openEnters.get(i));
+                sepr=", ";
             }
-            System.out.println();
+            System.out.println("}");
+
+            int activeTryStartsCount = active.size();
+            System.out.print("active try starts for " + current.getBlockIdx() +" ==> {" );
+            sepr = "";
+            for (int i = 0; i < activeTryStartsCount; i++) {
+                TryCatchDetails details = active.get(i);
+                CodeLocation start = getLocation(details.getStart());
+                CodeLocation end = getLocation(details.getEnd());
+                System.out.print(sepr);
+                System.out.print(start);
+                if (end != null) {
+                    System.out.print(":");
+                    System.out.print(end);
+                }
+                sepr=", ";
+            }
+            System.out.println("}");
+
+            int currentTryStartsCount = currentTryCatchStarts.size();
+            System.out.print("current try starts for " + current.getBlockIdx() +" ==> {" );
+            sepr = "";
+            for (int i = 0; i < currentTryStartsCount; i++) {
+                TryCatchDetails details = currentTryCatchStarts.get(i);
+                CodeLocation start = getLocation(details.getStart());
+                CodeLocation end = getLocation(details.getEnd());
+                System.out.print(sepr);
+                System.out.print(start);
+                if (end != null) {
+                    System.out.print(":");
+                    System.out.print(end);
+                }
+                sepr=", ";
+            }
+            System.out.println("}");
         }
 
-        // pair off any new found exits with their respective enters
+        // find any exits which have not been closed
 
-        LinkedList<CodeLocation> reversed = new LinkedList<CodeLocation>();
-        while (entersIter.hasNext()) {
-            reversed.addFirst(entersIter.next());
-        }
-        entersIter = reversed.iterator();
+        List<CodeLocation> nonLocalExits = new LinkedList<CodeLocation>();
 
-        while (exitsIter.hasNext() && entersIter.hasNext()) {
+        while (exitsIter.hasNext()) {
             CodeLocation exit = exitsIter.next();
-            CodeLocation enter = entersIter.next();
+            // see if this one was paired off already
+            CodeLocation enter = getPairedEnter(exit);
+            if (enter ==  null) {
+                // this one must match a propagated enter so save it for later
+                nonLocalExits.add(exit);
+            }
+        }
+
+        // now pair off propagated enters with any non local exits
+
+        exitsIter = nonLocalExits.iterator();
+        
+        while (exitsIter.hasNext() && openEntersIter.hasNext()) {
+            CodeLocation exit = exitsIter.next();
+            CodeLocation enter = openEntersIter.next();
             addMonitorPair(enter, exit);
         }
 
-        // if all is right then this test should not be needed
-        if (openEntersIter != null) {
-            reversed = new LinkedList<CodeLocation>();
-            while (openEntersIter.hasNext()) {
-                reversed.addFirst(openEntersIter.next());
-            }
-            openEntersIter = reversed.iterator();
-
-            while (exitsIter.hasNext() && openEntersIter.hasNext()) {
-                CodeLocation exit = exitsIter.next();
-                CodeLocation enter = openEntersIter.next();
-                addMonitorPair(enter, exit);
-            }
-        } else {
-            if (exitsIter.hasNext()) {
-                System.out.println("exits unaccounted for in block B" + current.getBlockIdx());
-            }
+        // sanity check
+        if (exitsIter.hasNext()) {
+            System.out.println("exits unaccounted for in block B" + current.getBlockIdx());
         }
 
-        // any left over values are still open
-        // n.b. the lists are now in reverse order so we use addFirst to put them back in
-        // source code order
-        
+        // any left over values are still open at the end of this block so accumulate them
+        //  keeping them in reverse order of appearance
+
         LinkedList<CodeLocation> newOpenEnters = new LinkedList<CodeLocation>();
 
         while (entersIter.hasNext()) {
-            newOpenEnters.addFirst(entersIter.next());
+            newOpenEnters.add(entersIter.next());
         }
 
         if (openEntersIter != null) {
             while (openEntersIter.hasNext()) {
-                newOpenEnters.addFirst(openEntersIter.next());
+                newOpenEnters.add(openEntersIter.next());
             }
         }
 
         int newOpenCount = newOpenEnters.size();
         
-        // ok, now attach the list to all reachable blocks
+        // ok, now attach the list to all blocks reachable via normal control flow
 
         // first the blocks reachable via jump links
 
@@ -824,93 +861,323 @@ public class CFG
             if (openEnters == null) {
                 openMonitorEnters.put(label, newOpenEnters);
                 if (Transformer.isDumpCFGPartial()) {
-                    System.out.print("open monitors " + label + " ==>");
+                    System.out.print("open monitors " + label + " ==> {");
+                    String sepr="";
                     for (int j = 0; j < newOpenCount; j++) {
                         CodeLocation l = newOpenEnters.get(j);
-                        System.out.print(" BB");
+                        System.out.print(sepr);
+                        System.out.print("BB");
                         System.out.print(l.getBlock().getBlockIdx());
                         System.out.print(".");
                         System.out.print(l.getInstructionIdx());
+                        sepr=", ";
                     }
-                    System.out.println();
+                    System.out.println("}");
                 }
             } else {
                 // sanity check
                 // this should contain the same locations as our current list!
-                if (openEnters.size() != newOpenCount) {
-                    System.out.println("invalid open enters count for block " + label);
+                int openCount = openEnters.size();
+                if (openCount != newOpenCount) {
+                    System.out.println("CFG.carryForward: unexpected! invalid open enters count for block " + label);
                 }
-                for (int j = 0; j < newOpenCount; j++) {
+                for (int j = 0; j < newOpenCount && j < openCount; j++) {
                     CodeLocation l1 = openEnters.get(j);
                     CodeLocation l2 = newOpenEnters.get(j);
                     if (l1.getBlock() != l2.getBlock()) {
-                        System.out.println("invalid open enters block for block " + label + " at index " + j);
+                        System.out.println("CFG.carryForward: unexpected! invalid open enters block for block " + label + " at index " + j);
                     }
                     if (l1.getInstructionIdx() != l2.getInstructionIdx()) {
-                        System.out.println("invalid open enters instruction index for block " + label + " at index " + j);
+                        System.out.println("CFG.carryForward: unexpected! invalid open enters instruction index for block " + label + " at index " + j);
                     }
                 }
             }
         }
+        if (Transformer.isDumpCFGPartial()) {
+            System.out.println();
+        }
 
-        // now propagate open monitors to handler blocks reachable via thrown exceptions
-        // we need to be conservative here. a handler block may not actually be reachable because another
-        // try catch block with a generic exception type shadows it.
+        List<TryCatchDetails> activeTryStarts = current.getActiveTryStarts();
 
-        Iterator<CodeLocation> newOpenIter = newOpenEnters.iterator();
+        if (activeTryStarts != null) {
+            // now propagate open monitors to handler blocks reachable via exceptions thrown from this block
+            // we need to be conservative here. a handler block may not actually be reachable because another
+            // try catch block with a generic exception type shadows it.
 
-        // for each open enter check if any of the currently open try catch blocks is enclosed by the
-        // enter and its first exit (n.b. the latter is inclusive). if so then attach the open
-        // to the try catch details. a pseudo handler should be found later which closes the monitor
-        // and rethrows
+            // check each monitor exited in the current block to see if it's extent overlaps an active try catch
+            // anywhere in the current block
 
-        while (newOpenIter.hasNext()) {
-            CodeLocation enter = newOpenIter.next();
-            Iterator<TryCatchDetails> activeStarts = current.getActiveTryStarts();
-            while (activeStarts.hasNext()) {
-                TryCatchDetails details = activeStarts.next();
-                if (details.containsOpenEnter(enter)) {
-                    // ignore
-                    continue;
+            Iterator<CodeLocation> exitIter  = current.getMonitorExits();
+
+            while (exitIter.hasNext()) {
+                CodeLocation exit = exitIter.next();
+                CodeLocation enter = getPairedEnter(exit);
+                Iterator<TryCatchDetails> activeStartsIter = activeTryStarts.iterator();
+                while (activeStartsIter.hasNext()) {
+                    TryCatchDetails activeRegion = activeStartsIter.next();
+                    // skip if we know about this one already
+                    if (activeRegion.containsOpenEnter(enter)) {
+                        // ignore
+                        continue;
+                    }
+                    // if the handler has already been visited then this try catch returns to this same
+                    // block or one of its predecessors. that's not a real overlap since these try catches
+                    // are only added to ensure that exceptions in the handler code reenter the handler
+                    CodeLocation handlerStart = getLocation(activeRegion.getHandler());
+                    if (handlerStart != null) {
+                        continue;
+                    }
+                    // ok let's look for an overlap -- we will definitely have a start location
+                    // but there may not be an end location yet
+                    CodeLocation tryStart = getLocation(activeRegion.getStart());
+                    CodeLocation tryEnd = getLocation(activeRegion.getEnd());
+                    int containment = computeContainment(tryStart, tryEnd, enter, exit, OVERLAPS);
+                    if (containment == OVERLAPS) {
+                        // the enter/exit overlaps the try region but we still need to check whether
+                        // it lies in a shadowing region
+                        List<TryCatchDetails> shadowRegions = activeRegion.getShadowRegions();
+                        boolean isShadow = false;
+                        if (shadowRegions != null) {
+                            Iterator<TryCatchDetails> shadowRegionsIter = shadowRegions.iterator();
+                            while (shadowRegionsIter.hasNext() && !isShadow) {
+                                TryCatchDetails shadowRegion = shadowRegionsIter.next();
+                                CodeLocation shadowStart = getLocation(shadowRegion.getStart());
+                                CodeLocation shadowEnd = getLocation(shadowRegion.getEnd());
+                                containment = computeContainment(shadowStart, shadowEnd, enter, exit, CONTAINS);
+                                // we will not see UNKNOWN in this case as exit is known
+                                if (containment == CONTAINS) {
+                                    // this region encloses the enter/exit so there is no need to propagate it
+                                    if (Transformer.isDumpCFGPartial()) {
+                                        System.out.println("ignoring open enter " +  enter +
+                                                " for region " + tryStart +  ":" + (tryEnd != null ? tryEnd.toString() : "??") +
+                                                " shadowed by region " + shadowStart +  ":" + (shadowEnd != null ? shadowEnd.toString() : "??"));
+                                    }
+                                    isShadow = true;
+                                }
+                            }
+                        }
+                        if (!isShadow) {
+                            // ok, we need to add the enter to this region's open enter list
+                            if (Transformer.isDumpCFGPartial()) {
+                                System.out.println("propagating enter " +  enter + " to try handler for " +
+                                        tryStart +  ":" + (tryEnd != null ? tryEnd.toString() : "??"));
+                            }
+                            activeRegion.addOpenEnter(enter);
+                        }
+                    }
                 }
-                CodeLocation tryStart = getLocation(details.getStart());
-                if (enter.compareTo(tryStart) <= 0) {
-                    // try start is after the enter -- now see where the corresponding exit is
+            }
 
-                    CodeLocation exit = getPairedExit(enter);
-                    if (exit == null || tryStart.compareTo(exit) <= 0) {
-                        // open is in scope of try catch so attach it to the try start
-                        details.addOpenEnter(enter);
+            // for each monitor enter open at the end of the block to see if it's extent overlaps an active try catch
+            // anywhere in the current block
+
+            Iterator<CodeLocation> newOpenEntersIter = newOpenEnters.iterator();
+
+            while (newOpenEntersIter.hasNext()) {
+                CodeLocation enter = newOpenEntersIter.next();
+                Iterator<TryCatchDetails> activeStartsIter = activeTryStarts.iterator();
+                while (activeStartsIter.hasNext()) {
+                    TryCatchDetails activeRegion = activeStartsIter.next();
+                    // skip if we know about this one already
+                    if (activeRegion.containsOpenEnter(enter)) {
+                        // ignore
+                        continue;
+                    }
+                    // ok let's look for an overlap there may not be an end location yet
+                    // but we know the try start must precede the monitor exit because we have not
+                    // reached the exit and we know the try is active somewhere in this block
+                    CodeLocation tryStart = getLocation(activeRegion.getStart());
+                    CodeLocation tryEnd = getLocation(activeRegion.getEnd());
+                    int containment = computeContainment(tryStart, tryEnd, enter, null, OVERLAPS);
+
+                    if (containment == OVERLAPS) {
+                        // the enter/exit overlaps the try region but we still need to check whether
+                        // it lies in a shadowing region
+                        List<TryCatchDetails> shadowRegions = activeRegion.getShadowRegions();
+                        boolean isShadow = false;
+                        if (shadowRegions != null) {
+                            Iterator<TryCatchDetails> shadowRegionsIter = shadowRegions.iterator();
+                            while (shadowRegionsIter.hasNext() && !isShadow) {
+                                TryCatchDetails shadowRegion = shadowRegionsIter.next();
+                                CodeLocation shadowStart = getLocation(shadowRegion.getStart());
+                                CodeLocation shadowEnd = getLocation(shadowRegion.getEnd());
+                                containment = computeContainment(shadowStart, shadowEnd, enter, null, CONTAINS);
+                                if (containment == CONTAINS) {
+                                    // ok, the inner shadowing region overlaps the enter/exit
+                                    if (Transformer.isDumpCFGPartial()) {
+                                        System.out.println("ignoring open enter " +  enter +
+                                                " for region " + tryStart +  ":" + (tryEnd != null ? tryEnd.toString() : "??") +
+                                                " shadowed by region " + shadowStart +  ":" + (shadowEnd != null ? shadowEnd.toString() : "??"));
+                                    }
+                                    isShadow = true;
+                                } else if (containment == UNKNOWN) {
+                                    // this region may shadow the outer region but we don't know because we
+                                    // have not yet seen an exit or a tryEnd for the inner region -- we will
+                                    // find out when a monitor exit or tryEnd is reached so just delay for now
+                                    if (Transformer.isDumpCFGPartial()) {
+                                        System.out.println("ignoring open enter " +  enter +
+                                                " for region " + tryStart +  ":" + (tryEnd != null ? tryEnd.toString() : "??") +
+                                                " potentially shadowed by region " + shadowStart +  ":" + (shadowEnd != null ? shadowEnd.toString() : "??"));
+                                    }
+                                    isShadow = true;
+                                }
+                            }
+                        }
+                        if (!isShadow) {
+                            // ok, we need to add the enter to this regions open enter list
+                            if (Transformer.isDumpCFGPartial()) {
+                                System.out.println("propagating enter " +  enter + " to try handler for " +
+                                        tryStart +  ":" + (tryEnd != null ? tryEnd.toString() : "??"));
+                            }
+                            activeRegion.addOpenEnter(enter);
+                        }
                     }
                 }
             }
         }
+    }
 
-        // do the same for each enter opened in the current block
+    /**
+     * flag value passed to request a check for an overlap and returned to notify an overlap
+     */
+    private final static int OVERLAPS = 1;
+    /**
+     * flag value passed to request a check for a containment and returned to notify a containment
+     */
+    private final static int CONTAINS = 2;
+    /**
+     * flag value returned to notify that a containment cannot yet be computed
+     */
+    private final static int UNKNOWN = 4;
 
-        newOpenIter = current.getMonitorEnters();
-        
-        while (newOpenIter.hasNext()) {
-            CodeLocation enter = newOpenIter.next();
-            Iterator<TryCatchDetails> activeStarts = current.getActiveTryStarts();
-            while (activeStarts.hasNext()) {
-                TryCatchDetails details = activeStarts.next();
-                if (details.containsOpenEnter(enter)) {
-                    // ignore
-                    continue;
+    /**
+     * compute whether the the region defined by a given enter and exit location pair overlaps or is contained within
+     * the region defined by a try start and end location pair when both regions ar erestricted to the current block
+     * @param tryStart the location of the start of the try region which will already have been visited
+     * @param tryEnd the location of the end of the try region which may be null because the end point has not been
+     * yet visited
+     * @param enter the location of the start of the monitor region which will already have been visited
+     * @param exit the location of an exit corresponding to the enter which may be null because the exit has not
+     * yet been visited
+     * @param flags OVERLAPS if an overlap is being checked for or CONTAINS if a containment is being checked for
+     * @return OVERLAPS if the monitor region overlaps the try region and an overlap is being checked
+     * for or CONTAINS if the monitor region is definitely contained within the try region and containment is being
+     * checked for or UNKNOWN if the monitor region cannot yet be determined to be contained within the try region
+     * and containment is being checked or 0 if there is no overlap and and an overlap is being checked
+     * for or 0 if there is definitely no containment and containment is being checked for.
+     */
+    private int computeContainment(CodeLocation tryStart, CodeLocation tryEnd,
+                                   CodeLocation enter, CodeLocation exit, int flags)
+    {
+        int result = 0;
+
+        // we are only interested in overlaps or containment in the current block so
+        // restrict the region start to be inside this block
+
+        if (tryStart.getBlockIdx() < current.getBlockIdx()) {
+            tryStart = new CodeLocation(current, 0);
+        }
+        if (enter.getBlockIdx() < current.getBlockIdx()) {
+            enter = new CodeLocation(current, 0);
+        }
+
+        // tryStart and enter will both be non-null but either or both of exit and tryEnd can null indicating that
+        // they are both greater than or equal to the current position. by checking specifically for these cases
+        // we can avoid having to create code locations
+
+        if (exit == null) {
+            if (tryEnd == null) {
+                // there must at least be an OVERLAP since we have started both regions and have not exited either of
+                // them. however we cannot determine containment yet
+                if ((flags & CONTAINS) != 0) {
+                    return UNKNOWN;
                 }
-                CodeLocation tryStart = getLocation(details.getStart());
-                if (enter.compareTo(tryStart) <= 0) {
-                    // try start is after the enter -- now see where the corresponding exit is
-
-                    CodeLocation exit = getPairedExit(enter);
-                    if (exit == null || tryStart.compareTo(exit) <= 0) {
-                        // open is in scope of try catch so attach it to the try start
-                        details.addOpenEnter(enter);
-                    }
+                return OVERLAPS;
+            } else {
+                // the tryEnd precedes the exit. if it also precedes the enter then there is no overlap
+                if (tryEnd.compareTo(enter) <= 0) {
+                    return 0;
+                }
+                // the enter is contained in the try region so we have an overlap. we cannot have containment
+                // because the exit lies beyond the try end
+                if ((flags & CONTAINS) == 0) {
+                    return OVERLAPS;
+                } else {
+                    return 0;
                 }
             }
+        } else if (tryEnd == null) {
+            // well, we have an exit which precedes the try end. if it also precedes the try start then there
+            // is no overlap
+            if (exit.compareTo(tryStart) < 0) {
+                return 0;
+            }
+            // the exit is contained in the try region so we have an overlap. if we are not interested in
+            // containment then we are done
+            if ((flags & CONTAINS) == 0) {
+                return OVERLAPS;
+            }
+            // for containment we need the enter to be at or after the try start -- actually we also allow it
+            // to be in the same block as the try start but precede it by one instruction because the enter
+            // is only exposed starting from the instruction which follows it
+
+            if (tryStartMayContainEnter(tryStart, enter)) {
+                return CONTAINS;
+            }
+            // no containment
+            return 0;
+        } else {
+            // we have a start and end for both regions. we can rule out any overlap/containment if the exit
+            // precedes the try start or the enter follows the try end
+            if (exit.compareTo(tryStart) < 0 || tryEnd.compareTo(enter) <= 0) {
+                return 0;
+            }
+            // we must at least have an overlap. if we are not interested in
+            // containment then we are done
+            if ((flags & CONTAINS) == 0) {
+                return OVERLAPS;
+            }
+            // for containment we need the exit to preceded the tryEnd and the enter to be at or after the try
+            // start -- actually we also allow it to be in the same block as the try start but precede it by
+            // one instruction because the enter is only exposed starting from the instruction which follows it
+
+            // first check the exit against the try end
+            if (exit.compareTo(tryEnd) >= 0) {
+                // no containment
+                return 0;
+            }
+            if (tryStartMayContainEnter(tryStart, enter)) {
+                return CONTAINS;
+            }
+            // no containment
+            return 0;
         }
+    }
+
+    /**
+     * check whether the instructions exposed by a monitor enter may be contained within the scope of a
+     * tryStart. this is possible if the try start begins before the first instruction which follows the
+     * enter i.e. if the try start has a lower block idx than the enter or has the same block idx and an
+     * instruction offset less than or equal to the enter instruction idx + 1.
+     * @param enter
+     * @param tryStart
+     * @return
+     */
+    private boolean tryStartMayContainEnter(CodeLocation tryStart, CodeLocation enter)
+    {
+        int enterBlockIdx = enter.getBlockIdx();
+        int tryStartBlockIdx = tryStart.getBlockIdx();
+        if (tryStartBlockIdx < enterBlockIdx) {
+            return true;
+        }
+        if (tryStartBlockIdx == enterBlockIdx) {
+            int enterInsnIdx = enter.getInstructionIdx();
+            int tryStartInsnIdx = tryStart.getInstructionIdx();
+            if (tryStartInsnIdx <= enterInsnIdx + 1) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -1117,24 +1384,55 @@ public class CFG
         CodeLocation location = setLocation(label);
 
         // if this is a try catch block start, end or handler label then we need to update the list
-        // maintained in each block
+        // maintained in each block. in the former two cases we also need to update the set of currently
+        // open try starts
 
-        List<TryCatchDetails> details = tryCatchStartDetails(label);
+        List<TryCatchDetails> newStarts = tryCatchStartDetails(label);
 
-        if (details != null) {
-            current.addTryStarts(details);
+        if (newStarts != null) {
+            current.addTryStarts(newStarts);
+            currentTryCatchStarts.addAll(newStarts);
         }
 
-        details = tryCatchEndDetails(label);
+        List<TryCatchDetails> newEnds = tryCatchEndDetails(label);
 
-        if (details != null) {
-            current.addTryEnds(details);
+        if (newEnds != null) {
+            current.addTryEnds(newEnds);
+            currentTryCatchStarts.removeAll(newEnds);
         }
 
-        details = tryCatchHandlerStartDetails(label);
+        List<TryCatchDetails> newhandlers = tryCatchHandlerStartDetails(label);
 
-        if (details != null) {
-            current.addTryHandlerStarts(details);
+        if (newhandlers != null) {
+            current.addHandlerStarts(newhandlers);
+        }
+
+        if (newStarts != null) {
+            // we need to identify whether any of the new try catch regions shadows any outer try catch regions
+            // and add them to the shadow list for those outer regions. shadowing occurs if the inner region
+            // has a catch type which is the same as or a superclass of the outer region catch type or
+            // if the inner region is a catch all. we cannot guarantee to detect superclass relations as
+            // that requires code loading. but we can detect shadowing for same type and catch alls
+            // TODO extend this to cope with superclass shadowing
+
+            // currentTryStarts contains all tryStarts which have not yet been closed
+            Iterator<TryCatchDetails> currentStartsIter = currentTryCatchStarts.iterator();
+
+            while (currentStartsIter.hasNext()) {
+                TryCatchDetails currentStart = currentStartsIter.next();
+                if (newStarts.contains(currentStart)) {
+                    // this was just added so no shadowing occurs
+                    continue;
+                }
+                Iterator<TryCatchDetails> newStartsIter = newStarts.iterator();
+                while (newStartsIter.hasNext()) {
+                    TryCatchDetails newStart = newStartsIter.next();
+                    // TODO extend this to cope with superclass shadowing
+                    if (newStart.getType() == null || newStart.getType().equals(currentStart.getType())) {
+                        currentStart.addShadowRegion(newStart);
+                    }
+                }
+            }
         }
     }
 
@@ -1219,7 +1517,7 @@ public class CFG
     {
         // we just need to check whether the current block has a handler with a byteman exception type
 
-        Iterator<TryCatchDetails> handlerStarts = current.getTryHandlerStarts();
+        Iterator<TryCatchDetails> handlerStarts = current.getHandlerStarts();
         while (handlerStarts.hasNext()) {
             TryCatchDetails details = handlerStarts.next();
             // any trigger we have planted will be tagged as such

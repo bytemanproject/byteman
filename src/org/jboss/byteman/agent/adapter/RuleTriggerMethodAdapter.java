@@ -911,10 +911,9 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
 
         while (iterator.hasNext()) {
             TriggerDetails details = iterator.next();
-            Label startLabel = details.getStart();
-            CodeLocation startLocation = cfg.getLocation(startLabel);
-            List<CodeLocation> openEnters = cfg.getOpenMonitors(startLocation);
-            if (openEnters != null) {
+            // see if this trigger has any open monitor enters which will need closing
+            Iterator<CodeLocation> openEnters = cfg.getOpenMonitors(details);
+            if (openEnters.hasNext()) {
                 // add a handler here which unlocks each object and rethrows the
                 // saved exception then protect it with a try catch block and update
                 // the details so that it is the target of this block
@@ -930,9 +929,8 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
                 visitLabel(details.getThrowHandler());
                 // now add a rethrow handler which exits the open monitors
                 visitLabel(newStart);
-                int listIdx = openEnters.size();
-                while (listIdx-- > 0) {
-                    CodeLocation enterLocation = openEnters.get(listIdx);
+                while (openEnters.hasNext()) {
+                    CodeLocation enterLocation = openEnters.next();
                     int varIdx = cfg.getSavedMonitorIdx(enterLocation);
                     // call super method to avoid indexing these instructions
                     visitVarInsn(Opcodes.ALOAD, varIdx);
