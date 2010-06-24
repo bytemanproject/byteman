@@ -31,6 +31,8 @@ install. The installed version contains the following subdirectories
   sample/scripts -- contains example rule scripts showing how to
       use Byteman
 
+   contrib -- contains software contributed by other Byteman users
+
 Using Byteman
 -------------
 Please consult the Programmer's Guide for details of how Byteman
