@@ -85,10 +85,10 @@
     <!-- where to get the source -->
     <property name="svnbase" value="https://svn.jboss.org/repos/byteman/tags"/>
     <!-- The tag as it appears under svnbase -->
-    <property name="tag" value="Byteman_1_2_2_1"/>
+    <property name="tag" value="Byteman_1_3_0"/>
     <!-- The file name base for the user downloadable files. Derive it
     from the tag -->
-    <property name="version" value="1.2.2.1"/>
+    <property name="version" value="1.3.0"/>
     <!-- the location the Byteman web site content svn is checked out to -->
     <property name="cmsdir" value="/home/adinn/jboss/byteman/"/>
     <!-- you probably don't need to change anything below here -->
