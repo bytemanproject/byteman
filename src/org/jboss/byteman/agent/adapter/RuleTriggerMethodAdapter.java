@@ -56,6 +56,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
         this.bindReturnOrThrowableValue = false;
         this.bindInvokeParams = false;
         this.bindingIndicesSet =  false;
+        this.injected = false;
     }
 
     /**
@@ -607,6 +608,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
     private boolean bindReturnOrThrowableValue;
     private boolean bindInvokeParams;
     private boolean bindingIndicesSet;
+    private boolean injected;
 
     private CFG cfg;
 
@@ -1033,7 +1035,9 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
 
         // if we injected any triggers then we need to record the transform for this method
 
-        transformContext.recordMethodTransform(name, descriptor);
+        if (injected) {
+            transformContext.recordMethodTransform(name, descriptor);
+        }
     }
 
     /**
@@ -1089,5 +1093,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
             doArgUpdate();
         }
         visitTriggerEnd(endLabel);
+
+        injected = true;
     }
 }
