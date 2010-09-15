@@ -1002,8 +1002,10 @@ public class Helper
     // matching caller frames against exact name
 
     /**
-     * test whether the name of the method which called the the trigger method matches the supplied regular
+     * test whether the name of the method which called the the trigger method matches the supplied name
      * by calling callerEquals(name, false)
+     * @return true if the name of the method which called the the trigger method matches the supplied name
+     * otherwise false
      */
     public boolean callerEquals(String name)
     {
@@ -1012,7 +1014,9 @@ public class Helper
 
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
-     * matches the supplied regular expression by calling callerEquals(name, 1, frameCount)
+     * matches the supplied name by calling callerEquals(name, 1, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied name
+     * otherwise false
      */
     public boolean callerEquals(String name, int frameCount)
     {
@@ -1021,7 +1025,9 @@ public class Helper
 
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
-     * matches the supplied regular expression by calling callerEquals(name, false, startFrame, frameCount)
+     * matches the supplied name by calling callerEquals(name, false, startFrame, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied name
+     * otherwise false
      */
     public boolean callerEquals(String name, int startFrame, int frameCount)
     {
@@ -1029,10 +1035,10 @@ public class Helper
     }
 
     /**
-     * test whether the name of method which called the the trigger method matches the supplied regular
-     * expression by calling callerEquals(name, includeClass, false)
-     * @return true if the name of the method which called the the trigger method matches the supplied regular
-     * expression otherwise false
+     * test whether the name of method which called the the trigger method matches the supplied name
+     * by calling callerEquals(name, includeClass, false)
+     * @return true if the name of the method which called the the trigger method matches the supplied name
+     * otherwise false
      */
     public boolean callerEquals(String name, boolean includeClass)
     {
@@ -1040,10 +1046,10 @@ public class Helper
     }
 
     /**
-     * test whether the name of method which called the the trigger method matches the supplied regular
-     * expression by calling callerEquals(name, includeClass, false, frameCount)
-     * @return true if the name of the method which called the the trigger method matches the supplied regular
-     * expression otherwise false
+     * test whether the name of method which called the the trigger method matches the supplied name
+     * by calling callerEquals(name, includeClass, false, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied name
+     * otherwise false
      */
     public boolean callerEquals(String name, boolean includeClass, int frameCount)
     {
@@ -1051,10 +1057,10 @@ public class Helper
     }
 
     /**
-     * test whether the name of method which called the the trigger method matches the supplied regular
-     * expression by calling callerEquals(name, includeClass, false, startFrame, frameCount)
-     * @return true if the name of the method which called the the trigger method matches the supplied regular
-     * expression otherwise false
+     * test whether the name of method which called the the trigger method matches the supplied name
+     * by calling callerEquals(name, includeClass, false, startFrame, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied name
+     * otherwise false
      */
     public boolean callerEquals(String name, boolean includeClass, int startFrame, int frameCount)
     {
@@ -1062,10 +1068,10 @@ public class Helper
     }
 
     /**
-     * test whether the name of method which called the the trigger method matches the supplied regular
-     * expression by calling callerEquals(name, includeClass, includePackage, 1)
-     * @return true if the name of the method which called the the trigger method matches the supplied regular
-     * expression otherwise false
+     * test whether the name of method which called the the trigger method matches the supplied name
+     * by calling callerEquals(name, includeClass, includePackage, 1)
+     * @return true if the name of the method which called the the trigger method matches the supplied name
+     * otherwise false
      */
     public boolean callerEquals(String name, boolean includeClass, boolean includePackage)
     {
@@ -1074,8 +1080,10 @@ public class Helper
 
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
-     * matches the supplied regular expression by calling
+     * matches the supplied name by calling
      * callerCheck(name, false, includeClass, includePackage, 1, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied name
+     * otherwise false
      */
     public boolean callerEquals(String name, boolean includeClass, boolean includePackage, int frameCount)
     {
@@ -1084,8 +1092,10 @@ public class Helper
 
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
-     * matches the supplied regular expression by calling
+     * matches the supplied name by calling
      * callerCheck(name, false, includeClass, false, startFrame, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied name
+     * otherwise false
      */
     public boolean callerEquals(String name, boolean includeClass, boolean includePackage, int startFrame, int frameCount)
     {
@@ -1098,6 +1108,8 @@ public class Helper
     /**
      * test whether the name of the method which called the the trigger method matches the supplied regular
      * by calling callerMatches(regExp, false)
+     * @return true if the name of the method which called the the trigger method matches the supplied
+     * regular expression otherwise false
      */
     public boolean callerMatches(String regExp)
     {
@@ -1107,6 +1119,8 @@ public class Helper
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied regular expression by calling callerMatches(regExp, 1, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied
+     * regular expression otherwise false
      */
     public boolean callerMatches(String regExp, int frameCount)
     {
@@ -1116,6 +1130,8 @@ public class Helper
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied regular expression by calling callerMatches(regExp, false, startFrame, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied
+     * regular expression otherwise false
      */
     public boolean callerMatches(String regExp, int startFrame, int frameCount)
     {
@@ -1181,6 +1197,8 @@ public class Helper
      * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied regular expression by calling
      * callerCheck(regExp, true, includeClass, includePackage, 1, frameCount)
+     * @return true if the name of the method which called the the trigger method matches the supplied
+     * regular expression otherwise false
      */
     public boolean callerMatches(String regExp, boolean includeClass, boolean includePackage, int startFrame, int frameCount)
     {
@@ -1204,7 +1222,7 @@ public class Helper
      * this is non-positive or exceeds the actual number of callers above the start frame then all frames in
      * the stack are tested.
      * @return true if the name of one of the selected methods in the call stack starting from the trigger
-     * method matches the supplied regular expression otherwise false
+     * method matches the supplied match value otherwise false
      */
     public boolean callerCheck(String match, boolean isRegExp,
                                boolean includeClass, boolean includePackage,
