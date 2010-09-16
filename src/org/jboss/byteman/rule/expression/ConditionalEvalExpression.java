@@ -64,6 +64,9 @@ public class ConditionalEvalExpression extends TernaryOperExpression
             } else {
                 throw new TypeException("ConditionalEvalExpression.typeCheck : incompatible argument types " + type1.getName() + " and " + type2.getName() + getPos());
             }
+        } else {
+            // use either type
+            type = type1;
         }
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
             throw new TypeException("ConditionalEvalExpression.typeCheck : invalid expected result type " + expected.getName() + getPos());
