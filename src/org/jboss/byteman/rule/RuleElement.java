@@ -215,7 +215,7 @@ public abstract class RuleElement {
             mv.visitJumpInsn(Opcodes.IFNONNULL, elseLabel);
             // then string = "null"
             mv.visitInsn(Opcodes.POP);
-            mv.visitLdcInsn("null");
+            mv.visitInsn(Opcodes.ACONST_NULL);
             mv.visitJumpInsn(Opcodes.GOTO, endLabel);
             // else string = object.toString()
             mv.visitLabel(elseLabel);

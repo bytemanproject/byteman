@@ -71,7 +71,8 @@ public class StringPlusExpression extends BinaryOperExpression
         Expression oper1 = getOperand(1);
 
         int currentStack = currentStackHeights.stackCount;
-        int expected = 2;
+        int expected = 1;
+        int max = 3; // 2 operands plus the dupped copy of  operand 2
 
         // compile and type convert each operand n.b. the type conversion will ensure that
         // null operands are replaced with "null"
@@ -86,7 +87,15 @@ public class StringPlusExpression extends BinaryOperExpression
         // then call concat to join them
         // add two strings leaving one string
 
-        expected = 1;
+        // if second operand is null replace it with "null"
+        Label skiptarget = new Label();
+        mv.visitInsn(Opcodes.DUP);
+        // if it is not null we skip to the concat operation
+        mv.visitJumpInsn(Opcodes.IFNONNULL, skiptarget);
+        // it's null so we have to swap it fdr "null"
+        mv.visitInsn(Opcodes.POP);
+        mv.visitLdcInsn("null");
+        mv.visitLabel(skiptarget);
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "concat", "(Ljava/lang/String;)Ljava/lang/String;");
 
         currentStackHeights.addStackCount(-1);
@@ -95,9 +104,7 @@ public class StringPlusExpression extends BinaryOperExpression
             throw new CompileException("StringPlusExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
         }
 
-        // we need room for 2 * expected words at our maximum
-
-        int overflow = (currentStack + 2 * expected) - maxStackHeights.stackCount;
+        int overflow = (currentStack + max) - maxStackHeights.stackCount;
         if (overflow > 0) {
             maxStackHeights.addStackCount(overflow);
         }
