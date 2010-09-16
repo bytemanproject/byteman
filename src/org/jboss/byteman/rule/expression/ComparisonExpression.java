@@ -64,7 +64,9 @@ public class ComparisonExpression extends BooleanExpression
             throw new TypeException("ComparisonExpression.typeCheck : incomparable argument types " + type1.getName() + " and " + type2.getName() + " for comparison expression"  + getPos());
         }
 
-        if (oper !=  EQ && oper != NE && !comparable) {
+        // we have to implement anything other than EQ or NE using Comparable
+        
+        if (oper != EQ && oper != NE && !comparable) {
             throw new TypeException("ComparisonExpression.typeCheck : cannot compare instances of class " + comparisonType.getName() + getPos());
         }
         
@@ -201,7 +203,7 @@ public class ComparisonExpression extends BooleanExpression
                             break;
                     }
                     return result;
-                }  else { // comparisonType == Type.C
+                }  else if (comparisonType == Type.C) {
                     char c1 = (char)value1.intValue();
                     char c2 = (char)value2.intValue();
                     boolean result;
@@ -231,36 +233,53 @@ public class ComparisonExpression extends BooleanExpression
                     }
                     return result;
                 }
-            } else if (comparable) {
+            }
+            // we implement compares via comparable but eq and neq via .equals
+
+            if (comparable) {
                 Comparable value1 = (Comparable)getOperand(0).interpret(helper);
                 Comparable value2 = (Comparable)getOperand(1).interpret(helper);
-                int cmp = value1.compareTo(value2);
-                boolean result;
-                switch (oper)
-                {
-                    case LT:
-                        result = (cmp < 0);
-                        break;
-                    case LE:
-                        result = (cmp <= 0);
-                        break;
-                    case GT:
-                        result = (cmp > 0);
-                        break;
-                    case GE:
-                        result = (cmp >= 0);
-                        break;
-                    case EQ:
-                        result = (cmp == 0);
-                        break;
-                    case NE:
-                        result = (cmp != 0);
-                        break;
-                    default:
-                        result = false;
-                        break;
+                if (value1 == null || value2 == null) {
+                    if (oper == EQ) {
+                        return value1 == value2;
+                    } else if (oper == NE) {
+                        return value1 != value2;
+                    }
+                    return false;
+                } else {
+                    int cmp;
+                    cmp = value1.compareTo(value2);
+                    boolean result;
+                    switch (oper)
+                    {
+                        case LT:
+                            cmp = value1.compareTo(value2);
+                            result = (cmp < 0);
+                            break;
+                        case LE:
+                            cmp = value1.compareTo(value2);
+                            result = (cmp <= 0);
+                            break;
+                        case GT:
+                            cmp = value1.compareTo(value2);
+                            result = (cmp > 0);
+                            break;
+                        case GE:
+                            cmp = value1.compareTo(value2);
+                            result = (cmp >= 0);
+                            break;
+                        case EQ:
+                            result = value1.equals(value2);
+                            break;
+                        case NE:
+                            result = !value1.equals(value2);
+                            break;
+                        default:
+                            result = false;
+                            break;
+                    }
+                    return result;
                 }
-                return result;
             } else  {
                 Object value1 = getOperand(0).interpret(helper);
                 Object value2 = getOperand(1).interpret(helper);
@@ -268,7 +287,7 @@ public class ComparisonExpression extends BooleanExpression
                 if (oper == EQ) {
                     result = (value1 == value2);
                 } else {
-                    result = (value1 !=  value2);
+                    result = (value1 != value2);
                 }
                 return result;
             }
@@ -285,6 +304,7 @@ public class ComparisonExpression extends BooleanExpression
         Expression oper1 = getOperand(1);
 
         int currentStack = currentStackHeights.stackCount;
+        int removed = 0;
         int max = 0;
 
         // evaluate the operands and ensure the reuslt is of the correct type for comparison adds 2
@@ -294,161 +314,269 @@ public class ComparisonExpression extends BooleanExpression
         compileTypeConversion(oper1.getType(), comparisonType, mv, currentStackHeights, maxStackHeights);
 
         // now do the appropriate type of comparison
-        if (comparisonType.isNumeric()) {
-            if (comparisonType == type.B || comparisonType == type.S || comparisonType == type.S || comparisonType == type.I) {
-                Label elsetarget = new Label();
-                Label endtarget = new Label();
-                // we needed to stack two words for the operands
-                max = 2;
-                switch (oper)
-                {
-                    case LT:
-                        mv.visitJumpInsn(Opcodes.IF_ICMPGE, elsetarget);
-                        mv.visitLdcInsn(true); // or should we BIPUSH 1
-                        mv.visitJumpInsn(Opcodes.GOTO, endtarget);
-                        mv.visitLabel(elsetarget);
-                        mv.visitLdcInsn(false);
-                        mv.visitLabel(endtarget);
-                        break;
-                    case LE:
-                        mv.visitJumpInsn(Opcodes.IF_ICMPGT, elsetarget);
-                        mv.visitLdcInsn(true); // or should we BIPUSH 1
-                        mv.visitJumpInsn(Opcodes.GOTO, endtarget);
-                        mv.visitLabel(elsetarget);
-                        mv.visitLdcInsn(false);
-                        mv.visitLabel(endtarget);
-                        break;
-                    case GT:
-                        mv.visitJumpInsn(Opcodes.IF_ICMPLE, elsetarget);
-                        mv.visitLdcInsn(true); // or should we BIPUSH 1
-                        mv.visitJumpInsn(Opcodes.GOTO, endtarget);
-                        mv.visitLabel(elsetarget);
-                        mv.visitLdcInsn(false);
-                        mv.visitLabel(endtarget);
-                        break;
-                    case GE:
-                        mv.visitJumpInsn(Opcodes.IF_ICMPLT, elsetarget);
-                        mv.visitLdcInsn(true); // or should we BIPUSH 1
-                        mv.visitJumpInsn(Opcodes.GOTO, endtarget);
-                        mv.visitLabel(elsetarget);
-                        mv.visitLdcInsn(false);
-                        mv.visitLabel(endtarget);
-                        break;
-                    case EQ:
-                        mv.visitJumpInsn(Opcodes.IF_ICMPNE, elsetarget);
-                        mv.visitLdcInsn(true); // or should we BIPUSH 1
-                        mv.visitJumpInsn(Opcodes.GOTO, endtarget);
-                        mv.visitLabel(elsetarget);
-                        mv.visitLdcInsn(false);
-                        mv.visitLabel(endtarget);
-                        break;
-                    case NE:
-                        mv.visitJumpInsn(Opcodes.IF_ICMPEQ, elsetarget);
-                        mv.visitLdcInsn(true); // or should we BIPUSH 1
-                        mv.visitJumpInsn(Opcodes.GOTO, endtarget);
-                        mv.visitLabel(elsetarget);
-                        mv.visitLdcInsn(false);
-                        mv.visitLabel(endtarget);
-                        break;
-                }
-            } else if (comparisonType == type.J || comparisonType == type.F || comparisonType == type.D || comparable) {
-                if (comparisonType == type.J) {
-                    mv.visitInsn(Opcodes.LCMP);
-                    // we needed to stack four words for the operands
-                    max = 4;
-                } else if (comparisonType == type.F) {
-                    // we needed to stack two words for the operands
-                    max = 2;
-                    mv.visitInsn(Opcodes.FCMPG);
-                } else if (comparisonType == type.D) {
-                    // we needed to stack four words for the operands
-                    max = 4;
-                    mv.visitInsn(Opcodes.DCMPG);
-                } else {
-                    // we needed to stack two words for the operands
-                    max = 2;
-                    // comparable -- call compare to to leave an int
-                    mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, "java/lang/Comparable", "compareTo", "(Ljava/lang/Object;)I");
-                }
-                Label elsetarget = new Label();
-                Label endtarget = new Label();
-                switch (oper)
-                {
-                    case LT:
-                        mv.visitJumpInsn(Opcodes.IFGE, elsetarget);
-                        mv.visitLdcInsn(true); // or should we BIPUSH 1
-                        mv.visitJumpInsn(Opcodes.GOTO, endtarget);
-                        mv.visitLabel(elsetarget);
-                        mv.visitLdcInsn(false);
-                        mv.visitLabel(endtarget);
-                        break;
-                    case LE:
-                        mv.visitJumpInsn(Opcodes.IFGT, elsetarget);
-                        mv.visitLdcInsn(true); // or should we BIPUSH 1
-                        mv.visitJumpInsn(Opcodes.GOTO, endtarget);
-                        mv.visitLabel(elsetarget);
-                        mv.visitLdcInsn(false);
-                        mv.visitLabel(endtarget);
-                        break;
-                    case GT:
-                        mv.visitJumpInsn(Opcodes.IFLE, elsetarget);
-                        mv.visitLdcInsn(true); // or should we BIPUSH 1
-                        mv.visitJumpInsn(Opcodes.GOTO, endtarget);
-                        mv.visitLabel(elsetarget);
-                        mv.visitLdcInsn(false);
-                        mv.visitLabel(endtarget);
-                        break;
-                    case GE:
-                        mv.visitJumpInsn(Opcodes.IFLT, elsetarget);
-                        mv.visitLdcInsn(true); // or should we BIPUSH 1
-                        mv.visitJumpInsn(Opcodes.GOTO, endtarget);
-                        mv.visitLabel(elsetarget);
-                        mv.visitLdcInsn(false);
-                        mv.visitLabel(endtarget);
-                        break;
-                    case EQ:
-                        mv.visitJumpInsn(Opcodes.IFNE, elsetarget);
-                        mv.visitLdcInsn(true); // or should we BIPUSH 1
-                        mv.visitJumpInsn(Opcodes.GOTO, endtarget);
-                        mv.visitLabel(elsetarget);
-                        mv.visitLdcInsn(false);
-                        mv.visitLabel(endtarget);
-                        break;
-                    case NE:
-                        mv.visitJumpInsn(Opcodes.IFEQ, elsetarget);
-                        mv.visitLdcInsn(true); // or should we BIPUSH 1
-                        mv.visitJumpInsn(Opcodes.GOTO, endtarget);
-                        mv.visitLabel(elsetarget);
-                        mv.visitLdcInsn(false);
-                        mv.visitLabel(endtarget);
-                        break;
-                }
+        if (comparisonType == type.B || comparisonType == type.S || comparisonType == type.S || comparisonType == type.I) {
+            Label elsetarget = new Label();
+            Label endtarget = new Label();
+            // we remove 2 words from the stack
+            removed = 2;
+            max = 2;
+            switch (oper)
+            {
+                case LT:
+                    mv.visitJumpInsn(Opcodes.IF_ICMPGE, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case LE:
+                    mv.visitJumpInsn(Opcodes.IF_ICMPGT, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case GT:
+                    mv.visitJumpInsn(Opcodes.IF_ICMPLE, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case GE:
+                    mv.visitJumpInsn(Opcodes.IF_ICMPLT, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case EQ:
+                    mv.visitJumpInsn(Opcodes.IF_ICMPNE, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case NE:
+                    mv.visitJumpInsn(Opcodes.IF_ICMPEQ, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
             }
+        } else if (comparisonType == type.J || comparisonType == type.F || comparisonType == type.D) {
+            if (comparisonType == type.J) {
+                mv.visitInsn(Opcodes.LCMP);
+                // we needed to stack four words for the operands
+                removed = 4;
+                max = 4;
+            } else if (comparisonType == type.F) {
+                // we needed to stack two words for the operands
+                removed = 2;
+                max = 2;
+                mv.visitInsn(Opcodes.FCMPG);
+            } else if (comparisonType == type.D) {
+                // we needed to stack four words for the operands
+                removed = 4;
+                max = 4;
+                mv.visitInsn(Opcodes.DCMPG);
+            }
+            Label elsetarget = new Label();
+            Label endtarget = new Label();
+            switch (oper)
+            {
+                case LT:
+                    mv.visitJumpInsn(Opcodes.IFGE, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case LE:
+                    mv.visitJumpInsn(Opcodes.IFGT, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case GT:
+                    mv.visitJumpInsn(Opcodes.IFLE, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case GE:
+                    mv.visitJumpInsn(Opcodes.IFLT, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case EQ:
+                    mv.visitJumpInsn(Opcodes.IFNE, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case NE:
+                    mv.visitJumpInsn(Opcodes.IFEQ, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+            }
+        } else if (comparable) {
+            removed = 2;
+            // we add a further two words setting up the relevant test
+            max = 4;
+            // we need to deal with null values correctly
+            // if op1 == null || op2 == null
+            // then
+            //   EQ:
+            //   push value1 == value2
+            //   NE:
+            //   push value1 != value2
+            //   ow:
+            //   push false
+            // else
+            //   execute compareTo or equals and test for the desired outcome
+            // end if
+            Label splittarget = new Label(); // else
+            Label jointarget = new Label(); // end if
+            mv.visitInsn(Opcodes.DUP2); // [... op1, op2 ] ==> [... op1, op2, op1,  op2]
+            mv.visitInsn(Opcodes.POP); // [... op1, op2, op1, op2 ] ==> [... op1, op2, op1]
+            // if op1 == null
+            mv.visitJumpInsn(Opcodes.IFNULL, splittarget); // [... op1, op2, op1] ==> [... op1, op2]
+            mv.visitInsn(Opcodes.DUP); // [... op1, op2 ] ==> [... op1, op2, op2]
+            // || op2 == null
+            mv.visitJumpInsn(Opcodes.IFNULL, splittarget); // [... op1, op2, op2] ==> [... op1, op2]
+            // so, it is ok to call compareTo leaving an int or equals leaving a boolean
+            if (oper != EQ && oper != NE) {
+                mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, "java/lang/Comparable", "compareTo", "(Ljava/lang/Object;)I");
+            } else {
+                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Object", "equals", "(Ljava/lang/Object;)Z");
+            }
+            // now if we did a compareTo we need to generate the required boolean
+            Label elsetarget = new Label();
+            Label endtarget = new Label();
+            // if needed the convert the compareTo result to the required boolean outcome
+            switch (oper)
+            {
+                case LT:
+                    mv.visitJumpInsn(Opcodes.IFGE, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case LE:
+                    mv.visitJumpInsn(Opcodes.IFGT, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case GT:
+                    mv.visitJumpInsn(Opcodes.IFLE, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case GE:
+                    mv.visitJumpInsn(Opcodes.IFLT, elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitLabel(endtarget);
+                    break;
+                case NE:
+                    mv.visitJumpInsn(Opcodes.IFEQ, elsetarget);
+                    mv.visitLdcInsn(false);
+                    mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                    mv.visitLabel(elsetarget);
+                    mv.visitLdcInsn(true);
+                    mv.visitLabel(endtarget);
+                    break;
+            }
+            // skip to the join point
+            mv.visitJumpInsn(Opcodes.GOTO, jointarget);
+            // label the split point
+            mv.visitLabel(splittarget);
+            if (oper == EQ) {
+                elsetarget = new Label();
+                endtarget = new Label();
+                mv.visitJumpInsn(Opcodes.IF_ACMPEQ, elsetarget);
+                mv.visitLdcInsn(false);
+                mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                mv.visitLabel(elsetarget);
+                mv.visitLdcInsn(true);
+                mv.visitLabel(endtarget);
+            } else if (oper == NE) {
+                elsetarget = new Label();
+                endtarget = new Label();
+                mv.visitJumpInsn(Opcodes.IF_ACMPNE, elsetarget);
+                mv.visitLdcInsn(false);
+                mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                mv.visitLabel(elsetarget);
+                mv.visitLdcInsn(true);
+                mv.visitLabel(endtarget);
+            } else {
+                // pop the operands and stack false
+                mv.visitInsn(Opcodes.POP2);
+                mv.visitLdcInsn(false);
+            }
+            // label the join point
+            mv.visitLabel(jointarget);
+
         } else {
-            // we needed to stack two words for the operands
+            removed = 2;
             max = 2;
             Label elsetarget = new Label();
             Label endtarget = new Label();
             if (oper == EQ) {
                 mv.visitJumpInsn(Opcodes.IF_ACMPNE, elsetarget);
-                mv.visitLdcInsn(true); // or should we BIPUSH 1
+                mv.visitLdcInsn(true);
                 mv.visitJumpInsn(Opcodes.GOTO, endtarget);
                 mv.visitLabel(elsetarget);
                 mv.visitLdcInsn(false);
                 mv.visitLabel(endtarget);
             } else {
                 mv.visitJumpInsn(Opcodes.IF_ACMPEQ, elsetarget);
-                mv.visitLdcInsn(true); // or should we BIPUSH 1
+                mv.visitLdcInsn(true);
                 mv.visitJumpInsn(Opcodes.GOTO, endtarget);
                 mv.visitLabel(elsetarget);
                 mv.visitLdcInsn(false);
                 mv.visitLabel(endtarget);
             }
         }
-        // we remove max words and add a single boolean to the stack
-        currentStackHeights.addStackCount(1 - max);
-        // no need to check the max heights as we stacked one or two words per operand and
-        // the compile and compileConvert calls will have already bumped the maximum stack
+        // allow for removal of removed words and push of one boolean
+        currentStackHeights.addStackCount(1 - removed);
+        // see if we exceeded the current stack height
+        int excess = (currentStack + max - maxStackHeights.stackCount);
+        if (excess > 0) {
+            maxStackHeights.addStackCount(excess);
+        }
     }
 
     private Type comparisonType;

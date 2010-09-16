@@ -1,0 +1,59 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2009, Red Hat Middleware LLC, and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+
+RULE test comparison 1
+CLASS TestComparison
+METHOD triggerMethod1(String)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER CALL log
+BIND test : Test = $0,
+     arg : String = $1
+IF TRUE
+DO test.log("triggerMethod1 : arg == " + arg),
+   test.log("triggerMethod1 : arg == 1234 == " + (arg == "1234")),
+   test.log("triggerMethod1 : arg != 1234 == " + (arg != "1234")),
+   test.log("triggerMethod1 : arg >= 1234 == " + (arg >= "1234")),
+   test.log("triggerMethod1 : arg > 1234 == " + (arg > "1234")),
+   test.log("triggerMethod1 : arg < 1234 == " + (arg < "1234")),
+   test.log("triggerMethod1 : arg <= 1234 == " + (arg <= "1234")),
+   return $1
+ENDRULE
+
+RULE test comparison 2
+CLASS TestComparison
+METHOD triggerMethod2(int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER CALL log
+BIND test : Test = $0,
+     arg : int = $1
+IF TRUE
+DO test.log("triggerMethod2 : arg == " + $1),
+   test.log("triggerMethod2 : arg == 1234 == " + (arg == 1234)),
+   test.log("triggerMethod2 : arg != 1234 == " + (arg != 1234)),
+   test.log("triggerMethod2 : arg >= 1234 == " + (arg >= 1234)),
+   test.log("triggerMethod2 : arg > 1234 == " + (arg > 1234)),
+   test.log("triggerMethod2 : arg < 1234 == " + (arg < 1234)),
+   test.log("triggerMethod2 : arg <= 1234 == " + (arg <= 1234)),
+   return $1
+ENDRULE
