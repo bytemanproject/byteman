@@ -24,12 +24,12 @@
 package org.jboss.byteman.rule.expression;
 
 import org.jboss.byteman.rule.binding.Binding;
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -123,10 +123,8 @@ public class Variable extends AssignableExpression
         return helper.getBinding(name);
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
-        int currentStack = currentStackHeights.stackCount;
-
         // stack the current helper
         // stack the name for the variable
         // call the getBinding method
@@ -134,21 +132,17 @@ public class Variable extends AssignableExpression
         mv.visitLdcInsn(name);
         mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "getBinding", "(Ljava/lang/String;)Ljava/lang/Object;");
         // ok, we added 2 to the stack and then popped them leaving 1
-        currentStackHeights.addStackCount(1);
+        compileContext.addStackCount(2);
+        compileContext.addStackCount(-1);
         // perform any necessary type conversion
         if (type.isPrimitive()) {
             // cast down to the boxed type then do an unbox
             Type boxType = Type.boxType(type);
-            compileObjectConversion(Type.OBJECT, boxType, mv, currentStackHeights, maxStackHeights);
-            compileUnbox(boxType, type,  mv, currentStackHeights, maxStackHeights);
+            compileObjectConversion(Type.OBJECT, boxType, mv, compileContext);
+            compileUnbox(boxType, type,  mv, compileContext);
         } else {
             // cast down to the required type
-            compileObjectConversion(Type.OBJECT, type, mv, currentStackHeights, maxStackHeights);
-        }
-        // make sure we have room for 2 working slots
-        int overflow = (currentStack + 2 - maxStackHeights.stackCount);
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
+            compileObjectConversion(Type.OBJECT, type, mv, compileContext);
         }
     }
 
@@ -160,67 +154,68 @@ public class Variable extends AssignableExpression
     }
 
     @Override
-    public void compileAssign(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compileAssign(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int size = ((type.getNBytes() > 4) ? 2 : 1);
         int max;
 
         // value to be assigned is TOS and will already be coerced to the correct value type
         // copy it so we leave it as a a return value on the stack
         if (size == 2) {
+            // [... val1 val2 ==> ... val1 val2 val1 val2]
             mv.visitInsn(Opcodes.DUP2);
         } else {
+            // [... val ==> ... val val]
             mv.visitInsn(Opcodes.DUP);
         }
         // stack the current helper then insert it below the value
         mv.visitVarInsn(Opcodes.ALOAD, 0);
         if (size == 2) {
             // use a DUP_X2 to push a copy below the value then pop the redundant value
+            // [... val1 val2 val1 val2 helper ==> ... val1 val2 helper val1 val2 helper]
             mv.visitInsn(Opcodes.DUP_X2);
+            // [... val1 val2 helper val1 val2 helper ==> ... val1 val2 helper val1 val2]
             mv.visitInsn(Opcodes.POP);
         } else {
             // we can just swap the two values
+            // [... val val helper ==> ... val helper val]
             mv.visitInsn(Opcodes.SWAP);
         }
         // stack the name for the variable and swap below the value
         mv.visitLdcInsn(name);
         if (size == 2) {
             // use a DUP_X2 to push a copy below the value then pop the redundant value
+            // [... val1 val2 helper val1 val2 name ==> [... val1 val2 helper name val1 val2 name]
             mv.visitInsn(Opcodes.DUP_X2);
             // this is the high water mark
-            // at this point the stack has gone from [ .. val1 val2]  to [.. val1 val2 helper name val1 val2 name]
-            max = 3 + size;
+            compileContext.addStackCount(5);
+            // [... val1 val2 helper name val1 val2 name ==> [... val1 val2 helper name val1 val2]
             mv.visitInsn(Opcodes.POP);
-            // and now we have the desired arrangement for the call[.. val1 val2 helper name val]
+            compileContext.addStackCount(-1);
+            // and now we have the desired arrangement for the call[.. val1 val2 helper name val1 val2]
         } else {
             // this is the high water mark
             // at this point the stack has gone from [ .. val]  to [.. val helper val name]
-            max = 2 + size;
+            compileContext.addStackCount(3);
             // we can just swap the two values
+            // [... val helper val name ==> ... val helper name val]
             mv.visitInsn(Opcodes.SWAP);
             // and now we have the desired arrangement for the call[.. val helper name val]
         }
-        // update the stack count for the value and two extra words before we attempt a type conversion
-        currentStackHeights.addStackCount(2 + size);
+
         // ensure we have an object
-        compileObjectConversion(type, Type.OBJECT, mv, currentStackHeights, maxStackHeights);
+        compileObjectConversion(type, Type.OBJECT, mv, compileContext);
 
         // call the setBinding method
         mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V");
 
         // the call will remove 3 from the stack height
-        currentStackHeights.addStackCount(-3);
+        compileContext.addStackCount(-3);
 
         // ok, the stack height should be as it was
-        if (currentStackHeights.stackCount != currentStack) {
-            throw new CompileException("variable.compileAssignment : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack);
-        }
-        // make sure we left room for the right number of working slots at our maximum
-        // at the high water mark we had
-        int overflow = (currentStack + max - maxStackHeights.stackCount);
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
+        if (compileContext.getStackCount() != currentStack) {
+            throw new CompileException("variable.compileAssignment : invalid stack height " + compileContext.getStackCount() + " expecting " + currentStack);
         }
     }
 

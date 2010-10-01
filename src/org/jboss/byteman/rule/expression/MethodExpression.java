@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.type.TypeGroup;
 import org.jboss.byteman.rule.binding.Binding;
@@ -30,7 +31,6 @@ import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -283,14 +283,14 @@ public class MethodExpression extends Expression
         }
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int extraParams = 0; // space used by stacked args after conversion
         int expected = 0;
         if (recipient != null) {
             // compile code for recipient
-            recipient.compile(mv, currentStackHeights, maxStackHeights);
+            recipient.compile(mv, compileContext);
 
             extraParams += 1;
         }
@@ -302,19 +302,19 @@ public class MethodExpression extends Expression
             Type argType = argumentTypes.get(i);
             Type paramType = paramTypes.get(i);
             // compile code to stack argument and type convert if necessary
-            argument.compile(mv, currentStackHeights, maxStackHeights);
-            compileTypeConversion(argType, paramType, mv, currentStackHeights, maxStackHeights);
+            argument.compile(mv, compileContext);
+            compileTypeConversion(argType, paramType, mv, compileContext);
             // allow for stacked paramType value
             extraParams += (paramType.getNBytes() > 4 ? 2 : 1);
         }
 
         // enable triggering before we call the method
-        // this temporarily adds an extra value to the stack so we need to check the stack height
+        // this adds an extra value to the stack so modify the compile context to ensure
+        // we increase the maximum height if necessary
         mv.visitMethodInsn(Opcodes.INVOKESTATIC, "org/jboss/byteman/rule/Rule", "enableTriggersInternal", "()Z");
+        compileContext.addStackCount(1);
         mv.visitInsn(Opcodes.POP);
-        if (maxStackHeights.stackCount == currentStackHeights.stackCount) {
-            maxStackHeights.stackCount++;
-        }
+        compileContext.addStackCount(-1);
 
         // ok, now just call the method -- removes extraParams words
 
@@ -328,12 +328,6 @@ public class MethodExpression extends Expression
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, ownerName, method.getName(), getDescriptor());
         }
 
-        // now disable triggering again
-        // this temporarily adds an extra value to the stack but cannot increase the max height
-        
-        mv.visitMethodInsn(Opcodes.INVOKESTATIC, "org/jboss/byteman/rule/Rule", "disableTriggersInternal", "()Z");
-        mv.visitInsn(Opcodes.POP);
-
         // no need for type conversion as return type was derived from method
         if (type.getNBytes() > 4) {
             expected = 2;
@@ -344,11 +338,18 @@ public class MethodExpression extends Expression
         }
 
         // decrement the stack height to account for stacked param values (removed) and return value (added)
-        currentStackHeights.addStackCount(expected - extraParams);
+        compileContext.addStackCount(expected - extraParams);
+
+        // now disable triggering again
+        // this temporarily adds an extra value to the stack -- no need to increment and
+        // then decrement the stack height as we will already have bumped the max last time
+
+        mv.visitMethodInsn(Opcodes.INVOKESTATIC, "org/jboss/byteman/rule/Rule", "disableTriggersInternal", "()Z");
+        mv.visitInsn(Opcodes.POP);
 
         // ensure we have only increased the stack by the return value size
-        if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("MethodExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
+        if (compileContext.getStackCount() != currentStack + expected) {
+            throw new CompileException("MethodExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
         }
 
         // no need to update max stack since compiling the  recipient or arguments will

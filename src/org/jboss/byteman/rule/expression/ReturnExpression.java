@@ -23,13 +23,13 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.EarlyReturnException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -165,12 +165,11 @@ public class ReturnExpression extends Expression
         }
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         Type valueType = (returnValue == null ? Type.VOID : returnValue.getType());
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int expected = 1;
-        int extraSlots = 0;
 
         // ok, we need to create the EarlyReturnException instance and then
         // initialise it using the appropriate return value or null if no
@@ -182,51 +181,42 @@ public class ReturnExpression extends Expression
         // create am EarlyReturnException -- adds 1 to stack
         String exceptionClassName = Type.internalName(EarlyReturnException.class);
         mv.visitTypeInsn(Opcodes.NEW, exceptionClassName);
-        currentStackHeights.addStackCount(1);
+        compileContext.addStackCount(1);
         // copy the exception so we can initialise it -- adds 1 to stack
         mv.visitInsn(Opcodes.DUP);
-        currentStackHeights.addStackCount(1);
+        compileContext.addStackCount(1);
         // stack a string constant to initialise the exception with -- adds 1 to stack
         mv.visitLdcInsn("return from " + rule.getName());
-        currentStackHeights.addStackCount(1);
+        compileContext.addStackCount(1);
         // stack any required return value or null -- adds 1 to stack but may use 2 slots
         if (returnValue != null) {
-            returnValue.compile(mv, currentStackHeights, maxStackHeights);
+            returnValue.compile(mv, compileContext);
             // we may need to convert from the value type to the return type
             if (valueType != type) {
-                compileTypeConversion(valueType, type,  mv, currentStackHeights, maxStackHeights);
+                compileTypeConversion(valueType, type,  mv, compileContext);
             }
             if (type.isPrimitive()) {
-                // if the intermediate value used 2 words then at the peak we needed an extra stack slot
-                if (valueType.getNBytes() > 4) {
-                    extraSlots++;
-                }
                 // we need an object not a primitive
-                compileBox(Type.boxType(type), mv, currentStackHeights, maxStackHeights);
+                compileBox(Type.boxType(type), mv, compileContext);
             }
         } else {
             // just push null
             mv.visitInsn(Opcodes.ACONST_NULL);
-            currentStackHeights.addStackCount(1);
+            compileContext.addStackCount(1);
         }
         // construct the exception -- pops 3
         mv.visitMethodInsn(Opcodes.INVOKESPECIAL, exceptionClassName, "<init>", "(Ljava/lang/String;Ljava/lang/Object;)V");
-        currentStackHeights.addStackCount(-3);
+        compileContext.addStackCount(-3);
 
         // check current stack and increment max stack if necessary
-        if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("ReturnExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
+        if (compileContext.getStackCount() != currentStack + expected) {
+            throw new CompileException("ReturnExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
         }
 
         // now insert the throw instruction and decrement the stack height accordingly
         
         mv.visitInsn(Opcodes.ATHROW);
-        currentStackHeights.addStackCount(-1);
-
-        int overflow = ((currentStack + 3 +  extraSlots) - maxStackHeights.stackCount);
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
-        }
+        compileContext.addStackCount(-1);
     }
 
     public void writeTo(StringWriter stringWriter) {

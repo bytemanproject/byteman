@@ -24,7 +24,7 @@
 package org.jboss.byteman.rule.expression;
 
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.TypeException;
@@ -75,23 +75,13 @@ public class NullLiteral extends Expression
         return null;
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
-        int currentStack = currentStackHeights.stackCount;
-        int expected = 1;
-
         // load null or zero
 
         mv.visitInsn(Opcodes.ACONST_NULL);
 
-        currentStackHeights.addStackCount(expected);
-
-        int overflow = ((currentStack + expected) - maxStackHeights.stackCount);
-
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
-        }
-
+        compileContext.addStackCount(1);
     }
 
     public void writeTo(StringWriter stringWriter) {

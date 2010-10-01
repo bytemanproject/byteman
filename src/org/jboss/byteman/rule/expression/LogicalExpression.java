@@ -23,12 +23,12 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -66,17 +66,17 @@ public class LogicalExpression extends BooleanExpression
         }
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         Expression oper0 = getOperand(0);
         Expression oper1 = getOperand(1);
 
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
 
         // compile the first expression and make sure it is a boolean -- adds 1 to stack height
-        oper0.compile(mv, currentStackHeights, maxStackHeights);
+        oper0.compile(mv, compileContext);
         if (oper0.getType() == Type.BOOLEAN) {
-            compileBooleanConversion(Type.BOOLEAN, type.Z, mv, currentStackHeights, maxStackHeights);
+            compileBooleanConversion(Type.BOOLEAN, type.Z, mv, compileContext);
         }
         // plant a test and branch
         Label nextLabel = new Label();
@@ -95,21 +95,20 @@ public class LogicalExpression extends BooleanExpression
             mv.visitJumpInsn(Opcodes.GOTO, endLabel);
         }
         // in either case if we get here the if test removed 1 from the stack
-        currentStackHeights.addStackCount(-1);
+        compileContext.addStackCount(-1);
         // the else branch -- adds 1 to stack height
         mv.visitLabel(nextLabel);
-        oper1.compile(mv, currentStackHeights, maxStackHeights);
+        oper1.compile(mv, compileContext);
         if (oper0.getType() == Type.BOOLEAN) {
-            compileBooleanConversion(Type.BOOLEAN, type.Z, mv, currentStackHeights, maxStackHeights);
+            compileBooleanConversion(Type.BOOLEAN, type.Z, mv, compileContext);
         }
         // the final result is the result of the second oper which is on the stack already
         // This is the end, my beau-tiful friend
         mv.visitLabel(endLabel);
         // in either case if we get here we should have one extra value on the stack
         // check stack height
-        if (currentStackHeights.stackCount != currentStack + 1) {
-            throw new CompileException("LogicalExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + 1));
+        if (compileContext.getStackCount() != currentStack + 1) {
+            throw new CompileException("LogicalExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + 1));
         }
-        // no need to check max stack height as recursive calls will have added at least 1 
     }
 }

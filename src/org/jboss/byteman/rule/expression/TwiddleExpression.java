@@ -23,12 +23,12 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -77,18 +77,18 @@ public class TwiddleExpression extends UnaryOperExpression
         }
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         // compile the operand and then bit twiddle it
         Expression oper = getOperand(0);
         Type operType = oper.getType();
 
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int expected = 0;
 
-        oper.compile(mv, currentStackHeights, maxStackHeights);
-        currentStackHeights.addStackCount((operType.getNBytes() > 4 ? 2 : 1));
-        compileTypeConversion(operType, type, mv, currentStackHeights, maxStackHeights);
+        oper.compile(mv, compileContext);
+        compileContext.addStackCount((operType.getNBytes() > 4 ? 2 : 1));
+        compileTypeConversion(operType, type, mv, compileContext);
         if (type == Type.B) {
             expected = 1;
             mv.visitInsn(Opcodes.ICONST_1);
@@ -115,8 +115,8 @@ public class TwiddleExpression extends UnaryOperExpression
         }
 
         // check the stack height is what we expect
-        if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("MinusExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+        if (compileContext.getStackCount() != currentStack + expected) {
+            throw new CompileException("MinusExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + currentStack + expected);
         }
     }
 }

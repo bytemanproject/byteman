@@ -23,12 +23,12 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -298,28 +298,25 @@ public class ComparisonExpression extends BooleanExpression
         }
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         Expression oper0 = getOperand(0);
         Expression oper1 = getOperand(1);
 
-        int currentStack = currentStackHeights.stackCount;
         int removed = 0;
-        int max = 0;
 
         // evaluate the operands and ensure the reuslt is of the correct type for comparison adds 2
-        oper0.compile(mv, currentStackHeights, maxStackHeights);
-        compileTypeConversion(oper0.getType(), comparisonType, mv, currentStackHeights, maxStackHeights);
-        oper1.compile(mv, currentStackHeights, maxStackHeights);
-        compileTypeConversion(oper1.getType(), comparisonType, mv, currentStackHeights, maxStackHeights);
+        oper0.compile(mv, compileContext);
+        compileTypeConversion(oper0.getType(), comparisonType, mv, compileContext);
+        oper1.compile(mv, compileContext);
+        compileTypeConversion(oper1.getType(), comparisonType, mv, compileContext);
 
         // now do the appropriate type of comparison
         if (comparisonType == type.B || comparisonType == type.S || comparisonType == type.S || comparisonType == type.I) {
             Label elsetarget = new Label();
             Label endtarget = new Label();
-            // we remove 2 words from the stack
+            // we remove 2 words from the stack and then add 1 back
             removed = 2;
-            max = 2;
             switch (oper)
             {
                 case LT:
@@ -374,18 +371,15 @@ public class ComparisonExpression extends BooleanExpression
         } else if (comparisonType == type.J || comparisonType == type.F || comparisonType == type.D) {
             if (comparisonType == type.J) {
                 mv.visitInsn(Opcodes.LCMP);
-                // we needed to stack four words for the operands
+                // we remove four words from the stack and add 1 back
                 removed = 4;
-                max = 4;
             } else if (comparisonType == type.F) {
-                // we needed to stack two words for the operands
+                // we remove two words from the stack and add 1 back
                 removed = 2;
-                max = 2;
                 mv.visitInsn(Opcodes.FCMPG);
             } else if (comparisonType == type.D) {
-                // we needed to stack four words for the operands
+                // we remove four words from the stack and add 1 back
                 removed = 4;
-                max = 4;
                 mv.visitInsn(Opcodes.DCMPG);
             }
             Label elsetarget = new Label();
@@ -442,9 +436,10 @@ public class ComparisonExpression extends BooleanExpression
                     break;
             }
         } else if (comparable) {
-            removed = 2;
-            // we add a further two words setting up the relevant test
-            max = 4;
+            // we add a further two words setting up the relevant test then remove them
+            // and also remove the original two words replacing them with a single word
+            removed = 4;
+            compileContext.addStackCount(2);
             // we need to deal with null values correctly
             // if op1 == null || op2 == null
             // then
@@ -548,10 +543,9 @@ public class ComparisonExpression extends BooleanExpression
             }
             // label the join point
             mv.visitLabel(jointarget);
-
         } else {
+            // we remove two words replacing them with a single word
             removed = 2;
-            max = 2;
             Label elsetarget = new Label();
             Label endtarget = new Label();
             if (oper == EQ) {
@@ -570,13 +564,7 @@ public class ComparisonExpression extends BooleanExpression
                 mv.visitLabel(endtarget);
             }
         }
-        // allow for removal of removed words and push of one boolean
-        currentStackHeights.addStackCount(1 - removed);
-        // see if we exceeded the current stack height
-        int excess = (currentStack + max - maxStackHeights.stackCount);
-        if (excess > 0) {
-            maxStackHeights.addStackCount(excess);
-        }
+        compileContext.addStackCount(1 - removed);
     }
 
     private Type comparisonType;

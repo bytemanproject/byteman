@@ -25,6 +25,7 @@ package org.jboss.byteman.rule;
 
 import org.jboss.byteman.rule.binding.Bindings;
 import org.jboss.byteman.rule.binding.Binding;
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import static org.jboss.byteman.rule.grammar.ParseNode.*;
 import org.jboss.byteman.rule.grammar.ECATokenLexer;
@@ -37,7 +38,6 @@ import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.helper.HelperAdapter;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.objectweb.asm.MethodVisitor;
 
 import java.util.List;
@@ -295,20 +295,20 @@ public class Event extends RuleElement {
         return null;
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
 
         Iterator<Binding> iterator = getBindings().iterator();
         while (iterator.hasNext()) {
             Binding binding = iterator.next();
 
-            binding.compile(mv, currentStackHeights, maxStackHeights);
+            binding.compile(mv, compileContext);
         }
 
         // check stack heights
-        if (currentStackHeights.stackCount != currentStack) {
-            throw new CompileException("Event.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack);
+        if (compileContext.getStackCount() != currentStack) {
+            throw new CompileException("Event.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + currentStack);
         }
     }
 

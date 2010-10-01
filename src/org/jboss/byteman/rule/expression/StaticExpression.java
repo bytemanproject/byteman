@@ -23,13 +23,13 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.type.TypeGroup;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -115,9 +115,9 @@ public class StaticExpression extends AssignableExpression
         }
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int expected;
 
         // compile a field access
@@ -128,13 +128,7 @@ public class StaticExpression extends AssignableExpression
         mv.visitFieldInsn(Opcodes.GETSTATIC, ownerType, fieldName, fieldType);
         expected = (type.getNBytes() > 4 ? 2 : 1);
 
-        currentStackHeights.addStackCount(expected);
-
-        int overflow = ((currentStack + expected) - maxStackHeights.stackCount);
-        
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
-        }
+        compileContext.addStackCount(expected);
     }
 
     public void writeTo(StringWriter stringWriter) {
@@ -171,9 +165,8 @@ public class StaticExpression extends AssignableExpression
     }
 
     @Override
-    public void compileAssign(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compileAssign(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
-        int currentStack = currentStackHeights.stackCount;
         int size = (type.getNBytes() > 4 ? 2 : 1);
 
         // copy the value so we leave a result
@@ -189,10 +182,5 @@ public class StaticExpression extends AssignableExpression
         String fieldName = field.getName();
         String fieldType = Type.internalName(field.getType(), true);
         mv.visitFieldInsn(Opcodes.PUTSTATIC, ownerType, fieldName, fieldType);
-        // ensure that we had room for size extra words
-        int overflow = (currentStack + size - maxStackHeights.stackCount);
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
-        }
     }
 }

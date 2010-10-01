@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.type.TypeGroup;
 import org.jboss.byteman.rule.exception.TypeException;
@@ -30,7 +31,6 @@ import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.ThrowException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -251,9 +251,9 @@ public class ThrowExpression extends Expression
         }
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int expected = 1;
         int extraParams = 0;
 
@@ -263,10 +263,10 @@ public class ThrowExpression extends Expression
         // create the thrown exception instance -- adds 1 to stack
         String exceptionClassName = type.getInternalName();
         mv.visitTypeInsn(Opcodes.NEW, exceptionClassName);
-        currentStackHeights.addStackCount(1);
+        compileContext.addStackCount(1);
         // copy the exception so we can init it
         mv.visitInsn(Opcodes.DUP);
-        currentStackHeights.addStackCount(1);
+        compileContext.addStackCount(1);
 
         int argCount = arguments.size();
 
@@ -278,51 +278,41 @@ public class ThrowExpression extends Expression
 
             // track extra storage used after type conversion
             extraParams += (paramCount);
-            arguments.get(i).compile(mv, currentStackHeights, maxStackHeights);
-            compileTypeConversion(argType, paramType, mv, currentStackHeights, maxStackHeights);
+            arguments.get(i).compile(mv, compileContext);
+            compileTypeConversion(argType, paramType, mv, compileContext);
         }
 
         // construct the exception
         mv.visitMethodInsn(Opcodes.INVOKESPECIAL, exceptionClassName, "<init>", getDescriptor());
 
         // modify the stack height to account for the removed exception and params
-        currentStackHeights.addStackCount(-(extraParams+1));
+        compileContext.addStackCount(-(extraParams+1));
 
-        if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("ThrowExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
+        if (compileContext.getStackCount() != currentStack + expected) {
+            throw new CompileException("ThrowExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
         }
         // now create a ThrowException to wrap the user exception
         // create the thrown exception instance -- adds 1 to stack [UE] --> [UE, THE]
         exceptionClassName = "org/jboss/byteman/rule/exception/ThrowException";
         mv.visitTypeInsn(Opcodes.NEW, exceptionClassName);
-        currentStackHeights.addStackCount(1);
+        compileContext.addStackCount(1);
         // copy the ThrowException so we can init it [UE, THE] --> [THE, UE, THE]
         mv.visitInsn(Opcodes.DUP_X1);
-        currentStackHeights.addStackCount(1);
+        compileContext.addStackCount(1);
         // reverse the order of the top two words  [THE, UE, THE] --> [THE, THE, UE]
         mv.visitInsn(Opcodes.SWAP);
         // construct the exception [THE, THE, UE] --> [UE]
         mv.visitMethodInsn(Opcodes.INVOKESPECIAL, exceptionClassName, "<init>", "(Ljava/lang/Throwable;)V");
         // we should now have just the ThrowException on the stack
-        currentStackHeights.addStackCount(-2);
-        if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("ThrowExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
+        compileContext.addStackCount(-2);
+        if (compileContext.getStackCount() != currentStack + expected) {
+            throw new CompileException("ThrowExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
         }
 
         // now throw the exception and decrement the stack height
 
         mv.visitInsn(Opcodes.ATHROW);
-        currentStackHeights.addStackCount(-1);
-
-        // no need to update max stack unless extraParams is zero in which case the exception
-        // instance may have thrown us over the limit
-
-        if (extraParams < 1) {
-            int overflow = ((currentStack + 1) - maxStackHeights.stackCount);
-            if (overflow > 0) {
-                maxStackHeights.addStackCount(overflow);
-            }
-        }
+        compileContext.addStackCount(-1);
     }
 
     private String getDescriptor()

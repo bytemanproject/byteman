@@ -24,7 +24,7 @@
 package org.jboss.byteman.rule.expression;
 
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.TypeException;
@@ -69,26 +69,26 @@ public class AssignExpression extends BinaryOperExpression
         return value;
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         Expression oper1 = getOperand(1);
 
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int expected = (type.getNBytes() > 4 ? 2 : 1);
 
         // compile and type convert the rhs operand . it will ensure the max stack height is updated
         // accordingly and we don't add anything more so there is no need to check the stack heights here
 
-        oper1.compile(mv, currentStackHeights, maxStackHeights);
-        compileTypeConversion(oper1.getType(), type, mv, currentStackHeights, maxStackHeights);
+        oper1.compile(mv, compileContext);
+        compileTypeConversion(oper1.getType(), type, mv, compileContext);
 
         // now get the LHS expression to compile in the appropriate assignment code
 
-        lhs.compileAssign(mv, currentStackHeights, maxStackHeights);
+        lhs.compileAssign(mv, compileContext);
 
         // ok, the stack height should be increased by the expecdted bytecount
-        if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("AssignExpression.compileAssignment : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
+        if (compileContext.getStackCount() != currentStack + expected) {
+            throw new CompileException("AssignExpression.compileAssignment : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
         }
     }
 }

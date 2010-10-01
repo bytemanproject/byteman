@@ -23,12 +23,12 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -182,17 +182,17 @@ public class BitExpression extends BinaryOperExpression
         }
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int expected = 0;
         Expression oper0 = getOperand(0);
         Expression oper1 = getOperand(1);
         // compile the operands and make sure the result is our target type
-        oper0.compile(mv, currentStackHeights, maxStackHeights);
-        compileTypeConversion(oper0.getType(), type, mv, currentStackHeights, maxStackHeights);
-        oper1.compile(mv, currentStackHeights, maxStackHeights);
-        compileTypeConversion(oper1.getType(), type, mv, currentStackHeights, maxStackHeights);
+        oper0.compile(mv, compileContext);
+        compileTypeConversion(oper0.getType(), type, mv, compileContext);
+        oper1.compile(mv, compileContext);
+        compileTypeConversion(oper1.getType(), type, mv, compileContext);
 
         if (type == Type.B || type == Type.S || type == Type.C || type == Type.I) {
             switch (oper)
@@ -263,18 +263,10 @@ public class BitExpression extends BinaryOperExpression
         // we have either a 1 byte or a 2 byte result
         // check that the stack height is what we expect
 
-        currentStackHeights.addStackCount(expected);
+        compileContext.addStackCount(expected);
         
-        if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("BitExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
-        }
-
-        // we needed room for 2 * expected stack values at the highest point
-        int maxStack = maxStackHeights.stackCount;
-        int overflow = (currentStack + (2 * expected)) - maxStack;
-
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
+        if (compileContext.getStackCount() != currentStack + expected) {
+            throw new CompileException("BitExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + currentStack + expected);
         }
     }
 }

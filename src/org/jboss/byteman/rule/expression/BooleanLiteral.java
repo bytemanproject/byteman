@@ -23,12 +23,12 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -73,15 +73,12 @@ public class BooleanLiteral extends Expression
         return value;
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException {
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException {
         // load a boolean constant
         mv.visitLdcInsn(value);
         
         // increment stack height and update maximmum if necessary
-        currentStackHeights.addStackCount(1);
-        if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
-            maxStackHeights.stackCount = currentStackHeights.stackCount;
-        }
+        compileContext.addStackCount(1);
     }
 
     public void writeTo(StringWriter stringWriter) {

@@ -23,12 +23,12 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -65,22 +65,21 @@ public class StringPlusExpression extends BinaryOperExpression
         return string1 + string2;
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         Expression oper0 = getOperand(0);
         Expression oper1 = getOperand(1);
 
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int expected = 1;
-        int max = 3; // 2 operands plus the dupped copy of  operand 2
 
         // compile and type convert each operand n.b. the type conversion will ensure that
         // null operands are replaced with "null"
         
-        oper0.compile(mv, currentStackHeights, maxStackHeights);
-        compileTypeConversion(oper0.getType(), type, mv, currentStackHeights, maxStackHeights);
-        oper1.compile(mv, currentStackHeights, maxStackHeights);
-        compileTypeConversion(oper1.getType(), type, mv, currentStackHeights, maxStackHeights);
+        oper0.compile(mv, compileContext);
+        compileTypeConversion(oper0.getType(), type, mv, compileContext);
+        oper1.compile(mv, compileContext);
+        compileTypeConversion(oper1.getType(), type, mv, compileContext);
 
         // ok, we could optimize this for the case where the left or right operand is a String plus expression
         // by employing a StringBuffer but for now we will just evaluate the left and right operand and
@@ -89,24 +88,22 @@ public class StringPlusExpression extends BinaryOperExpression
 
         // if second operand is null replace it with "null"
         Label skiptarget = new Label();
+        // this adds a word then removes it -- do so to ensure the max height gets updated if need be
         mv.visitInsn(Opcodes.DUP);
+        compileContext.addStackCount(1);
         // if it is not null we skip to the concat operation
         mv.visitJumpInsn(Opcodes.IFNONNULL, skiptarget);
+        compileContext.addStackCount(-1);
         // it's null so we have to swap it fdr "null"
         mv.visitInsn(Opcodes.POP);
         mv.visitLdcInsn("null");
         mv.visitLabel(skiptarget);
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "concat", "(Ljava/lang/String;)Ljava/lang/String;");
 
-        currentStackHeights.addStackCount(-1);
+        compileContext.addStackCount(-1);
         
-        if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("StringPlusExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
-        }
-
-        int overflow = (currentStack + max) - maxStackHeights.stackCount;
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
+        if (compileContext.getStackCount() != currentStack + expected) {
+            throw new CompileException("StringPlusExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + currentStack + expected);
         }
     }
 }

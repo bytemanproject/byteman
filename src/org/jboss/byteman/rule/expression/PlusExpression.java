@@ -23,12 +23,12 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -121,19 +121,19 @@ public class PlusExpression extends BinaryOperExpression
         }
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         Expression oper0 = getOperand(0);
         Expression oper1 = getOperand(1);
 
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int expected = 0;
 
         // compile and type convert each operand -- adds 2 or 4 depending upon type
-        oper0.compile(mv, currentStackHeights, maxStackHeights);
-        compileTypeConversion(oper0.getType(), type, mv, currentStackHeights, maxStackHeights);
-        oper1.compile(mv, currentStackHeights, maxStackHeights);
-        compileTypeConversion(oper1.getType(), type, mv, currentStackHeights, maxStackHeights);
+        oper0.compile(mv, compileContext);
+        compileTypeConversion(oper0.getType(), type, mv, compileContext);
+        oper1.compile(mv, compileContext);
+        compileTypeConversion(oper1.getType(), type, mv, compileContext);
 
         if (type == Type.S) {
             // ok, we could optimize this for the case where the left or right operand is a String plus expression
@@ -142,56 +142,49 @@ public class PlusExpression extends BinaryOperExpression
             // add two strings leaving one string
             expected = 1;
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "concat", "(Ljava/lang/String;)Ljava/lang/String;");
-            currentStackHeights.addStackCount(-1);
+            compileContext.addStackCount(-1);
         } else if (type == Type.B) {
             // add two bytes leaving one byte
             expected = 1;
             mv.visitInsn(Opcodes.IADD);
             mv.visitInsn(Opcodes.I2B);
-            currentStackHeights.addStackCount(-1);
+            compileContext.addStackCount(-1);
         } else if (type == Type.S ) {
             // add two shorts leaving one short
             expected = 1;
             mv.visitInsn(Opcodes.IADD);
             mv.visitInsn(Opcodes.I2S);
-            currentStackHeights.addStackCount(-1);
+            compileContext.addStackCount(-1);
         } else if (type == Type.C) {
             // add two chars leaving one char
             expected = 1;
             mv.visitInsn(Opcodes.IADD);
             mv.visitInsn(Opcodes.I2C);
-            currentStackHeights.addStackCount(-1);
+            compileContext.addStackCount(-1);
         } else if (type == Type.I) {
             // add two ints leaving one int
             expected = 1;
             mv.visitInsn(Opcodes.IADD);
-            currentStackHeights.addStackCount(-1);
+            compileContext.addStackCount(-1);
         } else if (type == Type.J) {
             // add two longs leaving one long
             expected = 2;
             mv.visitInsn(Opcodes.LADD);
-            currentStackHeights.addStackCount(-2);
+            compileContext.addStackCount(-2);
         } else if (type == Type.F) {
             // add two floats leaving one float
             expected = 1;
             mv.visitInsn(Opcodes.FADD);
-            currentStackHeights.addStackCount(-1);
+            compileContext.addStackCount(-1);
         } else if (type == Type.D) {
             // add two doubles leaving one double
             expected = 2;
             mv.visitInsn(Opcodes.FADD);
-            currentStackHeights.addStackCount(-2);
+            compileContext.addStackCount(-2);
         }
 
-        if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("PlusExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
-        }
-
-        // we need room for 2 * expected words at our maximum
-
-        int overflow = (currentStack + 2 * expected) - maxStackHeights.stackCount;
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
+        if (compileContext.getStackCount() != currentStack + expected) {
+            throw new CompileException("PlusExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
         }
     }
 }

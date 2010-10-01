@@ -23,12 +23,12 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -72,24 +72,12 @@ public class StringLiteral extends Expression
         return text;
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
-        int currentStack = currentStackHeights.stackCount;
-        int expected = 1;
-
-        // compile a field access
-
         // compile a load constant instruction
         mv.visitLdcInsn(text);
 
-        currentStackHeights.addStackCount(expected);
-
-        int overflow = ((currentStack + expected) - maxStackHeights.stackCount);
-
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
-        }
-
+        compileContext.addStackCount(1);
     }
 
     public void writeTo(StringWriter stringWriter) {

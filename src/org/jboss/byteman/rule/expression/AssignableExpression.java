@@ -1,6 +1,7 @@
 package org.jboss.byteman.rule.expression;
 
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.exception.ExecuteException;
@@ -47,11 +48,10 @@ public abstract class AssignableExpression extends Expression
      * Java stack.
 
      * @param mv
-     * @param currentStackHeights
-     * @param maxStackHeights
+     * @param compileContext
      * @throws CompileException
      */
-    public abstract void compileAssign(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException;
+    public abstract void compileAssign(MethodVisitor mv, CompileContext compileContext) throws CompileException;
 
     /**
      * bind as an assignable expression. for variables and dollar expressions this will ensure that a binding exists

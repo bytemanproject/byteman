@@ -23,12 +23,12 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -71,7 +71,7 @@ public class NumericLiteral extends Expression
         return value;
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         if (type == Type.I) {
             int val = value.intValue();
@@ -85,10 +85,7 @@ public class NumericLiteral extends Expression
             }
             // we have only added 1 to the stack height
 
-            currentStackHeights.addStackCount(1);
-            if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
-                maxStackHeights.stackCount = currentStackHeights.stackCount;
-            }
+            compileContext.addStackCount(1);
         } else { // type = type.F
             float val = value.floatValue();
             if (val == 0.0) {
@@ -107,10 +104,7 @@ public class NumericLiteral extends Expression
 
             // we have only added 1 to the stack height
 
-            currentStackHeights.addStackCount(1);
-            if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
-                maxStackHeights.stackCount = currentStackHeights.stackCount;
-            }
+            compileContext.addStackCount(1);
         }
     }
 

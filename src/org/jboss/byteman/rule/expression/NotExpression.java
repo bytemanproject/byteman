@@ -23,12 +23,12 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -57,17 +57,17 @@ public class NotExpression extends UnaryOperExpression
         return !result;
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         Expression oper = getOperand(0);
         Type operType = oper.getType();
 
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int expected = 1;
 
         // compile code to execute the operand -- adds 1
-        oper.compile(mv, currentStackHeights, maxStackHeights);
-        compileTypeConversion(operType, type, mv, currentStackHeights, maxStackHeights);
+        oper.compile(mv, compileContext);
+        compileTypeConversion(operType, type, mv, compileContext);
 
         // the boolean expression will leave 0 or 1 on the stack so we can negate negate this to get
         // 0 or -1 and then add 1 to get 1 or 0
@@ -78,17 +78,8 @@ public class NotExpression extends UnaryOperExpression
         mv.visitInsn(Opcodes.IADD);
 
         // check stack height
-        if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("NotExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack + expected);
+        if (compileContext.getStackCount() != currentStack + expected) {
+            throw new CompileException("NotExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + currentStack + expected);
         }
-
-        // ensure we have room for the two values we stacked
-
-        int overflow = (currentStack + 2) - maxStackHeights.stackCount;
-
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
-        }
-
     }
 }

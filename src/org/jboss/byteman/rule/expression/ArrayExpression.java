@@ -23,12 +23,12 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -122,23 +122,23 @@ public class ArrayExpression extends Expression
         }
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         Type valueType = arrayRef.getType().getBaseType();
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int expected = 0;
 
         // compile load of array reference -- adds 1 to stack height
-        arrayRef.compile(mv, currentStackHeights, maxStackHeights);
+        arrayRef.compile(mv, compileContext);
         // for each index expression compile the expression and the do an array load
         Iterator<Expression> iterator = idxList.iterator();
 
         while (iterator.hasNext()) {
             Expression idxExpr = iterator.next();
             // compile expression index -- adds 1 to height
-            idxExpr.compile(mv, currentStackHeights, maxStackHeights);
+            idxExpr.compile(mv, compileContext);
             // make sure the index is an integer
-            compileTypeConversion(idxExpr.getType(), Type.I, mv, currentStackHeights, maxStackHeights);
+            compileTypeConversion(idxExpr.getType(), Type.I, mv, compileContext);
 
             if (valueType.isObject() || valueType.isArray()) {
                 // compile load object - pops 2 and adds 1
@@ -173,7 +173,7 @@ public class ArrayExpression extends Expression
                 mv.visitInsn(Opcodes.DALOAD);
                 expected = 2;
             }
-            currentStackHeights.addStackCount(expected - 2);
+            compileContext.addStackCount(expected - 2);
             if (iterator.hasNext()) {
                 assert valueType.isArray();
                 valueType =valueType.getBaseType();
@@ -181,8 +181,8 @@ public class ArrayExpression extends Expression
         }
 
         // check stack height
-        if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("ArrayExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
+        if (compileContext.getStackCount() != currentStack + expected) {
+            throw new CompileException("ArrayExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
         }
 
         // we needed room for an aray and an index or for a one or two word result

@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.rule;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.expression.ExpressionHelper;
 import org.jboss.byteman.rule.expression.Expression;
@@ -34,7 +35,6 @@ import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.helper.HelperAdapter;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.objectweb.asm.MethodVisitor;
 
 import java.io.StringWriter;
@@ -95,26 +95,18 @@ public class Condition extends RuleElement
         return Type.Z;
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException {
-        int currentStack = currentStackHeights.stackCount;
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException {
+        int currentStack = compileContext.getStackCount();
         // get the condition to compile itself -- it adds 1 to stack height
-        condition.compile(mv, currentStackHeights, maxStackHeights);
+        condition.compile(mv, compileContext);
         // unbox if necessary
         if (condition.getType() == Type.BOOLEAN) {
-            compileUnbox(Type.BOOLEAN, Type.Z, mv, currentStackHeights, maxStackHeights);
+            compileUnbox(Type.BOOLEAN, Type.Z, mv, compileContext);
         }
 
         // check stack heights
-        if (currentStackHeights.stackCount != currentStack + 1) {
-            throw new CompileException("Condition.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack);
-        }
-
-        // we needed room for 1 more values on the stack -- make sure we got it
-        int maxStack = maxStackHeights.stackCount;
-        int overflow = (currentStack + 1) - maxStack;
-
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
+        if (compileContext.getStackCount() != currentStack + 1) {
+            throw new CompileException("Condition.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + currentStack);
         }
     }
 

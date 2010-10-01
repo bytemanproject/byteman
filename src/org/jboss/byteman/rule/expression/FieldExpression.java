@@ -24,13 +24,13 @@
 package org.jboss.byteman.rule.expression;
 
 import org.jboss.byteman.rule.binding.Binding;
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.type.TypeGroup;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -199,31 +199,27 @@ public class FieldExpression extends AssignableExpression
         }
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int expected = (type.getNBytes() > 4 ? 2 : 1);
 
         if (indirectStatic != null) {
             // this is just wrapping a static field expression so compile it
-            indirectStatic.compile(mv, currentStackHeights, maxStackHeights);
+            indirectStatic.compile(mv, compileContext);
         } else {
             // compile the owner expression
-            owner.compile(mv, currentStackHeights, maxStackHeights);
+            owner.compile(mv, compileContext);
             // now compile a field access
             String ownerType = Type.internalName(field.getDeclaringClass());
             String fieldName = field.getName();
             String fieldType = Type.internalName(field.getType(), true);
             mv.visitFieldInsn(Opcodes.GETFIELD, ownerType, fieldName, fieldType);
+            compileContext.addStackCount(expected - 1);            
         }
         // check the stack height is ok
-        if (currentStackHeights.stackCount != currentStack + expected) {
-            throw new CompileException("FieldExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
-        }
-        // make sure we have room for the field value if it is 2 words
-        int overflow = (currentStack + expected) - maxStackHeights.stackCount;
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
+        if (compileContext.getStackCount() != currentStack + expected) {
+            throw new CompileException("FieldExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
         }
     }
 
@@ -312,19 +308,16 @@ public class FieldExpression extends AssignableExpression
     }
 
     @Override
-    public void compileAssign(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compileAssign(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         if (indirectStatic != null) {
             // this is just wrapping a static field expression so compile it
-            indirectStatic.compileAssign(mv, currentStackHeights, maxStackHeights);
+            indirectStatic.compileAssign(mv, compileContext);
         } else {
-            int currentStack = currentStackHeights.stackCount;
+            int currentStack = compileContext.getStackCount();
             int size = (type.getNBytes() > 4 ? 2 : 1);
-            int expected = 0;
-            int max;
 
             // copy the value so we leave it as a result
-            // adds size words to current stac>pk height
             if (size == 1) {
                 // this means at the maximum we add 1 to the current stack
                 // [.. val] ==> [.. val val]
@@ -333,39 +326,32 @@ public class FieldExpression extends AssignableExpression
                 // [.. val1 val2] ==> [.. val1 val2 val1 val2]
                 mv.visitInsn(Opcodes.DUP2);
             }
-            // compile the owner expression and swap if with the value
-            // adds 1 to current stack height
-            owner.compile(mv, currentStackHeights, maxStackHeights);
+            compileContext.addStackCount(size);
+            // compile the owner expression and swap with the value
+            owner.compile(mv, compileContext);
             if (size == 1) {
-                // this means at the maximum we add 2 to the current stack
                 // [.. val val owner] ==> [.. val owner val]
                 mv.visitInsn(Opcodes.SWAP);
-                max = 2;
             } else {
                 // we have to use a DUP_X2 and a POP to insert the owner below the two word value
                 // i.e. [.. val1 val2 val1 val2] ==> [.. val1 val2 val1 val2 owner] ==>
                 //              [.. val1 val2 owner val1 val2 owner] ==> [.. val1 val2 owner val1 val2]
-                // this means at the maximum we add 4 to the current stack height
                 mv.visitInsn(Opcodes.DUP_X2);
+                compileContext.addStackCount(1);
                 mv.visitInsn(Opcodes.POP);
-                max = 4;
+                compileContext.addStackCount(-1);
             }
             // now compile a field update
             String ownerType = Type.internalName(field.getDeclaringClass());
             String fieldName = field.getName();
             String fieldType = Type.internalName(field.getType(), true);
             mv.visitFieldInsn(Opcodes.PUTFIELD, ownerType, fieldName, fieldType);
-            // we removed the owner and the value but we never counted the extra words for the value
-            currentStackHeights.addStackCount(-1);
+            // we removed the owner and the value
+            compileContext.addStackCount(- (1 + size));
 
             // check the stack height is ok
-            if (currentStackHeights.stackCount != currentStack + expected) {
-                throw new CompileException("FieldExpression.compileAssign : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expected));
-            }
-            // check we have not exceeded the maximum stack height
-            int overflow = (currentStack + 2 - maxStackHeights.stackCount);
-            if (overflow > 0) {
-                maxStackHeights.addStackCount(overflow);
+            if (compileContext.getStackCount() != currentStack) {
+                throw new CompileException("FieldExpression.compileAssign : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack));
             }
         }
     }

@@ -325,33 +325,30 @@ public class Compiler implements Opcodes
             // the event, condiiton and action to insert the relevant bytecode to implement
             // bind(), test() and fire()
 
-            StackHeights maxStackHeights = new StackHeights();
-            StackHeights currentStackHeights;
+            CompileContext compileContext = new CompileContext(rule.getLine());
             {
             // create the execute0() method
             //
             // private void execute0()
             mv = cw.visitMethod(ACC_PRIVATE, "execute0", "()V", null, new String[] { "org/jboss/byteman/rule/exception/ExecuteException" });
             mv.visitCode();
-            maxStackHeights.addLocalCount(3); // for this and 2 object args
+            compileContext.addLocalCount(3); // for this and 2 object args
             // bind();
-            currentStackHeights = new StackHeights();
-            rule.getEvent().compile(mv, currentStackHeights, maxStackHeights);
+            rule.getEvent().compile(mv, compileContext);
             // if (test())
-            currentStackHeights = new StackHeights();
-            rule.getCondition().compile(mv, currentStackHeights, maxStackHeights);
+            rule.getCondition().compile(mv, compileContext);
             Label l0 = new Label();
             mv.visitJumpInsn(IFEQ, l0);
+            compileContext.addStackCount(-1);
             // then
-            currentStackHeights = new StackHeights();
-            rule.getAction().compile(mv, currentStackHeights, maxStackHeights);
+            rule.getAction().compile(mv, compileContext);
             // fire();
             // end if
             mv.visitLabel(l0);
             // return
             mv.visitInsn(RETURN);
             // need to specify correct Maxs values
-            mv.visitMaxs(maxStackHeights.stackCount, maxStackHeights.localCount);
+            mv.visitMaxs(compileContext.getStackMax(), compileContext.getLocalMax());
             mv.visitEnd();
             }
         } else {

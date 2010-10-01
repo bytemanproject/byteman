@@ -25,12 +25,12 @@ package org.jboss.byteman.rule.expression;
 
 import org.jboss.byteman.rule.binding.Binding;
 import org.jboss.byteman.rule.binding.Bindings;
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -179,46 +179,43 @@ public class DollarExpression extends AssignableExpression
         return helper.getBinding(binding.getName());
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         String targetName = binding.getName();
 
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
+        int expected = (type.getNBytes() > 4 ? 2 : 1);
 
         if (index == HELPER_IDX) {
             // reference to the current helper so just stack this
             mv.visitVarInsn(Opcodes.ALOAD, 0);
-            currentStackHeights.addStackCount(1);
-            // make sure we have room for this
-            int overflow = (currentStack + 1 - maxStackHeights.stackCount);
-            if (overflow > 0) {
-                maxStackHeights.addStackCount(overflow);
-            }
+            compileContext.addStackCount(1);
         } else {
             // stack the current helper
             // stack the name for the variable
             // call the getBinding method
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitLdcInsn(targetName);
+            compileContext.addStackCount(2);
             mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "getBinding", "(Ljava/lang/String;)Ljava/lang/Object;");
-            // ok, we added 2 to the stack and then popped them leaving 1
-            currentStackHeights.addStackCount(1);
+            compileContext.addStackCount(-1);
             // perform any necessary type conversion
             if (type.isPrimitive()) {
                 // cast down to the boxed type then do an unbox
                 Type boxType = Type.boxType(type);
-                compileObjectConversion(Type.OBJECT, boxType, mv, currentStackHeights, maxStackHeights);
-                compileUnbox(boxType, type,  mv, currentStackHeights, maxStackHeights);
+                compileObjectConversion(Type.OBJECT, boxType, mv, compileContext);
+                compileUnbox(boxType, type,  mv, compileContext);
             } else {
                 // cast down to the required type
-                compileObjectConversion(Type.OBJECT, type, mv, currentStackHeights, maxStackHeights);
-            }
-            // make sure we have room for 2 working slots
-            int overflow = (currentStack + 2 - maxStackHeights.stackCount);
-            if (overflow > 0) {
-                maxStackHeights.addStackCount(overflow);
+                compileObjectConversion(Type.OBJECT, type, mv, compileContext);
             }
         }
+
+        // ensure we have only increased the stack by the return value size
+        if (compileContext.getStackCount() != currentStack + expected) {
+            throw new CompileException("DollarExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
+        }
+
     }
 
     @Override
@@ -229,13 +226,12 @@ public class DollarExpression extends AssignableExpression
     }
 
     @Override
-    public void compileAssign(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compileAssign(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         String targetName = binding.getName();
 
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int size = ((type.getNBytes() > 4) ? 2 : 1);
-        int max;
 
         if (index == HELPER_IDX) {
             // not allowed to reassign the helper binding
@@ -265,34 +261,28 @@ public class DollarExpression extends AssignableExpression
                 mv.visitInsn(Opcodes.DUP_X2);
                 // this is the high water mark
                 // at this point the stack has gone from [ .. val1 val2]  to [.. val1 val2 helper name val1 val2 name]
-                max = 3 + size;
+                compileContext.addStackCount(5);
                 mv.visitInsn(Opcodes.POP);
+                compileContext.addStackCount(-1);
             } else {
                 // this is the high water mark
                 // at this point the stack has gone from [ .. val]  to [.. val helper val name]
-                max = 2 + size;
+                compileContext.addStackCount(3);
                 // we can just swap the two values
                 mv.visitInsn(Opcodes.SWAP);
             }
-            // update the stack count for the value and two extra words before we attempt a type conversion
-            currentStackHeights.addStackCount(2 + size);
             // ensure we have an object
-            compileObjectConversion(type, Type.OBJECT, mv, currentStackHeights, maxStackHeights);
+            compileObjectConversion(type, Type.OBJECT, mv, compileContext);
 
             // call the setBinding method
             mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V");
 
             // the call will remove 3 from the stack height
-            currentStackHeights.addStackCount(-3);
+            compileContext.addStackCount(-3);
 
             // ok, the stack height should be as it was
-            if (currentStackHeights.stackCount != currentStack) {
-                throw new CompileException("variable.compileAssignment : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack);
-            }
-            // make sure we left room for the right number of working slots at our maximum
-            int overflow = (currentStack + max - maxStackHeights.stackCount);
-            if (overflow > 0) {
-                maxStackHeights.addStackCount(overflow);
+            if (compileContext.getStackCount() != currentStack) {
+                throw new CompileException("variable.compileAssignment : invalid stack height " + compileContext.getStackCount() + " expecting " + currentStack);
             }
         }
     }

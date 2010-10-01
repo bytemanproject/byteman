@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.rule;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.expression.ExpressionHelper;
 import org.jboss.byteman.rule.expression.Expression;
@@ -37,7 +38,6 @@ import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.helper.HelperAdapter;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -109,13 +109,11 @@ public class Action extends RuleElement
         return Type.VOID;
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException {
-        int currentStack = currentStackHeights.stackCount;
-        boolean hasActions = false;
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException {
+        int currentStack = compileContext.getStackCount();
 
         for (Expression expr : action) {
-            hasActions = true;
-            expr.compile(mv, currentStackHeights, maxStackHeights);
+            expr.compile(mv, compileContext);
             Type resultType = expr.getType();
             // return and throw expressions don't actually leave a value on the stack even
             // though they may have a non-VOID value type
@@ -124,24 +122,18 @@ public class Action extends RuleElement
                 int expected = (resultType.getNBytes() > 4 ? 2 : 1);
                 if (expected == 1) {
                     mv.visitInsn(Opcodes.POP);
-                    currentStackHeights.addStackCount(-1);
+                    compileContext.addStackCount(-1);
                 } else if (expected == 2) {
                     mv.visitInsn(Opcodes.POP2);
-                    currentStackHeights.addStackCount(-2);
+                    compileContext.addStackCount(-2);
                 }
             }
         }
-        if (!hasActions) {
-            // don't check or adjust stack heights as we did nothing
-            return;
-        }
 
         // check original stack height has been restored
-        if (currentStackHeights.stackCount != currentStack) {
-            throw new CompileException("Action.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + currentStack);
+        if (compileContext.getStackCount() != currentStack) {
+            throw new CompileException("Action.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + currentStack);
         }
-
-        // each action will have checked whether it needed to increase the maximum stack count so just return
     }
 
     public Object interpret(HelperAdapter helper)

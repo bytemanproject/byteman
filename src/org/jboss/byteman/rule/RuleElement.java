@@ -24,12 +24,12 @@
 package org.jboss.byteman.rule;
 
 import org.jboss.byteman.rule.binding.Bindings;
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.TypeGroup;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.exception.ExecuteException;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -63,9 +63,9 @@ public abstract class RuleElement {
 
     public abstract Object interpret(HelperAdapter helper) throws ExecuteException;
 
-    public abstract void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException;
+    public abstract void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException;
 
-    protected void compileTypeConversion(Type fromType, Type toType, MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights)
+    protected void compileTypeConversion(Type fromType, Type toType, MethodVisitor mv, CompileContext compileContext)
             throws CompileException
     {
         // make sure we have some real work to do
@@ -76,19 +76,19 @@ public abstract class RuleElement {
 
         if (toType.isNumeric()) {
             // do number conversion
-            compileNumericConversion(fromType, toType, mv, currentStackHeights, maxStackHeights);
+            compileNumericConversion(fromType, toType, mv, compileContext);
         } else if (toType.isString()) {
             // do toString conversion
-            compileStringConversion(fromType, toType, mv, currentStackHeights, maxStackHeights);
+            compileStringConversion(fromType, toType, mv, compileContext);
         } else if (toType.isBoolean()) {
             // do toString conversion
-            compileBooleanConversion(fromType, toType, mv, currentStackHeights, maxStackHeights);
+            compileBooleanConversion(fromType, toType, mv, compileContext);
         } else {
-            compileObjectConversion(fromType, toType, mv, currentStackHeights, maxStackHeights);
+            compileObjectConversion(fromType, toType, mv, compileContext);
         }
     }
 
-    protected void compileNumericConversion(Type fromType, Type toType, MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights)
+    protected void compileNumericConversion(Type fromType, Type toType, MethodVisitor mv, CompileContext compileContext)
             throws CompileException
     {
         // fromType != toType
@@ -98,19 +98,19 @@ public abstract class RuleElement {
         if (unbox) {
             if (box) {
                 Type midType = Type.boxType(toType);
-                compileUnbox(fromType, midType, mv, currentStackHeights, maxStackHeights);
-                compileBox(midType, mv, currentStackHeights, maxStackHeights);
+                compileUnbox(fromType, midType, mv, compileContext);
+                compileBox(midType, mv, compileContext);
             } else {
-                compileUnbox(fromType, toType, mv, currentStackHeights, maxStackHeights);
+                compileUnbox(fromType, toType, mv, compileContext);
             }
         } else if (box) {
             Type midType = Type.boxType(toType);
             if (fromType != midType) {
-                compilePrimitiveConversion(fromType, midType, mv, currentStackHeights, maxStackHeights);
+                compilePrimitiveConversion(fromType, midType, mv, compileContext);
             }
-            compileBox(toType, mv, currentStackHeights, maxStackHeights);
+            compileBox(toType, mv, compileContext);
         } else {
-            compilePrimitiveConversion(fromType, toType, mv, currentStackHeights, maxStackHeights);
+            compilePrimitiveConversion(fromType, toType, mv, compileContext);
         }
     }
 
@@ -121,11 +121,10 @@ public abstract class RuleElement {
      * @param fromType
      * @param toType
      * @param mv
-     * @param currentStackHeights
-     * @param maxStackHeights
+     * @param compileContext
      * @throws CompileException
      */
-   protected void compileUnbox(Type fromType, Type toType, MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights)
+   protected void compileUnbox(Type fromType, Type toType, MethodVisitor mv, CompileContext compileContext)
             throws CompileException
     {
         // we either have a Boolean, a Character or a Number for fromType
@@ -135,7 +134,7 @@ public abstract class RuleElement {
         } else if (fromType == Type.CHARACTER) {
             // obtain the underlying char then massage it to the correct bit format
             mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Character", "charValue", "()C");
-            compilePrimitiveConversion(Type.C, toType, mv, currentStackHeights, maxStackHeights);
+            compilePrimitiveConversion(Type.C, toType, mv, compileContext);
         } else {
             // we have a numeric type so call the relevant conversion method
             if (toType == Type.B) {
@@ -151,18 +150,12 @@ public abstract class RuleElement {
                 mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Number", "intValue", "()I");
             } else if (toType == Type.J){
                 mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Number", "longValue", "()J");
-                currentStackHeights.addStackCount(1);
-                if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
-                    maxStackHeights.stackCount = currentStackHeights.stackCount;
-                }
+                compileContext.addStackCount(1);
             } else if (toType == Type.F){
                 mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Number", "floatValue", "()F");
             } else {
                 assert toType == Type.D;
-                currentStackHeights.addStackCount(1);
-                if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
-                    maxStackHeights.stackCount = currentStackHeights.stackCount;
-                }
+                compileContext.addStackCount(1);
                 mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Number", "doubleValue", "()D");
             }
         }
@@ -172,14 +165,13 @@ public abstract class RuleElement {
      * box a value belonging to a primitive type
      * @param toType
      * @param mv
-     * @param currentStackHeights
-     * @param maxStackHeights
+     * @param compileContext
      * @throws CompileException
      */
-    protected void compileBox(Type toType, MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights)
+    protected void compileBox(Type toType, MethodVisitor mv, CompileContext compileContext)
             throws CompileException
     {
-        // use the statci methods on the class  to do conversions -- that means the class gets a chance
+        // use the static methods on the class  to do conversions -- that means the class gets a chance
         // to reuse cached values
         if (toType == Type.BOOLEAN) {
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;");
@@ -193,16 +185,16 @@ public abstract class RuleElement {
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;");
         } else if (toType == Type.LONG) {
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;");
-            currentStackHeights.addStackCount(-1);
+            compileContext.addStackCount(-1);
         } else if (toType == Type.FLOAT) {
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;");
         } else if (toType == Type.DOUBLE) {
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;");
-            currentStackHeights.addStackCount(-1);
+            compileContext.addStackCount(-1);
         }
     }
 
-    protected void compileStringConversion(Type fromType, Type toType, MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights)
+    protected void compileStringConversion(Type fromType, Type toType, MethodVisitor mv, CompileContext compileContext)
             throws CompileException
     {
         assert toType == Type.STRING;
@@ -239,14 +231,14 @@ public abstract class RuleElement {
         } else if (fromType == Type.J) {
             // use the toString method
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Long", "toString", "(J)Ljava/lang/String;");
-            currentStackHeights.addStackCount(-1);
+            compileContext.addStackCount(-1);
         } else if (fromType == Type.F) {
             // use the toString method
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Float", "toString", "(F)Ljava/lang/String;");
         } else if (fromType == Type.D) {
             // use the toString method
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Double", "toString", "(D)Ljava/lang/String;");
-            currentStackHeights.addStackCount(-1);
+            compileContext.addStackCount(-1);
         }
     }
 
@@ -255,11 +247,10 @@ public abstract class RuleElement {
      * @param fromType
      * @param toType
      * @param mv
-     * @param currentStackHeights
-     * @param maxStackHeights
+     * @param compileContext
      * @throws CompileException
      */
-    protected void compilePrimitiveConversion(Type fromType, Type toType, MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights)
+    protected void compilePrimitiveConversion(Type fromType, Type toType, MethodVisitor mv, CompileContext compileContext)
             throws CompileException
     {
         if (fromType == Type.B || fromType == Type.S || fromType == Type.I) {
@@ -273,18 +264,12 @@ public abstract class RuleElement {
                 // nothing to do
             } else if (toType == Type.J) {
                 mv.visitInsn(Opcodes.I2L);
-                currentStackHeights.addStackCount(1);
-                if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
-                    maxStackHeights.stackCount = currentStackHeights.stackCount;
-                }
+                compileContext.addStackCount(1);
             } else if (toType == Type.F) {
                 mv.visitInsn(Opcodes.I2F);
             } else if (toType == Type.D) {
                 mv.visitInsn(Opcodes.I2D);
-                currentStackHeights.addStackCount(1);
-                if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
-                    maxStackHeights.stackCount = currentStackHeights.stackCount;
-                }
+                compileContext.addStackCount(1);
             }
         } else if (fromType == Type.C) {
             // convert to the relevant numeric size
@@ -298,28 +283,22 @@ public abstract class RuleElement {
                 // nothing to do
             } else  if (toType == Type.J) {
                 mv.visitInsn(Opcodes.I2L);
-                currentStackHeights.addStackCount(1);
-                if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
-                    maxStackHeights.stackCount = currentStackHeights.stackCount;
-                }
+                compileContext.addStackCount(1);
             } else if (toType == Type.F) {
                 mv.visitInsn(Opcodes.I2F);
             } else if (toType == Type.D) {
                 mv.visitInsn(Opcodes.I2D);
-                currentStackHeights.addStackCount(1);
-                if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
-                    maxStackHeights.stackCount = currentStackHeights.stackCount;
-                }
+                compileContext.addStackCount(1);
             }
         } else if (fromType == Type.J) {
             if (toType == Type.B || toType ==  Type.S || toType == Type.I || toType == Type.C) {
                 mv.visitInsn(Opcodes.L2I);
-                currentStackHeights.addStackCount(-1);
+                compileContext.addStackCount(-1);
             } else if (toType == Type.J) {
                 // nothing to do
             } else if (toType == Type.F) {
                 mv.visitInsn(Opcodes.L2F);
-                currentStackHeights.addStackCount(-1);
+                compileContext.addStackCount(-1);
             } else if (toType == Type.D) {
                 mv.visitInsn(Opcodes.L2D);
             }
@@ -337,63 +316,61 @@ public abstract class RuleElement {
                 mv.visitInsn(Opcodes.F2I);
             } else if (toType == Type.J) {
                 mv.visitInsn(Opcodes.F2L);
-                currentStackHeights.addStackCount(1);
-                if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
-                    maxStackHeights.stackCount = currentStackHeights.stackCount;
-                }
+                compileContext.addStackCount(1);
             } else if (toType == Type.F) {
                 // nothing to do
             } else if (toType == Type.D) {
                 mv.visitInsn(Opcodes.F2D);
-                currentStackHeights.addStackCount(1);
-                if (currentStackHeights.stackCount > maxStackHeights.stackCount) {
-                    maxStackHeights.stackCount = currentStackHeights.stackCount;
-                }
+                compileContext.addStackCount(1);
             }
         } else if (fromType == Type.D) {
             if (toType == Type.B) {
                 mv.visitInsn(Opcodes.D2I);
                 mv.visitInsn(Opcodes.I2B);
+                compileContext.addStackCount(-1);
             } else if (toType == Type.S) {
                 mv.visitInsn(Opcodes.D2I);
                 mv.visitInsn(Opcodes.I2S);
+                compileContext.addStackCount(-1);
             } else if (toType == Type.C) {
                 mv.visitInsn(Opcodes.D2I);
                 mv.visitInsn(Opcodes.I2C);
+                compileContext.addStackCount(-1);
             } else if (toType == Type.I) {
                 mv.visitInsn(Opcodes.D2I);
+                compileContext.addStackCount(-1);
             } else if (toType == Type.J) {
                 mv.visitInsn(Opcodes.D2L);
             } else if (toType == Type.F) {
                 mv.visitInsn(Opcodes.D2F);
-                currentStackHeights.addStackCount(-1);
+                compileContext.addStackCount(-1);
             } else if (toType == Type.D) {
                 // nothing to do
             }
         }
     }
 
-    protected void compileBooleanConversion(Type fromType, Type toType, MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights)
+    protected void compileBooleanConversion(Type fromType, Type toType, MethodVisitor mv, CompileContext compileContext)
             throws CompileException
     {
         if (toType == Type.Z) {
             assert fromType == Type.BOOLEAN;
-            compileUnbox(fromType, toType, mv, currentStackHeights, maxStackHeights);
+            compileUnbox(fromType, toType, mv, compileContext);
         } else {
             assert toType == Type.BOOLEAN;
             assert fromType == Type.Z;
-            compileBox(toType, mv, currentStackHeights, maxStackHeights);
+            compileBox(toType, mv, compileContext);
         }
     }
 
-    protected void compileObjectConversion(Type fromType, Type toType, MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights)
+    protected void compileObjectConversion(Type fromType, Type toType, MethodVisitor mv, CompileContext compileContext)
             throws CompileException
     {
         // ensure any primitive type is boxed before we go any further
 
         if (fromType.isPrimitive()) {
             Type boxType = Type.boxType(fromType);
-            compileBox(boxType, mv, currentStackHeights, maxStackHeights);
+            compileBox(boxType, mv, compileContext);
             fromType = boxType;
         }
 
@@ -401,7 +378,7 @@ public abstract class RuleElement {
             // special case -- isAssignableFrom says yes if we are trying to assign to a String but
             // we may still need to do a toString cobversion all the same
             if (toType == Type.STRING && fromType != Type.STRING) {
-                compileStringConversion(fromType, toType, mv, currentStackHeights, maxStackHeights);
+                compileStringConversion(fromType, toType, mv, compileContext);
             } else {
                 // nothing more to do
             }

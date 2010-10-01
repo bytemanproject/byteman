@@ -23,12 +23,12 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
@@ -271,22 +271,22 @@ public class ArithmeticExpression extends BinaryOperExpression
         }
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
-        int currentStack = currentStackHeights.stackCount;
+        int currentStack = compileContext.getStackCount();
         int expectedStack = 0;
         Expression operand0 = getOperand(0);
         Expression operand1 = getOperand(1);
         Type type0 = operand0.getType();
         Type type1 = operand1.getType();
         // compile lhs -- it adds 1 or 2 to the stack height
-        operand0.compile(mv, currentStackHeights, maxStackHeights);
+        operand0.compile(mv, compileContext);
         // do any required type conversion
-        compileTypeConversion(type0, type, mv, currentStackHeights, maxStackHeights);
+        compileTypeConversion(type0, type, mv, compileContext);
         // compile rhs -- it adds 1 or 2 to the stack height
-        operand1.compile(mv, currentStackHeights, maxStackHeights);
+        operand1.compile(mv, compileContext);
         // do any required type conversion
-        compileTypeConversion(type1, type, mv, currentStackHeights, maxStackHeights);
+        compileTypeConversion(type1, type, mv, compileContext);
 
         try {
 // n.b. be careful with characters here
@@ -326,7 +326,7 @@ public class ArithmeticExpression extends BinaryOperExpression
                     mv.visitInsn(Opcodes.I2C);
                 } // else if (type == type.I) { do nothing }
                 // ok, we popped two bytes but added one
-                currentStackHeights.addStackCount(-1);
+                compileContext.addStackCount(-1);
             }  else if (type == type.J) {
 
                 expectedStack = 2;
@@ -353,7 +353,7 @@ public class ArithmeticExpression extends BinaryOperExpression
                         throw new CompileException("ArithmeticExpression.compile : unexpected operator " + oper);
                 }
                 // ok, we popped four bytes but added two
-                currentStackHeights.addStackCount(-2);
+                compileContext.addStackCount(-2);
             }  else if (type == type.F) {
 
                 expectedStack = 1;
@@ -380,7 +380,7 @@ public class ArithmeticExpression extends BinaryOperExpression
                         throw new CompileException("ArithmeticExpression.compile : unexpected operator " + oper);
                 }
                 // ok, we popped two bytes but added one
-                currentStackHeights.addStackCount(-1);
+                compileContext.addStackCount(-1);
             }  else if (type == type.D) {
 
                 expectedStack = 2;
@@ -407,7 +407,7 @@ public class ArithmeticExpression extends BinaryOperExpression
                         throw new CompileException("ArithmeticExpression.compile : unexpected operator " + oper);
                 }
                 // ok, we popped four bytes but added two
-                currentStackHeights.addStackCount(-2);
+                compileContext.addStackCount(-2);
             } else {
                 throw new CompileException("ArithmeticExpression.compile : unexpected result type " + type.getName());
             }
@@ -418,16 +418,8 @@ public class ArithmeticExpression extends BinaryOperExpression
         }
 
         // check stack heights
-        if (currentStackHeights.stackCount != currentStack + expectedStack) {
-            throw new CompileException("ArithmeticExpression.compile : invalid stack height " + currentStackHeights.stackCount + " expecting " + (currentStack + expectedStack));
-        }
-
-        // we needed room for 2 * expectedStack extra values on the stack -- make sure we got it
-        int maxStack = maxStackHeights.stackCount;
-        int overflow = (currentStack + (2 * expectedStack)) - maxStack;
-
-        if (overflow > 0) {
-            maxStackHeights.addStackCount(overflow);
+        if (compileContext.getStackCount() != currentStack + expectedStack) {
+            throw new CompileException("ArithmeticExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expectedStack));
         }
     }
 

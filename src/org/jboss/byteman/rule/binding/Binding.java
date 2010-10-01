@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.rule.binding;
 
+import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.expression.DollarExpression;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.expression.Expression;
@@ -31,7 +32,6 @@ import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.RuleElement;
-import org.jboss.byteman.rule.compiler.StackHeights;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -137,38 +137,26 @@ public class Binding extends RuleElement
         return null;
     }
 
-    public void compile(MethodVisitor mv, StackHeights currentStackHeights, StackHeights maxStackHeights) throws CompileException
+    public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
         if (alias != null) {
-            alias.compile(mv, currentStackHeights, maxStackHeights);
+            alias.compile(mv, compileContext);
         } else if (isBindVar()) {
-            int currentStack = currentStackHeights.stackCount;
-
             // push the current helper instance i.e. this -- adds 1 to stack height
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             // push the variable name -- adds 1 to stack height
             mv.visitLdcInsn(name);
             // increment stack count
-            currentStackHeights.addStackCount(2);
+            compileContext.addStackCount(2);
             // compile the rhs expression for the binding -- adds 1 to stack height
-            value.compile(mv, currentStackHeights, maxStackHeights);
+            value.compile(mv, compileContext);
             // make sure value is boxed if necessary
             if (type.isPrimitive()) {
-                compileBox(Type.boxType(type), mv, currentStackHeights, maxStackHeights);
+                compileBox(Type.boxType(type), mv, compileContext);
             }
             // compile a setBinding call pops 3 from stack height
             mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V");
-            currentStackHeights.addStackCount(-3);
-
-            // check the max height was enough for 3 extra values
-
-            // we needed room for 3 more values on the stack -- make sure we got it
-            int maxStack = maxStackHeights.stackCount;
-            int overflow = (currentStack + 3) - maxStack;
-
-            if (overflow > 0) {
-                maxStackHeights.addStackCount(overflow);
-            }
+            compileContext.addStackCount(-3);
         }
     }
 
