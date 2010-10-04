@@ -96,6 +96,10 @@ public abstract class RuleElement {
         boolean box = toType.isObject();
 
         if (unbox) {
+            // if this is not already a numeric type then generate a cast
+            if (!fromType.isNumeric()) {
+                compileObjectConversion(fromType, Type.NUMBER, mv, compileContext);
+            }
             if (box) {
                 Type midType = Type.boxType(toType);
                 compileUnbox(fromType, midType, mv, compileContext);
