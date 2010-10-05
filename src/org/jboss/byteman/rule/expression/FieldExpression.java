@@ -53,6 +53,7 @@ public class FieldExpression extends AssignableExpression
         this.pathList = pathList;
         this.ownerType = null;
         this.indirectStatic = null;
+        this.fieldIndex = -1;
     }
 
     /**
@@ -155,7 +156,7 @@ public class FieldExpression extends AssignableExpression
             Class valueClass = null;
 
             try {
-                field  = ownerClazz.getField(fieldName);
+                field  = lookupField(ownerClazz);
             } catch (NoSuchFieldException e) {
                 throw new TypeException("FieldExpresssion.typeCheck : invalid field reference " + fieldName + getPos());
             }
@@ -208,14 +209,34 @@ public class FieldExpression extends AssignableExpression
             // this is just wrapping a static field expression so compile it
             indirectStatic.compile(mv, compileContext);
         } else {
-            // compile the owner expression
-            owner.compile(mv, compileContext);
-            // now compile a field access
-            String ownerType = Type.internalName(field.getDeclaringClass());
-            String fieldName = field.getName();
-            String fieldType = Type.internalName(field.getType(), true);
-            mv.visitFieldInsn(Opcodes.GETFIELD, ownerType, fieldName, fieldType);
-            compileContext.addStackCount(expected - 1);            
+            if (isPublicField) {
+                // we can use GETFIELD to access a public field
+                String ownerType = Type.internalName(field.getDeclaringClass());
+                String fieldName = field.getName();
+                String fieldType = Type.internalName(field.getType(), true);
+                // compile the owner expression
+                owner.compile(mv, compileContext);
+                mv.visitFieldInsn(Opcodes.GETFIELD, ownerType, fieldName, fieldType);
+                // we removed the owner and replaced with expected words
+                compileContext.addStackCount(expected - 1);
+            } else {
+                // since this is a private field we need to do the access using reflection
+                // stack the helper, owner and the field index
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                compileContext.addStackCount(1);
+                owner.compile(mv, compileContext);
+                mv.visitLdcInsn(fieldIndex);
+                compileContext.addStackCount(1);
+                // use the HelperAdapter method getAccessibleField to get the field value
+                mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,
+                        Type.internalName(HelperAdapter.class),
+                        "getAccessibleField",
+                        "(Ljava/lang/Object;I)Ljava/lang/Object;");
+                // we popped three words and added one object as result
+                compileContext.addStackCount(-2);
+                // convert Object to primitive or cast to subtype if required
+                compileTypeConversion(Type.OBJECT, type, mv, compileContext);
+            }
         }
         // check the stack height is ok
         if (compileContext.getStackCount() != currentStack + expected) {
@@ -279,6 +300,15 @@ public class FieldExpression extends AssignableExpression
     private Type ownerType;
     private Field field;
     private AssignableExpression indirectStatic;
+    /**
+     * true if this is a public field otherwise false
+     */
+    private boolean isPublicField;
+    /**
+     * index used compiled code when reading or writing a non-public field to obtain the field descriptor
+     * from the helper's list of accessible field descriptors.
+     */
+    private int fieldIndex;
 
     @Override
     public Object interpretAssign(HelperAdapter helperAdapter, Object value) throws ExecuteException
@@ -341,18 +371,73 @@ public class FieldExpression extends AssignableExpression
                 mv.visitInsn(Opcodes.POP);
                 compileContext.addStackCount(-1);
             }
-            // now compile a field update
-            String ownerType = Type.internalName(field.getDeclaringClass());
-            String fieldName = field.getName();
-            String fieldType = Type.internalName(field.getType(), true);
-            mv.visitFieldInsn(Opcodes.PUTFIELD, ownerType, fieldName, fieldType);
-            // we removed the owner and the value
-            compileContext.addStackCount(- (1 + size));
+            if (isPublicField) {
+                // now compile a field update
+                String ownerType = Type.internalName(field.getDeclaringClass());
+                String fieldName = field.getName();
+                String fieldType = Type.internalName(field.getType(), true);
+                mv.visitFieldInsn(Opcodes.PUTFIELD, ownerType, fieldName, fieldType);
+                // we removed the owner and the value
+                compileContext.addStackCount(- (1 + size));
+            } else {
+                // since this is a private field we need to do the update using reflection
+                // box the value to an object if necessary
+                if (type.isPrimitive()) {
+                    compileBox(Type.boxType(type),  mv, compileContext);
+                }
+                // stack the helper and then dupx2 it so it goes under the owner and value
+                // [.. val(s) owner  valObj ==> val(s) owner valObj helper ]
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                // [.. val(s) owner  valObj helper ==> val(s) helper owner valObj helper ]
+                mv.visitInsn(Opcodes.DUP_X2);
+                // stack now has 2 more words so count them
+                compileContext.addStackCount(2);
+                // now pop the redundant top word and stack the field index instead
+                // [.. val(s) helper owner valObj helper ==> val(s) helper owner valObj index ]
+                mv.visitInsn(Opcodes.POP);
+                mv.visitLdcInsn(fieldIndex);
+                // use the HelperAdapter method setAccessibleField to set the field value
+                mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,
+                        Type.internalName(HelperAdapter.class),
+                        "setAccessibleField",
+                        "(Ljava/lang/Object;Ljava/lang/Object;I)V");
+                // we popped four args
+                compileContext.addStackCount(-4);
+            }
 
             // check the stack height is ok
             if (compileContext.getStackCount() != currentStack) {
                 throw new CompileException("FieldExpression.compileAssign : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack));
             }
+        }
+    }
+    
+    private Field lookupField(Class<?> ownerClazz) throws NoSuchFieldException
+    {
+        try {
+            Field field = ownerClazz.getField(fieldName);
+            isPublicField = true;
+            return field;
+        } catch (NoSuchFieldException nsfe) {
+            // look for a protected or private field with the desired name
+            Class<?> nextClass = ownerClazz;
+            while (nextClass != null) {
+                try {
+                    field = nextClass.getDeclaredField(fieldName);
+                    isPublicField = false;
+                    field.setAccessible(true);
+                    // register the field with the rule so we can access it later
+                    fieldIndex = rule.addAccessibleField(field);
+                    return field;
+                } catch (NoSuchFieldException e) {
+                    // continue
+                } catch (SecurityException e) {
+                    // continue
+                }
+                nextClass = nextClass.getSuperclass();
+            }
+
+            throw nsfe;
         }
     }
 }

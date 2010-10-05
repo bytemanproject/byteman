@@ -162,7 +162,7 @@ public class TestField extends Test
                 logExpected("triggerMethod1 : arg == " + aux[2]);
                 logExpected("triggerMethod1 : arg.left.right == " + aux[2].left.right);
                 logExpected("triggerMethod1 : arg.right.right.right == " + aux[2].right.right.right);
-                logExpected("called TestField.triggerMethod1 : result == " + aux[2].right.getRight());
+                logExpected("called TestField.triggerMethod1 : result == " + aux[2].right.right);
             }
             break;
             case 3:
@@ -171,8 +171,8 @@ public class TestField extends Test
                 logExpected("inside TestField.triggerMethod2");
                 logExpected("triggerMethod2 : arg == " + aux[4]);
                 logExpected("triggerMethod2 : TestFieldMethodAuxiliary.theAuxiliary.left.value == " + aux[0].left.value);
-                logExpected("triggerMethod2 : TestFieldMethodAuxiliary.theAuxiliary.left.getRight().right == " + aux[0].left.getRight().right);
-                logExpected("called TestField.triggerMethod2 : result == " + aux[0].getLeft().right);
+                logExpected("triggerMethod2 : TestFieldMethodAuxiliary.theAuxiliary.left.getRight().right == " + aux[0].left.right.right);
+                logExpected("called TestField.triggerMethod2 : result == " + aux[0].left.right);
             }
             break;
             case 4:
@@ -182,7 +182,7 @@ public class TestField extends Test
                 logExpected("triggerMethod2 : arg == " + aux[7]);
                 logExpected("triggerMethod2 : TestFieldMethodAuxiliary.theAuxiliary.value == " + aux[0].value);
                 logExpected("triggerMethod2 : TestFieldMethodAuxiliary.theAuxiliary.right.right.right.right.value == " + aux[0].right.right.right.right.value);
-                logExpected("called TestField.triggerMethod2 : result == " + aux[7].getLeft());
+                logExpected("called TestField.triggerMethod2 : result == " + aux[7].left);
             }
             break;
         }

@@ -172,4 +172,18 @@ public class InterpretedHelper extends Helper implements HelperAdapter
     public String getName() {
         return rule.getName();
     }
+
+    public Object getAccessibleField(Object owner, int fieldIndex)
+    {
+        return rule.getAccessibleField(owner, fieldIndex);
+    }
+
+    public void setAccessibleField(Object owner, Object value, int fieldIndex)
+    {
+        rule.setAccessibleField(owner, value, fieldIndex);
+    }
+    public Object invokeAccessibleMethod(Object target, Object[] args, int methodIndex)
+    {
+        return rule.invokeAccessibleMethod(target, args, methodIndex);
+    }
 }

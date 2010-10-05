@@ -61,7 +61,27 @@ public class TestFieldMethodAuxiliary
         return theAuxiliary;
     }
 
+    protected static TestFieldMethodAuxiliary getTheAuxiliaryProtected()
+    {
+        return theAuxiliary;
+    }
+
+    private static TestFieldMethodAuxiliary getTheAuxiliaryPrivate()
+    {
+        return theAuxiliary;
+    }
+
     public TestFieldMethodAuxiliary getLeft()
+    {
+        return left;
+    }
+
+    protected TestFieldMethodAuxiliary getLeftProtected()
+    {
+        return left;
+    }
+
+    private TestFieldMethodAuxiliary getLeftPrivate()
     {
         return left;
     }
@@ -70,8 +90,28 @@ public class TestFieldMethodAuxiliary
     {
         return value;
     }
-    
+
+    protected int getValueProtected()
+    {
+        return value;
+    }
+
+    private int getValuePrivate()
+    {
+        return value;
+    }
+
     public TestFieldMethodAuxiliary getRight()
+    {
+        return right;
+    }
+
+    protected TestFieldMethodAuxiliary getRightProtected()
+    {
+        return right;
+    }
+
+    private TestFieldMethodAuxiliary getRightPrivate()
     {
         return right;
     }

@@ -30,9 +30,9 @@ import org.jboss.byteman.tests.Test;
  */
 public class TestAssign extends Test
 {
-    public int testInt;
+    protected int testInt;
     public long testLong;
-    public static long staticLong;
+    private static long staticLong;
     public TestAssign()
     {
         super(TestAssign.class.getCanonicalName());

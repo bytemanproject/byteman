@@ -320,6 +320,63 @@ public class Compiler implements Opcodes
         mv.visitMaxs(1, 1);
         mv.visitEnd();
         }
+        // create the getAccessibleField method
+        //
+        // public Object getAccessibleField(Object owner, int fieldIndex)
+        {
+        mv = cw.visitMethod(ACC_PUBLIC, "getAccessibleField", "(Ljava/lang/Object;I)Ljava/lang/Object;", null, null);
+        mv.visitCode();
+        // {TOS} <== rule.getAccessibleField(owner, fieldIndex);
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitFieldInsn(GETFIELD, compiledHelperName, "rule", "Lorg/jboss/byteman/rule/Rule;");
+        mv.visitVarInsn(ALOAD, 1);
+        mv.visitVarInsn(ILOAD, 2);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/Rule", "getAccessibleField", "(Ljava/lang/Object;I)Ljava/lang/Object;");
+        // return {TOS}
+        mv.visitInsn(ARETURN);
+        mv.visitMaxs(3, 3);
+        mv.visitEnd();
+        }
+
+        // create the setAccessibleField method
+        //
+        // public void setAccessibleField(Object owner, Object value, int fieldIndex)
+        // rule.setAccessibleField(owner, value, fieldIndex);
+        {
+        mv = cw.visitMethod(ACC_PUBLIC, "setAccessibleField", "(Ljava/lang/Object;Ljava/lang/Object;I)V", null, null);
+        mv.visitCode();
+        // rule.setAccessibleField(owner, value, fieldIndex);
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitFieldInsn(GETFIELD, compiledHelperName, "rule", "Lorg/jboss/byteman/rule/Rule;");
+        mv.visitVarInsn(ALOAD, 1);
+        mv.visitVarInsn(ALOAD, 2);
+        mv.visitVarInsn(ILOAD, 3);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/Rule", "setAccessibleField", "(Ljava/lang/Object;Ljava/lang/Object;I)V");
+        // return
+        mv.visitInsn(RETURN);
+        mv.visitMaxs(4, 4);
+        mv.visitEnd();
+        }
+
+        // create the invokeAccessibleMethod method
+        //
+        // public Object invokeAccessibleMethod(Object target, Object[] args, int methodIndex)
+        // {TOS} <==  rule.invokeAccessibleMethod(target, args, methodIndex);
+        {
+        mv = cw.visitMethod(ACC_PUBLIC, "invokeAccessibleMethod", "(Ljava/lang/Object;[Ljava/lang/Object;I)Ljava/lang/Object;", null, null);
+        mv.visitCode();
+        // rule.invokeAccessibleMethod(target, args, fieldIndex);
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitFieldInsn(GETFIELD, compiledHelperName, "rule", "Lorg/jboss/byteman/rule/Rule;");
+        mv.visitVarInsn(ALOAD, 1);
+        mv.visitVarInsn(ALOAD, 2);
+        mv.visitVarInsn(ILOAD, 3);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/Rule", "invokeAccessibleMethod", "(Ljava/lang/Object;[Ljava/lang/Object;I)Ljava/lang/Object;");
+            // return {TOS}
+        mv.visitInsn(ARETURN);
+        mv.visitMaxs(4, 4);
+        mv.visitEnd();
+        }
         if (compileToBytecode) {
             // we generate a single execute0 method if we want to run compiled and get
             // the event, condiiton and action to insert the relevant bytecode to implement

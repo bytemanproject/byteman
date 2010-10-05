@@ -43,6 +43,8 @@ import org.objectweb.asm.Opcodes;
 import org.jboss.byteman.rule.compiler.Compiler;
 
 import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -149,6 +151,15 @@ public class Rule
      * lifecycle event manager for rule helpers
      */
     private HelperManager helperManager;
+    /**
+     * a list of field objects used by compiled code to enable rule code to access non-public fields
+     */
+    private List<Field> accessibleFields;
+
+    /**
+     * a list of method objects used by compiled code to enable rule code to access non-public methods
+     */
+    private List<Method> accessibleMethods;
 
     private Rule(RuleScript ruleScript, ClassLoader loader, HelperManager helperManager)
             throws ParseException, TypeException, CompileException
@@ -167,6 +178,8 @@ public class Rule
         triggerDescriptor = null;
         triggerAccess = 0;
         returnType = null;
+        accessibleFields =  null;
+        accessibleMethods = null;
         // this is only set when the rule is created via a real installed transformer
         this.helperManager =  helperManager;
         ECAGrammarParser parser = null;
@@ -839,5 +852,53 @@ public class Rule
     private void uninstalled()
     {
         helperManager.uninstalled(this);
+    }
+
+    public int addAccessibleField(Field field) {
+        if (accessibleFields == null) {
+            accessibleFields = new ArrayList<Field>();
+        }
+        int index = accessibleFields.size();
+        accessibleFields.add(field);
+        return index;
+    }
+    
+    public int addAccessibleMethod(Method method) {
+        if (accessibleMethods == null) {
+            accessibleMethods = new ArrayList<Method>();
+        }
+        int index = accessibleMethods.size();
+        accessibleMethods.add(method);
+        return index;
+    }
+
+    public Object getAccessibleField(Object owner, int fieldIndex) throws ExecuteException
+    {
+        try {
+            Field field = accessibleFields.get(fieldIndex);
+            return field.get(owner);
+        } catch (Exception e) {
+            throw new  ExecuteException("Rule.getAccessibleField : unexpected error getting non-public field in rule " + getName(), e);
+        }
+    }
+
+    public void setAccessibleField(Object owner, Object value, int fieldIndex) throws ExecuteException
+    {
+        try {
+            Field field = accessibleFields.get(fieldIndex);
+            field.set(owner, value);
+        } catch (Exception e) {
+            throw new  ExecuteException("Rule.setAccessibleField : unexpected error setting non-public field in rule " + getName(), e);
+        }
+    }
+
+    public Object invokeAccessibleMethod(Object target, Object[] args, int methodIndex)
+    {
+        try {
+            Method method = accessibleMethods.get(methodIndex);
+            return method.invoke(target, args);
+        } catch (Exception e) {
+            throw new  ExecuteException("Rule.invokeAccessibleMethod : unexpected error invoking non-public method in rule " + getName(), e);
+        }
     }
 }

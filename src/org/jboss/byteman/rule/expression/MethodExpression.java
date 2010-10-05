@@ -58,6 +58,7 @@ public class MethodExpression extends Expression
         this.paramTypes = null;
         this.rootType = null;
         this.pathList = pathList;
+        this.methodIndex = -1;
     }
 
     /**
@@ -150,9 +151,12 @@ public class MethodExpression extends Expression
 
         // if we don't have a recipient and we didn't find a static class for the method then this is
         // a builtin
-        
+
+        boolean isBuiltIn = false;
+
         if (recipient == null) {
             if (rootType == null) {
+                isBuiltIn = true;
                 Type ruleType = typeGroup.create(rule.getHelperClass().getCanonicalName());
                 recipient = new DollarExpression(rule, ruleType, token, DollarExpression.HELPER_IDX);
                 recipient.bind();
@@ -163,68 +167,9 @@ public class MethodExpression extends Expression
             rootType = recipient.typeCheck(Type.UNDEFINED);
         }
 
-        // ok the only way we fail to have a recipient now is because this is a static call
+        // see if we can find a method for this call
         
-        boolean isStatic = (recipient == null);
-
-        Class clazz = rootType.getTargetClass();
-        
-        // if we can find a unique method then we can use it to type the parameters
-        // otherwise we do it the hard way
-        int arity = arguments.size();
-        Method[] methods = clazz.getMethods();
-        List<Method> candidates = new ArrayList<Method>();
-        boolean duplicates = false;
-
-        for (Method method : methods) {
-            int modifiers = method.getModifiers();
-            // ensure we only look at static or non static methods as appropriate
-            if (Modifier.isStatic(modifiers) == isStatic) {
-                if (method.getName().equals(name) &&
-                        method.getParameterTypes().length == arity) {
-                    candidates.add(method);
-                }
-            }
-        }
-
-        argumentTypes = new ArrayList<Type>();
-
-        // check each argument in turn -- if all candidates have the same argument type then
-        // use that as the type to check against
-        for (int i = 0; i < arguments.size() ; i++) {
-            if (candidates.isEmpty()) {
-                throw new TypeException("MethodExpression.typeCheck : invalid method " + name + " for target class " + rootType.getName() + getPos());
-            }
-
-            // TODO get and prune operations do not allow for coercion but type check does!
-            // e.g. the parameter type may be int and the arg type float
-            // or the parameter type may be String and the arg type class Foo
-            // reimplement this using type inter-assignability to do the pruning
-
-            Class candidateClass = getCandidateArgClass(candidates, i);
-            Type candidateType;
-            if (candidateClass != null) {
-                candidateType = typeGroup.ensureType(candidateClass);
-            } else {
-                candidateType = Type.UNDEFINED;
-            }
-            Type argType = arguments.get(i).typeCheck(candidateType);
-            argumentTypes.add(argType);
-            if (candidateType == Type.UNDEFINED) {
-                // we had several methods to choose from
-                candidates = pruneCandidates(candidates, i, argType.getTargetClass());
-            }
-        }
-
-        if (candidates.isEmpty()) {
-            throw new TypeException("MethodExpression.typeCheck : invalid method " + name + " for target class " + rootType.getName() + getPos());
-        }
-        
-        if (candidates.size() > 1) {
-            throw new TypeException("MethodExpression.typeCheck : ambiguous method signature " + name + " for target class " + rootType.getName() + getPos());
-        }
-
-        method = candidates.get(0);
+        findMethod(isBuiltIn);
 
         // now go back and identify the parameter types
 
@@ -243,6 +188,106 @@ public class MethodExpression extends Expression
         }
 
         return type;
+    }
+
+    /**
+     * find a method to resolve this method call expression.
+     * @param publicOnly true if only public methods should be considered
+     * @throws TypeException
+     */
+    private void findMethod(boolean publicOnly) throws TypeException
+    {
+        // check all declared methods of each class in the class hierarchy using the one with
+        // the most specific recipient type if we can find it
+
+        TypeGroup typeGroup =  getTypeGroup();
+        Class<?> clazz = rootType.getTargetClass();
+        boolean isStatic = (recipient == null);
+
+        int arity = arguments.size();
+        while (clazz != null) {
+            List<Method> candidates = new ArrayList<Method>();
+            Class<?> superClazz = clazz.getSuperclass();
+            try {
+                Method[] methods;
+                if (publicOnly) {
+                    methods = clazz.getMethods();
+                } else {
+                    methods = clazz.getDeclaredMethods();
+                }
+                List<Type> argumentTypes = new ArrayList<Type>();
+
+                for (Method method : methods) {
+                    int modifiers = method.getModifiers();
+                    // ensure we only look at static or non static methods as appropriate
+                    if (Modifier.isStatic(modifiers) == isStatic) {
+                        if (method.getName().equals(name) &&
+                                method.getParameterTypes().length == arity) {
+                            candidates.add(method);
+                        }
+                    }
+                }
+                // check each argument in turn -- if all candidates have the same argument type then
+                // use that as the type to check against
+                for (int i = 0; i < arguments.size() ; i++) {
+                    if (candidates.isEmpty()) {
+                        // no more possible matches
+                        break;
+                    }
+                    Class candidateClass = getCandidateArgClass(candidates, i);
+                    Type candidateType;
+                    if (candidateClass != null) {
+                        candidateType = typeGroup.ensureType(candidateClass);
+                    } else {
+                        candidateType = Type.UNDEFINED;
+                    }
+                    Type argType = arguments.get(i).typeCheck(candidateType);
+                    argumentTypes.add(argType);
+                    if (candidateType == Type.UNDEFINED) {
+                        // we had several methods to choose from
+                        candidates = pruneCandidates(candidates, i, argType.getTargetClass());
+                    }
+                }
+
+                if (candidates.size() == 1) {
+                    // we found the best fit
+                    Method method = candidates.get(0);
+                    if (!Modifier.isPublic(method.getModifiers())) {
+                        // see if we can actually access this method
+                        try {
+                            method.setAccessible(true);
+                        } catch (SecurityException e) {
+                            // hmm, maybe try the next super
+                            continue;
+                        }
+                        // we need to remember that this is not public
+                        isPublicMethod  = false;
+                        // save the method so we can use it from the compiled code
+                        methodIndex = rule.addAccessibleMethod(method);
+                    } else {
+                        isPublicMethod =  true;
+                    }
+                    this.method = method;
+                    this.argumentTypes = argumentTypes;
+                    return;
+                } else if (candidates.size() > 1) {
+                    // ambiguous method so throw up here
+                    throw new TypeException("MethodExpression.typeCheck : ambiguous method signature " + name + " for target class " + rootType.getName() + getPos());
+                }
+
+            } catch (SecurityException e) {
+                // continue in case we can find an implementation
+            }
+
+            if (publicOnly) {
+                clazz = null;
+            } else {
+                clazz = superClazz;
+            }
+        }
+
+        // no more possible candidates so throw up here
+        throw new TypeException("MethodExpression.typeCheck : invalid method " + name + " for target class " + rootType.getName() + getPos());
     }
 
     public Object interpret(HelperAdapter helper) throws ExecuteException {
@@ -288,45 +333,6 @@ public class MethodExpression extends Expression
         int currentStack = compileContext.getStackCount();
         int extraParams = 0; // space used by stacked args after conversion
         int expected = 0;
-        if (recipient != null) {
-            // compile code for recipient
-            recipient.compile(mv, compileContext);
-
-            extraParams += 1;
-        }
-
-        int argCount = arguments.size();
-
-        for (int i = 0; i < argCount; i++) {
-            Expression argument = arguments.get(i);
-            Type argType = argumentTypes.get(i);
-            Type paramType = paramTypes.get(i);
-            // compile code to stack argument and type convert if necessary
-            argument.compile(mv, compileContext);
-            compileTypeConversion(argType, paramType, mv, compileContext);
-            // allow for stacked paramType value
-            extraParams += (paramType.getNBytes() > 4 ? 2 : 1);
-        }
-
-        // enable triggering before we call the method
-        // this adds an extra value to the stack so modify the compile context to ensure
-        // we increase the maximum height if necessary
-        mv.visitMethodInsn(Opcodes.INVOKESTATIC, "org/jboss/byteman/rule/Rule", "enableTriggersInternal", "()Z");
-        compileContext.addStackCount(1);
-        mv.visitInsn(Opcodes.POP);
-        compileContext.addStackCount(-1);
-
-        // ok, now just call the method -- removes extraParams words
-
-        String ownerName = Type.internalName(method.getDeclaringClass());
-
-        if (recipient == null) {
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC, ownerName, method.getName(), getDescriptor());
-        } else if (recipient.getClass().isInterface()) {
-            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, ownerName, method.getName(), getDescriptor());
-        } else {
-            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, ownerName, method.getName(), getDescriptor());
-        }
 
         // no need for type conversion as return type was derived from method
         if (type.getNBytes() > 4) {
@@ -337,15 +343,130 @@ public class MethodExpression extends Expression
             expected = 0;
         }
 
-        // decrement the stack height to account for stacked param values (removed) and return value (added)
-        compileContext.addStackCount(expected - extraParams);
+        int argCount = arguments.size();
 
-        // now disable triggering again
-        // this temporarily adds an extra value to the stack -- no need to increment and
-        // then decrement the stack height as we will already have bumped the max last time
 
-        mv.visitMethodInsn(Opcodes.INVOKESTATIC, "org/jboss/byteman/rule/Rule", "disableTriggersInternal", "()Z");
-        mv.visitInsn(Opcodes.POP);
+        if (isPublicMethod) {
+            // we can just do this as a direct call
+            // stack the recipient if necessary then stack the args and then invoke the method
+            if (recipient != null) {
+                // compile code for recipient
+                recipient.compile(mv, compileContext);
+
+                extraParams += 1;
+            }
+
+            for (int i = 0; i < argCount; i++) {
+                Expression argument = arguments.get(i);
+                Type argType = argumentTypes.get(i);
+                Type paramType = paramTypes.get(i);
+                // compile code to stack argument and type convert if necessary
+                argument.compile(mv, compileContext);
+                compileTypeConversion(argType, paramType, mv, compileContext);
+                // allow for stacked paramType value
+                extraParams += (paramType.getNBytes() > 4 ? 2 : 1);
+            }
+
+            // enable triggering before we call the method
+            // this adds an extra value to the stack so modify the compile context to ensure
+            // we increase the maximum height if necessary
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "org/jboss/byteman/rule/Rule", "enableTriggersInternal", "()Z");
+            compileContext.addStackCount(1);
+            mv.visitInsn(Opcodes.POP);
+            compileContext.addStackCount(-1);
+
+            // ok, now just call the method -- removes extraParams words
+
+            String ownerName = Type.internalName(method.getDeclaringClass());
+
+            if (recipient == null) {
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, ownerName, method.getName(), getDescriptor());
+            } else if (recipient.getClass().isInterface()) {
+                mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, ownerName, method.getName(), getDescriptor());
+            } else {
+                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, ownerName, method.getName(), getDescriptor());
+            }
+            // decrement the stack height to account for stacked param values (removed) and return value (added)
+            compileContext.addStackCount(expected - extraParams);
+
+            // now disable triggering again
+            // this temporarily adds an extra value to the stack -- no need to increment and
+            // then decrement the stack height as we will already have bumped the max last time
+
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "org/jboss/byteman/rule/Rule", "disableTriggersInternal", "()Z");
+            mv.visitInsn(Opcodes.POP);
+
+        } else {
+            // if we are calling a method by reflection then we need to stack the current helper then
+            // the recipient or null if there is none and then build an object array on the stack
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            compileContext.addStackCount(1);
+            if (recipient != null) {
+                // compile code for recipient
+                recipient.compile(mv, compileContext);
+            } else {
+                mv.visitInsn(Opcodes.ACONST_NULL);
+                compileContext.addStackCount(1);
+            }
+
+            // stack arg count then create a new array
+            mv.visitLdcInsn(argCount);
+            compileContext.addStackCount(1);
+            // this just swaps one word for another
+            mv.visitTypeInsn(Opcodes.ANEWARRAY, "java/lang/Object");
+
+            // duplicate the array, stack the index, compile code to generate the arg and the do an array put
+            for (int i = 0; i < argCount; i++) {
+                mv.visitInsn(Opcodes.DUP);
+                mv.visitLdcInsn(i);
+                // that was two extra words
+                compileContext.addStackCount(2);
+                Expression argument = arguments.get(i);
+                Type argType = argumentTypes.get(i);
+                Type paramType = paramTypes.get(i);
+                // compile code to stack argument and type convert/box if necessary
+                argument.compile(mv, compileContext);
+                compileTypeConversion(argType, paramType, mv, compileContext);
+                compileBox(paramType, mv, compileContext);
+                // that's 3 extra words which now get removed
+                mv.visitInsn(Opcodes.AASTORE);
+                compileContext.addStackCount(-3);
+            }
+            // now stack the method object index
+            mv.visitLdcInsn(methodIndex);
+            compileContext.addStackCount(1);
+
+            // enable triggering before we call the method
+            // this adds an extra value to the stack so modify the compile context to ensure
+            // we increase the maximum height if necessary
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "org/jboss/byteman/rule/Rule", "enableTriggersInternal", "()Z");
+            compileContext.addStackCount(1);
+            mv.visitInsn(Opcodes.POP);
+            compileContext.addStackCount(-1);
+            
+            // ok, we  now have the recipient, args array and method index on the stack
+            // so we can call the HelperAdapter method  to do the actual reflective invocation
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,
+                    Type.internalName(HelperAdapter.class),
+                    "invokeAccessibleMethod",
+                    "(Ljava/lang/Object;[Ljava/lang/Object;I)Ljava/lang/Object;");
+            // we popped 4 words and left one in its place
+            compileContext.addStackCount(-3);
+            if (type == Type.VOID) {
+                mv.visitInsn(Opcodes.POP);
+                compileContext.addStackCount(-1);
+            } else {
+                // do any necessary casting and/or unboxing
+                compileTypeConversion(Type.OBJECT, type, mv, compileContext);
+            }
+
+            // now disable triggering again
+            // this temporarily adds an extra value to the stack -- no need to increment and
+            // then decrement the stack height as we will already have bumped the max last time
+
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "org/jboss/byteman/rule/Rule", "disableTriggersInternal", "()Z");
+            mv.visitInsn(Opcodes.POP);
+        }
 
         // ensure we have only increased the stack by the return value size
         if (compileContext.getStackCount() != currentStack + expected) {
@@ -460,4 +581,9 @@ public class MethodExpression extends Expression
     private Type rootType;
     private Method method;
     String[] pathList;
+    /**
+     * index fo method object in rule's accessible method list
+     */
+    private int methodIndex;
+    private boolean isPublicMethod;
 }

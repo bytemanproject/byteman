@@ -23,7 +23,6 @@
  */
 package org.jboss.byteman.rule.helper;
 
-import org.jboss.byteman.rule.binding.Bindings;
 import org.jboss.byteman.rule.exception.ExecuteException;
 
 /**
@@ -44,4 +43,7 @@ public interface HelperAdapter
     public void setBinding(String name, Object value);
     public Object getBinding(String name);
     public String getName();
+    public Object getAccessibleField(Object owner, int fieldIndex);
+    public void setAccessibleField(Object owner, Object value, int fieldIndex);
+    public Object invokeAccessibleMethod(Object target, Object[] args, int fieldIndex);
 }

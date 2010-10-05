@@ -33,7 +33,7 @@ IF arg.left.value <= 1
 DO test.log("triggerMethod1 : arg == " + $1),
    test.log("triggerMethod1 : arg.getLeft() == " + arg.getLeft()),
    test.log("triggerMethod1 : arg.getRight() == " + arg.getRight()),
-   return arg.getLeft().getLeft()
+   return arg.getLeftPrivate().getLeftProtected()
 ENDRULE
 
 RULE test method 2
@@ -45,8 +45,8 @@ BIND test : Test = $0,
      arg : TestFieldMethodAuxiliary = $1
 IF arg.left.value > 1
 DO test.log("triggerMethod1 : arg == " + $1),
-   test.log("triggerMethod1 : arg.left.getRight() == " + arg.left.getRight()),
-   test.log("triggerMethod1 : arg.right.getRight().right == " + arg.right.getRight().right),
+   test.log("triggerMethod1 : arg.left.getRight() == " + arg.left.getRightProtected()),
+   test.log("triggerMethod1 : arg.right.getRight().right == " + arg.right.getRightPrivate().right),
    return arg.getRight().right
 ENDRULE
 
@@ -60,8 +60,8 @@ BIND test : Test = $0,
 IF arg.value == 4
 DO test.log("triggerMethod2 : arg == " + $1),
    test.log("triggerMethod2 : org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().left.value == " + org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().left.value),
-   test.log("triggerMethod2 : TestFieldMethodAuxiliary.getTheAuxiliary().left.getRight().right == " + (TestFieldMethodAuxiliary.getTheAuxiliary().left.getRight()).right),
-   return org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().getLeft().right
+   test.log("triggerMethod2 : TestFieldMethodAuxiliary.getTheAuxiliary().left.getRight().right == " + (TestFieldMethodAuxiliary.getTheAuxiliaryProtected().left.getRight()).right),
+   return org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliaryPrivate().getLeft().right
 ENDRULE
 
 RULE test method 4
@@ -74,7 +74,7 @@ BIND test : Test = $0,
 IF arg.value != 4
 DO test.log("triggerMethod2 : arg == " + $1),
    test.log("triggerMethod2 : TestFieldMethodAuxiliary.getTheAuxiliary().getValue() == " + TestFieldMethodAuxiliary.getTheAuxiliary().getValue()),
-   test.log("triggerMethod2 : org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().right.right.getRight().right.getValue() == " + org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().right.right.getRight().right.getValue()),
+   test.log("triggerMethod2 : org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().right.right.getRight().right.getValue() == " + org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliaryPrivate().right.right.getRightProtected().right.getValue()),
    return arg.getLeft()
 ENDRULE
 

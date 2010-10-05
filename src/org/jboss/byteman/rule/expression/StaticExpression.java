@@ -50,6 +50,7 @@ public class StaticExpression extends AssignableExpression
         this.ownerTypeName = ownerTypeName;
         this.fieldName = fieldName;
         this.ownerType = null;
+        this.fieldIndex = -1;
     }
 
     /**
@@ -83,7 +84,7 @@ public class StaticExpression extends AssignableExpression
 
         Class clazz = ownerType.getTargetClass();
         try {
-            field = clazz.getField(fieldName);
+            field  = lookupField(clazz);
         } catch (NoSuchFieldException e) {
                 // oops
             throw new TypeException("StaticExpression.typeCheck : invalid field name " + fieldName + getPos());
@@ -122,13 +123,30 @@ public class StaticExpression extends AssignableExpression
 
         // compile a field access
 
-        String ownerType = Type.internalName(field.getDeclaringClass());
-        String fieldName = field.getName();
-        String fieldType = Type.internalName(field.getType(), true);
-        mv.visitFieldInsn(Opcodes.GETSTATIC, ownerType, fieldName, fieldType);
-        expected = (type.getNBytes() > 4 ? 2 : 1);
-
-        compileContext.addStackCount(expected);
+        if (isPublicField) {
+            String ownerType = Type.internalName(field.getDeclaringClass());
+            String fieldName = field.getName();
+            String fieldType = Type.internalName(field.getType(), true);
+            mv.visitFieldInsn(Opcodes.GETSTATIC, ownerType, fieldName, fieldType);
+            expected = (type.getNBytes() > 4 ? 2 : 1);
+            compileContext.addStackCount(expected);
+        } else {
+            // since this is a private field we need to do the access using reflection
+            // stack the helper, a null owner and the field index
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            mv.visitInsn(Opcodes.ACONST_NULL);
+            mv.visitLdcInsn(fieldIndex);
+            compileContext.addStackCount(3);
+            // use the HelperAdapter method getAccessibleField to get the field value
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,
+                    Type.internalName(HelperAdapter.class),
+                    "getAccessibleField",
+                    "(Ljava/lang/Object;I)Ljava/lang/Object;");
+            // we popped three words and added one object as result
+            compileContext.addStackCount(-2);
+            // convert Object to primitive or cast to subtype if required
+            compileTypeConversion(Type.OBJECT, type, mv, compileContext);
+        }
     }
 
     public void writeTo(StringWriter stringWriter) {
@@ -146,6 +164,8 @@ public class StaticExpression extends AssignableExpression
     private String fieldName;
     private Field field;
     private Type ownerType;
+    private boolean isPublicField;
+    private int fieldIndex;
 
     @Override
     public Object interpretAssign(HelperAdapter helperAdapter, Object value) throws ExecuteException
@@ -167,6 +187,7 @@ public class StaticExpression extends AssignableExpression
     @Override
     public void compileAssign(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        int currentStack =compileContext.getStackCount();
         int size = (type.getNBytes() > 4 ? 2 : 1);
 
         // copy the value so we leave a result
@@ -176,11 +197,75 @@ public class StaticExpression extends AssignableExpression
         } else {
             mv.visitInsn(Opcodes.DUP2);
         }
+        compileContext.addStackCount(size);
         // compile a static field update
 
-        String ownerType = Type.internalName(field.getDeclaringClass());
-        String fieldName = field.getName();
-        String fieldType = Type.internalName(field.getType(), true);
-        mv.visitFieldInsn(Opcodes.PUTSTATIC, ownerType, fieldName, fieldType);
+        if (isPublicField) {
+            String ownerType = Type.internalName(field.getDeclaringClass());
+            String fieldName = field.getName();
+            String fieldType = Type.internalName(field.getType(), true);
+            compileContext.addStackCount(-size);
+            mv.visitFieldInsn(Opcodes.PUTSTATIC, ownerType, fieldName, fieldType);
+        } else {
+            // since this is a private field we need to do the update using reflection
+            // box the value to an object if necessary
+            // [.. val(s) val(s) ==> val(s) valObj]
+            if (type.isPrimitive()) {
+                compileBox(Type.boxType(type), mv, compileContext);
+            }
+            // stack the helper and then swap it so it goes under the value
+            // [.. val(s) valObj ==> val(s) valObj helper ==> val(s) helper valObj]
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            mv.visitInsn(Opcodes.SWAP);
+            // stack a null owner then swap it so it goes under the value
+            // [val(s) helper valObj ==> val(s) helper valObj null ==> val(s) helper null valObj]
+            mv.visitInsn(Opcodes.ACONST_NULL);
+            mv.visitInsn(Opcodes.SWAP);
+            // now stack the field index
+            // [.. val(s) helper null valObj ==> val(s) helper null valObj index ]
+            mv.visitLdcInsn(fieldIndex);
+            // we added three more words
+            compileContext.addStackCount(3);
+            // use the HelperAdapter method setAccessibleField to set the field value
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,
+                    Type.internalName(HelperAdapter.class),
+                    "setAccessibleField",
+                    "(Ljava/lang/Object;Ljava/lang/Object;I)V");
+            // we popped four args
+            compileContext.addStackCount(-4);
+        }
+
+        if (compileContext.getStackCount() !=  currentStack) {
+            throw new CompileException("StaticExpression.compileAssign : invalid stack height " + compileContext.getStackCount() + " expecting " + currentStack);
+        }
+    }
+
+    private Field lookupField(Class<?> ownerClazz) throws NoSuchFieldException
+    {
+        try {
+            Field field = ownerClazz.getField(fieldName);
+            isPublicField = true;
+            return field;
+        } catch (NoSuchFieldException nsfe) {
+            // look for a protected or private field with the desired name
+            Class<?> nextClass = ownerClazz;
+            while (nextClass != null) {
+                try {
+                    field = nextClass.getDeclaredField(fieldName);
+                    isPublicField = false;
+                    field.setAccessible(true);
+                    // register the field with the rule so we can access it later
+                    fieldIndex = rule.addAccessibleField(field);
+                    return field;
+                } catch (NoSuchFieldException e) {
+                    // continue
+                } catch (SecurityException e) {
+                    // continue
+                }
+                nextClass = nextClass.getSuperclass();
+            }
+
+            throw nsfe;
+        }
     }
 }

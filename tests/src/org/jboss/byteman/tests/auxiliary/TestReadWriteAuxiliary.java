@@ -31,7 +31,7 @@ import org.jboss.byteman.tests.Test;
 public class TestReadWriteAuxiliary
 {
     protected Test test;
-    public int counter;
+    private int counter;
 
     public TestReadWriteAuxiliary(Test test)
     {
