@@ -97,7 +97,7 @@ public class NewExpression extends Expression
         type = Type.dereference(typeGroup.create(typeName));
 
         if (type == null || type.isUndefined()) {
-            throw new TypeException("ThrowExpression.typeCheck : unknown exception type " + typeName + getPos());
+            throw new TypeException("NewExpression.typeCheck : unknown type " + typeName + getPos());
         }
 
         Class clazz = type.getTargetClass();
@@ -120,7 +120,7 @@ public class NewExpression extends Expression
         // use that as the type to check against
         for (int i = 0; i < arguments.size() ; i++) {
             if (candidates.isEmpty()) {
-                throw new TypeException("ThrowExpression.typeCheck : invalid constructor for target class " + typeName + getPos());
+                throw new TypeException("NewExpression.typeCheck : invalid constructor for target class " + typeName + getPos());
             }
 
             // TODO get and prune operations do not allow for coercion but type check does!
@@ -144,11 +144,11 @@ public class NewExpression extends Expression
         }
 
         if (candidates.isEmpty()) {
-            throw new TypeException("ThrowExpression.typeCheck : invalid constructor for target class " + typeName + getPos());
+            throw new TypeException("NewExpression.typeCheck : invalid constructor for target class " + typeName + getPos());
         }
 
         if (candidates.size() > 1) {
-            throw new TypeException("ThrowExpression.typeCheck : ambiguous constructor signature for target class " + typeName + getPos());
+            throw new TypeException("NewExpression.typeCheck : ambiguous constructor signature for target class " + typeName + getPos());
         }
 
         constructor = candidates.get(0);
@@ -224,11 +224,11 @@ public class NewExpression extends Expression
             Object result = constructor.newInstance(callArgs);
             return result;
         } catch (InstantiationException e) {
-            throw new ExecuteException("ThrowExpression.interpret : unable to instantiate exception class " + typeName + getPos(), e);
+            throw new ExecuteException("NewExpression.interpret : unable to instantiate class " + typeName + getPos(), e);
         } catch (IllegalAccessException e) {
-            throw new ExecuteException("ThrowExpression.interpret : unable to access exception class " + typeName + getPos(), e);
+            throw new ExecuteException("NewExpression.interpret : unable to access class " + typeName + getPos(), e);
         } catch (InvocationTargetException e) {
-            throw new ExecuteException("ThrowExpression.interpret : unable to invoke exception class constructor for " + typeName + getPos(), e);
+            throw new ExecuteException("NewExpression.interpret : unable to invoke constructor for class " + typeName + getPos(), e);
         }
     }
 
@@ -269,7 +269,7 @@ public class NewExpression extends Expression
         compileContext.addStackCount(-(extraParams+1));
 
         if (compileContext.getStackCount() != currentStack + expected) {
-            throw new CompileException("ThrowExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
+            throw new CompileException("NewExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
         }
     }
 
