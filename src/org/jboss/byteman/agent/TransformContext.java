@@ -28,6 +28,7 @@ import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.rule.Rule;
 
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * Class used to localise the context information employed when creating a rule from a rule script and
@@ -94,6 +95,17 @@ public class TransformContext
     public void recordFailedTransform(Throwable th)
     {
         ruleScript.recordFailedTransform(loader, triggerClass, th);
+
+        //  this gets called when a transform attempt fails. if there is a rule left in the rule map
+        // then it will belong to the failed transform so it needs  to be purged.
+
+        Iterator<Rule> iterator = ruleMap.values().iterator();
+
+        for (Rule rule : ruleMap.values()) {
+            rule.purge();
+        }
+
+        ruleMap.clear();
     }
 
     public void recordMethodTransform(String triggerMethodName, String triggerMethodDescriptor)

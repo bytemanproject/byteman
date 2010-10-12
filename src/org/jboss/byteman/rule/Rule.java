@@ -731,9 +731,12 @@ public class Rule
      */
     public void purge()
     {
-        ruleKeyMap.remove(key);
-        if (checked) {
-            uninstalled();
+        // nothing to do unless we actually allocated a key
+        if (key != null) {
+            ruleKeyMap.remove(key);
+            if (checked) {
+                uninstalled();
+            }
         }
     }
 
