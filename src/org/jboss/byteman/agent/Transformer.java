@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.agent;
 
+import org.jboss.byteman.agent.adapter.JSRInliner;
 import org.jboss.byteman.agent.check.ClassChecker;
 import org.jboss.byteman.agent.check.LoadCache;
 import org.jboss.byteman.rule.Rule;
@@ -32,6 +33,7 @@ import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.agent.adapter.RuleTriggerAdapter;
 import org.jboss.byteman.agent.adapter.RuleCheckAdapter;
 import org.objectweb.asm.*;
+import org.objectweb.asm.commons.JSRInlinerAdapter;
 
 import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
@@ -686,8 +688,10 @@ public class Transformer implements ClassFileTransformer {
             cr = new ClassReader(targetClassBytes);
             ClassWriter cw = getNonLoadingClassWriter(ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
             RuleTriggerAdapter adapter = handlerLocation.getRuleAdapter(cw, transformContext);
+            // insert a JSR inliner between the reader and the adapter so we don't see JSR/RET sequences
+            JSRInliner jsrInliner = new JSRInliner(adapter);
             try {
-                cr.accept(adapter, ClassReader.EXPAND_FRAMES);
+                cr.accept(jsrInliner, ClassReader.EXPAND_FRAMES);
             } catch (Throwable th) {
                 if (isVerbose()) {
                     System.out.println("org.jboss.byteman.agent.Transformer : error injecting trigger for rule " + ruleScript.getName() + " into class " + className + "\n" +  th);
