@@ -42,12 +42,9 @@ public class HelperManager
                 }
                 try {
                     details.activated.invoke(null);
-                } catch (IllegalAccessException e) {
+                } catch (Exception e) {
                     System.out.println("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".activate() : " + e);
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                } catch (InvocationTargetException e) {
-                    System.out.println("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".activate() : " + e);
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    e.printStackTrace();
                 }
             }
             if (details.installed != null) {
@@ -60,12 +57,9 @@ public class HelperManager
                     } else {
                         details.installed.invoke(null, rule.getName());
                     }
-                } catch (IllegalAccessException e) {
+                } catch (Exception e) {
                     System.out.println("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".installed(String) : " + e);
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                } catch (InvocationTargetException e) {
-                    System.out.println("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".installed(String) : " + e);
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    e.printStackTrace();
                 }
             }
             details.installCount++;
@@ -98,12 +92,9 @@ public class HelperManager
                     } else {
                         details.uninstalled.invoke(null, rule.getName());
                     }
-                } catch (IllegalAccessException e) {
+                } catch (Exception e) {
                     System.out.println("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".uninstalled(String) : " + e);
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                } catch (InvocationTargetException e) {
-                    System.out.println("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".uninstalled(String) : " + e);
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    e.printStackTrace();
                 }
             }
             if (details.installCount == 0 && details.deactivated != null) {
@@ -112,12 +103,9 @@ public class HelperManager
                 }
                 try {
                     details.deactivated.invoke(null);
-                } catch (IllegalAccessException e) {
-                    System.out.println("HelperManager.uninstalled : unexpected exception from " + helperClass.getName() + ".deactivate() : " + e);
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                } catch (InvocationTargetException e) {
+                } catch (Exception e) {
                     System.out.println("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".deactivate() : " + e);
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    e.printStackTrace();
                 }
             }
             if (details.installCount == 0) {
