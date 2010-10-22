@@ -1,3 +1,4 @@
 Premain-Class: org.jboss.byteman.agent.Main
+Agent-Class: org.jboss.byteman.agent.Main
 Can-Redefine-Classes: true
 Can-Retransform-Classes: true
