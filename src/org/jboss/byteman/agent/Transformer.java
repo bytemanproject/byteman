@@ -218,11 +218,13 @@ public class Transformer implements ClassFileTransformer {
                 return null;
             }
 
+            /*
             if (checker.hasOuterClass()) {
                 // we don't transform inner classes for now
                 // TODO -- see if we can match and transform inner classes via the outer class
                 return null;
             }
+            */
 
             // TODO-- reconsider this as it is a bit dodgy as far as security is concerned
         

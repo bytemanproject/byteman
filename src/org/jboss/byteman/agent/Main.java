@@ -40,9 +40,20 @@ import java.net.Socket;
  * agent class supplied at JVM startup to install byteman package bytecode transformer
  */
 public class Main {
+    public static boolean firstTime = true;
+    public final static String BYTEMAN_PREFIX = "org.jboss.byteman.";
+
     public static void premain(String args, Instrumentation inst)
             throws Exception
     {
+        // guard against the agent being loaded twice
+        synchronized (Main.class) {
+            if (firstTime) {
+                firstTime = false;
+            } else {
+                throw new Exception("Main : attempting to load Byteman agent more than once");
+            }
+        }
         boolean allowRedefine = false;
 
         if (args != null) {
@@ -73,6 +84,28 @@ public class Main {
                     // this is only for backwards compatibility -- it is the same as listener
                     String value = arg.substring(REDEFINE_PREFIX.length(), arg.length());
                     allowRedefine = Boolean.parseBoolean(value);
+                } else if (arg.startsWith(PROP_PREFIX)) {
+                    // this can be used to set byteman properties
+                    String prop = arg.substring(PROP_PREFIX.length(), arg.length());
+                    String value="";
+                    if (prop.startsWith(BYTEMAN_PREFIX)) {
+                        int index = prop.indexOf('=');
+                        if (index > 0) {
+                            // need to split off the value
+                            if (index == prop.length() - 1)
+                            {
+                                // value is empty so just drop the =
+                                prop = prop.substring(0, index);
+                            } else {
+                                value = prop.substring(index + 1);
+                                prop = prop.substring(0, index);
+                            }
+                        }
+                        System.out.println("Setting " + prop + "=" + value);
+                        System.setProperty(prop, value);
+                    } else {
+                        System.err.println("Invalid property : " +  prop);
+                    }
                 } else {
                     System.err.println("org.jboss.byteman.agent.Main:\n" +
                             "  illegal agent argument : " + arg + "\n" +
@@ -175,6 +208,10 @@ public class Main {
         }
     }
 
+    public static void agentmain(String args, Instrumentation inst) throws Exception
+    {
+        premain(args, inst);
+    }
     /**
      * prefix used to specify port argument for agent
      */
@@ -212,6 +249,12 @@ public class Main {
      */
 
     private static final String REDEFINE_PREFIX = "redefine:";
+
+    /**
+     * prefix used to specify system properties to be set before starting the agent
+     */
+
+    private static final String PROP_PREFIX = "prop:";
 
     /**
      * list of paths to extra bootstrap jars supplied on command line

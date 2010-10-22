@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # JBoss, Home of Professional Open Source
-# Copyright 2009, Red Hat Middleware LLC, and individual contributors
+# Copyright 2009, Red Hat Middleware, and individual contributors
 # by the @authors tag. See the copyright.txt in the distribution for a
 # full listing of individual contributors.
 #
@@ -53,10 +53,10 @@
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then
 # use the root of the path to this file to locate the byteman jar
-    BYTEMAN_HOME=${0%*/bin/bmjava.sh}
-# allow for rename to plain bmjava
+    BYTEMAN_HOME=${0%*/bin/submit.sh}
+# allow for rename to plain submit
     if [ "$BYTEMAN_HOME" == "$0" ]; then
-	BYTEMAN_HOME=${0%*/bin/bmjava}
+	BYTEMAN_HOME=${0%*/bin/submit}
     fi
     if [ "$BYTEMAN_HOME" == "$0" ]; then
 	echo "Unable to find byteman home"
