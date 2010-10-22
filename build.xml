@@ -61,7 +61,8 @@
     <property name="ext.javacup.rt.jars" value="javacuprt.jar"/>
     <property name="byteman.jar" value="byteman.jar"/>
     <property name="byteman-submit.jar" value="byteman-submit.jar"/>
-    <property name="byteman.bin.scripts" value="bytemancheck.sh submit.sh bmjava.sh"/>
+    <property name="byteman-install.jar" value="byteman-install.jar"/>
+    <property name="byteman.bin.scripts" value="bytemancheck.sh submit.sh bminstall.sh bmjava.sh"/>
     <property name="byteman.doc.files" value="ProgrammersGuide.pdf copyright.txt"/>
     <property name="byteman.ext.lib.doc.files" value="third_party_licenses.txt"/>
     <property name="manifest.file" value="${dd.dir}/META-INF/MANIFEST.MF"/>
@@ -121,7 +122,7 @@
     <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
        classpath="${ext.lib.dir}/jarjar-1.0.jar"/>
 
-   <target name="jar" depends="compile, byteman.jar, submit.jar">
+   <target name="jar" depends="compile, byteman.jar, submit.jar, install.jar">
    </target>
 
     <target name="byteman.jar.obfuscated" if="obfuscate.3rd.party">
@@ -161,6 +162,21 @@
         </jar>
     </target>
 
+    <target  name="install.jar">
+        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}" includes="**/Install.java">
+            <classpath>
+                <fileset dir="${java.home}/lib/" includes="tools.jar"/>
+            </classpath>
+        </javac>
+        <jar jarfile="${build.lib.dir}/${byteman-install.jar}">
+            <fileset dir="${build.classes.dir}" includes="**/Install.class"/>
+            <manifest>
+                <attribute name="Main-Class" value="org.jboss.byteman.agent.install.Install"/>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+        </jar>
+    </target>
+
     <!-- installation targets -->
     <target  name="init-install">
         <delete dir="${install.dir}"/>
@@ -175,7 +191,7 @@
             <fileset dir="${build.lib.dir}" includes="${byteman.jar}"/>
         </copy>
         <copy todir="${install.lib.dir}">
-            <fileset dir="${build.lib.dir}" includes="${byteman-submit.jar}"/>
+            <fileset dir="${build.lib.dir}" includes="${byteman-submit.jar} ${byteman-install.jar}"/>
         </copy>
         <copy todir="${install.bin.dir}">
             <fileset dir="${bin.src.dir}" includes="${byteman.bin.scripts}"/>
