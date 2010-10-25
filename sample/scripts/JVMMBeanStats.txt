@@ -23,8 +23,9 @@
 #
 # JVM Statistics Display via a Dynamic MBean
 #
-# A variant of the PeriodicStats script which makes the stats available
-# via JMX
+# A variant of the PeriodicStats script which counts the occurence of
+# various events in the JVM and makes the stats available via a JMX
+# Dynamic MBean
 #
 # to use ths script to trace execution of java program org.my.App execute
 #
@@ -35,7 +36,7 @@
 #   SAMPLE_JAR=${BYTEMAN_HOME}/sample/lib/byteman-sample.jar
 #
 #   -- identify this script
-#   SCRIPT={BYTEMAN_HOME}/sample/scripts/JMXStats.txt
+#   SCRIPT={BYTEMAN_HOME}/sample/scripts/JVMMBeanStats.txt
 #
 #  ${BYTEMAN_HOME}/bin/bmjava.sh -l $SCRIPT -b $SAMPLE_JAR org.my.App
 #
