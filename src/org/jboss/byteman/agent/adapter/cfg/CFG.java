@@ -598,7 +598,7 @@ public class CFG
         List<TryCatchDetails> tryCatchDetails = tryCatchStartDetails(triggerDetails.getStart());
         if (tryCatchDetails.size() != 3) {
             // hmm, this is weird
-            System.out.println("unexpected handler count for trigger code try catch label" + tryCatchDetails.size());
+            System.out.println("unexpected handler count for trigger code try catch label" + tryCatchDetails.size()  + " in method " + methodName);
         }
         // all 3 handler should have the same open monitor enters list
         return tryCatchDetails.get(0).getOpenEnters();
@@ -659,11 +659,11 @@ public class CFG
         BBlock block = open.getBlock();
         int instructionIdx = open.getInstructionIdx();
         if (instructionIdx <= 0) {
-            System.out.println("getSavedMonitorIdx : unexpected! close pair has invalid index " + instructionIdx);
+            System.out.println("getSavedMonitorIdx : unexpected! close pair has invalid index " + instructionIdx + " in method " + methodName);
         }
         int instruction = block.getInstruction(instructionIdx);
         if (instruction != Opcodes.MONITORENTER) {
-            System.out.println("getSavedMonitorIdx : unexpected! close pair instruction " + instruction + " is not MONITOREXIT");
+            System.out.println("getSavedMonitorIdx : unexpected! close pair instruction " + instruction + " is not MONITOREXIT in method " + methodName);
         }
         instructionIdx--;
         instruction = block.getInstruction(instructionIdx );
@@ -680,12 +680,12 @@ public class CFG
             }
         }
         if (instruction != Opcodes.ASTORE) {
-            System.out.println("getSavedMonitorIdx : unexpected! close pair preceding instruction " + instruction + " is not ASTORE");
+            System.out.println("getSavedMonitorIdx : unexpected! close pair preceding instruction " + instruction + " is not ASTORE in method " + methodName);
             return -1;
         }
         int varIdx = block.getInstructionArg(instructionIdx, 0);
         if (varIdx < 0) {
-            System.out.println("getSavedMonitorIdx : unexpected! close pair preceding ASTORE instruction has invalid index " + varIdx);
+            System.out.println("getSavedMonitorIdx : unexpected! close pair preceding ASTORE instruction has invalid index " + varIdx + " in method " + methodName);
         }
         return varIdx;
     }
@@ -879,16 +879,16 @@ public class CFG
                 // this should contain the same locations as our current list!
                 int openCount = openEnters.size();
                 if (openCount != newOpenCount) {
-                    System.out.println("CFG.carryForward: unexpected! invalid open enters count for block " + label);
+                    System.out.println("CFG.carryForward: unexpected! invalid open enters count for block " + label + " in method " + methodName);
                 }
                 for (int j = 0; j < newOpenCount && j < openCount; j++) {
                     CodeLocation l1 = openEnters.get(j);
                     CodeLocation l2 = newOpenEnters.get(j);
                     if (l1.getBlock() != l2.getBlock()) {
-                        System.out.println("CFG.carryForward: unexpected! invalid open enters block for block " + label + " at index " + j);
+                        System.out.println("CFG.carryForward: unexpected! invalid open enters block for block " + label + " at index " + j + " in method " + methodName);
                     }
                     if (l1.getInstructionIdx() != l2.getInstructionIdx()) {
-                        System.out.println("CFG.carryForward: unexpected! invalid open enters instruction index for block " + label + " at index " + j);
+                        System.out.println("CFG.carryForward: unexpected! invalid open enters instruction index for block " + label + " at index " + j + " in method " + methodName);
                     }
                 }
             }
