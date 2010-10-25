@@ -42,7 +42,7 @@
 #  ${BYTEMAN_HOME}/bin/bmjava.sh org.my.App
 #
 #   -- install the script
-#  ${BYTEMAN_HOME}/bin/submit.sh -l $SCRIPT
+#  ${BYTEMAN_HOME}/bin/bmsubmit.sh -l $SCRIPT
 
 ########################################################################
 #
