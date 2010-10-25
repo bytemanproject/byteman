@@ -137,14 +137,6 @@ public class KeyInfo
             keyLabel = keyName;
         }
 
-        // we cannot allow repeat key names
-
-        for (int i = 0; i < keyCount; i++) {
-            if (keyNames[i].equals(keyName)) {
-                throw new IllegalArgumentException("KeyInfo.addKey() : Key names must be unique");
-            }
-        }
-        
         String[] newKeyNames = new String[keyCount + 1];
         int[] newKeyTypes = new int[keyCount + 1];
         String[] newKeyLabels = new String[keyCount + 1];

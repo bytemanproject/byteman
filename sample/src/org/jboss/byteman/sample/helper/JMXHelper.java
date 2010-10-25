@@ -124,10 +124,21 @@ public class JMXHelper extends Helper implements DynamicMBean
             return getPeriodSecs();
         }
 
+        int pos = attribute.lastIndexOf(" : ");
+        String keyname = attribute.substring(0,pos);
+        int keyType;
+        if (attribute.endsWith(" : rate")) {
+            keyType = KeyInfo.KEY_TYPE_RATE;
+        } else if (attribute.endsWith(" : mean")) {
+            keyType = KeyInfo.KEY_TYPE_MEAN;
+        } else {
+            keyType = KeyInfo.KEY_TYPE_CUMULATIVE;
+        }
         String[] keyNames = keyInfo.getKeyNames();
+        int[] keyTypes = keyInfo().getKeyTypes();
         int keyCount = keyInfo.getKeyCount();
         for (int i = 0; i < keyCount; i++) {
-            if (keyNames[i].equals(attribute)) {
+            if (keyNames[i].equals(keyname) && keyTypes[i] == keyType) {
                 return getValue(i);
             }
         }
@@ -240,15 +251,15 @@ public class JMXHelper extends Helper implements DynamicMBean
             String descriptor;
             if (keyTypes[i] == KeyInfo.KEY_TYPE_CUMULATIVE) {
                 type = "java.lang.Integer";
-                descriptor = " total";
+                descriptor = " : total";
             } else if (keyTypes[i] == KeyInfo.KEY_TYPE_RATE) {
                 type = "java.lang.Float";
-                descriptor = " per second";
+                descriptor = " : rate";
             } else {
                 type = "java.lang.Float";
-                descriptor = " average";
+                descriptor = " : mean";
             }
-            attributes[i + 1] = new MBeanAttributeInfo(keyNames[i],
+            attributes[i + 1] = new MBeanAttributeInfo(keyNames[i] + descriptor,
                 type,
                 keyLabels[i],
                 true,
