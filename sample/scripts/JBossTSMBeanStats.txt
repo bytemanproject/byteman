@@ -1,0 +1,176 @@
+########################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2009, Red Hat Middleware LLC, and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+# JBossTS Statistics Display via a Dynamic MBean
+#
+# A variant of the PeriodicStats script which makes the stats available
+# via JMX
+#
+# to use ths script to trace execution of JBossTS
+#
+#  -- set the directory in which byteman has been installed
+#  BYTEMAN_HOME= ...
+#
+#   -- identify the samples helper jar
+#   SAMPLE_JAR=${BYTEMAN_HOME}/sample/lib/byteman-sample.jar
+#
+#   -- identify this script
+#   SCRIPT={BYTEMAN_HOME}/sample/scripts/JBossTSStats.txt
+#
+#   -- set the javaagent command line option and start JBoss AS
+#   export JAVA_OPTS="${JAVA_OPTS} -javaagent:${BYTEMAN_JAR}=script:${SCRIPT},sys:${SAMPLE_JAR)"
+#   ${JBOSS_HOME}/bin/run.sh
+#
+# alternatively to load the script dynamically
+#
+#   -- start JBoss AS with the Byteman agent listener
+#   export JAVA_OPTS="${JAVA_OPTS} -javaagent:${BYTEMAN_JAR}=listener:true"
+#  ${JBOSS_HOME}/run.sh
+#
+#   -- install the helper library into the system classpath
+#  ${BYTEMAN_HOME}/bin/bmsubmit.sh -s $SAMPLE_JAR
+#
+#   -- install the script
+#  ${BYTEMAN_HOME}/bin/bmsubmit.sh -l $SCRIPT
+
+########################################################################
+#
+# All rules in this script use class JMXHelper which provides support
+# for sampling and displaying statistics in an MBean. The helper adds a
+# thread in the background when it is activated i.e. when any of the rules
+# which employs the helper is first triggered. The thread is shut down
+# when the helper is deactivated i.e. once all rules using the helper
+# have been uninstalled. At regular intervals the helper thread samples
+# counters updated by the rules and posts new stats to the MBean.
+#
+# The script attaches a rule to the helper method keyInfo() to define the
+# counters to be sampled by the background thread. The object returned
+# by this rule contains a set of string keys identifying the counters.
+# It also provides each counter with a corresponding desciption
+# and counter type. The type is either: CUMULATIVE meaning that the
+# display tracks the counter total across successive samples; RATE,
+# meaning that the display tracks the rate of change in the counter
+# value per second across the last N samples; or MEAN, meaning
+# that the display tracks the mean value of the counter across
+# the last N samples. n.b. in the last case the sample counts
+# are weighted by the exact length of the sample interval.
+#
+# The script also attaches a rule to helper method samplePeriod. The value
+# 5000 returned by this method is used as the sampling period measured in
+#  milliseconds. If this rule were omitted then the method would returns
+# the default value 10,000.
+#
+# Thirdly, the script attaches a rule to helper method sampleSetSize. The value
+# 3 returned by this method is used to determine how many sample readings to
+# combine when computing the rate of change of a counter or the average value
+# of the counter across each sample period.
+#
+# The remaining rules are used to update the values of the counters displayed
+# in the mbean. They are injected into JBossTS methods at locations where
+# a statistically significant event occurs and their action, fired when
+# that event needs to be counted, is to incremment the relevant counter.
+#
+# In this example the rules measure various operations in the JVM such as
+# thread, file and class loads operations.
+
+# ensure all rules employ the JMX helper class.
+
+HELPER org.jboss.byteman.sample.helper.JMXHelper
+
+# this rule is triggered when the periodic helper thread starts
+# it returns a KeyInfo object identifying the stats counters
+# updated by rules in this rule set
+
+RULE return key info
+CLASS JMXHelper
+METHOD keyInfo()
+BIND keyInfo : KeyInfo = new KeyInfo("JBossTS Statistics in a Dynamic MBean")
+IF TRUE
+DO keyInfo.addKey("TX begin request", KeyInfo.KEY_TYPE_CUMULATIVE, "TX begin request Total"),
+   keyInfo.addKey("TX commit request", KeyInfo.KEY_TYPE_CUMULATIVE, "TX commit request Total"),
+   keyInfo.addKey("TX rollback request", KeyInfo.KEY_TYPE_CUMULATIVE, "TX rollback request Total"),
+   RETURN keyInfo
+ENDRULE
+
+# this rule is triggered when a call is made to Transaction.begin
+
+RULE count begin request
+INTERFACE javax.transaction.Transaction
+METHOD begin()
+IF TRUE
+DO incrementCounter("TX begin request")
+ENDRULE
+
+# this rule is triggered when a call is made to Transaction.commit
+
+RULE count commit request
+INTERFACE javax.transaction.Transaction
+METHOD commit()
+IF TRUE
+DO incrementCounter("TX begin request")
+ENDRULE
+
+# this rule is triggered when a call is made to Transaction.rollback
+
+RULE count rollback request
+INTERFACE javax.transaction.Transaction
+METHOD rollback()
+IF TRUE
+DO incrementCounter("TX rollback request")
+ENDRULE
+
+# this rule is triggered when a call is made to Transaction.setRollbackOnly
+
+RULE count setRollbackOnly request
+INTERFACE javax.transaction.Transaction
+METHOD setRollbackOnly()
+IF TRUE
+DO incrementCounter("TX setRollbackOnly request")
+ENDRULE
+
+# this rule is triggered when a call is made to Transaction.enlistResource
+
+RULE count enlistResource request
+INTERFACE javax.transaction.Transaction
+METHOD enlistResource()
+IF TRUE
+DO incrementCounter("TX enlistResource request")
+ENDRULE
+
+# this rule is triggered when a call is made to Transaction.delistResource
+
+RULE count delistResource request
+INTERFACE javax.transaction.Transaction
+METHOD delistResource()
+IF TRUE
+DO incrementCounter("TX delistResource request")
+ENDRULE
+
+# this rule is triggered when a call is made to Transaction.registerSynchronization
+
+RULE count registerSynchronization request
+INTERFACE javax.transaction.Transaction
+METHOD registerSynchronization()
+IF TRUE
+DO incrementCounter("TX registerSynchronization request")
+ENDRULE

@@ -31,7 +31,7 @@
 #  -- set the directory in which byteman has been installed
 #  BYTEMAN_HOME= ...
 #
-#   -- identify the samples helper jar to the boot path
+#   -- identify the samples helper jar
 #   SAMPLE_JAR=${BYTEMAN_HOME}/sample/lib/byteman-sample.jar
 #
 #   -- identify this script
