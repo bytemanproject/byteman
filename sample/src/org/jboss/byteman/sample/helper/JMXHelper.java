@@ -124,6 +124,10 @@ public class JMXHelper extends Helper implements DynamicMBean
             return getPeriodSecs();
         }
 
+        if (attribute.equals("samples")) {
+            return getPeriodSecs();
+        }
+
         int pos = attribute.lastIndexOf(" : ");
         String keyname = attribute.substring(0,pos);
         int keyType;
@@ -234,7 +238,7 @@ public class JMXHelper extends Helper implements DynamicMBean
         int[] keyTypes = keyInfo.getKeyTypes();
         String[] keyLabels = keyInfo.getKeyLabels();
         String className = getClass().getName();
-        MBeanAttributeInfo[] attributes = new MBeanAttributeInfo[keyInfo.getKeyCount() + 1];
+        MBeanAttributeInfo[] attributes = new MBeanAttributeInfo[keyInfo.getKeyCount() + 2];
         MBeanConstructorInfo[] constructors = null;
         MBeanOperationInfo[] operations = new MBeanOperationInfo[1];
         MBeanNotificationInfo[] notifications = null;
@@ -244,6 +248,13 @@ public class JMXHelper extends Helper implements DynamicMBean
                 "Sample Period",
                 true,
                 true,
+                false);
+
+        attributes[1] = new MBeanAttributeInfo("samples",
+                "java.lang.Integer",
+                "Sample Set Size",
+                true,
+                false,
                 false);
 
         for (int i = 0; i < keyCount; i++) {
@@ -259,7 +270,7 @@ public class JMXHelper extends Helper implements DynamicMBean
                 type = "java.lang.Float";
                 descriptor = " : mean";
             }
-            attributes[i + 1] = new MBeanAttributeInfo(keyNames[i] + descriptor,
+            attributes[i + 2] = new MBeanAttributeInfo(keyNames[i] + descriptor,
                 type,
                 keyLabels[i],
                 true,
