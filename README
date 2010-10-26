@@ -12,7 +12,7 @@ install directory. This directory contains everything you need to
 use byteman. You should set environment variable BYTEMAN_HOME so
 that it points to the target install directory.
 
-If you have downloaded a source release then unzip into a target
+If you have downloaded a full release then unzip into a target
 release directory. The release includes a subdirectory called install
 which contains everything you need to use byteman. You should set
 environment variable BYTEMAN_HOME so that it points to the install
@@ -27,7 +27,7 @@ The install directory contains the following subdirectories
       communicating with the Byteman agent listener (bmsubmit.sh);
       and installing the agent into a running JVM (bminstall.sh).
       You will need to change the permissions of these files
-      in order to execute them dirctely from the command line.
+      in order to execute them directly from the command line.
 
   docs -- contains the Byteman Programmer's guide and license
       information for Byteman plus the third-party software it uses
