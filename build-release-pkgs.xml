@@ -148,7 +148,7 @@
 
         <delete dir="${workdir}/build/${tag}"/>
         <unzip src="${workdir}/byteman-${version}.zip" dest="${workdir}/build"/>
-        <copy src="${workdir}/byteman-src.jar" dest="${workdir}/build/lib"/>
+        <copy file="${workdir}/byteman-src.jar" todir="${workdir}/build/lib"/>
 
         <!-- install all the jars in maven with a synthetic pom -->
         <exec executable="mvn" dir="${workdir}">
