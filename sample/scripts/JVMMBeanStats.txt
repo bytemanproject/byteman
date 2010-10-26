@@ -104,20 +104,20 @@ CLASS JMXHelper
 METHOD keyInfo()
 BIND keyInfo : KeyInfo = new KeyInfo("JVM Statistics in a Dynamic MBean")
 IF TRUE
-DO keyInfo.addKey("thread creates", KeyInfo.KEY_TYPE_CUMULATIVE, "Thread() total calls"),
-   keyInfo.addKey("thread starts", KeyInfo.KEY_TYPE_CUMULATIVE, "Thread.start() total calls"),
-   keyInfo.addKey("thread runs", KeyInfo.KEY_TYPE_CUMULATIVE, "Thread.run() total calls"),
-   keyInfo.addKey("thread exits", KeyInfo.KEY_TYPE_CUMULATIVE, "Thread.exit() total calls"),
-   keyInfo.addKey("thread creates", KeyInfo.KEY_TYPE_RATE, "Thread() calls per second"),
-   keyInfo.addKey("thread starts", KeyInfo.KEY_TYPE_RATE, "Thread.start() calls per second"),
-   keyInfo.addKey("thread runs", KeyInfo.KEY_TYPE_RATE, "Thread.run() calls per second"),
-   keyInfo.addKey("thread exits", KeyInfo.KEY_TYPE_RATE, "Thread.exit() calls per second"),
-   keyInfo.addKey("file in opens", KeyInfo.KEY_TYPE_RATE, "FileInputStream.open() calls per second"),
-   keyInfo.addKey("file out opens", KeyInfo.KEY_TYPE_RATE, "FileOutputStream.open() calls per second"),
-   keyInfo.addKey("file in closes", KeyInfo.KEY_TYPE_RATE, "FileInputStream.close() calls per second"),
-   keyInfo.addKey("file out closes", KeyInfo.KEY_TYPE_RATE, "FileOutputStream.close() calls per second"),
-   keyInfo.addKey("class loads", KeyInfo.KEY_TYPE_CUMULATIVE, "ClassLoader.defineClass() total calls"),
-   keyInfo.addKey("class loads", KeyInfo.KEY_TYPE_MEAN, "ClassLoader.defineClass() mean calls per sample"),
+DO keyInfo.addKey("thread creates", KeyInfo.KEY_TYPE_CUMULATIVE, "Thread() total calls");
+   keyInfo.addKey("thread starts", KeyInfo.KEY_TYPE_CUMULATIVE, "Thread.start() total calls");
+   keyInfo.addKey("thread runs", KeyInfo.KEY_TYPE_CUMULATIVE, "Thread.run() total calls");
+   keyInfo.addKey("thread exits", KeyInfo.KEY_TYPE_CUMULATIVE, "Thread.exit() total calls");
+   keyInfo.addKey("thread creates", KeyInfo.KEY_TYPE_RATE, "Thread() calls per second");
+   keyInfo.addKey("thread starts", KeyInfo.KEY_TYPE_RATE, "Thread.start() calls per second");
+   keyInfo.addKey("thread runs", KeyInfo.KEY_TYPE_RATE, "Thread.run() calls per second");
+   keyInfo.addKey("thread exits", KeyInfo.KEY_TYPE_RATE, "Thread.exit() calls per second");
+   keyInfo.addKey("file in opens", KeyInfo.KEY_TYPE_RATE, "FileInputStream.open() calls per second");
+   keyInfo.addKey("file out opens", KeyInfo.KEY_TYPE_RATE, "FileOutputStream.open() calls per second");
+   keyInfo.addKey("file in closes", KeyInfo.KEY_TYPE_RATE, "FileInputStream.close() calls per second");
+   keyInfo.addKey("file out closes", KeyInfo.KEY_TYPE_RATE, "FileOutputStream.close() calls per second");
+   keyInfo.addKey("class loads", KeyInfo.KEY_TYPE_CUMULATIVE, "ClassLoader.defineClass() total calls");
+   keyInfo.addKey("class loads", KeyInfo.KEY_TYPE_MEAN, "ClassLoader.defineClass() mean calls per sample");
    RETURN keyInfo
 ENDRULE
 

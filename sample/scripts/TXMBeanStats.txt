@@ -111,30 +111,30 @@ CLASS JMXHelper
 METHOD keyInfo()
 BIND keyInfo : KeyInfo = new KeyInfo("JBossTS Statistics in a Dynamic MBean")
 IF TRUE
-DO keyInfo.addKey("TX begin", KeyInfo.KEY_TYPE_CUMULATIVE, "TX begin total"),
-   keyInfo.addKey("TX commit", KeyInfo.KEY_TYPE_CUMULATIVE, "TX commit total"),
-   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_CUMULATIVE, "TX rollback total"),
-   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_CUMULATIVE, "TX rollback total"),
-   keyInfo.addKey("TX setRollbackOnly", KeyInfo.KEY_TYPE_CUMULATIVE, "TX setRollbackOnly total"),
-   keyInfo.addKey("TX enlistResource", KeyInfo.KEY_TYPE_CUMULATIVE, "TX enlistResource total"),
-   keyInfo.addKey("TX delistResource", KeyInfo.KEY_TYPE_CUMULATIVE, "TX delistResource total"),
-   keyInfo.addKey("TX registerSynchronization", KeyInfo.KEY_TYPE_CUMULATIVE, "TX registerSynchronization total"),
-   keyInfo.addKey("TX begin", KeyInfo.KEY_TYPE_RATE, "TX begin request/second"),
-   keyInfo.addKey("TX commit", KeyInfo.KEY_TYPE_RATE, "TX commit request/second"),
-   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_RATE, "TX rollback request/second"),
-   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_RATE, "TX rollback request/second"),
-   keyInfo.addKey("TX setRollbackOnly", KeyInfo.KEY_TYPE_RATE, "TX setRollbackOnly request/second"),
-   keyInfo.addKey("TX enlistResource", KeyInfo.KEY_TYPE_RATE, "TX enlistResource request/second"),
-   keyInfo.addKey("TX delistResource", KeyInfo.KEY_TYPE_RATE, "TX delistResource request/second"),
-   keyInfo.addKey("TX registerSynchronization", KeyInfo.KEY_TYPE_RATE, "TX registerSynchronization request/second"),
-   keyInfo.addKey("TX begin", KeyInfo.KEY_TYPE_MEAN, "TX begin average"),
-   keyInfo.addKey("TX commit", KeyInfo.KEY_TYPE_MEAN, "TX commit average"),
-   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_MEAN, "TX rollback average"),
-   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_MEAN, "TX rollback average"),
-   keyInfo.addKey("TX setRollbackOnly", KeyInfo.KEY_TYPE_MEAN, "TX setRollbackOnly average"),
-   keyInfo.addKey("TX enlistResource", KeyInfo.KEY_TYPE_MEAN, "TX enlistResource average"),
-   keyInfo.addKey("TX delistResource", KeyInfo.KEY_TYPE_MEAN, "TX delistResource average"),
-   keyInfo.addKey("TX registerSynchronization", KeyInfo.KEY_TYPE_MEAN, "TX registerSynchronization average"),
+DO keyInfo.addKey("TX begin", KeyInfo.KEY_TYPE_CUMULATIVE, "TX begin total");
+   keyInfo.addKey("TX commit", KeyInfo.KEY_TYPE_CUMULATIVE, "TX commit total");
+   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_CUMULATIVE, "TX rollback total");
+   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_CUMULATIVE, "TX rollback total");
+   keyInfo.addKey("TX setRollbackOnly", KeyInfo.KEY_TYPE_CUMULATIVE, "TX setRollbackOnly total");
+   keyInfo.addKey("TX enlistResource", KeyInfo.KEY_TYPE_CUMULATIVE, "TX enlistResource total");
+   keyInfo.addKey("TX delistResource", KeyInfo.KEY_TYPE_CUMULATIVE, "TX delistResource total");
+   keyInfo.addKey("TX registerSynchronization", KeyInfo.KEY_TYPE_CUMULATIVE, "TX registerSynchronization total");
+   keyInfo.addKey("TX begin", KeyInfo.KEY_TYPE_RATE, "TX begin request/second");
+   keyInfo.addKey("TX commit", KeyInfo.KEY_TYPE_RATE, "TX commit request/second");
+   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_RATE, "TX rollback request/second");
+   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_RATE, "TX rollback request/second");
+   keyInfo.addKey("TX setRollbackOnly", KeyInfo.KEY_TYPE_RATE, "TX setRollbackOnly request/second");
+   keyInfo.addKey("TX enlistResource", KeyInfo.KEY_TYPE_RATE, "TX enlistResource request/second");
+   keyInfo.addKey("TX delistResource", KeyInfo.KEY_TYPE_RATE, "TX delistResource request/second");
+   keyInfo.addKey("TX registerSynchronization", KeyInfo.KEY_TYPE_RATE, "TX registerSynchronization request/second");
+   keyInfo.addKey("TX begin", KeyInfo.KEY_TYPE_MEAN, "TX begin average");
+   keyInfo.addKey("TX commit", KeyInfo.KEY_TYPE_MEAN, "TX commit average");
+   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_MEAN, "TX rollback average");
+   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_MEAN, "TX rollback average");
+   keyInfo.addKey("TX setRollbackOnly", KeyInfo.KEY_TYPE_MEAN, "TX setRollbackOnly average");
+   keyInfo.addKey("TX enlistResource", KeyInfo.KEY_TYPE_MEAN, "TX enlistResource average");
+   keyInfo.addKey("TX delistResource", KeyInfo.KEY_TYPE_MEAN, "TX delistResource average");
+   keyInfo.addKey("TX registerSynchronization", KeyInfo.KEY_TYPE_MEAN, "TX registerSynchronization average");
    RETURN keyInfo
 ENDRULE
 

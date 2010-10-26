@@ -80,26 +80,26 @@ ENDRULE
 RULE dump stats
 CLASS PeriodicHelper
 METHOD periodicTrigger()
-BIND threadCreates = readCounter("thread creates", true),
-     threadStarts = readCounter("thread starts", true),
-     threadRuns = readCounter("thread runs", true),
-     threadExits = readCounter("thread exits", true),
-     fileInOpens = readCounter("file in opens", true),
-     fileOutOpens = readCounter("file out opens", true),
-     fileInCloses = readCounter("file in closes", true),
-     fileOutCloses = readCounter("file out closes", true),
+BIND threadCreates = readCounter("thread creates", true);
+     threadStarts = readCounter("thread starts", true);
+     threadRuns = readCounter("thread runs", true);
+     threadExits = readCounter("thread exits", true);
+     fileInOpens = readCounter("file in opens", true);
+     fileOutOpens = readCounter("file out opens", true);
+     fileInCloses = readCounter("file in closes", true);
+     fileOutCloses = readCounter("file out closes", true);
      classLoads = readCounter("class loads", true)
 IF TRUE
-DO traceln("Periodic Statistics"),
-   traceln("Thread creates    " + threadCreates),
-   traceln("Thread starts     " + threadStarts),
-   traceln("Thread runs       " + threadRuns),
-   traceln("Thread exits      " + threadExits),
-   traceln("File [in] opens   " + fileInOpens),
-   traceln("File [out] opens  " + fileOutOpens),
-   traceln("File [in] closes  " + fileInCloses),
-   traceln("File [out] closes " + fileOutCloses),
-   traceln("Class loads       " + classLoads),
+DO traceln("Periodic Statistics");
+   traceln("Thread creates    " + threadCreates);
+   traceln("Thread starts     " + threadStarts);
+   traceln("Thread runs       " + threadRuns);
+   traceln("Thread exits      " + threadExits);
+   traceln("File [in] opens   " + fileInOpens);
+   traceln("File [out] opens  " + fileOutOpens);
+   traceln("File [in] closes  " + fileInCloses);
+   traceln("File [out] closes " + fileOutCloses);
+   traceln("Class loads       " + classLoads);
    traceln("")
 ENDRULE
 
