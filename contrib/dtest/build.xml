@@ -19,7 +19,7 @@
   @author JBoss, by Red Hat.
 -->
 
-<project name="byteman.dtest" default="dist" basedir=".">
+<project name="byteman.dtest" default="jar" basedir=".">
 
     <property environment="env"/>
 
@@ -28,6 +28,9 @@
     <!-- pick up the byteman library -->
     <property name="byteman.home" value="../../build/lib"/>
     <property name="byteman.jar" value="byteman.jar"/>
+    <property name="byteman.install" value="../../install"/>
+    <property name="byteman.install.contrib" value="${byteman.install}/contrib"/>
+    <property name="byteman.install.contrib.dtest" value="${byteman.install.contrib}/dtest"/>
 
     <!-- pick up the junit library -->
     <property name="junit.home" value="../../ext"/>
@@ -53,7 +56,12 @@
         <mkdir dir="${build.classes.dir}/META-INF"/>
     </target>
 
-    <target name="dist" depends="clean, jar"/>
+    <target name="install" depends="clean, jar">
+        <mkdir dir = "${byteman.install.contrib}"/>
+        <mkdir dir = "${byteman.install.contrib.dtest}"/>
+        <copy file="${build.lib.dir}/${jarfilename}" tofile="${byteman.install.contrib.dtest}/${jarfilename}"/>
+        <copy file="README.txt" tofile="${byteman.install.contrib.dtest}/README.txt"/>
+    </target>
 
     <target name="jar" depends="compile">
         <jar jarfile="${build.lib.dir}/${jarfilename}">

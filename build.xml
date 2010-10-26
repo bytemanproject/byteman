@@ -40,6 +40,12 @@
     <property name="tests.dir"         value="tests"/>
     <property name="tests.src.dir"     value="${tests.dir}/src"/>
     <property name="tests.dd.dir"      value="${tests.dir}/dd"/>
+    <property name="sample.dir"        value="sample"/>
+    <property name="sample.src.dir"    value="${sample.dir}/src"/>
+    <property name="sample.scripts.dir"  value="${sample.dir}/scripts"/>
+    <property name="contrib.dir"        value="contrib"/>
+    <property name="contrib.dtest.dir"  value="${contrib.dir}/dtest"/>
+    <property name="contrib.dtest.src.dir"    value="${contrib.dtest.dir}/src"/>
 
     <!-- locations of intermediate build products -->
 
@@ -206,20 +212,30 @@
 
     <!-- target to make and install samples in samples directory -->
     <target name="sample-install">
-        <ant dir="sample" target="install"/>
+        <ant dir="${sample.dir}" target="install"/>
     </target>
 
-    <target name="install" depends="jar, init-install, local-install, sample-install">
+    <!-- target to make and install code in contrib directory -->
+    <target name="contrib-install" depends="contrib-dtest-install"/>
+
+    <target name="contrib-dtest-install">
+        <ant dir="${contrib.dtest.dir}" target="install"/>
+    </target>
+
+    <target name="install" depends="jar, init-install, local-install, sample-install, contrib-install">
     </target>
 
     <!-- target for use by build-release-pkgs script n.b. this assumes it is being run in a clean
          source tree under tags obtained using svn export. -->
     <target name="zip" depends="install">
         <zip destfile="${build.dir}/byteman.zip">
+            <fileset  dir="." includes="README"/>
             <fileset  dir="${install.dir}" includes="**/*"/>
         </zip>
         <zip destfile="${build.dir}/byteman-src.zip">
-            <fileset  dir="${install.dir}" includes="**/*"/>
+            <!-- embed installed build  products in install tree -->
+            <fileset  dir="." includes="README"/>
+            <fileset  dir="." includes="install/**/*"/>
             <fileset  dir="." includes="${src.dir}/**/*"/>
             <fileset  dir="." includes="${dd.dir}/**/*"/>
             <fileset  dir="." includes="${docs.src.dir}/**/*"/>
@@ -228,6 +244,10 @@
             <fileset  dir="." includes="${ext.lib.dir}/**/*"/>
             <fileset  dir="." includes="${tests.src.dir}/**/*"/>
             <fileset  dir="." includes="${tests.dd.dir}/**/*"/>
+            <fileset  dir="." includes="${sample.src.dir}/**/*"/>
+            <fileset  dir="." includes="${sample.scripts.dir}/**/*"/>
+            <fileset  dir="." includes="${contrib.dtest.src.dir}/**/*"/>
+            <fileset  dir="." includes="${contrib.dtest.dir}/README.txt"/>
         </zip>
     </target>
 
