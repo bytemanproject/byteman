@@ -25,7 +25,11 @@
 #
 # A variant of the JVMMBeanStats script which counts requests made via
 # interface javax.transaction.Transaction and makes the stats available
-# via a JMX Dynamic MBean
+# via a JMX Dynamic MBean. Note that this is only counting calls to the
+# transaction interface methods. Counting the number of successful
+# begins, commits, rollbacks etc woudl require injecting rules into
+# the implementation classes at strategic locations where success or
+# failure of a transaction can be confirmed.
 #
 # to use ths script to trace execution of JBossTS
 #
