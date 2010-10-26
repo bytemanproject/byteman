@@ -161,7 +161,7 @@
         </exec>
         <exec executable="mvn" dir="${workdir}">
             <arg value="deploy:deploy-file"/>
-            <arg value="-Dfile=${workdir}/build/lib/byteman-src.jar"/>
+            <arg value="-Dfile=${workdir}/build/byteman-src.jar"/>
             <arg value="-Dpackaging=jar"/>
             <arg value="-Durl=${mvn.repo.url}"/>
             <arg value="-DrepositoryId=${mvn.repo.id}"/>
