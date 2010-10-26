@@ -410,6 +410,12 @@ event	::=	NOTHING:n {: RESULT = node(ParseNode.NOTHING, nleft, nright); :}
 bindings
 	::=	binding:b COMMA bindings:bs {: RESULT = node(ParseNode.COMMA, bleft, bright, b, bs); :}
 	|	binding:b SEMI bindings:bs {: RESULT = node(ParseNode.COMMA, bleft, bright, b, bs); :}
+	|	error:err SEMI bindings:bs
+	    {: error("invalid binding", errleft, errright);
+	       RESULT = bs; :}
+	|	binding:b SEMI error:err
+	    {: error("invalid binding", errleft, errright);
+	       RESULT = b; :}
 	|	binding:b {: RESULT = b; :}
 	;
 
@@ -464,6 +470,12 @@ action_expr_list
 		{: RESULT = node(ParseNode.SEMI, eleft, eright, e, ael); :}
 	|	expr:e COMMA action_expr_list:ael
 		{: RESULT = node(ParseNode.SEMI, eleft, eright, e, ael); :}
+	|	error:err SEMI action_expr_list:ael
+	    {: error("invalid action", errleft, errright);
+		   RESULT = ael; :}
+	|	expr:e SEMI error:err
+	    {: error("invalid action", errleft, errright);
+		   RESULT = e; :}
 	|	action_expr:ae {: RESULT = ae; :}
 	;
 
@@ -493,7 +505,10 @@ expr_list
 		{: RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
 	|	expr:e SEMI expr_list:el
 		{: RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
-	;
+	|	error:err SEMI expr_list:el
+		{: error("invalid expression", errleft, errright);
+		   RESULT = el; :}
+    ;
 
 expr
     ::= ternary_oper_expr:e {: RESULT = e; :}
