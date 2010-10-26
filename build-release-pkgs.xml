@@ -113,8 +113,8 @@
         <!-- package the byteman source release (all src tree) -->
         <delete file="${workdir}/byteman-${version}-src.zip"/>
 
-        <zip basedir="${workdir}" destfile="${workdir}/byteman-${version}-src.zip"
-             includes="${tag}/**" excludes="images/**/*"/>
+        <zip basedir="${workdir}/${tag}" destfile="${workdir}/byteman-${version}-src.zip"
+             includes="**/*" excludes="images/**/*"/>
         <jar basedir="${workdir}/${tag}" jarfile="${workdir}/byteman-src.jar"
              includes="**/*" excludes="images/**/*"/>
         <!-- build the binary release -->
