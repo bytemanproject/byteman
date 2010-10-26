@@ -1,0 +1,222 @@
+<!--
+  JBoss, Home of Professional Open Source
+  Copyright 2009, Red Hat Middleware LLC, and individual contributors
+  as indicated by the @author tags.
+  See the copyright.txt in the distribution for a
+  full listing of individual contributors.
+  This copyrighted material is made available to anyone wishing to use,
+  modify, copy, or redistribute it subject to the terms and conditions
+  of the GNU Lesser General Public License, v. 2.1.
+  This program is distributed in the hope that it will be useful, but WITHOUT A
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+  PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+  You should have received a copy of the GNU Lesser General Public License,
+  v.2.1 along with this distribution; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+  MA  02110-1301, USA.
+
+  (C) 2009,
+  @author JBoss Inc. (jonathan.halliday@redhat.com. adinn@redhat.com)
+-->
+<!--
+
+    build-release-pkgs.xml: Utility script for building Byteman
+    release artifacts.  Probably only useful for JBoss Byteman
+    developers. Everyone else should only need the regular build.xml.
+
+    This script automates the some steps of the release build and
+    packaging process to reduce the opportunities for users to get it
+    wrong. For example, it works from a fresh svn checkout to ensure
+    locally modified files in a dev's svn working copy don't sneak
+    into the release bundle.
+
+    usage:
+
+      Tag the Byteman release in svn.
+        or you can do a snapshot release direct from trunk, see
+        properties below.
+
+      Check out the necessary bits of repository.jboss.org
+        artifacts for use by other projects e.g. JBossAS get published
+        here. You don't need to check out Byteman, the script does
+        that.
+
+      Update the properties section below to suit your machine.
+
+      Set JAVA_HOME to a jdk 1.6, since that's the version we
+      currently support.
+
+      ant -f build-release-pkgs.xml dist mvn-repository cms-repository
+
+      check in the repository.jboss.org and the cms updates to publish
+      the files.
+
+      Update the project.xml in the cms to link the release bundles
+      from the web pages.
+
+      Update appropriate wiki pages, such as the 'which version to use' page.
+
+-->
+
+<project name="Byteman Release Packaging" default="dist" basedir=".">
+    <description>
+        package Byteman binary + src files for upload to website and
+        other repos.
+    </description>
+
+    <!-- you probably need to change these properties to suit your machine -->
+
+    <!-- uncomment the block of properties below to do a snapshot
+            release.  you need permissions to webdav upload to the
+            server for this to work
+            http://www.jboss.org/community/docs/DOC-11381 -->
+
+<!--
+    <property name="svnbase" value="https://svn.jboss.org/repos/byteman"/>
+    <property name="tag" value="trunk"/>
+    <property name="filename" value="X.Y.Z.SNAPSHOT"/>
+    <property name="mvn.repo.id" value="jboss-snapshots-repository"/>
+    <property name="mvn.repo.url" value="https://repository.jboss.org/nexus/content/repositories/snapshots/"/>
+-->
+
+    <!-- a working direrctory for the process. Can contain output from
+    previous releases if you like to keep them archived locally. -->
+    <property name="workdir" location="/tmp/packaged_builds"/>
+    <!-- where to get the source -->
+    <property name="svnbase" value="https://svn.jboss.org/repos/byteman/tags"/>
+    <!-- The tag as it appears under svnbase -->
+    <property name="tag" value="Byteman_1_4_0"/>
+    <!-- The file name base for the user downloadable files. Derive it
+    from the tag -->
+    <property name="version" value="1.4.0"/>
+    <!-- the location the Byteman web site content svn is checked out to -->
+    <property name="cmsdir" value="/home/adinn/jboss/byteman/"/>
+    <!-- you probably don't need to change anything below here -->
+
+    <property name="mvn.repo.id" value="jboss-releases-repository"/>
+    <property name="mvn.repo.url" value="https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/"/>
+
+    <target name="init">
+        <tstamp/>
+        <delete dir="${workdir}"/>
+        <mkdir dir="${workdir}"/>
+    </target>
+
+    <target name="dist" depends="init" description="build the end-user release bundles (src and binary)">
+
+        <!-- pull the source code from svn -->
+        <exec executable="svn" dir="${workdir}">
+            <arg value="export"/>
+            <arg value="${svnbase}/${tag}"/>
+        </exec>
+
+        <!-- package the byteman source release (all src tree) -->
+        <delete file="${workdir}/byteman-${version}-src.zip"/>
+
+        <zip basedir="${workdir}" destfile="${workdir}/byteman-${version}-src.zip"
+             includes="${tag}/**"/>
+        <jar basedir="${workdir}/${tag}" jarfile="${workdir}/byteman-src.jar"
+             includes="**/*"/>
+        <!-- build the binary release -->
+        <delete file="${workdir}/byteman-${version}.zip"/>
+        <ant dir="${workdir}/${tag}" antfile="build.xml" target="zip">
+            <property name="version" value="${version}"/>
+            <property name="obfuscate.3rd.party" value="true"/>
+        </ant>
+        <copy tofile="${workdir}/byteman-${version}.zip" file="${workdir}/${tag}/build/byteman.zip">
+        </copy>
+    </target>
+
+    <!-- copy the release into the cms svn tree (http://www.jboss.org/jbosstm web site content) -->
+    <target name="cms-repository" description="copy release bundles to JBossTS web site content">
+        <mkdir dir="${cmsdir}/downloads/${version}"/>
+        <copy todir="${cmsdir}/downloads/${version}">
+            <fileset dir="${workdir}" includes="byteman-${version}-src.zip"/>
+        </copy>
+        <copy todir="${cmsdir}/downloads/${version}">
+            <fileset dir="${workdir}" includes="byteman-${version}.zip"/>
+        </copy>
+        <!-- TODO: notes dir, xml generation? project.xml edits -->
+    </target>
+
+    <!-- http://wiki.jboss.org/wiki/MavenReleaseRepository -->
+    <target name="mvn-repository" description="copy the release artifacts to the maven repository">
+        <delete dir="${workdir}/build"/>
+        <mkdir dir="${workdir}/build"/>
+
+        <!-- now package the Byteman release -->
+
+        <delete dir="${workdir}/build/${tag}"/>
+        <unzip src="${workdir}/byteman-${version}.zip" dest="${workdir}/build"/>
+        <copy src="${workdir}/byteman-src.jar" dest="${workdir}/build/lib"/>
+
+        <!-- install all the jars in maven with a synthetic pom -->
+        <exec executable="mvn" dir="${workdir}">
+            <arg value="deploy:deploy-file"/>
+            <arg value="-Dfile=${workdir}/build/lib/byteman.jar"/>
+            <arg value="-Dpackaging=jar"/>
+            <arg value="-Durl=${mvn.repo.url}"/>
+            <arg value="-DrepositoryId=${mvn.repo.id}"/>
+            <arg value="-DgroupId=org.jboss.byteman"/>
+            <arg value="-DartifactId=byteman"/>
+            <arg value="-Dversion=${version}"/>
+            <arg value="-DgeneratePom=true"/>
+        </exec>
+        <exec executable="mvn" dir="${workdir}">
+            <arg value="deploy:deploy-file"/>
+            <arg value="-Dfile=${workdir}/build/lib/byteman-src.jar"/>
+            <arg value="-Dpackaging=jar"/>
+            <arg value="-Durl=${mvn.repo.url}"/>
+            <arg value="-DrepositoryId=${mvn.repo.id}"/>
+            <arg value="-DgroupId=org.jboss.byteman"/>
+            <arg value="-DartifactId=byteman-src"/>
+            <arg value="-Dversion=${version}"/>
+            <arg value="-DgeneratePom=true"/>
+        </exec>
+        <exec executable="mvn" dir="${workdir}">
+            <arg value="deploy:deploy-file"/>
+            <arg value="-Dfile=${workdir}/build/lib/byteman-submit.jar"/>
+            <arg value="-Dpackaging=jar"/>
+            <arg value="-Durl=${mvn.repo.url}"/>
+            <arg value="-DrepositoryId=${mvn.repo.id}"/>
+            <arg value="-DgroupId=org.jboss.byteman"/>
+            <arg value="-DartifactId=byteman-submit"/>
+            <arg value="-Dversion=${version}"/>
+            <arg value="-DgeneratePom=true"/>
+        </exec>
+        <exec executable="mvn" dir="${workdir}">
+            <arg value="deploy:deploy-file"/>
+            <arg value="-Dfile=${workdir}/build/lib/byteman-install.jar"/>
+            <arg value="-Dpackaging=jar"/>
+            <arg value="-Durl=${mvn.repo.url}"/>
+            <arg value="-DrepositoryId=${mvn.repo.id}"/>
+            <arg value="-DgroupId=org.jboss.byteman"/>
+            <arg value="-DartifactId=byteman-inistall"/>
+            <arg value="-Dversion=${version}"/>
+            <arg value="-DgeneratePom=true"/>
+        </exec>
+        <exec executable="mvn" dir="${workdir}">
+            <arg value="deploy:deploy-file"/>
+            <arg value="-Dfile=${workdir}/build/sample/lib/byteman-sample.jar"/>
+            <arg value="-Dpackaging=jar"/>
+            <arg value="-Durl=${mvn.repo.url}"/>
+            <arg value="-DrepositoryId=${mvn.repo.id}"/>
+            <arg value="-DgroupId=org.jboss.byteman"/>
+            <arg value="-DartifactId=byteman-sample"/>
+            <arg value="-Dversion=${version}"/>
+            <arg value="-DgeneratePom=true"/>
+        </exec>
+        <exec executable="mvn" dir="${workdir}">
+            <arg value="deploy:deploy-file"/>
+            <arg value="-Dfile=${workdir}/build/contrib/dtest/byteman-dtest.jar"/>
+            <arg value="-Dpackaging=jar"/>
+            <arg value="-Durl=${mvn.repo.url}"/>
+            <arg value="-DrepositoryId=${mvn.repo.id}"/>
+            <arg value="-DgroupId=org.jboss.byteman"/>
+            <arg value="-DartifactId=byteman-dtest"/>
+            <arg value="-Dversion=${version}"/>
+            <arg value="-DgeneratePom=true"/>
+        </exec>
+    </target>
+
+</project>

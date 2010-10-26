@@ -1,0 +1,64 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2009, Red Hat Middleware LLC, and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+
+RULE test call getCounter ALL in testMethod
+CLASS TestAllAuxiliary
+METHOD testMethod(int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AT CALL getCounter ALL
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("testMethod CALL getCounter " + $currentCounter)
+ENDRULE
+
+RULE test call setCounter ALL in testMethod
+CLASS TestAllAuxiliary
+METHOD testMethod(int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER CALL setCounter ALL
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("testMethod CALL setCounter " + $currentCounter)
+ENDRULE
+
+RULE test AT SYNCHRONIZE ALL in testMethod2
+CLASS TestAllAuxiliary
+METHOD testMethod2(int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AT SYNCHRONIZE ALL
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("testMethod2 SYNCHRONIZE " + $currentCounter)
+ENDRULE
+
+RULE test AT THROW ALL in testMethod3
+CLASS TestAllAuxiliary
+METHOD testMethod3(int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AT THROW ALL
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("testMethod3 THROW " + $currentCounter)
+ENDRULE
+

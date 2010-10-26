@@ -1,0 +1,217 @@
+########################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2009-2010, Red Hat Middleware and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+# SocketMonitor
+#
+# A byteman script which traces thread creation, start, run and exit
+#
+# to use ths script to trace execution of java program org.my.App execute
+#
+#  -- set the directory in which byteman has been installed
+#  BYTEMAN_HOME= ...
+#
+#   -- identify this script
+#   SCRIPT={BYTEMAN_HOME}/sample/scripts/SocketMonitor.txt
+#
+#  ${BYTEMAN_HOME}/bin/bmjava.sh -l $SCRIPT -b org.my.App
+#
+# alternatively to load the script dynamically
+#
+#   -- start the program with the agent
+#  ${BYTEMAN_HOME}/bin/bmjava.sh org.my.App
+#
+#   -- install the script
+#  ${BYTEMAN_HOME}/bin/bmsubmit.sh -l $SCRIPT
+
+########################################################################
+#
+# Rule to trace ServerSocket creation
+#
+
+RULE ServerSocket trace create
+CLASS java.net.ServerSocket
+METHOD <init>(int, int, InetAddress)
+AT EXIT
+IF TRUE
+DO traceStack("*** server create " + $0, 15)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace ServerSocket creation failed with invalid port
+#
+
+RULE ServerSocket trace create failed with invalid port
+CLASS java.net.ServerSocket
+METHOD <init>(int, int, InetAddress)
+AT THROW 1
+IF TRUE
+DO traceStack("*** server create failed with invalid port " + $0, 15)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace ServerSocket creation failed with security exception
+#
+
+RULE ServerSocket trace create failed with security exception
+CLASS java.net.ServerSocket
+METHOD <init>(int, int, InetAddress)
+AT THROW 2
+IF TRUE
+DO traceStack("*** server create failed with security exception " + $0, 15)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace ServerSocket creation failed with IOException
+#
+
+RULE ServerSocket trace create failed with IOException
+CLASS java.net.ServerSocket
+METHOD <init>(int, int, InetAddress)
+AT THROW 3
+IF TRUE
+DO traceStack("*** server create failed with IOException " + $0, 15)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace ServerSocket bind
+#
+
+RULE ServerSocket trace bind
+CLASS ^java.net.ServerSocket
+METHOD bind(SocketAddress, int)
+AT EXIT
+IF TRUE
+DO traceStack("*** server bind " + $0, 15)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace ServerSocket accept
+#
+
+RULE ServerSocket trace accept
+CLASS ^java.net.ServerSocket
+METHOD accept()
+AT EXIT
+IF TRUE
+DO traceStack("*** server accept " + $0, 15)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace ServerSocket close
+#
+# the AT CALL close location means we do not trace calls to already closed sockets
+#
+
+RULE ServerSocket trace close
+CLASS ^java.net.ServerSocket
+METHOD close
+AT CALL close
+IF TRUE
+DO traceStack("*** server close " + $0, 15)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace socket create
+#
+
+RULE Socket trace create
+CLASS java.net.Socket
+METHOD <init>(SocketAddress, SocketAddress, boolean)
+AT EXIT
+IF TRUE
+DO traceStack("*** create " + $0, 15)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace socket create failed with invalid address
+#
+
+RULE Socket trace create failed with invalid address
+CLASS java.net.Socket
+METHOD <init>(SocketAddress, SocketAddress, boolean)
+AT THROW 1
+IF TRUE
+DO traceStack("*** create failed with invalid address exception " + $0, 15)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace socket create failed with IOException
+#
+
+RULE Socket trace create failed with IOException
+CLASS java.net.Socket
+METHOD <init>(SocketAddress, SocketAddress, boolean)
+AT THROW 2
+IF TRUE
+DO traceStack("*** create failed with IOException " + $0, 15)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace socket bind
+#
+
+RULE Socket trace bind
+CLASS ^java.net.Socket
+METHOD bind(SocketAddress)
+AT EXIT
+IF TRUE
+DO traceStack("*** bind " + $0, 15)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace socket connect
+#
+
+RULE Socket trace connect
+CLASS ^java.net.Socket
+METHOD connect(SocketAddress, int)
+AT EXIT
+IF TRUE
+DO traceStack("*** connect " + $0, 15)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace socket close
+#
+# the AT CALL close location means we do not trace calls to already closed sockets
+#
+
+RULE Socket trace close
+CLASS ^java.net.Socket
+METHOD close()
+AT CALL close
+IF TRUE
+DO traceStack("*** close " + $0, 15)
+ENDRULE

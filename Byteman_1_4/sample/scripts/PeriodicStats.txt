@@ -1,0 +1,207 @@
+########################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2010, Red Hat Middleware and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+# Preiodic Statistics Display
+#
+# A byteman script which collects statistics for actions performed by the
+# JVM runtime and uses the periodic helper to dump and clear them at regular
+# intervals
+#
+# to use ths script to trace execution of java program org.my.App execute
+#
+#  -- set the directory in which byteman has been installed
+#  BYTEMAN_HOME= ...
+#
+#   -- identify the samples helper jar to the boot path
+#   SAMPLE_JAR=${BYTEMAN_HOME}/sample/lib/byteman-sample.jar
+#
+#   -- identify this script
+#   SCRIPT={BYTEMAN_HOME}/sample/scripts/PeriodicStats.txt
+#
+#  ${BYTEMAN_HOME}/bin/bmjava.sh -l $SCRIPT -b $SAMPLE_JAR org.my.App
+#
+# alternatively to load the script dynamically
+#
+#   -- start the program with the agent
+#  ${BYTEMAN_HOME}/bin/bmjava.sh org.my.App
+#
+#   -- install the helper library into the bootstrap classpath
+#  ${BYTEMAN_HOME}/bin/bmsubmit.sh -b $SAMPLE_JAR
+#
+#   -- install the script
+#  ${BYTEMAN_HOME}/bin/bmsubmit.sh -l $SCRIPT
+
+########################################################################
+#
+# all rules in this script use the periodic helper which provides support
+# for triggering of rules at regular intervals. The helper adds a
+# thread in the background when it is activated i.e. when any of the rules
+# which employs the helper is first triggered. The thread is shut down
+# when the helper is deactivated i.e. once all rules using the helper
+# have been uninstalled.
+
+HELPER org.jboss.byteman.sample.helper.PeriodicHelper
+
+# This rule defines the wait interval between periodic triggers. The periodic
+# helper thread calls getPeriod when it is started. The rule forces getPeriod
+# to return 30,000 causing the thread to wake up at 30 second intervals.
+
+RULE set period
+CLASS PeriodicHelper
+METHOD getPeriod()
+IF TRUE
+DO RETURN 30 * 1000
+ENDRULE
+
+# this rule is triggered every 30 seconds when the periodic helper thread
+# calls method periodicTrigger. It reads and zeroes all the stats counters
+# and the prints a formatted trace of JVM activity in the 30 second interval.
+
+RULE dump stats
+CLASS PeriodicHelper
+METHOD periodicTrigger()
+BIND threadCreates = readCounter("thread creates", true);
+     threadStarts = readCounter("thread starts", true);
+     threadRuns = readCounter("thread runs", true);
+     threadExits = readCounter("thread exits", true);
+     fileInOpens = readCounter("file in opens", true);
+     fileOutOpens = readCounter("file out opens", true);
+     fileInCloses = readCounter("file in closes", true);
+     fileOutCloses = readCounter("file out closes", true);
+     classLoads = readCounter("class loads", true)
+IF TRUE
+DO traceln("Periodic Statistics");
+   traceln("Thread creates    " + threadCreates);
+   traceln("Thread starts     " + threadStarts);
+   traceln("Thread runs       " + threadRuns);
+   traceln("Thread exits      " + threadExits);
+   traceln("File [in] opens   " + fileInOpens);
+   traceln("File [out] opens  " + fileOutOpens);
+   traceln("File [in] closes  " + fileInCloses);
+   traceln("File [out] closes " + fileOutCloses);
+   traceln("Class loads       " + classLoads);
+   traceln("")
+ENDRULE
+
+# The remaining rules increment stats counters whenever a sigificant
+# event occurs in the JVM.
+
+# this rule counts Thread creates
+RULE count thread create
+CLASS java.lang.Thread
+METHOD <init>
+IF TRUE
+DO incrementCounter("thread creates")
+ENDRULE
+
+# this rule counts Thread starts
+RULE count thread start
+CLASS java.lang.Thread
+METHOD start()
+AT CALL start0
+IF TRUE
+DO incrementCounter("thread starts")
+ENDRULE
+
+# this rule counts Thread runs
+RULE count thread run
+CLASS ^java.lang.Thread
+METHOD run()
+IF !callerMatches(".*")
+DO incrementCounter("thread runs")
+ENDRULE
+
+# this rule counts Thread exits
+RULE count thread exit
+CLASS ^java.lang.Thread
+METHOD exit()
+IF TRUE
+DO incrementCounter("thread exits")
+ENDRULE
+
+# this rule counts FileInputStream opens for read from a File
+RULE count file open read File
+CLASS java.io.FileInputStream
+METHOD <init>(java.io.File)
+AT RETURN
+IF TRUE
+DO incrementCounter("file in opens")
+ENDRULE
+
+# this rule counts FileInputStream opens for read from a File Descriptor
+RULE count file open read File Descriptor
+CLASS java.io.FileInputStream
+METHOD <init>(FileDescriptor)
+AT RETURN
+IF TRUE
+DO incrementCounter("file in opens")
+ENDRULE
+
+# this rule counts FileOutputStream opens for write from a File
+RULE count file open write File
+CLASS java.io.FileOutputStream
+METHOD <init>(java.io.File, boolean)
+AT RETURN
+IF TRUE
+DO incrementCounter("file out opens")
+ENDRULE
+
+# this rule counts FileOutputStream opens for write from a File Descriptor
+RULE count file open write File Descriptor
+CLASS java.io.FileOutputStream
+METHOD <init>(FileDescriptor)
+AT RETURN
+IF TRUE
+DO incrementCounter("file out opens")
+ENDRULE
+
+# this rule counts FileInputStream closes for a File input stream
+RULE count file input stream close
+CLASS java.io.FileInputStream
+METHOD close()
+AT RETURN
+IF TRUE
+DO incrementCounter("file in closes")
+ENDRULE
+
+# this rule counts FileOutputStream closes for a File output stream
+RULE count file output stream close
+CLASS java.io.FileOutputStream
+METHOD close()
+AT RETURN
+IF TRUE
+DO incrementCounter("file out closes")
+ENDRULE
+
+# this rule counts class loads which result in a new class being defined
+RULE count class loads
+CLASS ^java.lang.ClassLoader
+METHOD defineClass(String, byte[], int, int, ProtectionDomain)
+AT RETURN
+IF TRUE
+DO incrementCounter("class loads")
+ENDRULE
+
+
+
+

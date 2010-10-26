@@ -1,0 +1,86 @@
+<!--
+  JBoss, Home of Professional Open Source
+  Copyright 2009-2010 Red Hat Middleware, and individual contributors
+  as indicated by the @author tags.
+  See the copyright.txt in the distribution for a full listing
+  of individual contributors.
+  This copyrighted material is made available to anyone wishing to use,
+  modify, copy, or redistribute it subject to the terms and conditions
+  of the GNU General Public License, v. 2.0.
+  This program is distributed in the hope that it will be useful, but WITHOUT A
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+  PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  You should have received a copy of the GNU General Public License,
+  v. 2.0 along with this distribution; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+  MA  02110-1301, USA.
+
+  (C) 2009-2010
+  @author JBoss Inc.
+-->
+
+<project name="byteman-sample" default="install" basedir=".">
+
+    <!-- n.b. we assume the byteman jar has been installed in the parent tree -->
+    <property name="byteman.jar" value="byteman.jar"/>
+    <property name="byteman.sample.jar" value="byteman-sample.jar"/>
+
+    <!-- paths for local build -->
+    <property name="src.dir"           value="src"/>
+    <property name="scripts.dir"       value="scripts"/>
+    <property name="build.dir"         value="build"/>
+    <property name="build.classes.dir" value="${build.dir}/classes"/>
+    <property name="build.lib.dir"     value="${build.dir}/lib"/>
+
+    <!-- paths for installation into parent install tree -->
+    <property name="parent.install.dir" value="../install"/>
+    <property name="install.sample.dir" value="${parent.install.dir}/sample"/>
+    <property name="install.sample.lib.dir" value="${install.sample.dir}/lib"/>
+    <property name="install.sample.scripts.dir" value="${install.sample.dir}/scripts"/>
+
+    <!-- enable debugging of compiled code including refs to local vars -->
+    <property name="javac.debug" value="on"/>
+
+    <target name="init">
+        <delete dir="${build.dir}"/>
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${build.classes.dir}"/>
+        <mkdir dir="${build.lib.dir}"/>
+    </target>
+
+    <target name="compile" depends="init">
+        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}">
+            <classpath>
+                <pathelement location="${parent.install.dir}/lib/${byteman.jar}"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile">
+        <jar jarfile="${build.lib.dir}/${byteman.sample.jar}">
+            <fileset dir="${build.classes.dir}" includes="**/*"/>
+        </jar>
+   </target>
+
+    <target name="init-install">
+        <delete dir="${install.sample.dir}" />
+        <mkdir dir="${install.sample.dir}" />
+        <mkdir dir="${install.sample.lib.dir}" />
+        <mkdir dir="${install.sample.scripts.dir}" />
+   </target>
+
+    <target name="install" depends="jar, init-install">
+        <copy todir="${install.sample.lib.dir}" file="${build.lib.dir}/${byteman.sample.jar}"/>
+        <copy todir="${install.sample.scripts.dir}">
+            <fileset dir="${scripts.dir}" includes="*.txt *.bms"/>
+        </copy>
+   </target>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+     </target>
+
+    <target name="spotless">
+        <delete dir="${install.sample.dir}"/>
+     </target>
+</project>

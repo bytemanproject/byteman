@@ -1,0 +1,84 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2010, Red Hat and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+
+RULE test caller match first caller
+CLASS TestCallerMatches
+METHOD triggerMethod1()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestCallerMatches = $0
+IF callerEquals("test")
+DO test.log("caller match first caller")
+ENDRULE
+
+RULE test caller match first caller with class
+CLASS TestCallerMatches
+METHOD triggerMethod2()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestCallerMatches = $0
+IF callerEquals("TestCallerMatches.test", true)
+DO test.log("caller match first caller with class")
+ENDRULE
+
+RULE test caller match first caller with class and package
+CLASS TestCallerMatches
+METHOD triggerMethod21()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestCallerMatches = $0
+IF callerMatches("org\.jboss\.byteman\.tests\.helpertests\.TestCallerMatches\.triggerMethod2", true, true)
+DO test.log("caller match first caller with class and package")
+ENDRULE
+
+RULE test caller match 2nd caller in range
+CLASS TestCallerMatches
+METHOD triggerMethod211()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestCallerMatches = $0
+IF callerEquals("triggerMethod2", 1, 2)
+DO test.log("caller match 2nd caller in range")
+ENDRULE
+
+RULE test caller match 1st caller in range
+CLASS TestCallerMatches
+METHOD triggerMethod212()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestCallerMatches = $0
+IF callerEquals("triggerMethod21", 1, 2)
+DO test.log("caller match 1st caller in range")
+ENDRULE
+
+RULE test caller match caller's caller in range
+CLASS TestCallerMatches
+METHOD triggerMethod3111()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestCallerMatches = $0
+IF callerMatches("triggerMethod31", 2, 2)
+DO test.log("caller match caller's caller in range")
+ENDRULE
+

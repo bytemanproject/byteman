@@ -1,0 +1,672 @@
+/*
+* JBoss, Home of Professional Open Source
+* Copyright 2008, Red Hat Middleware LLC, and individual contributors
+* by the @authors tag. See the copyright.txt in the distribution for a
+* full listing of individual contributors.
+*
+* This is free software; you can redistribute it and/or modify it
+* under the terms of the GNU Lesser General Public License as
+* published by the Free Software Foundation; either version 2.1 of
+* the License, or (at your option) any later version.
+*
+* This software is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+* Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public
+* License along with this software; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+* 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+*
+* @authors Andrew Dinn
+*/
+
+import java_cup.runtime.*;
+
+import org.jboss.byteman.rule.grammar.ParseNode;
+// cannot do this!
+// import static org.jboss.byteman.rule.grammar.ParseNode.*;
+
+/* parser methods to make it easier to access the ParseNode package */
+
+action code {:
+    /*
+    private ParseNode node(int tag)
+    {
+    return ParseNode.node(tag, parser.getFile());
+    }
+    */
+
+    private ParseNode node(int tag, int line, int column)
+    {
+	return ParseNode.node(tag, parser.getFile(), line, column);
+    }
+
+    private ParseNode node(int tag, int line, int column, Object child0)
+    {
+	return ParseNode.node(tag, parser.getFile(), line, column, child0);
+    }
+
+    private ParseNode node(int tag, int line, int column, Object child0, Object child1)
+    {
+	return ParseNode.node(tag, parser.getFile(), line, column, child0, child1);
+    }
+
+    private ParseNode node(int tag, int line, int column, Object child0, Object child1, Object child2)
+    {
+	return ParseNode.node(tag, parser.getFile(), line, column, child0, child1, child2);
+    }
+
+    /*
+    private ParseNode node(int tag, int line, int column, Object child0, Object child1, Object child2, Object child3)
+    {
+	return ParseNode.node(tag, parser.getFile(), line, column, child0, child1, child2, child3);
+    }
+    */
+    public void error(String message, int line, int col)
+    {
+        parser.error(message, line, col);
+    }
+
+    public void error(String message)
+    {
+        parser.error(message);
+    }
+
+:}
+
+parser code {:
+
+  private String file = "";
+  private int errorCount = 0;
+  private StringBuffer errorBuffer = new StringBuffer();
+
+  public void setFile(String file)
+  {
+    this.file = file;
+  }
+
+  /**
+   * Called by the parser when it detects a syntax error. This is overridden so
+   * that it does nothing. Instead the parser relies upon explicit calls to routine
+   * error(String) or error(String, int line, int column) which store details of
+   * synatx errors into an error buffer for retrieval after the parse call completes.
+   *
+   * @param message an error message.
+   * @param info    an extra object reserved for use by specialized subclasses.
+   */
+
+  public void report_error(String message, Object info)
+  {
+  }
+
+  /**
+   * Called by the parser when it is unable to recover from one or more syntax errors
+   *
+   * @param cur_token the token current at the point in the token stream where the recovery
+   * process fails
+   */
+
+  public void unrecovered_syntax_error(Symbol cur_token)
+  {
+      int line = cur_token.left;
+      errorCount++;
+      errorBuffer.append('\n');
+      errorBuffer.append(file);
+      if (line >= 0) {
+          errorBuffer.append(" line ");
+          errorBuffer.append(cur_token.left);
+      }
+      errorBuffer.append(" : unable to recover from previous errors");
+  }
+
+  public void error(String message)
+  {
+        errorCount++;
+        errorBuffer.append('\n');
+        errorBuffer.append(file);
+        errorBuffer.append(" : ");
+        errorBuffer.append(message);
+  }
+
+  public void error(String message, int line, int col)
+  {
+        errorCount++;
+        errorBuffer.append('\n');
+        errorBuffer.append(file);
+        errorBuffer.append(" line ");
+        errorBuffer.append(line);
+        errorBuffer.append(" : ");
+        errorBuffer.append(message);
+  }
+
+  public String getFile()
+  {
+    return file;
+  }
+
+  public int getErrorCount()
+  {
+    return errorCount;
+  }
+
+  public String getErrors()
+  {
+    return errorBuffer.toString();
+  }
+
+  /*. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .*/
+
+  /** Do debug output for a reduce.
+   *
+   * @param prod_num  the production we are reducing with.
+   * @param nt_num    the index of the LHS non terminal.
+   * @param rhs_size  the size of the RHS.
+   */
+  public void debug_reduce(int prod_num, int nt_num, int rhs_size)
+    {
+      debug_message("# Reduce with prod #" + prod_num + " [NT=" + nt_num +
+	            ", " + "SZ=" + rhs_size + "]");
+    }
+
+  /*. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .*/
+
+  /** Do debug output for shift.
+   *
+   * @param shift_tkn the Symbol being shifted onto the stack.
+   */
+  public void debug_shift(Symbol shift_tkn)
+    {
+      debug_message("# Shift under term " + shift_tkn +
+		    " to state #" + shift_tkn.parse_state);
+    }
+:}
+
+/* Preliminaries to set up and use the scanner.  */
+/* not needed
+init with {: scanner.init(); :}
+*/
+scan with {: Symbol token = getScanner().next_token();
+	     return token;
+     	  :};
+/*
+*/
+
+/* Terminals (tokens returned by the scanner). */
+
+/* rule definition keywords */
+/* first the redundant ones */
+/*
+terminal	RULE, CLASS, METHOD, LINE, ENDRULE;
+*/
+/* now the required ones */
+
+terminal	BIND, IF, DO;
+
+/* keywords ocurring in bindings, conditions and actions */
+terminal	NOTHING, RETURN, THROW;
+
+/* brackets */
+/* don't need braces yet */
+/* terminal	LBRACE, RBRACE; */
+terminal	LPAREN, RPAREN, LSQUARE, RSQUARE;
+
+/* separators */
+terminal	SEMI, COMMA, DOT;
+
+/* assignment */
+terminal	ASSIGN;
+
+/* instance creation */
+terminal	NEW;
+
+/* operators of various flavours */
+
+/* ternary operators */
+
+/* condition operator -- also sepr for var and type in decl */
+terminal	TERN_IF, COLON;
+
+/* binary operators */
+
+/* logical operators */
+terminal	OR, AND;
+
+/* comparison operators */
+terminal	LT, LE, EQ, NE, GE, GT;
+
+/* bitwise operators */
+terminal	BOR, BAND, BXOR;
+
+/* arithmetic operators */
+terminal	MUL, DIV, PLUS, MINUS, MOD;
+
+/* unary operators */
+
+/* logical operator */
+terminal	NOT;
+
+/* bitwise operators */
+terminal	TWIDDLE;
+
+/* pseudo operator for minus as prefix */
+terminal	UMINUS;
+
+/* dollar prefixed integer or identifier for referencing paams */
+terminal	DOLLAR;
+
+/* literals. strings and identifiers */
+
+terminal	NULL_LITERAL;
+
+terminal	Float FLOAT_LITERAL;
+
+terminal	Integer INTEGER_LITERAL;
+
+terminal	Boolean BOOLEAN_LITERAL;
+
+terminal	String STRING_LITERAL;
+
+terminal	String IDENTIFIER;
+
+/* non terminals */
+
+non terminal ParseNode eca_rule;
+non terminal ParseNode eca;
+non terminal ParseNode ca;
+
+non terminal ParseNode event;
+non terminal ParseNode bindings;
+non terminal ParseNode binding;
+non terminal ParseNode bind_sym;
+
+non terminal ParseNode condition;
+
+non terminal ParseNode actions;
+non terminal ParseNode action_expr_list;
+non terminal ParseNode action_expr;
+non terminal ParseNode throw_return_expr;
+
+non terminal ParseNode expr_list;
+
+non terminal ParseNode expr;
+non terminal ParseNode ternary_oper_expr;
+non terminal ParseNode binary_oper_expr;
+non terminal ParseNode unary_oper_expr;
+non terminal ParseNode array_expr;
+non terminal ParseNode field_expr;
+non terminal ParseNode expr_field_expr;
+non terminal ParseNode meth_expr;
+non terminal ParseNode expr_meth_expr;
+non terminal ParseNode new_expr;
+non terminal ParseNode simple_expr;
+non terminal ParseNode null_expr;
+
+non terminal ParseNode array_idx_list;
+non terminal ParseNode array_idx;
+
+/* names and paths */
+
+non terminal ParseNode typename;
+non terminal Integer arraydims;
+non terminal ParseNode name;
+non terminal ParseNode simple_name;
+non terminal ParseNode path;
+
+/* error patterns */
+
+non terminal ParseNode eca_error;
+non terminal ParseNode eca_error_in_event;
+non terminal ParseNode eca_error_in_condition;
+non terminal ParseNode eca_error_in_action;
+non terminal ParseNode ca_error;
+non terminal ParseNode ca_error_in_condition;
+non terminal ParseNode ca_error_in_action;
+
+/* precedences from weakest to tightest binding */
+
+precedence left SEMI;
+precedence left COMMA;
+precedence left ASSIGN;
+precedence left COLON;
+precedence left TERN_IF;
+precedence left OR, AND, NOT;
+precedence nonassoc EQ, NE;
+precedence left LT, LE, GE, GT;
+precedence left PLUS, MINUS;
+precedence left MUL, DIV, MOD;
+precedence left BOR, BAND, BXOR;
+precedence left TWIDDLE;
+precedence left UMINUS;
+precedence left DOT;
+
+
+eca_rule
+	::=	eca:rule {: RESULT = rule; :}
+	| ca:rule  {: RESULT = rule; :}
+	;
+	
+eca	::=	BIND event:e
+		IF condition:c
+		DO actions:a {: RESULT = node(ParseNode.BIND, eleft, eright, e, c, a); :}
+	|   eca_error
+	;
+
+eca_error
+    ::= eca_error_in_event
+    |   eca_error_in_condition
+    |   eca_error_in_action
+    ;
+
+eca_error_in_event
+    ::= BIND:b error {: error("invalid event", bleft, bright); :}
+        IF condition:c
+        DO actions:a {: RESULT = node(ParseNode.BIND, bleft, bright, null, c, a); :}
+    ;
+
+eca_error_in_condition
+    ::= BIND event:e
+        IF:i error {: error("invalid condition", ileft, iright); :}
+        DO actions:a {: RESULT = node(ParseNode.BIND, eleft, eright, e, null, a); :}
+    ;
+
+eca_error_in_action
+    ::= BIND event:e
+        IF condition:c
+        DO:d error {: error("invalid action", dleft, dright);
+                      RESULT = node(ParseNode.BIND, eleft, eright, e, c, null); :}
+    ;
+
+ca	::=	IF condition:c
+		DO actions:a {: RESULT = node(ParseNode.BIND, cleft, cright, null, c, a); :}
+	|   ca_error
+	;
+
+ca_error
+    ::= ca_error_in_condition
+    |   ca_error_in_action
+    ;
+
+ca_error_in_condition
+    ::= IF:i error {: error("invalid condition", ileft, iright); :}
+        DO actions:a {: RESULT = node(ParseNode.BIND, ileft, iright, null, null, a); :}
+    ;
+
+ca_error_in_action
+    ::= IF condition:c
+        DO:d error {: error("invalid action", dleft, dright);
+                      RESULT = node(ParseNode.BIND, cleft, cright, null, c, null); :}
+    ;
+
+// event specifications -- for now events are just a list of bindings
+
+event	::=	NOTHING:n {: RESULT = node(ParseNode.NOTHING, nleft, nright); :}
+	|	bindings:b {: RESULT = b; :}
+	;
+
+// zero event bindings is specified by an empty event string so we always expect at least one binding
+
+bindings
+	::=	binding:b COMMA bindings:bs {: RESULT = node(ParseNode.COMMA, bleft, bright, b, bs); :}
+	|	binding:b SEMI bindings:bs {: RESULT = node(ParseNode.COMMA, bleft, bright, b, bs); :}
+	|	error:err SEMI bindings:bs
+	    {: error("invalid binding", errleft, errright);
+	       RESULT = bs; :}
+	|	binding:b SEMI error:err
+	    {: error("invalid binding", errleft, errright);
+	       RESULT = b; :}
+	|	binding:b {: RESULT = b; :}
+	;
+
+binding	::=	bind_sym:s ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, sleft, sright, s, e); :}
+	;
+
+// a bound symbol can optionally be specified to be of a particular type
+
+bind_sym
+	::=	simple_name:var COLON typename:type {: RESULT = node(ParseNode.COLON, varleft, varright, var, type); :}
+	|	simple_name:var {: RESULT = var; :}
+	;
+
+// a typename is a simple type or an array type
+typename
+    ::= name:t arraydims:d
+        {:
+            ParseNode tmp = t;
+            for (int i = 0; i < d; i++) {
+                tmp =  node(ParseNode.ARRAY, tleft, tright, tmp);
+            }
+            RESULT = tmp;
+        :}
+    | name:t {: RESULT = t; :}
+    ;
+
+arraydims
+    ::= LSQUARE RSQUARE arraydims:a {: RESULT = a + 1; :}
+    |   LSQUARE RSQUARE  {: RESULT =  1; :}
+    ;
+
+// a condition is simply an expression. it not type-constrained by the grammar.
+// it's easier to do the type checking after parsing  n.b. we always have at
+// least one condition as an empty (i.e. vacuously true) condition is defined
+// by an empty input string.
+
+condition
+	::=	expr:e {: RESULT = e; :}
+	;
+
+// actions area defined as a sequence of expressions.it not type-constrained
+// by the grammar -- it's easier to do the type checking after parsing  n.b.
+// we always have at least one action as an  empty (i.e. do nothing) action
+// is defined by an empty action string
+
+actions	::=	NOTHING:n {: RESULT = node(ParseNode.NOTHING, nleft, nright); :}
+	|	action_expr_list:ael {: RESULT = ael; :}
+	;
+
+action_expr_list
+	::=	expr:e SEMI action_expr_list:ael
+		{: RESULT = node(ParseNode.SEMI, eleft, eright, e, ael); :}
+	|	expr:e COMMA action_expr_list:ael
+		{: RESULT = node(ParseNode.SEMI, eleft, eright, e, ael); :}
+	|	error:err SEMI action_expr_list:ael
+	    {: error("invalid action", errleft, errright);
+		   RESULT = ael; :}
+	|	expr:e SEMI error:err
+	    {: error("invalid action", errleft, errright);
+		   RESULT = e; :}
+	|	action_expr:ae {: RESULT = ae; :}
+	;
+
+action_expr
+	::=	expr:e {: RESULT = e; :}
+	| throw_return_expr:tre {: RESULT = tre; :}
+	;
+
+throw_return_expr
+    ::=	RETURN:r
+		{: RESULT = node(ParseNode.RETURN, rleft, rright, null); :}
+	|	RETURN:r expr:e
+		{: RESULT = node(ParseNode.RETURN, rleft, rright, e); :}
+	|	THROW name:i LPAREN RPAREN
+		{: RESULT = node(ParseNode.THROW, ileft, iright, i, null); :}
+	|	THROW name:i LPAREN expr_list:args RPAREN 
+		{: RESULT = node(ParseNode.THROW, ileft, iright, i, args); :}
+	|	THROW NEW name:i LPAREN RPAREN
+		{: RESULT = node(ParseNode.THROW, ileft, iright, i, null); :}
+	|	THROW NEW name:i LPAREN expr_list:args RPAREN 
+		{: RESULT = node(ParseNode.THROW, ileft, iright, i, args); :}
+	;
+
+expr_list
+	::=	expr:e {: RESULT = e; :}
+	|   expr:e COMMA expr_list:el
+		{: RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
+	|	expr:e SEMI expr_list:el
+		{: RESULT = node(ParseNode.COMMA, eleft, eright, e, el); :}
+	|	error:err SEMI expr_list:el
+		{: error("invalid expression", errleft, errright);
+		   RESULT = el; :}
+    ;
+
+expr
+    ::= ternary_oper_expr:e {: RESULT = e; :}
+    |	binary_oper_expr:e {: RESULT = e; :}
+	|	unary_oper_expr:e {: RESULT = e; :}
+	|	array_expr:e {: RESULT = e; :}
+	|	field_expr:e {: RESULT = e; :}
+	|	meth_expr:e {: RESULT = e; :}
+	|   new_expr:ne {: RESULT = ne; :}
+	|	simple_expr:e {: RESULT = e; :}
+	|   null_expr:e {: RESULT = e; :}
+	|	simple_name:n {: RESULT = n; :}
+	|   simple_name:s ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, sleft, sright, s, e); :}
+	|   DOLLAR:d ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, dleft, dright, node(ParseNode.DOLLAR, dleft, dright, d), e); :}
+	|   field_expr:f ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, fleft, fright, f, e); :}
+	|   error:err expr:e {: error("invalid expression", errleft, errright); RESULT = e; :}
+	;
+
+ternary_oper_expr
+	::=	expr:cond TERN_IF expr:iftrue COLON expr:iffalse
+		{: RESULT = node(ParseNode.TERNOP, condleft, condright, cond, iftrue, iffalse); :}
+	;
+
+binary_oper_expr
+	// logical operators
+	::=	expr:e1 OR:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.OR, oleft, oright), e1, e2); :}
+	|	expr:e1 AND:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.AND, oleft, oright), e1, e2); :}
+	// comparison operators
+	|	expr:e1 LT:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.LT, oleft, oright), e1, e2); :}
+	|	expr:e1 LE:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.LE, oleft, oright), e1, e2); :}
+	|	expr:e1 EQ:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.EQ, oleft, oright), e1, e2); :}
+	|	expr:e1 NE:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.NE, oleft, oright), e1, e2); :}
+	|	expr:e1 GE:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.GE, oleft, oright), e1, e2); :}
+	|	expr:e1 GT:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.GT, oleft, oright), e1, e2); :}
+	// bitwise operators
+	|	expr:e1 BOR:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.BOR, oleft, oright), e1, e2); :}
+	|	expr:e1 BAND:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.BAND, oleft, oright), e1, e2); :}
+	|	expr:e1 BXOR:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.BXOR, oleft, oright), e1, e2); :}
+	// arithmetic operators
+	| expr:e1 PLUS:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.PLUS, oleft, oright), e1, e2); :}
+	|	expr:e1 MINUS:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.MINUS, oleft, oright), e1, e2); :}
+	|	expr:e1 MUL:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.MUL, oleft, oright), e1, e2); :}
+	|	expr:e1 DIV:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.DIV, oleft, oright), e1, e2); :}
+	|	expr:e1 MOD:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.MOD, oleft, oright), e1, e2); :}
+	;
+	
+unary_oper_expr
+	/* logical operators */
+	::=	NOT:o expr:e {: RESULT = node(ParseNode.UNOP, eleft, eright, node(ParseNode.NOT, oleft, oright), e); :}
+	/* bitwise operators */
+	|	TWIDDLE:o expr:e {: RESULT = node(ParseNode.UNOP, eleft, eright, node(ParseNode.TWIDDLE, oleft, oright), e); :}
+	/* arithmetic operators */
+    |   MINUS:o expr:e {: RESULT = node(ParseNode.UNOP, eleft, eright, node(ParseNode.UMINUS, oleft, oright), e); :} %prec UMINUS
+	;
+
+array_expr
+	::=	simple_expr:se array_idx_list:ail
+		{: RESULT = node(ParseNode.ARRAY, seleft, seright, se, ail); :}
+	|	simple_name:name array_idx_list:ail
+		{: RESULT = node(ParseNode.ARRAY, nameleft, nameright, name, ail); :}
+	|	field_expr:fe array_idx_list:ail
+		{: RESULT = node(ParseNode.ARRAY, feleft, feright, fe, ail); :}
+	|	meth_expr:me array_idx_list:ail
+		{: RESULT = node(ParseNode.ARRAY, meleft, meright, me, ail); :}
+	;
+
+array_idx_list
+	::=	array_idx:ai array_idx_list:ail
+		{: RESULT =  node(ParseNode.SEMI, aileft, airight, ai, ail); :}
+	|   array_idx:ai {: RESULT = ai; :}
+	;
+
+array_idx
+	::=	LSQUARE expr:e RSQUARE {: RESULT = e; :}
+	;
+
+field_expr
+	::=	path:p DOT simple_name:f
+		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, p); :}
+	|	expr_field_expr:efe {: RESULT = efe; :}
+	;
+
+expr_field_expr
+	::=	simple_expr:se DOT simple_name:f
+		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, se); :}
+	|	meth_expr:me DOT simple_name:f
+		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, me); :}
+	|	expr_field_expr:efe DOT simple_name:f
+		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, efe); :}
+	;
+
+meth_expr
+	::=	simple_name:m LPAREN RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, null, null); :}
+	|	simple_name:m LPAREN expr_list:args RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, null, args); :}
+	|	path:p DOT simple_name:m LPAREN RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, p, null); :}
+	|	path:p DOT simple_name:m LPAREN expr_list:args RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, p, args); :}
+	|	expr_meth_expr:eme {: RESULT = eme; :}
+	;
+
+expr_meth_expr
+	::=	simple_expr:se DOT simple_name:m LPAREN RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, se, null); :}
+	|	simple_expr:se DOT simple_name:m LPAREN expr_list:args RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, se, args); :}
+	|	meth_expr:eme DOT simple_name:m LPAREN RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, eme, null); :}
+	|	meth_expr:eme DOT simple_name:m LPAREN expr_list:args RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, eme, args); :}
+	|	expr_field_expr:efe DOT simple_name:m LPAREN RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, efe, null); :}
+	|	expr_field_expr:efe DOT simple_name:m LPAREN expr_list:args RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, efe, args); :}
+	;
+
+new_expr
+    ::=	NEW name:i LPAREN RPAREN
+		{: RESULT = node(ParseNode.NEW, ileft, iright, i, null); :}
+	|	NEW name:i LPAREN expr_list:args RPAREN
+		{: RESULT = node(ParseNode.NEW, ileft, iright, i, args); :}
+	;
+
+simple_expr
+	::=	INTEGER_LITERAL:i
+		{: RESULT =  node(ParseNode.INTEGER_LITERAL, ileft, iright, i); :}
+	|	FLOAT_LITERAL:f
+		{: RESULT =  node(ParseNode.FLOAT_LITERAL, fleft, fright, f); :}
+	|	BOOLEAN_LITERAL:b
+		{: RESULT =  node(ParseNode.BOOLEAN_LITERAL, bleft, bright, b); :}
+	|	STRING_LITERAL:s
+		{: RESULT = node(ParseNode.STRING_LITERAL, sleft, sright, s); :}
+	|	DOLLAR:s
+	    {: RESULT = node(ParseNode.DOLLAR, sleft, sright, s); :}
+	|	LPAREN expr:e RPAREN
+		{: RESULT = e; :}
+	;
+
+null_expr
+    ::=	NULL_LITERAL:n
+		{: RESULT = node(ParseNode.NULL_LITERAL, nleft, nright); :}
+	;
+
+name	::=	simple_name:n
+		{: RESULT = n; :}
+	|	path:p DOT IDENTIFIER:i
+		{: RESULT = node(ParseNode.IDENTIFIER, ileft, iright, i, p); :}
+	;
+
+simple_name
+	::=	IDENTIFIER:i
+		{: RESULT = node(ParseNode.IDENTIFIER, ileft, iright, i, null); :}
+	;
+
+path	::=	IDENTIFIER:i
+		{: RESULT = node(ParseNode.PATH, ileft, iright, i, null); :}
+	|	path:p DOT IDENTIFIER:i
+		{: RESULT = node(ParseNode.PATH, ileft, iright, i, p); :}
+	;
