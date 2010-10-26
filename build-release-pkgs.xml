@@ -114,9 +114,9 @@
         <delete file="${workdir}/byteman-${version}-src.zip"/>
 
         <zip basedir="${workdir}" destfile="${workdir}/byteman-${version}-src.zip"
-             includes="${tag}/**" excludes="${tag}/images/**/*"/>
+             includes="${tag}/**" excludes="images/**/*"/>
         <jar basedir="${workdir}/${tag}" jarfile="${workdir}/byteman-src.jar"
-             includes="**/*" excludes="${tag}/images/**/*"/>
+             includes="**/*" excludes="images/**/*"/>
         <!-- build the binary release -->
         <delete file="${workdir}/byteman-${version}.zip"/>
         <ant dir="${workdir}/${tag}" antfile="build.xml" target="zip">
