@@ -115,6 +115,8 @@
 
         <zip basedir="${workdir}" destfile="${workdir}/byteman-${version}-src.zip"
              includes="${tag}/**"/>
+        <jar basedir="${workdir}/${tag}" jarfile="${workdir}/byteman-src.jar"
+             includes="**/*"/>
         <!-- build the binary release -->
         <delete file="${workdir}/byteman-${version}.zip"/>
         <ant dir="${workdir}/${tag}" antfile="build.xml" target="zip">
@@ -146,6 +148,7 @@
 
         <delete dir="${workdir}/build/${tag}"/>
         <unzip src="${workdir}/byteman-${version}.zip" dest="${workdir}/build"/>
+        <copy file="${workdir}/byteman-src.jar" todir="${workdir}/build/lib"/>
 
         <!-- install all the jars in maven with a synthetic pom -->
         <exec executable="mvn" dir="${workdir}">
@@ -161,7 +164,7 @@
         </exec>
         <exec executable="mvn" dir="${workdir}">
             <arg value="deploy:deploy-file"/>
-            <arg value="-Dfile=${workdir}/build/byteman-src.jar"/>
+            <arg value="-Dfile=${workdir}/build/lib/byteman-src.jar"/>
             <arg value="-Dpackaging=jar"/>
             <arg value="-Durl=${mvn.repo.url}"/>
             <arg value="-DrepositoryId=${mvn.repo.id}"/>

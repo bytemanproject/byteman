@@ -132,16 +132,6 @@
     <target name="jar" depends="compile, byteman.jar, submit.jar, install.jar">
     </target>
 
-    <target name="src-jar">
-        <jar jarfile="${build.dir}/${byteman.src.jar}">
-            <fileset dir="." includes = "build.xml, ${src.dir}/**/* ${dd.dir}/**/*"/>
-            <fileset dir="." includes = "README ${docs.src.dir}/ProgrammersGuide.odt ${docs.src.dir}/ProgrammersGuide.pdf ${docs.src.dir}/copyright.txt ${bin.src.dir}/**/*}"/>
-            <fileset dir="." includes = "${tests.dir}/build.xml ${tests.src.dir}/**/* ${tests.dd.dir}/**/*"/>
-            <fileset dir="." includes = "${sample.dir}/build.xml ${sample.src.dir}/**/* ${sample.scripts.dir}/**/*"/>
-            <fileset dir="." includes = "${contrib.dtest.dir}/build.xml ${contrib.dtest.dir}/README.txt ${contrib.dtest.src.dir}/**/*"/>
-        </jar>
-    </target>
-
     <target name="byteman.jar.obfuscated" if="obfuscate.3rd.party">
         <jarjar jarfile="${build.lib.dir}/${byteman.jar}" manifest="${manifest.file}">
             <fileset dir="${build.classes.dir}" includes="**/*"/>
@@ -238,7 +228,7 @@
 
     <!-- target for use by build-release-pkgs script n.b. this assumes it is being run in a clean
          source tree under tags obtained using svn export. -->
-    <target name="zip" depends="install, src-jar">
+    <target name="zip" depends="install">
         <zip destfile="${build.dir}/byteman.zip">
             <fileset  dir="." includes="README"/>
             <fileset  dir="${install.dir}" includes="**/*"/>
