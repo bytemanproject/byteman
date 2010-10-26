@@ -161,12 +161,23 @@
         </exec>
         <exec executable="mvn" dir="${workdir}">
             <arg value="deploy:deploy-file"/>
+            <arg value="-Dfile=${workdir}/build/lib/byteman-src.jar"/>
+            <arg value="-Dpackaging=jar"/>
+            <arg value="-Durl=${mvn.repo.url}"/>
+            <arg value="-DrepositoryId=${mvn.repo.id}"/>
+            <arg value="-DgroupId=org.jboss.byteman"/>
+            <arg value="-DartifactId=byteman-src"/>
+            <arg value="-Dversion=${version}"/>
+            <arg value="-DgeneratePom=true"/>
+        </exec>
+        <exec executable="mvn" dir="${workdir}">
+            <arg value="deploy:deploy-file"/>
             <arg value="-Dfile=${workdir}/build/lib/byteman-submit.jar"/>
             <arg value="-Dpackaging=jar"/>
             <arg value="-Durl=${mvn.repo.url}"/>
             <arg value="-DrepositoryId=${mvn.repo.id}"/>
             <arg value="-DgroupId=org.jboss.byteman"/>
-            <arg value="-DartifactId=byteman"/>
+            <arg value="-DartifactId=byteman-submit"/>
             <arg value="-Dversion=${version}"/>
             <arg value="-DgeneratePom=true"/>
         </exec>
@@ -177,7 +188,7 @@
             <arg value="-Durl=${mvn.repo.url}"/>
             <arg value="-DrepositoryId=${mvn.repo.id}"/>
             <arg value="-DgroupId=org.jboss.byteman"/>
-            <arg value="-DartifactId=byteman"/>
+            <arg value="-DartifactId=byteman-inistall"/>
             <arg value="-Dversion=${version}"/>
             <arg value="-DgeneratePom=true"/>
         </exec>
@@ -188,7 +199,7 @@
             <arg value="-Durl=${mvn.repo.url}"/>
             <arg value="-DrepositoryId=${mvn.repo.id}"/>
             <arg value="-DgroupId=org.jboss.byteman"/>
-            <arg value="-DartifactId=byteman"/>
+            <arg value="-DartifactId=byteman-sample"/>
             <arg value="-Dversion=${version}"/>
             <arg value="-DgeneratePom=true"/>
         </exec>
@@ -199,7 +210,7 @@
             <arg value="-Durl=${mvn.repo.url}"/>
             <arg value="-DrepositoryId=${mvn.repo.id}"/>
             <arg value="-DgroupId=org.jboss.byteman"/>
-            <arg value="-DartifactId=byteman"/>
+            <arg value="-DartifactId=byteman-dtest"/>
             <arg value="-Dversion=${version}"/>
             <arg value="-DgeneratePom=true"/>
         </exec>

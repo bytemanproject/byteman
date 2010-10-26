@@ -66,6 +66,7 @@
     <property name="ext.javacup.jars" value="javacup.jar"/>
     <property name="ext.javacup.rt.jars" value="javacuprt.jar"/>
     <property name="byteman.jar" value="byteman.jar"/>
+    <property name="byteman.src.jar" value="byteman-src.jar"/>
     <property name="byteman-submit.jar" value="byteman-submit.jar"/>
     <property name="byteman-install.jar" value="byteman-install.jar"/>
     <property name="byteman.bin.scripts" value="bytemancheck.sh bmsubmit.sh bminstall.sh bmjava.sh"/>
@@ -128,8 +129,18 @@
     <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
        classpath="${ext.lib.dir}/jarjar-1.0.jar"/>
 
-   <target name="jar" depends="compile, byteman.jar, submit.jar, install.jar">
-   </target>
+    <target name="jar" depends="compile, byteman.jar, submit.jar, install.jar">
+    </target>
+
+    <target name="src-jar">
+        <jar jarfile="${build.dir}/${byteman.src.jar}">
+            <fileset dir="." includes = "build.xml, ${src.dir}/**/* ${dd.dir}/**/*"/>
+            <fileset dir="." includes = "README ${docs.src.dir}/ProgrammersGuide.odt ${docs.src.dir}/ProgrammersGuide.pdf ${docs.src.dir}/copyright.txt ${bin.src.dir}/**/*}"/>
+            <fileset dir="." includes = "${tests.dir}/build.xml ${tests.src.dir}/**/* ${tests.dd.dir}/**/*"/>
+            <fileset dir="." includes = "${sample.dir}/build.xml ${sample.src.dir}/**/* ${sample.scripts.dir}/**/*"/>
+            <fileset dir="." includes = "${contrib.dtest.dir}/build.xml ${contrib.dtest.dir}/README.txt ${contrib.dtest.src.dir}/**/*"/>
+        </jar>
+    </target>
 
     <target name="byteman.jar.obfuscated" if="obfuscate.3rd.party">
         <jarjar jarfile="${build.lib.dir}/${byteman.jar}" manifest="${manifest.file}">
@@ -227,18 +238,20 @@
 
     <!-- target for use by build-release-pkgs script n.b. this assumes it is being run in a clean
          source tree under tags obtained using svn export. -->
-    <target name="zip" depends="install">
+    <target name="zip" depends="install, src-jar">
         <zip destfile="${build.dir}/byteman.zip">
             <fileset  dir="." includes="README"/>
             <fileset  dir="${install.dir}" includes="**/*"/>
         </zip>
-        <zip destfile="${build.dir}/byteman-src.zip">
+        <zip destfile="${build.dir}/byteman-full.zip">
             <!-- embed installed build  products in install tree -->
             <fileset  dir="." includes="README"/>
             <fileset  dir="." includes="install/**/*"/>
             <fileset  dir="." includes="${src.dir}/**/*"/>
             <fileset  dir="." includes="${dd.dir}/**/*"/>
-            <fileset  dir="." includes="${docs.src.dir}/**/*"/>
+            <fileset  dir="." includes="${docs.src.dir}/ProgrammersGuide.odt"/>
+            <fileset  dir="." includes="${docs.src.dir}/ProgrammersGuide.pdf"/>
+            <fileset  dir="." includes="${docs.src.dir}/copyright.txt"/>
             <fileset  dir="." includes="${htdocs.dir}/**/*"/>
             <fileset  dir="." includes="${bin.src.dir}/**/*"/>
             <fileset  dir="." includes="${ext.lib.dir}/**/*"/>
