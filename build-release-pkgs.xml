@@ -194,7 +194,7 @@
         </exec>
         <exec executable="mvn" dir="${workdir}">
             <arg value="deploy:deploy-file"/>
-            <arg value="-Dfile=${workdir}/build/contrib/dtest/byteman-submit.jar"/>
+            <arg value="-Dfile=${workdir}/build/contrib/dtest/byteman-dtest.jar"/>
             <arg value="-Dpackaging=jar"/>
             <arg value="-Durl=${mvn.repo.url}"/>
             <arg value="-DrepositoryId=${mvn.repo.id}"/>
