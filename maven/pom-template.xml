@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>@groupid@</groupId>
-    <artifactId>@artifactid@</artifactId>
+    <artifactId>@artifact@</artifactId>
     <packaging>@packaging@</packaging>
     <description>
         Byteman is a java agent-based bytecode injection tool. It can be used to inject Event Condition Action rules
