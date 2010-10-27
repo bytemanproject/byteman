@@ -1,0 +1,58 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>@groupid@</groupId>
+    <artifactId>@artifactid@</artifactId>
+    <packaging>@packaging@</packaging>
+    <description>
+        Byteman is a java agent-based bytecode injection tool. It can be used to inject Event Condition Action rules
+        into Java application and JVM runtime methods. Its primary purpose is to support execution tracing and fault
+        injection testing.
+    </description>
+    <version>@version@</version>
+    <name>@artifact@</name>
+    <url>http://www.jboss.org/byteman</url>
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>https://jira.jboss.org/jira/browse/BYTEMAN/</url>
+    </issueManagement>
+    <licenses>
+        <license>
+            <name>LGPL 2.1</name>
+            <url>http://www.gnu.org/licenses/lgpl-2.1.html</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:svn:http://anonsvn.jboss.org/repos/byteman/</connection>
+        <developerConnection>scm:svn:https://svn.jboss.org/repos/byteman/</developerConnection>
+        <url>http://fisheye.jboss.org/browse/byteman/</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>adinn</id>
+            <name>Andrew Dinn</name>
+            <email>adinn@redhat.com</email>
+            <organization>JBoss</organization>
+            <organizationUrl>http://www.jboss.org/</organizationUrl>
+            <roles>
+                <role>project lead</role>
+            </roles>
+            <timezone>0</timezone>
+        </developer>
+        <developer>
+          <id>kabir.khan@jboss.com</id>
+          <name>Kabir Khan</name>
+          <email>kabir.khan@jboss.com</email>
+          <organization>JBoss</organization>
+          <organizationUrl>http://www.jboss.org/</organizationUrl>
+          <roles>
+            <role>contributing developer</role>
+          </roles>
+          <timezone>0</timezone>
+        </developer>
+    </developers>
+</project>
