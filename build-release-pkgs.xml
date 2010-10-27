@@ -111,33 +111,113 @@
         </exec>
 
         <!-- package the byteman source release (all src tree) -->
-        <delete file="${workdir}/byteman-${version}-src.zip"/>
+        <delete file="${workdir}/byteman-full-${tag}.zip"/>
 
-        <zip basedir="${workdir}/${tag}" destfile="${workdir}/byteman-${version}-src.zip"
+        <zip basedir="${workdir}/${tag}" destfile="${workdir}/byteman-${version}-full.zip"
              includes="**/*" excludes="images/**/*"/>
-        <jar basedir="${workdir}/${tag}" jarfile="${workdir}/byteman-src.jar"
+        <jar basedir="${workdir}/${tag}" jarfile="${workdir}/byteman-sources.jar"
              includes="**/*" excludes="images/**/*"/>
         <!-- build the binary release -->
-        <delete file="${workdir}/byteman-${version}.zip"/>
         <ant dir="${workdir}/${tag}" antfile="build.xml" target="zip">
             <property name="version" value="${version}"/>
             <property name="obfuscate.3rd.party" value="true"/>
         </ant>
+        <!-- relocate source jar to install lib directory -->
+        <copy file="${workdir}/byteman-sources.jar" tofile="${workdir}/${tag}/install/lib/byteman-sources.jar"/>
+        <!-- relocate binary zip release to top level of workdir -->
         <copy tofile="${workdir}/byteman-${version}.zip" file="${workdir}/${tag}/build/byteman.zip">
         </copy>
+        <!-- bundle the sample lib and scripts into a zip in the top level of workdir -->
+        <zip zipfile="${workdir}/byteman-sample.zip">
+            <fileset dir="${workdir}/${tag}/install/sample" includes="**/"/>
+        </zip>
+        <!-- bundle the contrib code into a zip in the top level of workdir -->
+        <zip zipfile="${workdir}/byteman-contrib.zip">
+            <fileset dir="${workdir}/${tag}/install/contrib" includes="**/"/>
+        </zip>
     </target>
 
     <!-- copy the release into the cms svn tree (http://www.jboss.org/jbosstm web site content) -->
     <target name="cms-repository" description="copy release bundles to JBossTS web site content">
+        <!--
+          ${workdir}/${tag}/install/lib should contain
+            byteman.jar
+            byteman-submit.jar
+            byteman-install.jar
+            byteman-sources.jar
+          ${workdir} now contains
+            byteman-x.y.z.zip
+            byteman-x.y.z-full.zip
+            byteman-sample.zip
+            byteman-contrib.zip
+        -->
         <mkdir dir="${cmsdir}/downloads/${version}"/>
         <copy todir="${cmsdir}/downloads/${version}">
-            <fileset dir="${workdir}" includes="byteman-${version}-src.zip"/>
+            <fileset dir="${workdir}" includes="byteman-${version}-full.zip"/>
         </copy>
         <copy todir="${cmsdir}/downloads/${version}">
             <fileset dir="${workdir}" includes="byteman-${version}.zip"/>
         </copy>
         <!-- TODO: notes dir, xml generation? project.xml edits -->
     </target>
+
+    <macrodef name="mvn-artifact.src.macro">
+
+        <attribute name="artifact"/>
+        <attribute name="dir"/>
+        <attribute name="packaging" default="jar"/>
+
+        <sequential>
+            <property name="groupid" value="org.jboss.byteman"/>
+
+            <exec executable="mvn" dir="${workdir}">
+                <arg value="deploy:deploy-file"/>
+                <arg value="-Dfile=@{dir}/@{artifact}-sources.jar"/>
+                <arg value="-DrepositoryId=${mvn.repo.id}"/>
+                <arg value="-Durl=${mvn.repo.url}"/>
+
+                <arg value="-DgroupId=${groupid}"/>
+                <arg value="-DartifactId=@{artifact}"/>
+                <!--<arg value="-DgeneratePom=false"/> disable this due to MDEPLOY-48-->
+                <arg value="-Dclassifier=sources"/>
+                <arg value="-Dpackaging=java-source"/>
+                <arg value="-Dversion=${version}"/>
+                <arg value="-DuniqueVersion=false"/>
+            </exec>
+        </sequential>
+   </macrodef>
+
+    <macrodef name="mvn-artifact.macro">
+
+        <attribute name="artifact"/>
+        <attribute name="dir"/>
+        <attribute name="packaging" default="jar"/>
+
+        <sequential>
+            <property name="groupid" value="org.jboss.byteman"/>
+
+            <copy  file="${workdir}/${tag}/maven/pom-template.xml"
+                   tofile="${workdir}/build/${tag}/pom-@{artifact}.xml"
+                   filtering="true">
+                <filterset>
+                    <filter token="groupid" value="${groupid}"/>
+                    <filter token="artifact" value="@{artifact}"/>
+                    <filter token="version" value="${version}"/>
+                    <filter token="packaging" value="@{packaging}"/>
+                </filterset>
+            </copy>
+
+            <exec executable="mvn" dir="${workdir}">
+                <arg value="deploy:deploy-file"/>
+                <arg value="-Dfile=@{dir}/@{artifact}.@{packaging}"/>
+                <arg value="-DrepositoryId=${mvn.repo.id}"/>
+                <arg value="-Durl=${mvn.repo.url}"/>
+                <arg value="-DpomFile=${workdir}/build/${tag}/pom-@{artifact}.xml"/>
+                <arg value="-DuniqueVersion=false"/>
+            </exec>
+
+        </sequential>
+   </macrodef>
 
     <!-- http://wiki.jboss.org/wiki/MavenReleaseRepository -->
     <target name="mvn-repository" description="copy the release artifacts to the maven repository">
@@ -146,11 +226,29 @@
 
         <!-- now package the Byteman release -->
 
-        <delete dir="${workdir}/build/${tag}"/>
-        <unzip src="${workdir}/byteman-${version}.zip" dest="${workdir}/build"/>
-        <copy file="${workdir}/byteman-src.jar" todir="${workdir}/build/lib"/>
+        <!--
+          ${workdir}/${tag}/install/lib should contain
+            byteman.jar
+            byteman-submit.jar
+            byteman-install.jar
+            byteman-sources.jar
+          ${workdir} now contains
+            byteman-x.y.z.zip
+            byteman-x.y.z-full.zip
+            byteman-sample.zip
+            byteman-contrib.zip
+        -->
 
+        <mvn-artifact.src.macro artifact="byteman" dir="${workdir}/${tag}/install/lib/"/>
+        <mvn-artifact.macro artifact="byteman" dir="${workdir}/${tag}/install/lib/"/>
+        <mvn-artifact.macro artifact="byteman-submit" dir="${workdir}/${tag}/install/lib/"/>
+        <mvn-artifact.macro artifact="byteman-install" dir="${workdir}/${tag}/install/lib/"/>
+        <mvn-artifact.macro artifact="byteman-sample" packaging="zip" dir="${workdir}"/>
+        <mvn-artifact.macro artifact="byteman-contrib" packaging="zip" dir="${workdir}"/>
+
+        <delete dir="${workdir}/build/${tag}"/>
         <!-- install all the jars in maven with a synthetic pom -->
+        <!--
         <exec executable="mvn" dir="${workdir}">
             <arg value="deploy:deploy-file"/>
             <arg value="-Dfile=${workdir}/build/lib/byteman.jar"/>
@@ -164,12 +262,12 @@
         </exec>
         <exec executable="mvn" dir="${workdir}">
             <arg value="deploy:deploy-file"/>
-            <arg value="-Dfile=${workdir}/build/lib/byteman-src.jar"/>
+            <arg value="-Dfile=${workdir}/build/lib/byteman-sources.jar"/>
             <arg value="-Dpackaging=jar"/>
             <arg value="-Durl=${mvn.repo.url}"/>
             <arg value="-DrepositoryId=${mvn.repo.id}"/>
             <arg value="-DgroupId=org.jboss.byteman"/>
-            <arg value="-DartifactId=byteman-src"/>
+            <arg value="-DartifactId=byteman-sources"/>
             <arg value="-Dversion=${version}"/>
             <arg value="-DgeneratePom=true"/>
         </exec>
@@ -217,6 +315,7 @@
             <arg value="-Dversion=${version}"/>
             <arg value="-DgeneratePom=true"/>
         </exec>
+        -->
     </target>
 
 </project>
