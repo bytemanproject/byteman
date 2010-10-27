@@ -191,7 +191,7 @@
             <arg value="-Durl=${mvn.repo.url}"/>
             <arg value="-DrepositoryId=${mvn.repo.id}"/>
             <arg value="-DgroupId=org.jboss.byteman"/>
-            <arg value="-DartifactId=byteman-inistall"/>
+            <arg value="-DartifactId=byteman-install"/>
             <arg value="-Dversion=${version}"/>
             <arg value="-DgeneratePom=true"/>
         </exec>
