@@ -114,9 +114,9 @@
         <delete file="${workdir}/byteman-full-${tag}.zip"/>
 
         <zip basedir="${workdir}/${tag}" destfile="${workdir}/byteman-${version}-full.zip"
-             includes="**/*" excludes="images/**/*"/>
+             includes="**/*"/>
         <jar basedir="${workdir}/${tag}" jarfile="${workdir}/byteman-sources.jar"
-             includes="**/*" excludes="images/**/*"/>
+             includes="**/*"/>
         <!-- build the binary release -->
         <ant dir="${workdir}/${tag}" antfile="build.xml" target="zip">
             <property name="version" value="${version}"/>
@@ -135,22 +135,25 @@
         <zip zipfile="${workdir}/byteman-contrib.zip">
             <fileset dir="${workdir}/${tag}/install/contrib" includes="**/"/>
         </zip>
-    </target>
-
-    <!-- copy the release into the cms svn tree (http://www.jboss.org/jbosstm web site content) -->
-    <target name="cms-repository" description="copy release bundles to JBossTS web site content">
         <!--
-          ${workdir}/${tag}/install/lib should contain
+          ${workdir}/${tag}/install/lib now contains
             byteman.jar
             byteman-submit.jar
             byteman-install.jar
             byteman-sources.jar
+          ${workdir}/${tag}/install/contrib/dtest now contains
+            byteman-dtest.jar
           ${workdir} now contains
             byteman-x.y.z.zip
             byteman-x.y.z-full.zip
             byteman-sample.zip
             byteman-contrib.zip
         -->
+
+    </target>
+
+    <!-- copy the release into the cms svn tree (http://www.jboss.org/jbosstm web site content) -->
+    <target name="cms-repository" description="copy release bundles to JBossTS web site content">
         <mkdir dir="${cmsdir}/downloads/${version}"/>
         <copy todir="${cmsdir}/downloads/${version}">
             <fileset dir="${workdir}" includes="byteman-${version}-full.zip"/>
@@ -224,25 +227,11 @@
         <delete dir="${workdir}/build"/>
         <mkdir dir="${workdir}/build"/>
 
-        <!-- now package the Byteman release -->
-
-        <!--
-          ${workdir}/${tag}/install/lib should contain
-            byteman.jar
-            byteman-submit.jar
-            byteman-install.jar
-            byteman-sources.jar
-          ${workdir} now contains
-            byteman-x.y.z.zip
-            byteman-x.y.z-full.zip
-            byteman-sample.zip
-            byteman-contrib.zip
-        -->
-
         <mvn-artifact.src.macro artifact="byteman" dir="${workdir}/${tag}/install/lib/"/>
         <mvn-artifact.macro artifact="byteman" dir="${workdir}/${tag}/install/lib/"/>
         <mvn-artifact.macro artifact="byteman-submit" dir="${workdir}/${tag}/install/lib/"/>
         <mvn-artifact.macro artifact="byteman-install" dir="${workdir}/${tag}/install/lib/"/>
+        <mvn-artifact.macro artifact="byteman-dtest" dir="${workdir}/${tag}/install/contrib/dtest/"/>
         <mvn-artifact.macro artifact="byteman-sample" packaging="zip" dir="${workdir}"/>
         <mvn-artifact.macro artifact="byteman-contrib" packaging="zip" dir="${workdir}"/>
 
