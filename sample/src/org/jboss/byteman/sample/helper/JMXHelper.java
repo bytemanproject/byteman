@@ -18,6 +18,18 @@ public class JMXHelper extends Helper implements DynamicMBean
     /************************************************************************/
 
     /**
+     * This is a system property whose value will determine which MBean Server the
+     * MBeans should be registered in. If the system property is not defined, the default
+     * will be the platform MBeanServer itself. If this system property is set, it will
+     * be assumed to be a default domain name of an existing MBeanServer. The existing
+     * MBeanServer with that default domain name will be used to house the MBeans. If there
+     * is no existing MBeanServer with the given default domain name, one will be created.
+     * Note that if this sysprop has the special value "*platform*", then the platform
+     * MBeanServer will be used (i.e. it will be as if this sysprop was not set). 
+     */
+    public final static String SYSPROP_MBEAN_SERVER = "org.jboss.byteman.jmx.mbeanserver";
+
+    /**
      * the default period which the helper will wait for between calls to periodicUpdate in milliseconds. this
      * can be redefined either by overriding defaultPeriod
      */
@@ -463,18 +475,34 @@ public class JMXHelper extends Helper implements DynamicMBean
 
     private static MBeanServer getMBeanServer()
     {
-        ArrayList<MBeanServer> mbeanServers = MBeanServerFactory.findMBeanServer(null);
-        MBeanServer mbeanServer;
-        if (mbeanServers != null) {
-            mbeanServer = mbeanServers.get(0);
+        // If the sysprop is not defined, default to the platform MBeanServer.
+        // If it is defined, it is the name of the MBS' default domain name so
+        // look for an MBeanServer that already has that default domain name and
+        // if exists, use it, otherwise create a new one.
+        // Note that if the sysprop is defined and has the special value "*platform*"
+        // the platform MBeanServer will be used.
+
+        MBeanServer mbsToReturn = null;
+        String mbeanServerDomainToLookFor = System.getProperty(SYSPROP_MBEAN_SERVER);
+        if (mbeanServerDomainToLookFor == null || "*platform*".equals(mbeanServerDomainToLookFor)) {
+            mbsToReturn = ManagementFactory.getPlatformMBeanServer();
         } else {
-            mbeanServer = ManagementFactory.getPlatformMBeanServer();
-        }
-        if (mbeanServer == null) {
-            mbeanServer = MBeanServerFactory.createMBeanServer();
+            ArrayList<MBeanServer> mbeanServers = MBeanServerFactory.findMBeanServer(null);
+            if (mbeanServers != null) {
+                for (MBeanServer mbs : mbeanServers ) {
+                    if (mbeanServerDomainToLookFor.equals(mbs.getDefaultDomain())) {
+                        mbsToReturn = mbs;
+                        break;
+                    }
+                }
+            }
+            
+            if (mbsToReturn == null) {
+                mbsToReturn = MBeanServerFactory.createMBeanServer(mbeanServerDomainToLookFor);
+            }
         }
 
-        return mbeanServer;
+        return mbsToReturn;
     }
 
     /**

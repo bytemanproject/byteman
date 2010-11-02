@@ -67,6 +67,13 @@
 # when the helper is deactivated i.e. once all rules using the helper
 # have been uninstalled. At regular intervals the helper thread samples
 # counters updated by the rules and posts new stats to the MBean.
+# The helper will, by default, install its MBeans in the platform
+# MBeanServer. You can override this behavior by setting the JVM
+# system property "org.jboss.byteman.jmx.mbeanserver" to a valid
+# JMX domain name. If an MBeanServer exists with that as its default
+# domain, it will be used, otherwise, an MBeanServer will be created
+# with that domain name as its default. If the system property is
+# set to "*platform*", then the platform MBeanServer will be used.
 #
 # The script attaches a rule to the helper method keyInfo() to define the
 # counters to be sampled by the background thread. The object returned
