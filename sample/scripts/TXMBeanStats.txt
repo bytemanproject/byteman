@@ -145,6 +145,46 @@ DO keyInfo.addKey("TX begin", KeyInfo.KEY_TYPE_CUMULATIVE, "TX begin total");
    RETURN keyInfo
 ENDRULE
 
+# This rule is triggered when the periodic helper thread starts
+# it returns a boolean which determines whether the helper thread
+# creates a JMX Connector Server, allowing the MBean stats to be
+# fetched by a remote client using RMI. The default implemenation of
+# the trigger method returns false. If you want to be able to fetch
+# the MBean stats form a remote client uncomment this rule so  that
+# it injects code returning true.
+# RULE configure rmi server
+# CLASS JMXHelper
+# METHOD rmiServerRequired()
+# IF TRUE
+# DO RETURN TRUE
+# ENDRULE
+
+# This rule is triggered when the periodic helper thread starts
+# but only if the previous rule has requested that an rmi server
+# be installed. it returns a host address used when creating the
+# server socket. the trigger method returns "localhost" as the
+# default host. if you want to use a  different host then uncommment
+# this rule and insert a suitable address
+# RULE configure rmi host
+# CLASS JMXHelper
+# METHOD rmiHost()
+# IF TRUE
+# DO RETURN "<replace me with a hostname or address>"
+# ENDRULE
+
+# This rule is triggered when the periodic helper thread starts
+# but only if the previous rule has requested that an rmi server
+# be installed. it returns a port used when creating the
+# server socket. the trigger method returns 9999 as the
+# default host. if you want to use a  different host then uncommment
+# this rule and edit the port number
+# RULE configure rmi host
+# CLASS JMXHelper
+# METHOD rmiHost()
+# IF TRUE
+# DO RETURN <replace me with a port number>
+# ENDRULE
+
 # this rule is triggered when a call is made to Transaction.begin
 
 RULE count begin request
