@@ -261,6 +261,8 @@ public class TestScript
 
                 System.out.println("checking rule " + script.getName());
                 bytes = transformer.transform(script, loader, targetClass.getName(), bytes);
+                // maybe dump the transformed bytecode
+                Transformer.maybeDumpClass(targetClass.getName(), bytes);
             }
 
             // see if we have a record of any transform

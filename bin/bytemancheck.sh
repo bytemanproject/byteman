@@ -52,6 +52,8 @@ fi
 CP=${BYTEMAN_JAR}
 PACKAGES=""
 VERBOSE=""
+# for debugging purposes we will also pass through sys prop defines
+DEFINES=""
 # include application classes upplied via -cp flag and check for -v flag
 while [ $# -ne 0 -a ${1#-*} != ${1} ]; 
 do
@@ -69,6 +71,9 @@ do
       fi
   elif [ "$1" == "-v" ] ; then
     VERBOSE="-v"
+    shift
+  elif [ "${1#-D*}" != "$1" ] ; then
+    DEFINES="$DEFINES $1"
     shift
   else
     echo "usage: bytemancheck [-cp classpath]* [-p package]* [-v] script1 . . . scriptN"
@@ -101,4 +106,4 @@ fi
 
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 
-java ${BYTEMAN_JAVA_OPTS} -classpath ${CP} org.jboss.byteman.test.TestScript $PACKAGES $VERBOSE $FILES
+java ${BYTEMAN_JAVA_OPTS} -classpath ${CP} $DEFINES org.jboss.byteman.test.TestScript $PACKAGES $VERBOSE $FILES
