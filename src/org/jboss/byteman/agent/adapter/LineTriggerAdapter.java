@@ -78,6 +78,7 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
         public void visitLineNumber(final int line, final Label start) {
             if (unlatched && !visitedLine && (targetLine <= line)) {
                 injectTriggerPoint();
+                visitedLine = true;
             }
             super.visitLineNumber(line, start);
         }
