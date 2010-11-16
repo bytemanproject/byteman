@@ -61,7 +61,7 @@ public class Transformer implements ClassFileTransformer {
     {
         this.inst = inst;
         this.isRedefine = isRedefine;
-        scriptRepository = new ScriptRepository(skipOverrideRules());
+        scriptRepository = new ScriptRepository(skipOverrideRules);
         loadCache = new LoadCache(inst);
         helperManager = new HelperManager(inst);
 
@@ -543,16 +543,11 @@ public class Transformer implements ClassFileTransformer {
 
     /**
      * check whether compilation of rules is enabled or disabled
-     * @return true if compilation of rules is enabled etherwise false
+     * @return true if compilation of rules is enabled otherwise false
      */
-    public static boolean skipOverrideRules()
+    public boolean skipOverrideRules()
     {
-        if (allowConfigUpdate()) {
-            synchronized (configLock) {
-                return skipOverrideRules;
-            }
-        }
-        return skipOverrideRules;
+        return scriptRepository.skipOverrideRules();
     }
 
     /**
