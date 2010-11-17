@@ -416,6 +416,7 @@ bindings
 	|	binding:b SEMI error:err
 	    {: error("invalid binding", errleft, errright);
 	       RESULT = b; :}
+	|	binding:b SEMI {: RESULT = b; :}
 	|	binding:b {: RESULT = b; :}
 	;
 
@@ -481,7 +482,9 @@ action_expr_list
 
 action_expr
 	::=	expr:e {: RESULT = e; :}
+	| expr:e SEMI {: RESULT = e; :}
 	| throw_return_expr:tre {: RESULT = tre; :}
+	| throw_return_expr:tre SEMI {: RESULT = tre; :}
 	;
 
 throw_return_expr
