@@ -33,9 +33,9 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AT CALL subMethod(int long, String)
 BIND test = $0
 IF TRUE
-DO test.log("triggerMethod : $@[0] = " + $@[0]),
-   test.log("triggerMethod : $@[1] = " + $@[1]),
-   test.log("triggerMethod : $@[2] = " + $@[2]),
+DO test.log("triggerMethod : $@[0] = " + $@[0]);
+   test.log("triggerMethod : $@[1] = " + $@[1]);
+   test.log("triggerMethod : $@[2] = " + $@[2]);
    test.log("triggerMethod : $@[3] = " + $@[3])
 ENDRULE
 
@@ -46,8 +46,8 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AT CALL subMethod(int long, String) 2
 BIND test = $0
 IF TRUE
-DO test.log("triggerMethod : $@[0] = " + $@[0]),
-   test.log("triggerMethod : $@[1] = " + $@[1]),
-   test.log("triggerMethod : $@[2] = " + $@[2]),
+DO test.log("triggerMethod : $@[0] = " + $@[0]);
+   test.log("triggerMethod : $@[1] = " + $@[1]);
+   test.log("triggerMethod : $@[2] = " + $@[2]);
    test.log("triggerMethod : $@[3] = " + $@[3])
 ENDRULE

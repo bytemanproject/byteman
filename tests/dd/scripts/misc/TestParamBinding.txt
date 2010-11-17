@@ -33,6 +33,6 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
 BIND test = $0
 IF TRUE
-DO test.log("triggerMethod : triggered with " + $# + " params"),
+DO test.log("triggerMethod : triggered with " + $# + " params");
    test.log("triggerMethod : $*[1] = " + $*[1])
 ENDRULE

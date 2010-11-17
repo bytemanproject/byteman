@@ -27,20 +27,20 @@ CLASS TestArithmetic
 METHOD triggerMethod1(int,char,short,byte)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
-     i : int = $1,
-     c : char = $2,
-     s : short = $3,
+BIND test : Test = $0;
+     i : int = $1;
+     c : char = $2;
+     s : short = $3;
      b : byte = $4
 IF TRUE
-DO test.log("triggerMethod1 : i == " + i),
-   test.log("triggerMethod1 : c == '" + c + "'"),
-   test.log("triggerMethod1 : s == " + s),
-   test.log("triggerMethod1 : b == " + b),
-   test.log("triggerMethod1 : i + 255 == " + (i + 255)),
-   test.log("triggerMethod1 : c + 255 == " + (c + 255)),
-   test.log("triggerMethod1 : s + 255 == " + (s + 255)),
-   test.log("triggerMethod1 : b + 255 == " + (b + 255)),
+DO test.log("triggerMethod1 : i == " + i);
+   test.log("triggerMethod1 : c == '" + c + "'");
+   test.log("triggerMethod1 : s == " + s);
+   test.log("triggerMethod1 : b == " + b);
+   test.log("triggerMethod1 : i + 255 == " + (i + 255));
+   test.log("triggerMethod1 : c + 255 == " + (c + 255));
+   test.log("triggerMethod1 : s + 255 == " + (s + 255));
+   test.log("triggerMethod1 : b + 255 == " + (b + 255));
    return (s + c)
 ENDRULE
 
@@ -49,20 +49,20 @@ CLASS TestArithmetic
 METHOD triggerMethod2(int,char,short,byte)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
-     i : int = $1,
-     c : char = $2,
-     s : short = $3,
+BIND test : Test = $0;
+     i : int = $1;
+     c : char = $2;
+     s : short = $3;
      b : byte = $4
 IF TRUE
-DO test.log("triggerMethod2 : i == " + i),
-   test.log("triggerMethod2 : c == '" + c + "'"),
-   test.log("triggerMethod2 : s == " + s),
-   test.log("triggerMethod2 : b == " + b),
-   test.log("triggerMethod2 : i - 255 == " + (i - 255)),
-   test.log("triggerMethod2 : c - 255 == " + (c - 255)),
-   test.log("triggerMethod2 : s - 255 == " + (s - 255)),
-   test.log("triggerMethod2 : b - 255 == " + (b - 255)),
+DO test.log("triggerMethod2 : i == " + i);
+   test.log("triggerMethod2 : c == '" + c + "'");
+   test.log("triggerMethod2 : s == " + s);
+   test.log("triggerMethod2 : b == " + b);
+   test.log("triggerMethod2 : i - 255 == " + (i - 255));
+   test.log("triggerMethod2 : c - 255 == " + (c - 255));
+   test.log("triggerMethod2 : s - 255 == " + (s - 255));
+   test.log("triggerMethod2 : b - 255 == " + (b - 255));
    return (c + c)
 ENDRULE
 
@@ -71,20 +71,20 @@ CLASS TestArithmetic
 METHOD triggerMethod3(int,char,short,byte)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
-     i : int = $1,
-     c : char = $2,
-     s : short = $3,
+BIND test : Test = $0;
+     i : int = $1;
+     c : char = $2;
+     s : short = $3;
      b : byte = $4
 IF TRUE
-DO test.log("triggerMethod3 : i == " + i),
-   test.log("triggerMethod3 : c == '" + c + "'"),
-   test.log("triggerMethod3 : s == " + s),
-   test.log("triggerMethod3 : b == " + b),
-   test.log("triggerMethod3 : 255 % b == " + (255 % b)),
-   test.log("triggerMethod3 : c / 2 == " + (c / 2)),
-   test.log("triggerMethod3 : s * 1.5 == " + (s * 1.5)),
-   test.log("triggerMethod3 : b * b == " + (b * b)),
+DO test.log("triggerMethod3 : i == " + i);
+   test.log("triggerMethod3 : c == '" + c + "'");
+   test.log("triggerMethod3 : s == " + s);
+   test.log("triggerMethod3 : b == " + b);
+   test.log("triggerMethod3 : 255 % b == " + (255 % b));
+   test.log("triggerMethod3 : c / 2 == " + (c / 2));
+   test.log("triggerMethod3 : s * 1.5 == " + (s * 1.5));
+   test.log("triggerMethod3 : b * b == " + (b * b));
    return (s * b)
 ENDRULE
 
@@ -93,19 +93,19 @@ CLASS TestArithmetic
 METHOD triggerMethod4(int,char,short,byte)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
-     i : int = $1,
-     c : char = $2,
-     s : short = $3,
+BIND test : Test = $0;
+     i : int = $1;
+     c : char = $2;
+     s : short = $3;
      b : byte = $4
 IF TRUE
-DO test.log("triggerMethod4 : i == " + i),
-   test.log("triggerMethod4 : c == '" + c + "'"),
-   test.log("triggerMethod4 : s == " + s),
-   test.log("triggerMethod4 : b == " + b),
-   test.log("triggerMethod4 : 255 * b == " + (255 * b)),
-   test.log("triggerMethod4 : c / 0.5 == " + (c / 0.5)),
-   test.log("triggerMethod4 : s * c == " + (s * c)),
-   test.log("triggerMethod4 : b % 0.5 == " + (b % 0.5)),
+DO test.log("triggerMethod4 : i == " + i);
+   test.log("triggerMethod4 : c == '" + c + "'");
+   test.log("triggerMethod4 : s == " + s);
+   test.log("triggerMethod4 : b == " + b);
+   test.log("triggerMethod4 : 255 * b == " + (255 * b));
+   test.log("triggerMethod4 : c / 0.5 == " + (c / 0.5));
+   test.log("triggerMethod4 : s * c == " + (s * c));
+   test.log("triggerMethod4 : b % 0.5 == " + (b % 0.5));
    return (c * (b + s))
 ENDRULE

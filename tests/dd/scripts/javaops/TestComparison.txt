@@ -27,16 +27,16 @@ CLASS TestComparison
 METHOD triggerMethod1(String)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
+BIND test : Test = $0;
      arg : String = $1
 IF TRUE
-DO test.log("triggerMethod1 : arg == " + arg),
-   test.log("triggerMethod1 : arg == 1234 == " + (arg == "1234")),
-   test.log("triggerMethod1 : arg != 1234 == " + (arg != "1234")),
-   test.log("triggerMethod1 : arg >= 1234 == " + (arg >= "1234")),
-   test.log("triggerMethod1 : arg > 1234 == " + (arg > "1234")),
-   test.log("triggerMethod1 : arg < 1234 == " + (arg < "1234")),
-   test.log("triggerMethod1 : arg <= 1234 == " + (arg <= "1234")),
+DO test.log("triggerMethod1 : arg == " + arg);
+   test.log("triggerMethod1 : arg == 1234 == " + (arg == "1234"));
+   test.log("triggerMethod1 : arg != 1234 == " + (arg != "1234"));
+   test.log("triggerMethod1 : arg >= 1234 == " + (arg >= "1234"));
+   test.log("triggerMethod1 : arg > 1234 == " + (arg > "1234"));
+   test.log("triggerMethod1 : arg < 1234 == " + (arg < "1234"));
+   test.log("triggerMethod1 : arg <= 1234 == " + (arg <= "1234"));
    return $1
 ENDRULE
 
@@ -45,15 +45,15 @@ CLASS TestComparison
 METHOD triggerMethod2(int)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
+BIND test : Test = $0;
      arg : int = $1
 IF TRUE
-DO test.log("triggerMethod2 : arg == " + $1),
-   test.log("triggerMethod2 : arg == 1234 == " + (arg == 1234)),
-   test.log("triggerMethod2 : arg != 1234 == " + (arg != 1234)),
-   test.log("triggerMethod2 : arg >= 1234 == " + (arg >= 1234)),
-   test.log("triggerMethod2 : arg > 1234 == " + (arg > 1234)),
-   test.log("triggerMethod2 : arg < 1234 == " + (arg < 1234)),
-   test.log("triggerMethod2 : arg <= 1234 == " + (arg <= 1234)),
+DO test.log("triggerMethod2 : arg == " + $1);
+   test.log("triggerMethod2 : arg == 1234 == " + (arg == 1234));
+   test.log("triggerMethod2 : arg != 1234 == " + (arg != 1234));
+   test.log("triggerMethod2 : arg >= 1234 == " + (arg >= 1234));
+   test.log("triggerMethod2 : arg > 1234 == " + (arg > 1234));
+   test.log("triggerMethod2 : arg < 1234 == " + (arg < 1234));
+   test.log("triggerMethod2 : arg <= 1234 == " + (arg <= 1234));
    return $1
 ENDRULE

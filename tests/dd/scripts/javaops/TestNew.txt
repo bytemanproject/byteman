@@ -27,15 +27,15 @@ CLASS TestNew
 METHOD triggerMethod(String)
 HELPER org.jboss.byteman.tests.helpers.Default
 AT EXIT
-BIND test : TestNew = $0,
-     bytes = $input.getBytes(),
-     newStr = new String(bytes),
+BIND test : TestNew = $0;
+     bytes = $input.getBytes();
+     newStr = new String(bytes);
      throwable : Throwable = null
 IF TRUE
-DO test.log("triggerMethod : input == " + $input),
-   $input = newStr.replaceFirst("abc", "123"),
-   test.log("triggerMethod : new input == " + $input),
-   throwable = new Exception("hello"),
-   test.log("triggerMethod : throwable == " + throwable),
+DO test.log("triggerMethod : input == " + $input);
+   $input = newStr.replaceFirst("abc", "123");
+   test.log("triggerMethod : new input == " + $input);
+   throwable = new Exception("hello");
+   test.log("triggerMethod : throwable == " + throwable);
    $! = new String(bytes)
 ENDRULE

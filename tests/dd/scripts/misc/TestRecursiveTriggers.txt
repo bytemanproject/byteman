@@ -31,7 +31,7 @@ CLASS org.jboss.byteman.tests.misc.TestRecursiveTriggers
 METHOD triggerMethod1(int)
 HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
-BIND test = $0,
+BIND test = $0;
      count = $1
 IF TRUE
 DO test.log("triggerMethod1 : triggered with " + count)
@@ -49,7 +49,7 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : TestRecursiveTriggers = $0
 IF TRUE
-DO test.log("triggerMethod2 : triggered"),
+DO test.log("triggerMethod2 : triggered");
    test.triggerMethod1(2)
 ENDRULE
 
@@ -67,10 +67,10 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : TestRecursiveTriggers = $0
 IF TRUE
-DO test.log("triggerMethod3 : triggered"),
-   setTriggering(false),
-   test.triggerMethod1(3),
-   setTriggering(true),
+DO test.log("triggerMethod3 : triggered");
+   setTriggering(false);
+   test.triggerMethod1(3);
+   setTriggering(true);
    test.triggerMethod1(4)
 ENDRULE
 

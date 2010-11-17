@@ -27,12 +27,12 @@ CLASS TestLogical
 METHOD triggerMethod1(boolean)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
+BIND test : Test = $0;
      arg : boolean = $1
 IF arg
-DO test.log("triggerMethod1 : arg == " + $1),
-   test.log("triggerMethod1 : (arg && !arg) == " + (arg && !arg)),
-   test.log("triggerMethod1 : (arg && true) == " + (arg && true)),
+DO test.log("triggerMethod1 : arg == " + $1);
+   test.log("triggerMethod1 : (arg && !arg) == " + (arg && !arg));
+   test.log("triggerMethod1 : (arg && true) == " + (arg && true));
    return $1
 ENDRULE
 
@@ -41,12 +41,12 @@ CLASS TestLogical
 METHOD triggerMethod1(boolean)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
+BIND test : Test = $0;
      arg : boolean = $1
 IF NOT arg
-DO test.log("triggerMethod1 : arg == " + $1),
-   test.log("triggerMethod1 : (arg || !arg) == " + (arg || !arg)),
-   test.log("triggerMethod1 : (arg || false) == " + (arg || false)),
+DO test.log("triggerMethod1 : arg == " + $1);
+   test.log("triggerMethod1 : (arg || !arg) == " + (arg || !arg));
+   test.log("triggerMethod1 : (arg || false) == " + (arg || false));
    return (arg ? false : true)
 ENDRULE
 
@@ -55,12 +55,12 @@ CLASS TestLogical
 METHOD triggerMethod2(boolean)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
+BIND test : Test = $0;
      arg : boolean = $1
 IF arg
-DO test.log("triggerMethod2 : arg == " + $1),
-   test.log("triggerMethod2 : (arg || !arg) == " + (arg || !arg)),
-   test.log("triggerMethod2 : (arg || false) == " + (arg || false)),
+DO test.log("triggerMethod2 : arg == " + $1);
+   test.log("triggerMethod2 : (arg || !arg) == " + (arg || !arg));
+   test.log("triggerMethod2 : (arg || false) == " + (arg || false));
    return (arg ? false : true)
 ENDRULE
 
@@ -69,12 +69,12 @@ CLASS TestLogical
 METHOD triggerMethod2(boolean)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
+BIND test : Test = $0;
      arg : boolean = $1
 IF NOT arg
-DO test.log("triggerMethod2 : arg == " + $1),
-   test.log("triggerMethod2 : (arg && !arg) == " + (arg && !arg)),
-   test.log("triggerMethod2 : (arg && true) == " + (arg && true)),
+DO test.log("triggerMethod2 : arg == " + $1);
+   test.log("triggerMethod2 : (arg && !arg) == " + (arg && !arg));
+   test.log("triggerMethod2 : (arg && true) == " + (arg && true));
    return $1
 ENDRULE
 

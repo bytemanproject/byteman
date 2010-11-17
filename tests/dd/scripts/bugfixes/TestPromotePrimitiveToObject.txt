@@ -29,7 +29,7 @@ HELPER org.jboss.byteman.tests.helpers.TestPromotePrimitiveToObjectHelper
 AT ENTRY
 BIND test : Test = $0
 IF TRUE
-DO test.log("calling helper.testPromote " + $1),
+DO test.log("calling helper.testPromote " + $1);
    testPromote($1)
 ENDRULE
 

@@ -31,7 +31,7 @@ CLASS org.jboss.byteman.tests.misc.TestThrowBinding
 METHOD triggerMethod(int)
 HELPER org.jboss.byteman.tests.helpers.Default
 AT THROW ALL
-BIND test = $0,
+BIND test = $0;
      throwBinding = $^
 IF TRUE
 DO test.log("triggerMethod : triggered with " + throwBinding.getMessage())

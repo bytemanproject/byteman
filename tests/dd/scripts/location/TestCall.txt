@@ -79,7 +79,7 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AT CALL org.jboss.byteman.tests.auxiliary.TestCallThrowSynchAuxiliary.setCounter 3
 BIND test : Test = $0.getTest()
 IF TRUE
-DO test.log("CALL setCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod"),
+DO test.log("CALL setCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod");
    return
 ENDRULE
 

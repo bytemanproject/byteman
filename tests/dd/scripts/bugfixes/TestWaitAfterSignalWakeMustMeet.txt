@@ -70,7 +70,7 @@ METHOD triggerWaitFor
 HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
 BIND test : TestEmptySignature = $0
 IF TRUE
-DO test.log("waitFor"),
+DO test.log("waitFor");
    waitFor("test")
 ENDRULE
 
@@ -83,7 +83,7 @@ METHOD triggerSignalWake
 HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
 BIND test : TestEmptySignature = $0
 IF TRUE
-DO test.log("signalWake"),
+DO test.log("signalWake");
    signalWake("test", true)
 ENDRULE
 
@@ -106,7 +106,7 @@ RULE triggerTimeoutCheck
 CLASS TestWaitAfterSignalWakeMustMeet
 METHOD triggerTimeoutCheck
 IF TRUE
-DO waitFor("timeout", 60 * 1000),
+DO waitFor("timeout", 60 * 1000);
    throw Exception("failed with timeout")
 ENDRULE
 
