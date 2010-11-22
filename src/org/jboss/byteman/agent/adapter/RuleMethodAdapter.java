@@ -72,7 +72,7 @@ public class RuleMethodAdapter extends MethodAdapter {
             locals = new LinkedList<LocalVar>();
             localVarsByName.put(name, locals);
         }
-        locals.addFirst(localVar);
+        locals.add(localVar);
     }
 
     protected List<LocalVar> lookup(String name)
@@ -81,9 +81,9 @@ public class RuleMethodAdapter extends MethodAdapter {
     }
 
     /**
-     * a hashmap mapping local variable names to all in-scope variables with that name. the list of local
-     * variables operates like a stack with the current in-scope binding at the top and each successive
-     * entry representing an outer binding shadowed by its predecessors
+     * a hashmap mapping local variable names to all local variables with that name.  note  that although
+     * there may be more than one scope for a given local var name they will all have disjoint extents
+     * because Java does not permit shadowing.
      */
 
     HashMap<String, LinkedList<LocalVar>> localVarsByName = new HashMap<String, LinkedList<LocalVar>>();

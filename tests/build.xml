@@ -158,6 +158,14 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWriteParams.txt"/>
+            <test name="org.jboss.byteman.tests.location.TestReadWriteParams"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
             <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestAll.txt"/>
             <test name="org.jboss.byteman.tests.location.TestAll"/>
         </junit>
@@ -251,6 +259,15 @@
             <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWrite.txt"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <test name="org.jboss.byteman.tests.location.TestReadWrite"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWriteParams.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <test name="org.jboss.byteman.tests.location.TestReadWriteParams"/>
         </junit>
         <junit fork="true" showoutput="true">
             <classpath>

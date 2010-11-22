@@ -583,6 +583,14 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
     }
 
     /**
+     * return true if the current block is in a trigger block injected by Byteman
+     * @return
+     */
+    protected boolean inBytemanTrigger()
+    {
+        return cfg.inBytemanTrigger();
+    }
+    /**
      * return true if the current block is handler which catches a thrown exception within the scope
      * of a monitor enter in order to be able exit the monitor and rethrow the exception
      * @return
@@ -801,20 +809,20 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
 
     public void visitTriggerStart(Label label)
     {
-        visitLabel(label);
-
         // tell the CFG to visit this label
 
         cfg.visitTriggerStart(label);
+
+        visitLabel(label);
     }
 
     public void visitTriggerEnd(Label label)
     {
-        visitLabel(label);
-
         // tell the CFG to visit this label
 
         cfg.visitTriggerEnd(label);
+
+        visitLabel(label);
 
         // ok, update the trigger details with labels for the handler blocks we are going to generate
 
