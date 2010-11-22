@@ -69,7 +69,7 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AT CALL org.jboss.byteman.tests.auxiliary.TestCallThrowSynchAuxiliary.setCounter 2
 BIND test : Test = $0.getTest()
 IF TRUE
-DO test.log("CALL setCounter 2 triggered in TestCallThrowSynchAuxiliary.testMethod")
+DO test.log("CALL setCounter 2 triggered in TestCallThrowSynchAuxiliary.testMethod by call setCounter(" + $@[1] + ")")
 ENDRULE
 
 RULE test call setCounter trigger 3
@@ -79,7 +79,17 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AT CALL org.jboss.byteman.tests.auxiliary.TestCallThrowSynchAuxiliary.setCounter 3
 BIND test : Test = $0.getTest()
 IF TRUE
-DO test.log("CALL setCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod");
+DO test.log("CALL setCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod by call setCounter(" + $@[1] + ")")
+ENDRULE
+
+RULE test after call setCounter trigger 3
+CLASS TestCallThrowSynchAuxiliary
+METHOD testMethod()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER CALL org.jboss.byteman.tests.auxiliary.TestCallThrowSynchAuxiliary.setCounter 3
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AFTER CALL setCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod after call setCounter() ==> " + $!);
    return
 ENDRULE
 

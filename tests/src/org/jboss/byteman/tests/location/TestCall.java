@@ -70,10 +70,11 @@ public class TestCall extends Test
         logExpected("2: currentCounter == 1");
         // we should see trace from the second call to setCounter and the third call to getCounter
         // before printing the counter
-        logExpected("CALL setCounter 2 triggered in TestCallThrowSynchAuxiliary.testMethod");
+        logExpected("CALL setCounter 2 triggered in TestCallThrowSynchAuxiliary.testMethod by call setCounter(2)");
         logExpected("CALL getCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod");
         logExpected("3: currentCounter == 2");
-        logExpected("CALL setCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod");
+        logExpected("CALL setCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod by call setCounter(3)");
+        logExpected("AFTER CALL setCounter 3 triggered in TestCallThrowSynchAuxiliary.testMethod after call setCounter() ==> 2");
         logExpected("called TestCallThrowSynchAuxiliary.testMethod");
 
         return super.getExpected();

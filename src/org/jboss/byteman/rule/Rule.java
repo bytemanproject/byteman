@@ -569,20 +569,21 @@ public class Rule
 
         while (iterator.hasNext()) {
             Binding binding = iterator.next();
-            if (binding.isParam() || binding.isLocalVar()) {
+            // these bindings are typed via the descriptor installed during trigger injection
+            // note that the return type has to be done this way because it may represent the
+            // trigger method return type or the invoke method return type
+            if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
                 String typeName = binding.getDescriptor();
                 String[] typeAndArrayBounds = typeName.split("\\[");
                 Type baseType = typeGroup.create(typeAndArrayBounds[0]);
-                Type paramType = baseType;
+                Type fullType = baseType;
                 if (baseType.isUndefined()) {
                     throw new TypeException("Rule.installParameters : Rule " + name + " unable to load class " + baseType);
                 }
                 for (int i = 1; i < typeAndArrayBounds.length ; i++) {
-                    paramType = typeGroup.createArray(paramType);
+                    fullType = typeGroup.createArray(fullType);
                 }
-                binding.setType(paramType);
-            } else if (binding.isReturn()) {
-                binding.setType(returnType);
+                binding.setType(fullType);
             } else if (binding.isThrowable()) {
                 // TODO -- enable a more precise specification of the throwable type
                 // we need to be able to obtain the type descriptor for the throw operation

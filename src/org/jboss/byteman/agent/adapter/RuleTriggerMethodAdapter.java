@@ -68,6 +68,18 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
         throw new RuntimeException("RuleTriggerMethodAdapter.getInvokedTypes() : should never get called!");
     }
 
+    /**
+     * method overridden by AT INVOKE method adapter allowing the type of the $! binding to be identified.
+     * this default version should only get invoked for an AT EXIT rule where it returns the trigger method
+     * return type. the overridden version should only get invoked for an AFTER INVOKE rule where it returns the
+     * invoked method return type
+     * @return the appropriate return type
+     */
+    public Type getReturnBindingType()
+    {
+        return returnType;
+    }
+
     private void setBindingIndices()
     {
         if (bindingIndicesSet) {
@@ -127,7 +139,8 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
                 // in order to be able to add the return value to the args array
                 // we have to add a local var to store the value so track that requirement
                 bindReturnOrThrowableValue = true;
-                saveValueType = returnType;
+                saveValueType = getReturnBindingType();
+                binding.setDescriptor(saveValueType.getClassName());
                 callArrayBindings.add(binding);
             } else if (binding.isThrowable()) {
                 // in order to be able to add the return value or throwable value to the args array
@@ -295,8 +308,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
         Type objectType = Type.getType(Object.class);
         Type objectArrayType = Type.getType("[Ljava/lang/Object;");
         Type[] invokeParamTypes = getInvokedTypes();
-        // n.b. ignore return type on end of type array
-        int savedValueCount = invokeParamTypes.length - 1;
+        int savedValueCount = invokeParamTypes.length;
 
         // create the array and save it in a local var slot
 
@@ -411,8 +423,8 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
      * the updated values to be written back on return from the call to the rule engine.
      * @param saveSlot a local variable slot containing either the return value which the trigger method is about
      * to return or the Throwable the method is about to throw. this is only valid if, respectively, the rule
-     * location is AT EXIT or AT THROW and the rule body contains a reference to the return value ($!) or throwable
-     * value ($@).
+     * location is AT EXIT/AFTER INVOKE or AT THROW and the rule body contains a reference to the return value ($!)
+     * or throwable value ($@).
      * @return true if the rule may update the argument array and hence if a copy of the array has been inserted
      * below the initial two top entries otherwise false.
      */

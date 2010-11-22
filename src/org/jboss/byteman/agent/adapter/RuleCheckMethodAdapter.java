@@ -92,10 +92,10 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                     binding.setDescriptor(parameterTypenames.get(idx - 1));
                 }
             } else if (binding.isReturn()) {
-                // at some point we will allow reference to the current return value so we need
-                // to be sure that the method has a non-void return type
-                if (rule.getTargetLocation().getLocationType() != LocationType.EXIT) {
-                    System.out.println("RuleCheckMethodAdapter.checkBindings : found return value binding $! in non-EXIT rule " + rule.getName());
+                // this is a valid reference in an AT EXIT rule and in an AFTER INVOKE
+                LocationType locationType = rule.getTargetLocation().getLocationType();
+                if (locationType != LocationType.EXIT && locationType != LocationType.INVOKE_COMPLETED) {
+                    System.out.println("RuleCheckMethodAdapter.checkBindings : found return value binding $! in rule which is neither AT EXIT nor AFTER INVOKE " + rule.getName());
                     return false;
                 }
             } else if (binding.isThrowable()) {
