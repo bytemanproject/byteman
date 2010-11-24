@@ -9,7 +9,6 @@ import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 
 /**
@@ -105,6 +104,26 @@ public class JMXHelper extends Helper implements DynamicMBean
             theHelper.shutdown();
             theHelper = null;
         }
+    }
+
+    /**
+     * Byteman does not guarantee to deactivate the helper at shutdown. However, we need to be sure that
+     * a deactivate happens if we are using the connector server to avoid RMI problems. So, we register
+     * a shutdown hook when this helper class gets loaded. We don't bother about deregistering it inside
+     * deactivate and then reregistering it next time we activate and so on. We can safely do so because
+     * deactivated is idempotent.
+     */
+    static {
+        Thread thread = new Thread("JMXHelper Shutdown Hook Deactivation Thread") {
+            public void run()
+            {
+                synchronized(JMXHelper.class)
+                {
+                    JMXHelper.deactivated();
+                }
+            }
+        };
+        Runtime.getRuntime().addShutdownHook(thread);
     }
 
     /************************************************************************/
@@ -382,6 +401,10 @@ public class JMXHelper extends Helper implements DynamicMBean
 
     private static MBeanServer mbeanServer = null;
 
+    /**
+     * a connector server providing RMI access to the mbean server
+     */
+    
     private static JMXConnectorServer connectorServer = null;
 
     /**
@@ -554,7 +577,7 @@ public class JMXHelper extends Helper implements DynamicMBean
             mbsToReturn = ManagementFactory.getPlatformMBeanServer();
         } else {
             ArrayList<MBeanServer> mbeanServers = MBeanServerFactory.findMBeanServer(null);
-            if (mbeanServers != null) {
+            if (mbeanServers != null) {          0-atch
                 for (MBeanServer mbs : mbeanServers ) {
                     if (mbeanServerDomainToLookFor.equals(mbs.getDefaultDomain())) {
                         mbsToReturn = mbs;
