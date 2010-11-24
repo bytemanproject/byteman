@@ -45,10 +45,16 @@ public class TransformContext
 
     public TransformContext(RuleScript ruleScript, String triggerClass, String targetMethodSpec, ClassLoader loader, HelperManager helperManager)
     {
+        // the target method spec may just be a bare method name or it may optionally include a
+        // parameter type list and a return type. With Java syntax the return type appears before
+        // the method name. if so we modify the target method spec so that the return type appears
+        // after the argument list which means we also accept a spec supplied in this format. The
+        // parseMethodDescriptor call below will eat specs in this latter format.
+        String mungedMethodSpec = mungeMethodSpecReturnType(targetMethodSpec);
         this.ruleScript =  ruleScript;
         this.triggerClass =  triggerClass;
-        this.targetMethodName = TypeHelper.parseMethodName(targetMethodSpec);
-        this.targetDescriptor = TypeHelper.parseMethodDescriptor(targetMethodSpec);
+        this.targetMethodName = TypeHelper.parseMethodName(mungedMethodSpec);
+        this.targetDescriptor = TypeHelper.parseMethodDescriptor(mungedMethodSpec);
         this.loader = loader;
         this.ruleMap = new HashMap<String, Rule>();
         this.helperManager = helperManager;
@@ -139,6 +145,32 @@ public class TransformContext
     private String getRuleKey(String triggerMethodName, String triggerMethodDescriptor)
     {
             return triggerClass + "." + triggerMethodName + TypeHelper.internalizeDescriptor(triggerMethodDescriptor);
+    }
+
+    /**
+     * pattern used to identify target method specs which include a return type preceding the
+     * method name and parameter type list. note that we can only handle a return type in
+     * cases where the parameter type list is also specified.
+     */
+    private static final String JAVA_METHOD_SPEC_PATTERN = "[A-Za-z0-9$.]+ +[A-Za-z0-9$]+\\(.*\\)";
+
+    /**
+     * detect a method specification which includes a return type preceding the method name and transform
+     * it so that the return type is at the end.
+     * @param targetMethodSpec
+     * @return
+     */
+    private String mungeMethodSpecReturnType(String targetMethodSpec)
+    {
+        // remove any leading or trailing spaces
+        targetMethodSpec = targetMethodSpec.trim();
+        if (targetMethodSpec.matches(JAVA_METHOD_SPEC_PATTERN)) {
+            // put the return type at the end
+            int spaceIdx = targetMethodSpec.indexOf(' ');
+            String returnType = targetMethodSpec.substring(0, spaceIdx);
+            targetMethodSpec = targetMethodSpec.substring(spaceIdx).trim() + returnType;
+        }
+        return targetMethodSpec;
     }
 
     /**

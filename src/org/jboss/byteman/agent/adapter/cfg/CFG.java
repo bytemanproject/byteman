@@ -1462,6 +1462,7 @@ public class CFG
 
         latestTrigger.setEnd(label);
         triggerEnds.put(label, latestTrigger);
+        latestTrigger = null;
     }
 
     /**
@@ -1567,6 +1568,39 @@ public class CFG
                 current.getInstruction(nextIdx - 1) == Opcodes.MONITOREXIT  &&
                 current.getInstruction(nextIdx - 2) == Opcodes.ALOAD) {
             return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * check if the current block is a byteman-generated trigger section. this can be checked by testing whether
+     * there is an open try catch for one of the Byteman exception types
+     * @return true if the current block is a byteman-generated trigger section
+     */
+    public boolean inBytemanTrigger()
+    {
+        // if we are in the middle of injecting a trigger then latestTrigger will be non null
+        if (latestTrigger != null) {
+            return true;
+        }
+        // if we are in a previously injected trigger then we will be in the scope of a try catch
+        // which hanldes one of the Byteman generated exceptions
+
+        Iterator<TryCatchDetails> currentTryStarts = currentTryCatchStarts.iterator();
+        while (currentTryStarts.hasNext()) {
+            TryCatchDetails details = currentTryStarts.next();
+            // any trigger we have planted will be tagged as such
+            if (details.isTriggerHandler()) {
+                return true;
+            }
+            // handlers planted by previous transforms will not be tagged but will be for a byteman exception type
+            String typeName = details.getType();
+            if (typeName.equals(CFG.EARLY_RETURN_EXCEPTION_TYPE_NAME) ||
+                    typeName.equals(CFG.EXECUTE_EXCEPTION_TYPE_NAME) ||
+                    typeName.equals(CFG.THROW_EXCEPTION_TYPE_NAME)) {
+                return true;
+            }
         }
 
         return false;

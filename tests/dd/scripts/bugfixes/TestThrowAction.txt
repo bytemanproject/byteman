@@ -31,6 +31,6 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
 BIND test : TestThrowAction = $0
 IF TRUE
-DO test.log("throwing Exception"),
+DO test.log("throwing Exception");
    throw Exception("test exception")
 ENDRULE

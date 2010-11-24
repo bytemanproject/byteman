@@ -27,25 +27,25 @@ CLASS TestAssign
 METHOD triggerMethod(int)
 HELPER org.jboss.byteman.tests.helpers.Default
 AT EXIT
-BIND test : TestAssign = $0,
-     local = $local,
+BIND test : TestAssign = $0;
+     local = $local;
      result = $!
 IF TRUE
-DO test.log("triggerMethod1 : local == " + local),
-   test.log("triggerMethod1 : $local == " + $local),
-   test.log("triggerMethod1 : $local2 == " + $local2),
-   test.log("triggerMethod1 : $! == " + $!),
-   local = local + 1,
-   test.log("triggerMethod1 : local == " + local),
-   $local = $local - 1,
-   test.log("triggerMethod1 : $local == " + $local),
-   $local2 = - $local2,
-   test.log("triggerMethod1 : $local2 == " + $local2),
-   $1 = $1 + 2,
-   test.log("triggerMethod1 : $1 == " + $1),
-   test.testInt = 1,
-   test.testLong = 1234567891,
-   TestAssign.staticLong = 1234567892,
+DO test.log("triggerMethod1 : local == " + local);
+   test.log("triggerMethod1 : $local == " + $local);
+   test.log("triggerMethod1 : $local2 == " + $local2);
+   test.log("triggerMethod1 : $! == " + $!);
+   local = local + 1;
+   test.log("triggerMethod1 : local == " + local);
+   $local = $local - 1;
+   test.log("triggerMethod1 : $local == " + $local);
+   $local2 = - $local2;
+   test.log("triggerMethod1 : $local2 == " + $local2);
+   $1 = $1 + 2;
+   test.log("triggerMethod1 : $1 == " + $1);
+   test.testInt = 1;
+   test.testLong = 1234567891;
+   TestAssign.staticLong = 1234567892;
    $! = $! + 1
 ENDRULE
 
@@ -56,7 +56,7 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
 BIND test : TestAssign = $0
 IF TRUE
-DO $i = $i + 1,
-   $local = $local + 2,
+DO $i = $i + 1;
+   $local = $local + 2;
    $local2 = $local2 + 3
 ENDRULE

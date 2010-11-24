@@ -27,12 +27,12 @@ CLASS TestMethod
 METHOD triggerMethod1(TestFieldMethodAuxiliary)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
+BIND test : Test = $0;
      arg : TestFieldMethodAuxiliary = $1
 IF arg.left.value <= 1
-DO test.log("triggerMethod1 : arg == " + $1),
-   test.log("triggerMethod1 : arg.getLeft() == " + arg.getLeft()),
-   test.log("triggerMethod1 : arg.getRight() == " + arg.getRight()),
+DO test.log("triggerMethod1 : arg == " + $1);
+   test.log("triggerMethod1 : arg.getLeft() == " + arg.getLeft());
+   test.log("triggerMethod1 : arg.getRight() == " + arg.getRight());
    return arg.getLeftPrivate().getLeftProtected()
 ENDRULE
 
@@ -41,12 +41,12 @@ CLASS TestMethod
 METHOD triggerMethod1(TestFieldMethodAuxiliary)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
+BIND test : Test = $0;
      arg : TestFieldMethodAuxiliary = $1
 IF arg.left.value > 1
-DO test.log("triggerMethod1 : arg == " + $1),
-   test.log("triggerMethod1 : arg.left.getRight() == " + arg.left.getRightProtected()),
-   test.log("triggerMethod1 : arg.right.getRight().right == " + arg.right.getRightPrivate().right),
+DO test.log("triggerMethod1 : arg == " + $1);
+   test.log("triggerMethod1 : arg.left.getRight() == " + arg.left.getRightProtected());
+   test.log("triggerMethod1 : arg.right.getRight().right == " + arg.right.getRightPrivate().right);
    return arg.getRight().right
 ENDRULE
 
@@ -55,12 +55,12 @@ CLASS TestMethod
 METHOD triggerMethod2(TestFieldMethodAuxiliary)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
+BIND test : Test = $0;
      arg : TestFieldMethodAuxiliary = $1
 IF arg.value == 4
-DO test.log("triggerMethod2 : arg == " + $1),
-   test.log("triggerMethod2 : org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().left.value == " + org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().left.value),
-   test.log("triggerMethod2 : TestFieldMethodAuxiliary.getTheAuxiliary().left.getRight().right == " + (TestFieldMethodAuxiliary.getTheAuxiliaryProtected().left.getRight()).right),
+DO test.log("triggerMethod2 : arg == " + $1);
+   test.log("triggerMethod2 : org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().left.value == " + org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().left.value);
+   test.log("triggerMethod2 : TestFieldMethodAuxiliary.getTheAuxiliary().left.getRight().right == " + (TestFieldMethodAuxiliary.getTheAuxiliaryProtected().left.getRight()).right);
    return org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliaryPrivate().getLeft().right
 ENDRULE
 
@@ -69,12 +69,12 @@ CLASS TestMethod
 METHOD triggerMethod2(TestFieldMethodAuxiliary)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
-BIND test : Test = $0,
+BIND test : Test = $0;
      arg : TestFieldMethodAuxiliary = $1
 IF arg.value != 4
-DO test.log("triggerMethod2 : arg == " + $1),
-   test.log("triggerMethod2 : TestFieldMethodAuxiliary.getTheAuxiliary().getValue() == " + TestFieldMethodAuxiliary.getTheAuxiliary().getValue()),
-   test.log("triggerMethod2 : org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().right.right.getRight().right.getValue() == " + org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliaryPrivate().right.right.getRightProtected().right.getValue()),
+DO test.log("triggerMethod2 : arg == " + $1);
+   test.log("triggerMethod2 : TestFieldMethodAuxiliary.getTheAuxiliary().getValue() == " + TestFieldMethodAuxiliary.getTheAuxiliary().getValue());
+   test.log("triggerMethod2 : org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliary().right.right.getRight().right.getValue() == " + org.jboss.byteman.tests.auxiliary.TestFieldMethodAuxiliary.getTheAuxiliaryPrivate().right.right.getRightProtected().right.getValue());
    return arg.getLeft()
 ENDRULE
 

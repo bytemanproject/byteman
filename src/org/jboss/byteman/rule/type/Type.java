@@ -24,6 +24,7 @@
 package org.jboss.byteman.rule.type;
 
 import org.jboss.byteman.rule.exception.TypeException;
+import org.objectweb.asm.Opcodes;
 
 import java.util.HashMap;
 import java.util.List;
@@ -882,6 +883,90 @@ public class Type {
             }
         }
         return "void";
+    }
+
+    /**
+     * identify the local var slot used to store a method parameter identified by parameter index
+     * @param access the access flags for the method including whether or not it is static
+     * @param desc the intrenal form descriptor for the maethod
+     * @param paramIdx the index of the parameter in the parameter lost starting with 0 for this or 1 for
+     * actual parameters
+     * @return the corresponding local var slot or -1 if there is no such parameter
+     */
+    public static int paramSlotIdx(int access, String desc, int paramIdx)
+    {
+        boolean isStatic = (access & Opcodes.ACC_STATIC) != 0;
+        if (paramIdx ==  0) {
+            if (isStatic) {
+                return -1;
+            } else {
+                return 0;
+            }
+        } else {
+            int slotIdx =  (isStatic ? 0 : 1);
+            int descIdx = 0;
+            char[] chars = desc.toCharArray();
+            char next = chars[descIdx++];
+            // skip leading '('
+            if (next == '(') {
+                next = chars[descIdx++];
+            }
+            //  skip  all slots preceding the desired one
+            for (int i = 1;  i < paramIdx;  i++) {
+                switch (next) {
+                    case 'Z':
+                    case 'B':
+                    case 'S':
+                    case 'C':
+                    case 'I':
+                    case 'F':
+                    {
+                        slotIdx++;
+                    }
+                    break;
+                    case 'J':
+                    case 'D':
+                    {
+                        slotIdx += 2;
+                    }
+                    break;
+                    case 'L':
+                    {
+                        slotIdx++;
+                        // skip forward in descriptor up to ';'
+
+                        while (next != ';') {
+                            next = chars[descIdx++];
+                        }
+                    }
+                    break;
+                    case '[':
+                    {
+                        slotIdx++;
+                        // skip any extra '[' chars to get to the base array type
+                        while (next == '[') {
+                            next = chars[descIdx++];
+                        }
+                        if (next == 'L') {
+                            // skip forward in descriptor up to ';'
+
+                            while (next != ';') {
+                                next = chars[descIdx++];
+                            }
+                        }
+                    }
+                    break;
+                    case ')':
+                    default:
+                    {
+                        // invalid param index or invalid descriptor --either way this is a problem
+                        return -1;
+                    }
+                }
+                next = chars[descIdx++];
+            }
+            return slotIdx;
+        }
     }
 
     public static String fixArrayType(String baseType, int dimension)

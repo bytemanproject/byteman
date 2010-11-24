@@ -300,6 +300,7 @@ non terminal ParseNode expr_field_expr;
 non terminal ParseNode meth_expr;
 non terminal ParseNode expr_meth_expr;
 non terminal ParseNode new_expr;
+non terminal ParseNode new_array_idx_list;
 non terminal ParseNode simple_expr;
 non terminal ParseNode null_expr;
 
@@ -416,6 +417,7 @@ bindings
 	|	binding:b SEMI error:err
 	    {: error("invalid binding", errleft, errright);
 	       RESULT = b; :}
+	|	binding:b SEMI {: RESULT = b; :}
 	|	binding:b {: RESULT = b; :}
 	;
 
@@ -481,7 +483,9 @@ action_expr_list
 
 action_expr
 	::=	expr:e {: RESULT = e; :}
+	| expr:e SEMI {: RESULT = e; :}
 	| throw_return_expr:tre {: RESULT = tre; :}
+	| throw_return_expr:tre SEMI {: RESULT = tre; :}
 	;
 
 throw_return_expr
@@ -524,6 +528,7 @@ expr
 	|   simple_name:s ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, sleft, sright, s, e); :}
 	|   DOLLAR:d ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, dleft, dright, node(ParseNode.DOLLAR, dleft, dright, d), e); :}
 	|   field_expr:f ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, fleft, fright, f, e); :}
+	|   array_expr:a ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, aleft, aright, a, e); :}
 	|   error:err expr:e {: error("invalid expression", errleft, errright); RESULT = e; :}
 	;
 
@@ -629,10 +634,24 @@ expr_meth_expr
 
 new_expr
     ::=	NEW name:i LPAREN RPAREN
-		{: RESULT = node(ParseNode.NEW, ileft, iright, i, null); :}
+		{: RESULT = node(ParseNode.NEW, ileft, iright, i, null, null); :}
+	|	NEW name:i new_array_idx_list:as
+		{: RESULT = node(ParseNode.NEW, ileft, iright, i, null, as); :}
 	|	NEW name:i LPAREN expr_list:args RPAREN
-		{: RESULT = node(ParseNode.NEW, ileft, iright, i, args); :}
+		{: RESULT = node(ParseNode.NEW, ileft, iright, i, args, null); :}
 	;
+
+new_array_idx_list
+    ::= LSQUARE:l RSQUARE
+        // we use NOTHING to indicate an empty dimension
+        {: RESULT = node(ParseNode.NOTHING, lleft, lright); :}
+    |   LSQUARE expr:e RSQUARE
+        {: RESULT = e; :}
+    |   LSQUARE:l RSQUARE new_array_idx_list:as
+        {: RESULT = node(ParseNode.COMMA, lleft, lright, node(ParseNode.NOTHING, lleft, lright), as); :}
+    |   LSQUARE expr:e RSQUARE new_array_idx_list:as
+        {: RESULT = node(ParseNode.COMMA, eleft, eright, e, as); :}
+    ;
 
 simple_expr
 	::=	INTEGER_LITERAL:i

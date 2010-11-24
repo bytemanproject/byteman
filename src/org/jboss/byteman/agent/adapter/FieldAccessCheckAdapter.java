@@ -23,28 +23,24 @@
 */
 package org.jboss.byteman.agent.adapter;
 
-import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.type.TypeHelper;
-import org.jboss.byteman.agent.Location;
-import org.jboss.byteman.agent.RuleScript;
-import org.jboss.byteman.agent.TransformContext;
 import org.objectweb.asm.*;
+import org.jboss.byteman.agent.Location;
+import org.jboss.byteman.agent.TransformContext;
+import org.jboss.byteman.rule.type.TypeHelper;
 
 /**
- * asm Adapter class used to add a rule event trigger call to a method of som egiven class
+ * asm Adapter class used to check that the target method for a rule exists in a class
  */
-public class AccessTriggerAdapter extends RuleTriggerAdapter
+public class FieldAccessCheckAdapter extends RuleCheckAdapter
 {
-    public AccessTriggerAdapter(ClassVisitor cv, TransformContext transformContext, String ownerClass,
-                                String fieldName, int flags, int count, boolean whenComplete)
+     public FieldAccessCheckAdapter(ClassVisitor cv, TransformContext transformContext, String ownerClass,
+                               String fieldName, int flags, int count)
     {
         super(cv, transformContext);
         this.ownerClass = ownerClass;
         this.fieldName = fieldName;
         this.flags = flags;
         this.count = count;
-        this.whenComplete = whenComplete;
-        this.visitedCount = 0;
     }
 
     public MethodVisitor visitMethod(
@@ -55,13 +51,11 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
         final String[] exceptions)
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if (matchTargetMethod(name, desc)) {
-            if (name.equals("<init>")) {
-                return new AccessTriggerConstructorAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
-            } else {
-                return new AccessTriggerMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
-            }
+        if ((access & (Opcodes.ACC_NATIVE|Opcodes.ACC_ABSTRACT|Opcodes.ACC_SYNTHETIC)) == 0 && matchTargetMethod(name, desc)) {
+            setVisited();
+            return new FieldAccessCheckMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
         }
+
         return mv;
     }
 
@@ -69,18 +63,24 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
      * a method visitor used to add a rule event trigger call to a method
      */
 
-    private class AccessTriggerMethodAdapter extends RuleTriggerMethodAdapter
+    private class FieldAccessCheckMethodAdapter extends RuleCheckMethodAdapter
     {
-        /**
-         * flag used by subclass to avoid inserting trigger until after super constructor has been called
-         */
-        protected boolean latched;
+        private int access;
+        private String name;
+        private String descriptor;
+        private String signature;
+        private String[] exceptions;
+        private int visitedCount;
 
-        AccessTriggerMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
+        FieldAccessCheckMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
-            super(mv, transformContext, access, name, descriptor, signature, exceptions);
+            super(mv, transformContext, access, name, descriptor);
+            this.access = access;
+            this.name = name;
+            this.descriptor = descriptor;
+            this.signature = signature;
+            this.exceptions = exceptions;
             visitedCount = 0;
-            latched = false;
         }
 
         public void visitFieldInsn(
@@ -89,21 +89,22 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
             final String name,
             final String desc)
         {
-            if (whenComplete) {
-                // access the field before generating the trigger call
-                super.visitFieldInsn(opcode, owner, name, desc);
-            }
-            if ((count == 0 ||visitedCount < count) && matchCall(opcode, owner, name, desc)) {
+            if ((count == 0 || visitedCount < count) && matchCall(opcode, owner, name, desc)) {
                 // a relevant invocation occurs in the called method
                 visitedCount++;
-                if (!latched && (count == 0 || visitedCount == count)) {
-                    injectTriggerPoint();
+                if (count == 0 || visitedCount == count) {
+                    setTriggerPoint();
                 }
             }
-            if (!whenComplete) {
-                // access the field after generating the trigger call
-                super.visitFieldInsn(opcode, owner, name, desc);
+            super.visitFieldInsn(opcode, owner, name, desc);
+        }
+
+        public void visitEnd()
+        {
+            if (checkBindings()) {
+                setVisitOk();
             }
+            super.visitEnd();
         }
 
         private boolean matchCall(int opcode, String owner, String name, String desc)
@@ -111,7 +112,7 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
             if (!fieldName.equals(name)) {
                 return false;
             }
-
+            
             switch (opcode) {
                 case Opcodes.GETSTATIC:
                 case Opcodes.GETFIELD:
@@ -130,6 +131,7 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
                 }
                 break;
             }
+
             if (ownerClass != null) {
                 if (!ownerClass.equals(TypeHelper.internalizeClass(owner))) {
                     // TODO check for unqualified names
@@ -152,39 +154,8 @@ public class AccessTriggerAdapter extends RuleTriggerAdapter
         }
     }
 
-    /**
-     * a method visitor used to add a rule event trigger call to a constructor -- this has to make sure
-     * the super constructor has been called before allowing a trigger call to be compiled
-     */
-
-    private class AccessTriggerConstructorAdapter extends AccessTriggerMethodAdapter
-    {
-        AccessTriggerConstructorAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
-        {
-            super(mv, transformContext, access, name, descriptor, signature, exceptions);
-            // ensure we don't transform calls before the super constructor is called
-            latched = true;
-        }
-
-        public void visitMethodInsn(
-            final int opcode,
-            final String owner,
-            final String name,
-            final String desc)
-        {
-            super.visitMethodInsn(opcode, owner, name, desc);
-            // hmm, this probably means the super constructor has been invoked :-)
-            if (latched && opcode == Opcodes.INVOKESPECIAL) {
-                latched = false;
-            }
-
-        }
-    }
-
     private String ownerClass;
     private String fieldName;
     private int flags;
     private int count;
-    private boolean whenComplete;
-    private int visitedCount;
 }

@@ -60,6 +60,13 @@
 # when the helper is deactivated i.e. once all rules using the helper
 # have been uninstalled. At regular intervals the helper thread samples
 # counters updated by the rules and posts new stats to the MBean.
+# The helper will, by default, install its MBeans in the platform
+# MBeanServer. You can override this behavior by setting the JVM
+# system property "org.jboss.byteman.jmx.mbeanserver" to a valid
+# JMX domain name. If an MBeanServer exists with that as its default
+# domain, it will be used, otherwise, an MBeanServer will be created
+# with that domain name as its default. If the system property is
+# set to "*platform*", then the platform MBeanServer will be used.
 #
 # The script attaches a rule to the helper method keyInfo() to define the
 # counters to be sampled by the background thread. The object returned
@@ -144,6 +151,46 @@ METHOD sampleSetSize()
 IF TRUE
 DO RETURN 3
 ENDRULE
+
+# This rule is triggered when the periodic helper thread starts
+# it returns a boolean which determines whether the helper thread
+# creates a JMX Connector Server, allowing the MBean stats to be
+# fetched by a remote client using RMI. The default implemenation of
+# the trigger method returns false. If you want to be able to fetch
+# the MBean stats form a remote client uncomment this rule so  that
+# it injects code returning true.
+# RULE configure rmi server
+# CLASS JMXHelper
+# METHOD rmiServerRequired()
+# IF TRUE
+# DO RETURN TRUE
+# ENDRULE
+
+# This rule is triggered when the periodic helper thread starts
+# but only if the previous rule has requested that an rmi server
+# be installed. it returns a host address used when creating the
+# server socket. the trigger method returns "localhost" as the
+# default host. if you want to use a  different host then uncommment
+# this rule and insert a suitable address
+# RULE configure rmi host
+# CLASS JMXHelper
+# METHOD rmiHost()
+# IF TRUE
+# DO RETURN "<replace me with a hostname or address>"
+# ENDRULE
+
+# This rule is triggered when the periodic helper thread starts
+# but only if the previous rule has requested that an rmi server
+# be installed. it returns a port used when creating the
+# server socket. the trigger method returns 9999 as the
+# default host. if you want to use a  different host then uncommment
+# this rule and edit the port number
+# RULE configure rmi host
+# CLASS JMXHelper
+# METHOD rmiHost()
+# IF TRUE
+# DO RETURN <replace me with a port number>
+# ENDRULE
 
 # The remaining rules increment stats counters whenever a sigificant
 # event occurs in the JVM.

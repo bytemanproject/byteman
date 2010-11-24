@@ -208,52 +208,29 @@ public abstract class Location
     }
 
     /**
-     * location identifying a method field access trigger point
+     * location identifying a generic access trigger point
      */
-    private static class AccessLocation extends Location
+    private static abstract class AccessLocation extends Location
     {
-        /**
-         * the name of the field being accessed at the point where the trigger point should be inserted
-         */
-        private String fieldName;
-
-        /**
-         * the name of the type to which the field belongs or null if any type will do
-         */
-        private String typeName;
-
         /**
          * count identifying which access should be taken as the trigger point. if not specified
          * as a parameter this defaults to the first access.
          */
-        private int count;
+        protected int count;
 
         /**
          * flags identifying which type of access should be used to identify the trigger. this is either
          * ACCESS_READ, ACCESS_WRITE or an OR of these two values
          */
-        private int flags;
+        protected int flags;
 
         /**
          * flag which is false if the trigger should be inserted before the field access is performed
          * and true if it should be inserted after
          */
-        private boolean whenComplete;
+        protected boolean whenComplete;
 
-        /**
-         * construct a location identifying a field read trigger point
-         * @param typeName the name of the class owning the field
-         * @param fieldName the name of the field being read
-         * @param count count identifying which access should be taken as the trigger point
-         * @param flags bit field comprising one or other of flags ACCESS_READ and ACCESS_WRITE identifying
-         * whether this specifies field READ or WRITE operations
-         * @param whenComplete false if the trigger should be inserted before the access is performed
-         * and true if it should be inserted after
-         */
-        private AccessLocation(String typeName, String fieldName, int count, int flags, boolean whenComplete)
-        {
-            this.typeName = typeName;
-            this.fieldName = fieldName;
+        protected AccessLocation(int count, int flags, boolean whenComplete) {
             this.count = count;
             this.flags = flags;
             this.whenComplete = whenComplete;
@@ -269,8 +246,6 @@ public abstract class Location
         protected static Location create(String parameters, int flags, boolean whenComplete)
         {
             String text = parameters.trim();
-            String typeName;
-            String fieldName;
             int count;
 
             // check for trailing count
@@ -286,27 +261,84 @@ public abstract class Location
                     } catch (NumberFormatException nfe) {
                         return null;
                     }
-                    text = text.substring(0, spaceIdx).trim();
                 }
+                text = text.substring(0, spaceIdx).trim();
             } else {
                 count = 1;
             }
             if (text.equals("")) {
                 return null;
             }
-            
-            // check for leading type name
-            if (text.contains(".")) {
-                int dotIdx = text.lastIndexOf(".");
-                typeName = text.substring(0, dotIdx).trim();
-                fieldName=text.substring(dotIdx + 1).trim();
+
+            // check for a local or parameter var name identified by a leading $
+            if (text.startsWith("$")) {
+                String varname = text.substring(1).trim();
+                return new VariableAccessLocation(varname, count, flags, whenComplete);
             } else {
-                typeName = null;
-                fieldName = text;
+                String typeName;
+                String fieldName;
+                // check for leading type name
+                if (text.contains(".")) {
+                    int dotIdx = text.lastIndexOf(".");
+                    typeName = text.substring(0, dotIdx).trim();
+                    fieldName=text.substring(dotIdx + 1).trim();
+                } else {
+                    typeName = null;
+                    fieldName = text;
+                }
+                // TODO sanity check type and field name
+
+                return new FieldAccessLocation(typeName, fieldName, count, flags, whenComplete);
             }
-            // TODO sanity check type and field name
-                
-            return new AccessLocation(typeName, fieldName, count, flags, whenComplete);
+        }
+
+        public LocationType getLocationType() {
+            if ((flags & ACCESS_WRITE) != 0) {
+                if (whenComplete) {
+                    return LocationType.WRITE_COMPLETED;
+                } else {
+                    return LocationType.WRITE;
+                }
+            } else {
+                if (whenComplete) {
+                    return LocationType.READ_COMPLETED;
+                } else {
+                    return LocationType.READ;
+                }
+            }
+        }
+    }
+
+    /**
+     * location identifying a field access trigger point
+     */
+    private static class FieldAccessLocation extends AccessLocation
+    {
+        /**
+         * the name of the field being accessed at the point where the trigger point should be inserted
+         */
+        private String fieldName;
+
+        /**
+         * the name of the type to which the field belongs or null if any type will do
+         */
+        private String typeName;
+
+        /**
+         * construct a location identifying a field read trigger point
+         * @param typeName the name of the class owning the field
+         * @param fieldName the name of the field being read
+         * @param count count identifying which access should be taken as the trigger point
+         * @param flags bit field comprising one or other of flags ACCESS_READ and ACCESS_WRITE identifying
+         * whether this specifies field READ or WRITE operations
+         * @param whenComplete false if the trigger should be inserted before the access is performed
+         * and true if it should be inserted after
+         */
+        private FieldAccessLocation(String typeName, String fieldName, int count, int flags, boolean whenComplete)
+        {
+            super(count, flags, whenComplete);
+            this.typeName = typeName;
+            this.fieldName = fieldName;
         }
 
         /**
@@ -315,7 +347,7 @@ public abstract class Location
          * @return the required adapter
          */
         public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
-            return new AccessCheckAdapter(cv, transformContext, typeName, fieldName, flags, count);
+            return new FieldAccessCheckAdapter(cv, transformContext, typeName, fieldName, flags, count);
         }
 
         /**
@@ -324,7 +356,103 @@ public abstract class Location
          * @return the required adapter
          */
         public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
-            return new AccessTriggerAdapter(cv, transformContext, typeName, fieldName, flags, count, whenComplete);
+            return new FieldAccessTriggerAdapter(cv, transformContext, typeName, fieldName, flags, count, whenComplete);
+        }
+
+        public String toString() {
+            String text;
+
+            if (whenComplete) {
+                text = "AFTER ";
+            } else {
+                text = "AT ";
+            }
+            if (flags == ACCESS_READ) {
+                text += "READ ";
+            } else if (flags == ACCESS_WRITE) {
+                text += "WRITE ";
+            } else {
+                text += "ACCESS ";
+            }
+
+            if (typeName != null) {
+                text += typeName + ".";
+            }
+            text += fieldName;
+
+            if (count != 1) {
+                if (count == 0) {
+                    text += " ALL";
+                } else {
+                    text += " " + count;
+                }
+            }
+
+            return text;
+        }
+    }
+
+    /**
+     * location identifying a variable access trigger point
+     */
+    private static class VariableAccessLocation extends AccessLocation
+    {
+        /**
+         * the name of the variable being accessed at the point where the trigger point should be inserted
+         */
+        private String variableName;
+
+        /**
+         * flag which is true if the name is a method parameter index such as $0, $1 etc otherwise false
+         */
+        private boolean isIndex;
+
+        /**
+         * construct a location identifying a variable read trigger point
+         * @param typeName the name of the class owning the field
+         * @param variablename the name of the variable being read
+         * @param count count identifying which access should be taken as the trigger point
+         * @param flags bit field comprising one or other of flags ACCESS_READ and ACCESS_WRITE identifying
+         * whether this specifies field READ or WRITE operations
+         * @param whenComplete false if the trigger should be inserted before the access is performed
+         * and true if it should be inserted after
+         */
+        protected VariableAccessLocation(String variablename, int count, int flags, boolean whenComplete)
+        {
+            super(count, flags, whenComplete);
+            this.variableName = variablename;
+            isIndex = variablename.matches("[0-9]+");
+        }
+
+
+        /**
+         * return an adapter which can be used to check whether a method contains a trigger point whose position
+         * matches this location
+         * @return the required adapter
+         */
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
+            if (isIndex) {
+                int paramIdx = Integer.valueOf(variableName);
+                return new IndexParamAccessCheckAdapter(cv, transformContext, paramIdx, flags, count);
+            } else {
+                // we need to insert a BMJSRInliner into the pipeline so that the check adapter gets
+                // notified when local vars go in and out of scope
+                return new VariableAccessCheckAdapter(cv, transformContext, variableName, flags, count);
+            }
+        }
+
+        /**
+         * return an adapter which can be used to insert a trigger call in a method containing a trigger point whose
+         * position matches this location
+         * @return the required adapter
+         */
+        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
+            if (isIndex) {
+                int paramIdx = Integer.valueOf(variableName);
+                return new IndexParamAccessTriggerAdapter(cv, transformContext, paramIdx, flags, count, whenComplete);
+            } else {
+                return new VariableAccessTriggerAdapter(cv, transformContext, variableName, flags, count, whenComplete);
+            }
         }
 
         public LocationType getLocationType() {
@@ -359,10 +487,9 @@ public abstract class Location
                 text += "ACCESS ";
             }
 
-            if (typeName != null) {
-                text += typeName + ".";
-            }
-            text += fieldName;
+            text += "$";
+            
+            text += variableName;
 
             if (count != 1) {
                 if (count == 0) {

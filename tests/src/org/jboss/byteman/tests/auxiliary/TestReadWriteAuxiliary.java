@@ -43,6 +43,7 @@ public class TestReadWriteAuxiliary
     public void testMethod() throws Exception
     {
         test.log("inside TestReadWriteAuxiliary.testMethod");
+
         int currentCounter = counter;
 
         test.log("1: currentCounter == " + currentCounter);
@@ -56,10 +57,52 @@ public class TestReadWriteAuxiliary
         currentCounter = counter;
 
         currentCounter++;
-        
+
         counter = currentCounter;
 
         test.log("3: currentCounter == " + currentCounter);
+    }
+
+    public void testMethod2(String arg1, int arg2) throws Exception
+    {
+        test.log("inside TestReadWriteAuxiliary.testMethod2");
+
+        test.log("1: arg1 == " + arg1);
+
+        arg1 = "goodbye";
+
+        test.log("2: arg1 == " + arg1);
+
+        arg2 = 2;
+
+        arg2++;
+
+        test.log("3: arg2 == " + arg2);
+    }
+
+    public void testMethod3(String arg1, int arg2) throws Exception
+    {
+        test.log("inside TestReadWriteAuxiliary.testMethod3");
+
+        double d = 0.0;
+
+        test.log("1: arg1 == " + arg1);
+
+        arg1 = "goodbye";
+
+        test.log("2: arg1 == " + arg1);
+
+        arg2 = 5;
+
+        arg2+= 5;
+
+        test.log("3: arg2 == " + arg2);
+
+        d += 1.0;
+
+        d++;
+
+        test.log("4: d == " + d);
     }
 
     public Test getTest()

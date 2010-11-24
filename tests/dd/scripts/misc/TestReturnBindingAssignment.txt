@@ -31,9 +31,9 @@ CLASS org.jboss.byteman.tests.misc.TestReturnBindingAssignment
 METHOD triggerMethod(int)
 HELPER org.jboss.byteman.tests.helpers.Default
 AT EXIT
-BIND test = $0,
+BIND test = $0;
      returnBinding = $!
 IF TRUE
-DO test.log("triggerMethod : triggered with " + returnBinding),
+DO test.log("triggerMethod : triggered with " + returnBinding);
    $!= "unexpected"
 ENDRULE

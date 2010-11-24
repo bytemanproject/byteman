@@ -89,14 +89,24 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
             Type[] argTypes = Type.getArgumentTypes(matchedMethodDescriptor);
             Type returnType = Type.getReturnType(matchedMethodDescriptor);
             int numArgs = argTypes.length;
-            Type[] result = new Type[numArgs + 2];
+            Type[] result = new Type[numArgs + 1];
             result[0] = ownerType;
             for (int i = 0; i < numArgs; i++) {
                 result[i + 1] = argTypes[i];
             }
-            result[numArgs + 1] = returnType;
 
             return result;
+        }
+
+        /**
+         * method overridden by AT INVOKE method adapter allowing the type of the $! binding to be identified.
+         * this version should only get invoked for an AFTER INVOKE rule where it returns the invoked method
+         * return type
+         * @return the appropriate return type
+         */
+        public Type getReturnBindingType()
+        {
+            return Type.getReturnType(matchedMethodDescriptor);
         }
 
         // somewhere we need to add a catch exception block

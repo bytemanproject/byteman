@@ -195,8 +195,14 @@ public class ScriptRepository
             }
         }
 
+        boolean isOverride = script.isOverride();
+
         if (previous == null) {
-            // just index the new script
+            // increment override count if necessary before indexing
+            if (isOverride) {
+                overrideRuleCount++;
+            }
+            // now index the new script
 
             if (script.isInterface()) {
                 indexTarget(script,  targetInterfaceIndex);
@@ -204,6 +210,12 @@ public class ScriptRepository
                 indexTarget(script, targetClassIndex);
             }
         } else {
+            boolean wasOverride = previous.isOverride();
+            // increment override count if necessary before indexing
+            if (isOverride) {
+                overrideRuleCount++;
+            }
+
             boolean isInterface =  script.isInterface();
             boolean wasInterface = previous.isInterface();
 
@@ -218,6 +230,10 @@ public class ScriptRepository
             } else {
                 unindexTarget(previous, targetInterfaceIndex);
                 indexTarget(script, targetClassIndex);
+            }
+            // decrement count if necessary after unindexing
+            if (wasOverride) {
+                overrideRuleCount--;
             }
         }
 
@@ -258,6 +274,15 @@ public class ScriptRepository
         if (current != null) {
             Map<String, List<RuleScript>> index = (current.isInterface() ? targetInterfaceIndex : targetClassIndex);
             unindexTarget(current, index);
+
+            boolean wasOverride = current.isOverride();
+
+            // decrement count if necessary after unindexing
+
+            if (wasOverride) {
+                overrideRuleCount--;
+            }
+
         }
 
         return current;
@@ -611,6 +636,11 @@ public class ScriptRepository
     private final boolean skipOverrideRules;
 
     /**
+     * a count of how many rules there are in the script repository which employ injection into hierarchies
+     */
+    private int overrideRuleCount = 0;
+
+    /**
      * see if we need to do any transformation of interfaces
      * @return
      */
@@ -626,6 +656,14 @@ public class ScriptRepository
 
         synchronized (targetInterfaceIndex) {
             return !targetInterfaceIndex.isEmpty();
+        }
+    }
+
+    public boolean skipOverrideRules() {
+        if (skipOverrideRules) {
+            return true;
+        } else {
+            return overrideRuleCount == 0;
         }
     }
 }

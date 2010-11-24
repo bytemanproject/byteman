@@ -146,12 +146,13 @@ public class ExpressionHelper
             {
                 ParseNode child0 = (ParseNode) exprTree.getChild(0);
                 ParseNode child1 = (ParseNode) exprTree.getChild(1);
+                ParseNode child2 = (ParseNode) exprTree.getChild(2);
                 int tag0 = child0.getTag();
 
                 if (tag0 != IDENTIFIER) {
                     throw new TypeException("ExpressionHelper.createExpression : invalid new type " + tag + " in expression " + child0.getText() + child0.getPos());
                 } else {
-                    expr = createNewExpression(rule, bindings, child0, child1);
+                    expr = createNewExpression(rule, bindings, child0, child1, child2);
                 }
             }
             break;
@@ -359,19 +360,25 @@ public class ExpressionHelper
         return expr;
     }
 
-    public static Expression createNewExpression(Rule rule, Bindings bindings, ParseNode typeNameTree, ParseNode argTree)
+    public static Expression createNewExpression(Rule rule, Bindings bindings, ParseNode typeNameTree,
+                                                 ParseNode argTree, ParseNode arrayDimsTree)
             throws TypeException
     {
         Expression expr;
         List<Expression> args;
-
+        List<Expression> arrayDims;
         if (argTree == null) {
             args = new ArrayList<Expression>();
         } else {
             args = createExpressionList(rule, bindings, argTree);
         }
+        if (arrayDimsTree == null) {
+            arrayDims = new ArrayList<Expression>();
+        } else {
+            arrayDims = createNewExpressionIndexList(rule, bindings, arrayDimsTree);
+        }
 
-        expr = new NewExpression(rule, typeNameTree, args);
+        expr = new NewExpression(rule, typeNameTree, args, arrayDims);
 
         return expr;
     }
@@ -661,6 +668,22 @@ public class ExpressionHelper
                 }
             }
             break;
+            case ARRAY:
+            {
+                ParseNode child0 = (ParseNode) exprTree.getChild(0);
+                ParseNode child1 = (ParseNode) exprTree.getChild(1);
+
+                Expression arrayRef = createExpression(rule, bindings, child0, Type.UNDEFINED);
+
+                List<Expression> indices = createExpressionList(rule, bindings, child1, Type.I);
+
+                if (indices != null) {
+                    expr = new ArrayExpression(rule, type, exprTree, arrayRef, indices);
+                } else {
+                    throw new TypeException("ExpressionHelper.createExpression : invalid array index expression " + exprTree.getPos());
+                }
+            }
+            break;
             default:
                 throw new TypeException("ExpressionHelper.createAssignableExpression : unexpected token type " + tag + " for lhs of assignment " + exprTree.getPos());
         }
@@ -674,6 +697,7 @@ public class ExpressionHelper
         return createExpressionList(rule, bindings, exprTree, Type.UNDEFINED);
 
     }
+
     public static List<Expression> createExpressionList(Rule rule, Bindings bindings, ParseNode exprTree, Type type)
             throws TypeException
     {
@@ -730,4 +754,72 @@ public class ExpressionHelper
 
         return exprList;
     }
+    public static List<Expression> createNewExpressionIndexList(Rule rule, Bindings bindings, ParseNode exprTree)
+            throws TypeException
+    {
+        // we expect new_expr_idx_list = new_expr_idx
+        //                               ^(COMMA expr new_expr_idx_list)
+        // where          new_expr_idx = ^(EXPR) |
+        //                               ^(NOTHING)
+        // and we also have the constraints that any EXPR is expected to have an int type andthat
+        // once we see the first NOTHING we only expect NOTHING from then onwards
+
+        Type type =  Type.I;
+
+        List<Expression> exprList = new ArrayList<Expression>();
+        List<TypeException> exceptions = new ArrayList<TypeException>();
+        boolean foundEmptyDim = false;
+        int arrayDimCount = 0;
+        int emptyDimCount = 0;
+
+        while (exprTree != null)
+        {
+            try {
+                ParseNode saveTree = exprTree;
+                ParseNode child;
+                if (exprTree.getTag() == COMMA) {
+                    child = (ParseNode) exprTree.getChild(0);
+                    exprTree = (ParseNode) exprTree.getChild(1);
+                } else {
+                    child = exprTree;
+                    exprTree = null;
+                }
+                // count an extra array dimension
+                arrayDimCount++;
+
+                if (child.getTag() == NOTHING) {
+                    //  this is an empty array dimension
+                    emptyDimCount++;
+                    foundEmptyDim = true;
+                    // append null to the list to represent the empty dimension
+                    exprList.add(null);
+                } else  if (!foundEmptyDim){
+                    Expression expr = createExpression(rule, bindings, child, Type.I);
+                    exprList.add(expr);
+                } else {
+                    // once we see an empty dim we expect to see al empty dims
+                    throw new TypeException("ExpressionHelper.createNewExpressionIndexList : invalid array dimension " + child.getPos());
+                }
+            } catch (TypeException te) {
+                exceptions.add(te);
+            }
+        }
+
+        if (!exceptions.isEmpty()) {
+            if (exceptions.size() == 1) {
+                throw exceptions.get(0);
+            } else {
+                StringBuffer buffer = new StringBuffer();
+                buffer.append("ExpressionHelper.createExpressionList : errors checking new expression array dimensions");
+                for (TypeException typeException : exceptions) {
+                    buffer.append("\n");
+                    buffer.append(typeException.toString());
+                }
+                throw new TypeException(buffer.toString());
+            }
+        }
+
+        return exprList;
+    }
+
 }

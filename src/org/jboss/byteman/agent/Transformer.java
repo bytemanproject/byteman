@@ -23,15 +23,13 @@
 */
 package org.jboss.byteman.agent;
 
-import org.jboss.byteman.agent.adapter.JSRInliner;
+import org.jboss.byteman.agent.adapter.*;
 import org.jboss.byteman.agent.check.ClassChecker;
 import org.jboss.byteman.agent.check.LoadCache;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.rule.exception.ParseException;
 import org.jboss.byteman.rule.exception.TypeException;
-import org.jboss.byteman.agent.adapter.RuleTriggerAdapter;
-import org.jboss.byteman.agent.adapter.RuleCheckAdapter;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
 
@@ -61,7 +59,7 @@ public class Transformer implements ClassFileTransformer {
     {
         this.inst = inst;
         this.isRedefine = isRedefine;
-        scriptRepository = new ScriptRepository(skipOverrideRules());
+        scriptRepository = new ScriptRepository(skipOverrideRules);
         loadCache = new LoadCache(inst);
         helperManager = new HelperManager(inst);
 
@@ -543,16 +541,11 @@ public class Transformer implements ClassFileTransformer {
 
     /**
      * check whether compilation of rules is enabled or disabled
-     * @return true if compilation of rules is enabled etherwise false
+     * @return true if compilation of rules is enabled otherwise false
      */
-    public static boolean skipOverrideRules()
+    public boolean skipOverrideRules()
     {
-        if (allowConfigUpdate()) {
-            synchronized (configLock) {
-                return skipOverrideRules;
-            }
-        }
-        return skipOverrideRules;
+        return scriptRepository.skipOverrideRules();
     }
 
     /**
@@ -670,7 +663,10 @@ public class Transformer implements ClassFileTransformer {
         ClassWriter dummy = getNonLoadingClassWriter(0);
         RuleCheckAdapter checkAdapter = handlerLocation.getRuleCheckAdapter(dummy, transformContext);
         try {
-            cr.accept(checkAdapter, ClassReader.EXPAND_FRAMES);
+            // insert a JSR inliner between the reader and the adapter so we don't see JSR/RET sequences
+            // we use a specialised version which provides us with info about vars going in and out of scope
+            BMJSRInliner jsrInliner = new BMJSRInliner(checkAdapter);
+            cr.accept(jsrInliner, ClassReader.EXPAND_FRAMES);
         } catch (Throwable th) {
             if (isVerbose()) {
                 System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + ruleScript.getName() + " to class " + className + "\n" + th);
@@ -691,7 +687,8 @@ public class Transformer implements ClassFileTransformer {
             ClassWriter cw = getNonLoadingClassWriter(ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
             RuleTriggerAdapter adapter = handlerLocation.getRuleAdapter(cw, transformContext);
             // insert a JSR inliner between the reader and the adapter so we don't see JSR/RET sequences
-            JSRInliner jsrInliner = new JSRInliner(adapter);
+            // we use a specialised version which provides us with info about vars going in and out of scope
+            BMJSRInliner jsrInliner = new BMJSRInliner(adapter);
             try {
                 cr.accept(jsrInliner, ClassReader.EXPAND_FRAMES);
             } catch (Throwable th) {

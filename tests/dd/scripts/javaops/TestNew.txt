@@ -27,15 +27,48 @@ CLASS TestNew
 METHOD triggerMethod(String)
 HELPER org.jboss.byteman.tests.helpers.Default
 AT EXIT
-BIND test : TestNew = $0,
-     bytes = $input.getBytes(),
-     newStr = new String(bytes),
+BIND test : TestNew = $0;
+     bytes = $input.getBytes();
+     newStr = new String(bytes);
+     newStrArray : String[] = new String[1];
+     newStrArrayArray :String[][] =  new String[1][];
+     newDoubleArray = new double[1];
+     newDoubleArrayArray = new double[1][];
+     newDoubleArrayArrayArray = new double[1][][];
+     newDoubleArrayArrayArray2 = new double[1][1][];
      throwable : Throwable = null
 IF TRUE
-DO test.log("triggerMethod : input == " + $input),
-   $input = newStr.replaceFirst("abc", "123"),
-   test.log("triggerMethod : new input == " + $input),
-   throwable = new Exception("hello"),
-   test.log("triggerMethod : throwable == " + throwable),
+DO test.log("triggerMethod : input == " + $input);
+   $input = newStr.replaceFirst("abc", "123");
+   test.log("triggerMethod : new input == " + $input);
+   throwable = new Exception("hello");
+   test.log("triggerMethod : throwable == " + throwable);
+   test.log("triggerMethod : newStrArray[0] == " + newStrArray[0]);
+   newStrArray[0] = newStr;
+   test.log("triggerMethod : newStrArray[0] == " + newStrArray[0]);
+   test.log("triggerMethod : newStrArrayArray[0] == " + newStrArrayArray[0]);
+   newStrArrayArray = new String[1][1];
+   # test.log("triggerMethod : newStrArrayArray[0] == " + newStrArrayArray[0]);
+   test.log("triggerMethod : newStrArrayArray[0][0] == " + newStrArrayArray[0][0]);
+   newStrArrayArray[0] = newStrArray;
+   test.log("triggerMethod : newStrArrayArray[0][0] == " + newStrArrayArray[0][0]);
+   test.log("triggerMethod : newDoubleArray[0] == " + newDoubleArray[0]);
+   newDoubleArray[0] = 1.0;
+   test.log("triggerMethod : newDoubleArray[0] == " + newDoubleArray[0]);
+   test.log("triggerMethod : newDoubleArrayArray[0] == " + newDoubleArrayArray[0]);
+   newDoubleArrayArray[0] = newDoubleArray;
+   # test.log("triggerMethod : newDoubleArrayArray[0] == " + newDoubleArrayArray[0]);
+   test.log("triggerMethod : newDoubleArrayArray[0][0] == " + newDoubleArrayArray[0][0]);
+   test.log("triggerMethod : newDoubleArrayArrayArray[0] == " + newDoubleArrayArrayArray[0]);
+   newDoubleArrayArrayArray[0] = newDoubleArrayArray;
+   # test.log("triggerMethod : newDoubleArrayArrayArray[0] == " + newDoubleArrayArrayArray[0]);
+   # test.log("triggerMethod : newDoubleArrayArrayArray[0][0] == " + newDoubleArrayArrayArray[0][0]);
+   test.log("triggerMethod : newDoubleArrayArrayArray[0][0][0] == " + newDoubleArrayArrayArray[0][0][0]);
+   # test.log("triggerMethod : newDoubleArrayArrayArray2[0] == " + newDoubleArrayArrayArray2[0]);
+   test.log("triggerMethod : newDoubleArrayArrayArray2[0][0] == " + newDoubleArrayArrayArray2[0][0]);
+   newDoubleArrayArrayArray2[0][0] = newDoubleArrayArray[0];
+   # test.log("triggerMethod : newDoubleArrayArrayArray2[0] == " + newDoubleArrayArrayArray2[0]);
+   # test.log("triggerMethod : newDoubleArrayArrayArray2[0][0] == " + newDoubleArrayArrayArray2[0][0]);
+   test.log("triggerMethod : newDoubleArrayArrayArray2[0][0][0] == " + newDoubleArrayArrayArray2[0][0][0]);
    $! = new String(bytes)
 ENDRULE

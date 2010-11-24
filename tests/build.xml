@@ -158,8 +158,24 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWriteParams.txt"/>
+            <test name="org.jboss.byteman.tests.location.TestReadWriteParams"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
             <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestAll.txt"/>
             <test name="org.jboss.byteman.tests.location.TestAll"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestLine.txt"/>
+            <test name="org.jboss.byteman.tests.location.TestLine"/>
         </junit>
     </target>
 
@@ -249,9 +265,27 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWriteParams.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <test name="org.jboss.byteman.tests.location.TestReadWriteParams"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
             <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestAll.txt"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <test name="org.jboss.byteman.tests.location.TestAll"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestLine.txt"/>
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+            <test name="org.jboss.byteman.tests.location.TestLine"/>
         </junit>
     </target>
 
@@ -1050,6 +1084,27 @@
           -->
           <test name="org.jboss.byteman.tests.bugfixes.TestPromotePrimitiveToObject"/>
         </junit>
+        <junit fork="true" showoutput="true">
+          <classpath>
+              <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+              <pathelement location="${junit.home}/${junit.jar}"/>
+          </classpath>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMethodClauseReturnType.txt"/>
+          <!-- uncomment for verbose byteman output
+          <jvmarg value="-Dorg.jboss.byteman.verbose"/>
+          -->
+          <!-- uncomment to dump generated code
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+          -->
+          <!-- uncomment to enable debug
+          <jvmarg value="-Xdebug"/>
+          <jvmarg  value="-Xnoagent"/>
+          <jvmarg  value="-Djava.compiler=NONE"/>
+          <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+          -->
+          <test name="org.jboss.byteman.tests.bugfixes.TestMethodClauseReturnType"/>
+        </junit>
 
   </target>
 
@@ -1210,6 +1265,28 @@
           -->
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
           <test name="org.jboss.byteman.tests.bugfixes.TestPromotePrimitiveToObject"/>
+        </junit>
+        <junit fork="true" showoutput="true">
+          <classpath>
+              <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+              <pathelement location="${junit.home}/${junit.jar}"/>
+          </classpath>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMethodClauseReturnType.txt"/>
+          <!-- uncomment for verbose byteman output
+          <jvmarg value="-Dorg.jboss.byteman.verbose"/>
+          -->
+          <!-- uncomment to dump generated code
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+          -->
+          <!-- uncomment to enable debug
+          <jvmarg value="-Xdebug"/>
+          <jvmarg  value="-Xnoagent"/>
+          <jvmarg  value="-Djava.compiler=NONE"/>
+          <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+          -->
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+          <test name="org.jboss.byteman.tests.bugfixes.TestMethodClauseReturnType"/>
         </junit>
   </target>
 

@@ -1,0 +1,215 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2010, Red Hat Middleware and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+
+RULE test at read $1 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AT READ $1
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AT READ $1 triggered in TestReadWriteAuxiliary.testMethod2 : $1 == " + $1)
+ENDRULE
+
+RULE test at read $arg1 2 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AT READ $arg1 2
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AT READ $arg1 2 triggered in TestReadWriteAuxiliary.testMethod2 : $arg1 == " + $arg1)
+ENDRULE
+
+RULE test after read $arg1 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER READ $arg1
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AFTER READ $arg1 triggered in TestReadWriteAuxiliary.testMethod2 : $arg1 == " + $arg1)
+ENDRULE
+
+RULE test after read $1 2 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER READ $1 2
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AFTER READ $1 2 triggered in TestReadWriteAuxiliary.testMethod2 : $1 == " + $1)
+ENDRULE
+
+RULE test at write $1 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AT WRITE $1
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AT WRITE $1 triggered in TestReadWriteAuxiliary.testMethod2 : $1 == " + $1)
+ENDRULE
+
+RULE test at write $arg1 2 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AT WRITE $arg1 2
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AT WRITE $arg1 2 triggered in TestReadWriteAuxiliary.testMethod2 : $arg1 == " + $arg1)
+ENDRULE
+
+RULE test after write $1 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER WRITE $1
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AFTER WRITE $1 triggered in TestReadWriteAuxiliary.testMethod2 : $1 == " + $1)
+ENDRULE
+
+RULE test after write $arg1 2 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER WRITE $arg1 2
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AFTER WRITE $arg1 2 triggered in TestReadWriteAuxiliary.testMethod2 : $arg1 == " + $arg1)
+ENDRULE
+
+##
+
+RULE test at read $2 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AT READ $2
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AT READ $2 triggered in TestReadWriteAuxiliary.testMethod2 : $2 == " + $2)
+ENDRULE
+
+RULE test at read $arg2 2 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AT READ $arg2 2
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AT READ $arg2 2 triggered in TestReadWriteAuxiliary.testMethod2 : $arg2 == " + $arg2)
+ENDRULE
+
+RULE test after read $arg2 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER READ $arg2
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AFTER READ $arg2 triggered in TestReadWriteAuxiliary.testMethod2 : $arg2 == " + $arg2)
+ENDRULE
+
+RULE test after read $2 2 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER READ $2 2
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AFTER READ $2 2 triggered in TestReadWriteAuxiliary.testMethod2 : $2 == " + $2)
+ENDRULE
+
+RULE test at write $2 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AT WRITE $2
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AT WRITE $2 triggered in TestReadWriteAuxiliary.testMethod2 : $2 == " + $2)
+ENDRULE
+
+RULE test at write $arg2 2 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AT WRITE $arg2 2
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AT WRITE $arg2 2 triggered in TestReadWriteAuxiliary.testMethod2 : $arg2 == " + $arg2)
+ENDRULE
+
+RULE test after write $2 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER WRITE $2
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AFTER WRITE $2 triggered in TestReadWriteAuxiliary.testMethod2 : $2 == " + $2)
+ENDRULE
+
+RULE test after write $arg2 2 rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod2(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER WRITE $arg2 2
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AFTER WRITE $arg2 2 triggered in TestReadWriteAuxiliary.testMethod2 : $arg2 == " + $arg2)
+ENDRULE
+
+RULE test at read $1 all rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod3(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AT READ $1 ALL
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AT READ $1 ALL triggered in TestReadWriteAuxiliary.testMethod3 : $1 == " + $1)
+ENDRULE
+
+RULE test after write $arg2 all rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod3(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER WRITE $arg2 ALL
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AFTER WRITE $arg2 ALL triggered in TestReadWriteAuxiliary.testMethod3 : $arg2 == " + $arg2)
+ENDRULE
+
+RULE test at write $d all rule
+CLASS TestReadWriteAuxiliary
+METHOD testMethod3(String, int)
+HELPER org.jboss.byteman.tests.helpers.Default
+AT WRITE $d ALL
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("AT WRITE $d ALL triggered in TestReadWriteAuxiliary.testMethod3 : $d == " + $d)
+ENDRULE

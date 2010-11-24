@@ -4,6 +4,10 @@ import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
 
 import javax.management.*;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 
@@ -18,6 +22,18 @@ public class JMXHelper extends Helper implements DynamicMBean
     /************************************************************************/
 
     /**
+     * This is a system property whose value will determine which MBean Server the
+     * MBeans should be registered in. If the system property is not defined, the default
+     * will be the platform MBeanServer itself. If this system property is set, it will
+     * be assumed to be a default domain name of an existing MBeanServer. The existing
+     * MBeanServer with that default domain name will be used to house the MBeans. If there
+     * is no existing MBeanServer with the given default domain name, one will be created.
+     * Note that if this sysprop has the special value "*platform*", then the platform
+     * MBeanServer will be used (i.e. it will be as if this sysprop was not set). 
+     */
+    public final static String SYSPROP_MBEAN_SERVER = "org.jboss.byteman.jmx.mbeanserver";
+
+    /**
      * the default period which the helper will wait for between calls to periodicUpdate in milliseconds. this
      * can be redefined either by overriding defaultPeriod
      */
@@ -28,6 +44,28 @@ public class JMXHelper extends Helper implements DynamicMBean
      */
 
     public final static int DEFAULT_SAMPLE_SET_SIZE = 5;
+
+    /**
+     * default value for the rmi server host address used by the JMX onnector server
+     *
+     * used only if an rmi server is required for the JMXConnector
+     */
+
+    public final static String DEFAULT_RMI_HOST = "localhost";
+
+    /**
+     * default value for the rmi server port used by the JMX connector server
+     *
+     * used only if an rmi server is required for the JMXConnector
+     */
+
+    public final static int DEFAULT_RMI_PORT = 9999;
+
+    /**
+     * JMX Url pattern for use  when creating the connector server
+     */
+
+    public final static String JMX_URL = "service:jmx:rmi:///jndi/rmi://%1$s:%2$i/jmxrmi" ;
 
     /**
      * constructor allowing this helper to be used as a helper
@@ -68,10 +106,34 @@ public class JMXHelper extends Helper implements DynamicMBean
         }
     }
 
+    /**
+     * Byteman does not guarantee to deactivate the helper at shutdown. However, we need to be sure that
+     * a deactivate happens if we are using the connector server to avoid RMI problems. So, we register
+     * a shutdown hook when this helper class gets loaded. We don't bother about deregistering it inside
+     * deactivate and then reregistering it next time we activate and so on. We can safely do so because
+     * deactivated is idempotent.
+     */
+    static {
+        Thread thread = new Thread("JMXHelper Shutdown Hook Deactivation Thread") {
+            public void run()
+            {
+                synchronized(JMXHelper.class)
+                {
+                    JMXHelper.deactivated();
+                }
+            }
+        };
+        Runtime.getRuntime().addShutdownHook(thread);
+    }
+
     /************************************************************************/
     /* methods exposed by the helper class for the benefit of a rule set,   */
-    /* allowing it to specify the sampling period and the keys and value    */
-    /* types of the counters used for sampling                              */
+    /* allowing it to specify:                                              */
+    /* the sampling period                                                  */
+    /* the keys and value types of the counters used for sampling           */
+    /* the number of sample sets to combine when computing RATE and MEAN    */
+    /* whether to create a JMX RMI Connector server to expose MBean info    */
+    /* if so what host and port name to use for the connection              */
     /************************************************************************/
 
     /**
@@ -87,7 +149,7 @@ public class JMXHelper extends Helper implements DynamicMBean
 
     /**
      * method called by the helper thread when it is activated to obtain the number of samples
-     * over which counter rates or countre means should be averaged. this is provided so that
+     * over which counter rates or counter means should be averaged. this is provided so that
      * a rule set can inject an initial value to be used a the sample period. it should return
      * a positive integer ibetween 1 and 10.
      * @return
@@ -111,6 +173,39 @@ public class JMXHelper extends Helper implements DynamicMBean
         String[] keyNames = new String[1];
         keyNames[0] = "No counters defined";
         return new KeyInfo("Byteman Periodic Statistics", keyNames);
+    }
+
+    /**
+     * method called once by the helper thread when it is activated to decide whether to start up a
+     * JMX RMI Connector Service. this is provided so that a rule set can inject a rule which returns
+     * true to enable startup. this method returns false which means it is disabled by default.
+     * @return
+     */
+    private boolean rmiServerRequired()
+    {
+        return false;
+    }
+
+    /**
+     * method called once by the helper thread when it is activated if rmiServerrequired returns true.
+     * this is provided so that a rule set can inject a rule which returns a host name to  use for
+     * the connection. this method returns localhost as the default value.
+     * @return
+     */
+    private String rmiHost()
+    {
+        return DEFAULT_RMI_HOST;
+    }
+
+    /**
+     * method called once by the helper thread when it is activated if rmiServerrequired returns true.
+     * this is provided so that a rule set can inject a rule which returns a port to use for
+     * the connection. this method returns "1234" as the default value.
+     * @return
+     */
+    private int rmiPort()
+    {
+        return DEFAULT_RMI_PORT;
     }
 
     /************************************************************************/
@@ -307,6 +402,12 @@ public class JMXHelper extends Helper implements DynamicMBean
     private static MBeanServer mbeanServer = null;
 
     /**
+     * a connector server providing RMI access to the mbean server
+     */
+    
+    private static JMXConnectorServer connectorServer = null;
+
+    /**
      * flag used to control shutdown
      */
     private boolean shutDown;
@@ -463,18 +564,34 @@ public class JMXHelper extends Helper implements DynamicMBean
 
     private static MBeanServer getMBeanServer()
     {
-        ArrayList<MBeanServer> mbeanServers = MBeanServerFactory.findMBeanServer(null);
-        MBeanServer mbeanServer;
-        if (mbeanServers != null) {
-            mbeanServer = mbeanServers.get(0);
+        // If the sysprop is not defined, default to the platform MBeanServer.
+        // If it is defined, it is the name of the MBS' default domain name so
+        // look for an MBeanServer that already has that default domain name and
+        // if exists, use it, otherwise create a new one.
+        // Note that if the sysprop is defined and has the special value "*platform*"
+        // the platform MBeanServer will be used.
+
+        MBeanServer mbsToReturn = null;
+        String mbeanServerDomainToLookFor = System.getProperty(SYSPROP_MBEAN_SERVER);
+        if (mbeanServerDomainToLookFor == null || "*platform*".equals(mbeanServerDomainToLookFor)) {
+            mbsToReturn = ManagementFactory.getPlatformMBeanServer();
         } else {
-            mbeanServer = ManagementFactory.getPlatformMBeanServer();
-        }
-        if (mbeanServer == null) {
-            mbeanServer = MBeanServerFactory.createMBeanServer();
+            ArrayList<MBeanServer> mbeanServers = MBeanServerFactory.findMBeanServer(null);
+            if (mbeanServers != null) {          0-atch
+                for (MBeanServer mbs : mbeanServers ) {
+                    if (mbeanServerDomainToLookFor.equals(mbs.getDefaultDomain())) {
+                        mbsToReturn = mbs;
+                        break;
+                    }
+                }
+            }
+            
+            if (mbsToReturn == null) {
+                mbsToReturn = MBeanServerFactory.createMBeanServer(mbeanServerDomainToLookFor);
+            }
         }
 
-        return mbeanServer;
+        return mbsToReturn;
     }
 
     /**
@@ -500,6 +617,23 @@ public class JMXHelper extends Helper implements DynamicMBean
         } catch (MalformedObjectNameException e) {
             e.printStackTrace(System.out);
         }
+        // start a JMX RMI server if  it is needed
+
+        boolean isRmiRequired = rmiServerRequired();
+        if (isRmiRequired) {
+            String host = rmiHost();
+            int port = rmiPort();
+            if (port > 0) {
+                try {
+                    JMXServiceURL url = new JMXServiceURL(String.format( JMX_URL, host, port));
+                    connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(url, null, mbeanServer);
+                    connectorServer.start();
+                } catch (IOException e) {
+                    e.printStackTrace(System.out);
+                }
+            }
+        }
+
         setTriggering(false);
     }
 
@@ -509,6 +643,14 @@ public class JMXHelper extends Helper implements DynamicMBean
      */
     private void cleanup()
     {
+        if (connectorServer != null) {
+            try {
+                connectorServer.stop();
+            } catch (IOException e) {
+                e.printStackTrace(System.out);
+            }
+            connectorServer = null;
+        }
         try {
             mbeanServer.unregisterMBean(ObjectName.getInstance("org.jboss.byteman.sample.jmx:type=PeriodicStats"));
         } catch (InstanceNotFoundException e) {

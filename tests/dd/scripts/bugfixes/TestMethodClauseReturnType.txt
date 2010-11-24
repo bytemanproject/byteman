@@ -21,15 +21,27 @@
 #
 # @authors Andrew Dinn
 #
+# Test for BYTEMAN-129 reported by Jeremy Whiting where including a
+# return type before the method name in the METHOD clause was not
+# handled correctly
 
-RULE test promotion of primitive to object
-CLASS TestPromotePrimitiveToObject
-METHOD triggerMethod(int)
-HELPER org.jboss.byteman.tests.helpers.TestPromotePrimitiveToObjectHelper
-AT ENTRY
-BIND test : Test = $0
+# this rule should be injected and triggered
+RULE test method clause with boolean return type
+CLASS TestMethodClauseReturnType
+METHOD boolean booleanMethod()
+HELPER org.jboss.byteman.tests.helpers.Default
+BIND test : TestMethodClauseReturnType = $0
 IF TRUE
-DO test.log("calling helper.testPromote " + $1);
-   testPromote($1)
+DO test.log("triggered for METHOD boolean booleanMethod()")
 ENDRULE
 
+# this rule should not be injected and triggered as there
+# is not method booleanMethod() with return type int
+RULE test method clause with int return type
+CLASS TestMethodClauseReturnType
+METHOD int booleanMethod()
+HELPER org.jboss.byteman.tests.helpers.Default
+BIND test : TestMethodClauseReturnType = $0
+IF TRUE
+DO test.log("triggered for METHOD boolean booleanMethod()")
+ENDRULE

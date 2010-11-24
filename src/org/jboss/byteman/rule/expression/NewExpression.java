@@ -36,6 +36,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -49,14 +50,23 @@ public class NewExpression extends Expression
 {
     private String typeName;
     private List<Expression> arguments;
+    private List<Expression> arrayDims;
     private List<Type> argumentTypes;
     private List<Type> paramTypes;
     private Constructor constructor;
+    // if the new value is an array it will have this many dimensions
+    private int arrayDimCount;
+    // if the new value is an array this many of its dimensions are specified and are to be instantiated
+    private int arrayDimDefinedCount;
 
-    public NewExpression(Rule rule, ParseNode token, List<Expression> arguments) {
+    public NewExpression(Rule rule, ParseNode token, List<Expression> arguments, List<Expression> arraySizes) {
         super(rule, Type.UNDEFINED, token);
         this.typeName = token.getText();
         this.arguments = arguments;
+        this.arrayDims = arraySizes;
+        this.arrayDimCount = arraySizes.size();
+        // we check this at bind time and throw a TypeError if it is invalid
+        this.arrayDimDefinedCount = 0;
         this.argumentTypes = null;
         this.constructor = null;
     }
@@ -75,6 +85,18 @@ public class NewExpression extends Expression
 
         while (iterator.hasNext()) {
             iterator.next().bind();
+        }
+
+        // repeat for the array size expressions
+
+        iterator = arrayDims.iterator();
+
+        while (iterator.hasNext()) {
+            Expression expr = iterator.next();
+            if (expr !=  null)  {
+                expr.bind();
+                arrayDimDefinedCount++;
+            }
         }
     }
 
@@ -100,66 +122,92 @@ public class NewExpression extends Expression
             throw new TypeException("NewExpression.typeCheck : unknown type " + typeName + getPos());
         }
 
-        Class clazz = type.getTargetClass();
-        // if we can find a unique method then we can use it to type the parameters
-        // otherwise we do it the hard way
-        int arity = arguments.size();
-        Constructor[] constructors = clazz.getConstructors();
-        List<Constructor> candidates = new ArrayList<Constructor>();
-        boolean duplicates = false;
+        if (type.isObject() && arrayDimCount == 0) {
+            // we need to look for a suitable constructor
+            Class clazz = type.getTargetClass();
+            // if we can find a unique method then we can use it to type the parameters
+            // otherwise we do it the hard way
+            int arity = arguments.size();
+            Constructor[] constructors = clazz.getConstructors();
+            List<Constructor> candidates = new ArrayList<Constructor>();
+            boolean duplicates = false;
 
-        for (Constructor constructor : constructors) {
-            if (constructor.getParameterTypes().length == arity) {
-                candidates.add(constructor);
+            for (Constructor constructor : constructors) {
+                if (constructor.getParameterTypes().length == arity) {
+                    candidates.add(constructor);
+                }
             }
-        }
 
-        argumentTypes = new ArrayList<Type>();
+            argumentTypes = new ArrayList<Type>();
 
-        // check each argument in turn -- if all candidates have the same argument type then
-        // use that as the type to check against
-        for (int i = 0; i < arguments.size() ; i++) {
+            // check each argument in turn -- if all candidates have the same argument type then
+            // use that as the type to check against
+            for (int i = 0; i < arguments.size() ; i++) {
+                if (candidates.isEmpty()) {
+                    throw new TypeException("NewExpression.typeCheck : invalid constructor for target class " + typeName + getPos());
+                }
+
+                // TODO get and prune operations do not allow for coercion but type check does!
+                // e.g. the parameter type may be int and the arg type float
+                // or the parameter type may be String and the arg type class Foo
+                // reimplement this using type inter-assignability to do the pruning
+
+                Class candidateClass = getCandidateArgClass(candidates, i);
+                Type candidateType;
+                if (candidateClass != null) {
+                    candidateType = typeGroup.ensureType(candidateClass);
+                } else {
+                    candidateType = Type.UNDEFINED;
+                }
+                Type argType = arguments.get(i).typeCheck(candidateType);
+                argumentTypes.add(argType);
+                if (candidateType == Type.UNDEFINED) {
+                    // we had several constructors to choose from
+                    candidates = pruneCandidates(candidates, i, argType.getTargetClass());
+                }
+            }
+
             if (candidates.isEmpty()) {
                 throw new TypeException("NewExpression.typeCheck : invalid constructor for target class " + typeName + getPos());
             }
 
-            // TODO get and prune operations do not allow for coercion but type check does!
-            // e.g. the parameter type may be int and the arg type float
-            // or the parameter type may be String and the arg type class Foo
-            // reimplement this using type inter-assignability to do the pruning
-
-            Class candidateClass = getCandidateArgClass(candidates, i);
-            Type candidateType;
-            if (candidateClass != null) {
-                candidateType = typeGroup.ensureType(candidateClass);
-            } else {
-                candidateType = Type.UNDEFINED;
+            if (candidates.size() > 1) {
+                throw new TypeException("NewExpression.typeCheck : ambiguous constructor signature for target class " + typeName + getPos());
             }
-            Type argType = arguments.get(i).typeCheck(candidateType);
-            argumentTypes.add(argType);
-            if (candidateType == Type.UNDEFINED) {
-                // we had several constructors to choose from
-                candidates = pruneCandidates(candidates, i, argType.getTargetClass());
+
+            constructor = candidates.get(0);
+
+            // make sure we know the formal parameter types and have included them in the typegroup
+
+            paramTypes = new ArrayList<Type>();
+            Class<?>[] paramClasses = constructor.getParameterTypes();
+
+            for (int i = 0; i < arguments.size() ; i++) {
+                paramTypes.add(typeGroup.ensureType(paramClasses[i]));
             }
+        } else if (arrayDimCount == 0) {
+            // if we have a primitive type then have to have some array dimensions
+            throw new TypeException("NewExpression.typeCheck : invalid type for new operation " + getPos());
+        }
+        // if this is a new array operation we must have at least one defined dimension and we cannot have
+        // more dimensions than we can fit into a byte
+
+        if (arrayDimCount > 0 && arrayDimDefinedCount == 0) {
+            throw new TypeException("NewExpression.typeCheck : array dimension missing " + getPos());
         }
 
-        if (candidates.isEmpty()) {
-            throw new TypeException("NewExpression.typeCheck : invalid constructor for target class " + typeName + getPos());
+        if (arrayDimCount > Byte.MAX_VALUE) {
+            throw new TypeException("NewExpression.typeCheck : too many array dimensions " + getPos());
         }
+        // if we have any array dimension sizings then ensure they all type check as integer expressions
 
-        if (candidates.size() > 1) {
-            throw new TypeException("NewExpression.typeCheck : ambiguous constructor signature for target class " + typeName + getPos());
-        }
-
-        constructor = candidates.get(0);
-
-        // make sure we know the formal parameter types and have included them in the typegroup
-
-        paramTypes = new ArrayList<Type>();
-        Class<?>[] paramClasses = constructor.getParameterTypes();
-
-        for (int i = 0; i < arguments.size() ; i++) {
-            paramTypes.add(typeGroup.ensureType(paramClasses[i]));
+        for (int i = 0; i < arrayDimCount ; i++) {
+            if (i < arrayDimDefinedCount) {
+                Expression expr = arrayDims.get(i);
+                expr.typeCheck(Type.I);
+            }
+            // replace the current type with the corresponding array type
+            type = typeGroup.createArray(type);
         }
 
         // if the expected type is defined then ensure we can assign this type to it
@@ -214,21 +262,41 @@ public class NewExpression extends Expression
      *
      */
     public Object interpret(HelperAdapter helper) throws ExecuteException {
-        int l = arguments.size();
-        int i;
-        Object[] callArgs = new Object[l];
-        for (i =0; i < l; i++) {
-            callArgs[i] = arguments.get(i).interpret(helper);
-        }
-        try {
-            Object result = constructor.newInstance(callArgs);
-            return result;
-        } catch (InstantiationException e) {
-            throw new ExecuteException("NewExpression.interpret : unable to instantiate class " + typeName + getPos(), e);
-        } catch (IllegalAccessException e) {
-            throw new ExecuteException("NewExpression.interpret : unable to access class " + typeName + getPos(), e);
-        } catch (InvocationTargetException e) {
-            throw new ExecuteException("NewExpression.interpret : unable to invoke constructor for class " + typeName + getPos(), e);
+        if (arrayDimCount == 0) {
+            int l = arguments.size();
+            int i;
+            Object[] callArgs = new Object[l];
+            for (i =0; i < l; i++) {
+                callArgs[i] = arguments.get(i).interpret(helper);
+            }
+            try {
+                Object result = constructor.newInstance(callArgs);
+                return result;
+            } catch (InstantiationException e) {
+                throw new ExecuteException("NewExpression.interpret : unable to instantiate class " + typeName + getPos(), e);
+            } catch (IllegalAccessException e) {
+                throw new ExecuteException("NewExpression.interpret : unable to access class " + typeName + getPos(), e);
+            } catch (InvocationTargetException e) {
+                throw new ExecuteException("NewExpression.interpret : unable to invoke constructor for class " + typeName + getPos(), e);
+            }
+        } else {
+            int[] dims = new int[arrayDimDefinedCount];
+            Type componentType = type;
+            for (int i = 0; i < arrayDimDefinedCount; i++) {
+                Expression dim = arrayDims.get(i);
+                int dimValue = (Integer)dim.interpret(helper);
+                dims[i] = dimValue;
+                componentType = componentType.getBaseType();
+            }
+            try {
+                Object result = Array.newInstance(componentType.getTargetClass(), dims);
+                return result;
+            } catch (IllegalArgumentException e) {
+                throw new ExecuteException("NewExpression.interpret : unable to instantiate array " + typeName + getPos(), e);
+            } catch (NegativeArraySizeException e) {
+                // should never happen
+                throw new ExecuteException("NewExpression.interpret : unable to instantiate array " + typeName + getPos(), e);
+            }
         }
     }
 
@@ -238,35 +306,80 @@ public class NewExpression extends Expression
         int expected = 1;
         int extraParams = 0;
 
-        // ok, we need to create the new instance and then initialise it.
+        if (arrayDimCount ==  0) {
+            // ok, we need to create the new instance and then initialise it.
 
-        // create the new instance -- adds 1 to stack
-        String exceptionClassName = type.getInternalName();
-        mv.visitTypeInsn(Opcodes.NEW, exceptionClassName);
-        compileContext.addStackCount(1);
-        // copy the exception so we can init it
-        mv.visitInsn(Opcodes.DUP);
-        compileContext.addStackCount(1);
+            // create the new instance -- adds 1 to stack
+            String instantiatedClassName = type.getInternalName();
+            mv.visitTypeInsn(Opcodes.NEW, instantiatedClassName);
+            compileContext.addStackCount(1);
+            // copy the exception so we can init it
+            mv.visitInsn(Opcodes.DUP);
+            compileContext.addStackCount(1);
 
-        int argCount = arguments.size();
+            int argCount = arguments.size();
 
-        // stack each of the arguments to the constructor
-        for (int i = 0; i < argCount; i++) {
-            Type argType = argumentTypes.get(i);
-            Type paramType = paramTypes.get(i);
-            int paramCount = (paramType.getNBytes() > 4 ? 2 : 1);
+            // stack each of the arguments to the constructor
+            for (int i = 0; i < argCount; i++) {
+                Type argType = argumentTypes.get(i);
+                Type paramType = paramTypes.get(i);
+                int paramCount = (paramType.getNBytes() > 4 ? 2 : 1);
 
-            // track extra storage used after type conversion
-            extraParams += (paramCount);
-            arguments.get(i).compile(mv, compileContext);
-            compileTypeConversion(argType, paramType, mv, compileContext);
+                // track extra storage used after type conversion
+                extraParams += (paramCount);
+                arguments.get(i).compile(mv, compileContext);
+                compileTypeConversion(argType, paramType, mv, compileContext);
+            }
+
+            // construct the exception
+            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, instantiatedClassName, "<init>", getDescriptor());
+
+            // modify the stack height to account for the removed exception and params
+            compileContext.addStackCount(-(extraParams+1));
+        } else {
+            // TODO !!! implement compilation for array types !!!
+            if (arrayDimCount == 1) {
+                // we can use a NEWARRAY or ANEWARRAY
+                Type baseType = type.getBaseType();
+                // compile first array dimension adds 1 to stack
+                arrayDims.get(0).compile(mv, compileContext);
+                // compile new array op -- pops 1 and adds 1 to stack
+                if (baseType.isObject()) {
+                    mv.visitTypeInsn(Opcodes.ANEWARRAY, baseType.getInternalName());
+                // } else if (baseType.isArray()) {  // cannot happen!!!
+                } else {
+                    int operand = 0;
+                    if (baseType.equals(Type.Z)) {
+                        operand = Opcodes.T_BOOLEAN;
+                    } else if (baseType.equals(Type.B)) {
+                        operand = Opcodes.T_BYTE;
+                    } else if (baseType.equals(Type.S)) {
+                        operand = Opcodes.T_SHORT;
+                    } else if (baseType.equals(Type.C)) {
+                        operand = Opcodes.T_CHAR;
+                    } else if (baseType.equals(Type.I)) {
+                        operand = Opcodes.T_INT;
+                    } else if (baseType.equals(Type.J)) {
+                        operand = Opcodes.T_LONG;
+                    } else if (baseType.equals(Type.F)) {
+                        operand = Opcodes.T_FLOAT;
+                    } else if (baseType.equals(Type.D)) {
+                        operand = Opcodes.T_DOUBLE;
+                    }
+                    mv.visitIntInsn(Opcodes.NEWARRAY, operand);
+                }
+            } else {
+                // we need to use MULTIANEWARRAY
+
+                for (int i = 0; i < arrayDimDefinedCount; i++) {
+                    // compile next array dimension adds 1 to stack
+                    arrayDims.get(i).compile(mv, compileContext);
+                }
+                // execute the MULTIANEWARRAY operation -- pops arrayDims operands and pushes 1
+                mv.visitMultiANewArrayInsn(type.getInternalName(), arrayDimDefinedCount);
+                compileContext.addStackCount(1 - arrayDimDefinedCount);
+            }
         }
-
-        // construct the exception
-        mv.visitMethodInsn(Opcodes.INVOKESPECIAL, exceptionClassName, "<init>", getDescriptor());
-
-        // modify the stack height to account for the removed exception and params
-        compileContext.addStackCount(-(extraParams+1));
 
         if (compileContext.getStackCount() != currentStack + expected) {
             throw new CompileException("NewExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
