@@ -577,7 +577,7 @@ public class JMXHelper extends Helper implements DynamicMBean
             mbsToReturn = ManagementFactory.getPlatformMBeanServer();
         } else {
             ArrayList<MBeanServer> mbeanServers = MBeanServerFactory.findMBeanServer(null);
-            if (mbeanServers != null) {          0-atch
+            if (mbeanServers != null) {
                 for (MBeanServer mbs : mbeanServers ) {
                     if (mbeanServerDomainToLookFor.equals(mbs.getDefaultDomain())) {
                         mbsToReturn = mbs;
