@@ -1,6 +1,6 @@
 /*
 * JBoss, Home of Professional Open Source
-* Copyright 2008-9, Red Hat Middleware LLC, and individual contributors
+* Copyright 2008-10 Red Hat and individual contributors
 * by the @authors tag. See the copyright.txt in the distribution for a
 * full listing of individual contributors.
 *
@@ -23,9 +23,6 @@
 */
 package org.jboss.byteman.agent.adapter;
 
-import org.jboss.byteman.rule.type.TypeHelper;
-import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.agent.RuleScript;
 import org.jboss.byteman.agent.TransformContext;
 import org.objectweb.asm.*;
 

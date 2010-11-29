@@ -1,6 +1,6 @@
 /*
 * JBoss, Home of Professional Open Source
-* Copyright 2008, Red Hat Middleware LLC, and individual contributors
+* Copyright 2008-10 Red Hat and individual contributors
 * by the @authors tag. See the copyright.txt in the distribution for a
 * full listing of individual contributors.
 *
@@ -24,7 +24,7 @@
 package org.jboss.byteman.rule.exception;
 
 /**
- * SPecializaton of ExecuteException used to wrap a client exception generated via a rule THROW action.
+ * Specializaton of ExecuteException used to wrap a client exception generated via a rule THROW action.
  * A ThrowException is caught by the injected trigger code and unwrapped so that the client exception
  * can be rethrown from the trigger method.
  */
