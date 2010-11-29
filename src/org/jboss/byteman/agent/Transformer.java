@@ -31,7 +31,6 @@ import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.rule.exception.ParseException;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.JSRInlinerAdapter;
 
 import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
@@ -663,10 +662,10 @@ public class Transformer implements ClassFileTransformer {
         ClassWriter dummy = getNonLoadingClassWriter(0);
         RuleCheckAdapter checkAdapter = handlerLocation.getRuleCheckAdapter(dummy, transformContext);
         try {
-            // insert a JSR inliner between the reader and the adapter so we don't see JSR/RET sequences
-            // we use a specialised version which provides us with info about vars going in and out of scope
-            BMJSRInliner jsrInliner = new BMJSRInliner(checkAdapter);
-            cr.accept(jsrInliner, ClassReader.EXPAND_FRAMES);
+            // insert a local scope adapter between the reader and the adapter so
+            // we see info about vars going in and out of scope
+            BMLocalScopeAdapter localScopeAdapter = new BMLocalScopeAdapter(checkAdapter);
+            cr.accept(localScopeAdapter, ClassReader.EXPAND_FRAMES);
         } catch (Throwable th) {
             if (isVerbose()) {
                 System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + ruleScript.getName() + " to class " + className + "\n" + th);
