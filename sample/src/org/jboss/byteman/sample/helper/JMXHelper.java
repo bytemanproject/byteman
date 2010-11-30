@@ -82,7 +82,7 @@ public class JMXHelper extends Helper implements DynamicMBean
      * used only if an rmi server is required for the JMXConnector
      */
 
-    public final static int DEFAULT_RMI_PORT = 9999;
+    public final static int DEFAULT_RMI_PORT = 1099;
 
     /**
      * JMX Url pattern for use  when creating the connector server
