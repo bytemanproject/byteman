@@ -88,7 +88,7 @@ public class JMXHelper extends Helper implements DynamicMBean
      * JMX Url pattern for use  when creating the connector server
      */
 
-    public final static String JMX_URL = "service:jmx:rmi:///jndi/rmi://%1$s:%2$i/jmxrmi" ;
+    public final static String JMX_URL = "service:jmx:rmi:///jndi/rmi://%1$s:%2$d/jmxrmi" ;
 
     /**
      * constructor allowing this helper to be used as a helper
