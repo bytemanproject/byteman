@@ -229,6 +229,12 @@ public class Transformer implements ClassFileTransformer {
                 loader = ClassLoader.getSystemClassLoader();
             }
 
+            // if we need to traverse the interfaces then we have a DAG to deal with so
+            // we had better find a way to avoid doing things twice
+
+            LinkedList<String> toVisit = null;
+            HashSet<String> visited = null;
+
             // ok, we need to check whether there are any class scripts associated with this class and if so
             // we will consider transforming the byte code
 
@@ -247,15 +253,43 @@ public class Transformer implements ClassFileTransformer {
                 // n.b. resist the temptation to call classBeingRedefined.getInterfaces() as this will
                 // cause the class to be resolved, losing any changes we install
 
-                int interfaceCount = checker.getInterfaceCount();
+                // we need to check the transitive closure of the binary links
+                // Class implements Interface and Interface extends Interface for this class
+                // which in general is a DAG.
 
+                toVisit = new LinkedList<String>();
+                visited = new HashSet<String>();
+
+                // we start with the original list of implemented interfaces
+
+                int interfaceCount = checker.getInterfaceCount();
                 for (int i = 0; i < interfaceCount; i++) {
                     String interfaceName = checker.getInterface(i);
+                    toVisit.add(interfaceName);
+                }
+
+                // ok now check each interface in turn while pushing its super interfaces
+                // until we no longer have any new interfaces to check
+
+                while (!toVisit.isEmpty()) {
+                    String interfaceName = toVisit.pop();
                     String internalInterfaceName = TypeHelper.internalizeClass(interfaceName);
-                    newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName, true);
-                    dotIdx = internalInterfaceName.lastIndexOf('.');
-                    if (dotIdx >= 0) {
-                        newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName.substring(dotIdx + 1), true);
+                    if (!visited.contains(interfaceName)) {
+                        // avoid visiting  this interface again
+                        visited.add(interfaceName);
+                        // now see if we have any rules for this interface
+                        newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName, true);
+                        dotIdx = internalInterfaceName.lastIndexOf('.');
+                        if (dotIdx >= 0) {
+                            newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName.substring(dotIdx + 1), true);
+                        }
+                        // check the extends list of this interface for new interfaces to consider
+                        ClassChecker newChecker = getClassChecker(interfaceName, originalLoader);
+                        interfaceCount = newChecker.getInterfaceCount();
+                        for (int i = 0; i < interfaceCount; i++) {
+                            interfaceName = newChecker.getInterface(i);
+                            toVisit.add(interfaceName);
+                        }
                     }
                 }
             }
@@ -284,20 +318,40 @@ public class Transformer implements ClassFileTransformer {
                         newBuffer = tryTransform(newBuffer, internalName, loader, superName.substring(dotIdx + 1), false, true);
                     }
 
-                    int interfaceCount = checker.getInterfaceCount();
+                    if (scriptRepository.checkInterfaces()) {
+                        // we need to do another DAG visit but only for interfaces not already considered
 
-                    for (int i = 0; i < interfaceCount; i++) {
-                        String interfaceName = checker.getInterface(i);
-                        // TODO -- do we ever find that a super declares an interface also declared by its subclass
-                        // TODO -- we probably don't want to inject twice in such cases so we ought to remember whether
-                        // TODO -- we have seen an interface before
-                        newBuffer = tryTransform(newBuffer, internalName, loader, interfaceName, true, true);
-                        dotIdx = interfaceName.lastIndexOf('.');
-                        if (dotIdx >= 0) {
-                            newBuffer = tryTransform(newBuffer, internalName, loader, interfaceName.substring(dotIdx + 1), true, true);
+                        int interfaceCount = checker.getInterfaceCount();
+                        for (int i = 0; i < interfaceCount; i++) {
+                            String interfaceName = checker.getInterface(i);
+                            toVisit.add(interfaceName);
+                        }
+                        
+                        // ok now check each interface in turn while pushing its super interfaces
+                        // until we no longer have any new interfaces to check
+
+                        while(!toVisit.isEmpty()) {
+                            String interfaceName = toVisit.pop();
+                            String internalInterfaceName = TypeHelper.internalizeClass(interfaceName);
+                            if (!visited.contains(interfaceName)) {
+                                // avoid visiting  this interface again
+                                visited.add(interfaceName);
+                                // now see if we have any rules for this interface
+                                newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName, true, true);
+                                dotIdx = interfaceName.lastIndexOf('.');
+                                if (dotIdx >= 0) {
+                                    newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName.substring(dotIdx + 1), true, true);
+                                }
+                                // check the extends list of this interface for new interfaces to consider
+                                ClassChecker newChecker = getClassChecker(interfaceName, originalLoader);
+                                interfaceCount = newChecker.getInterfaceCount();
+                                for (int i = 0; i < interfaceCount; i++) {
+                                    interfaceName = newChecker.getInterface(i);
+                                    toVisit.add(interfaceName);
+                                }
+                            }
                         }
                     }
-
                     // move on to the next super
                     superName = checker.getSuper();
                 }
