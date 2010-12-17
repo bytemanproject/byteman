@@ -46,6 +46,8 @@
     <property name="contrib.dir"        value="contrib"/>
     <property name="contrib.dtest.dir"  value="${contrib.dir}/dtest"/>
     <property name="contrib.dtest.src.dir"    value="${contrib.dtest.dir}/src"/>
+    <property name="contrib.bmunit.dir"  value="${contrib.dir}/bmunit"/>
+    <property name="contrib.bmunit.src.dir"    value="${contrib.bmunit.dir}/src"/>
 
     <!-- locations of intermediate build products -->
 
@@ -217,10 +219,14 @@
     </target>
 
     <!-- target to make and install code in contrib directory -->
-    <target name="contrib-install" depends="contrib-dtest-install"/>
+    <target name="contrib-install" depends="contrib-dtest-install, contrib-bmunit-install"/>
 
     <target name="contrib-dtest-install">
         <ant dir="${contrib.dtest.dir}" target="install"/>
+    </target>
+
+    <target name="contrib-bmunit-install">
+        <ant dir="${contrib.bmunit.dir}" target="install"/>
     </target>
 
     <target name="install" depends="jar, init-install, local-install, sample-install, contrib-install">
