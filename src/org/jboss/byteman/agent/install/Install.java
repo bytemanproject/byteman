@@ -25,13 +25,12 @@
 
 package org.jboss.byteman.agent.install;
 
-import com.sun.tools.attach.AgentInitializationException;
-import com.sun.tools.attach.AgentLoadException;
-import com.sun.tools.attach.AttachNotSupportedException;
-import com.sun.tools.attach.VirtualMachine;
+import com.sun.tools.attach.*;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 import java.util.Properties;
 import java.util.jar.JarFile;
 
@@ -41,18 +40,8 @@ import java.util.jar.JarFile;
  */
 public class Install
 {
-    private String agentJar;
-    private int pid;
-    private int port;
-    private String host;
-    private boolean addToBoot;
-    private String props;
-    private VirtualMachine vm;
-
-    private static final String BYTEMAN_PREFIX="org.jboss.byteman.";
-
     /**
-     * main routine
+     * main routine for use from command line
      * <p/>
      * Install [-h host] [-p port] [-b] pid
      * <p/>
@@ -63,9 +52,54 @@ public class Install
     {
         Install attachTest = new Install();
         attachTest.parseArgs(args);
-        attachTest.locateAgent();
-        attachTest.attach();
-        attachTest.injectAgent();
+        try {
+                attachTest.locateAgent();
+                attachTest.attach();
+                attachTest.injectAgent();
+        } catch (Exception e) {
+            System.out.println(e);
+            System.exit(1);
+        }
+    }
+
+    /**
+     * @param pid the process id of the JVM into which the agent should be installed or 0 for this JVM
+     * @param addToBoot true if the agent jar should be installed into the bootstrap classpath
+     * @param host the hostname to be used by the agent listener or null for localhost
+     * @param port the port to be used by the agent listener or 0 for the default port
+     * @param properties an array of System properties to be installed by the agent with optional values e.g.
+     * values such as "org.jboss.byteman.verbose" or "org.jboss.byteman.dump.generated.classes.directory=./dump"
+     * @throws IllegalArgumentException if any of the arguments  is invalid
+     * @throws FileNotFoundException if the agent jar cannot be found using the environment variable BYTEMAN_HOME
+     * @throws IOException if the byteman jar cannot be opened or uploaded to the requested JVM
+     * @throws AttachNotSupportedException if the requested JVM cannot be attached to
+     * @throws AgentLoadException if an error occurs during upload of the agent into the JVM
+     * @throws AgentInitializationException if the agent fails to initialize after loading. this almost always
+     * indicates that the agent is already loaded into the JVM
+     */
+    public static void install(String pid, boolean addToBoot, String host, int  port, String[] properties)
+            throws IllegalArgumentException, FileNotFoundException,
+            IOException, AttachNotSupportedException,
+            AgentLoadException, AgentInitializationException
+    {
+        if (port < 0) {
+            throw new IllegalArgumentException("Install : port cannot be negative");
+        }
+        
+        for (int i = 0; i < properties.length; i++) {
+            String prop = properties[i];
+            if (prop == null || prop.length()  == 0) {
+                throw new IllegalArgumentException("Install : properties  cannot be null or \"\"");
+            }
+            if (prop.indexOf(',') >= 0) {
+                throw new IllegalArgumentException("Install : properties may not contain ','");
+            }
+        }
+        
+        Install install = new Install(pid, addToBoot, host, port, properties);
+        install.locateAgent();
+        install.attach();
+        install.injectAgent();
     }
 
     /**
@@ -74,10 +108,33 @@ public class Install
     private Install()
     {
         agentJar = null;
-        pid = 0;
+        id = null;
         port = 0;
         addToBoot = false;
         props="";
+        vm = null;
+    }
+
+    /**
+     *  only this class creates instances
+     */
+    private Install(String pid, boolean addToBoot, String host, int port, String[] properties)
+    {
+        agentJar = null;
+        this.id = pid;
+        this.port = 0;
+        this.addToBoot = addToBoot;
+        this.host = host;
+        if (properties != null) {
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < properties.length; i++) {
+                builder.append(",prop:");
+                builder.append(properties[i]);
+            }
+            props = builder.toString();
+        } else {
+            props = "";
+        }
         vm = null;
     }
 
@@ -145,23 +202,19 @@ public class Install
             usage(1);
         }
 
-        try {
-            pid = Integer.decode(nextArg);
-        } catch (NumberFormatException e) {
-            System.out.println("Install : invalid value for process id " + nextArg);
-            usage(1);
-        }
+        // we actually allow any string for the process id as we can look up by name also
+        id = nextArg;
     }
 
     /**
      * check for environment setting BYTEMAN_HOME and use it to identify the location of
      * the byteman agent jar.
      */
-    private void locateAgent()
+    private void locateAgent() throws IOException
     {
         String bmHome = System.getenv("BYTEMAN_HOME");
         if (bmHome == null || bmHome.length() == 0) {
-            System.out.println("Install : please set environment variable BYTEMAN_HOME");
+            throw new  FileNotFoundException("Install : cannot find Byteman agent jar please set environment variable BYTEMAN_HOME");
         }
 
         if (bmHome.endsWith("/")) {
@@ -170,18 +223,18 @@ public class Install
 
         File bmHomeFile = new File(bmHome);
         if (!bmHomeFile.isDirectory()) {
-            System.out.println("Install : ${BYTEMAN_HOME} does not identify a directory");
+            throw new FileNotFoundException("Install : ${BYTEMAN_HOME} does not identify a directory");
         }
 
         File bmLibFile = new File(bmHome + "/lib");
         if (!bmLibFile.isDirectory()) {
-            System.out.println("Install : ${BYTEMAN_HOME}/lib does not identify a directory");
+            throw new FileNotFoundException("Install : ${BYTEMAN_HOME}/lib does not identify a directory");
         }
 
         try {
             JarFile bytemanJarFile = new JarFile(bmHome + "/lib/byteman.jar");
         } catch (IOException e) {
-            System.out.println("Install : ${BYTEMAN_HOME}/lib/byteman.jar is not a valid jar file");
+            throw new IOException("Install : ${BYTEMAN_HOME}/lib/byteman.jar is not a valid jar file");
         }
 
         agentJar = bmHome + "/lib/byteman.jar";
@@ -190,30 +243,62 @@ public class Install
     /**
      * attach to the Java process identified by the process id supplied on the command line
      */
-    private void attach()
+    private void attach() throws AttachNotSupportedException, IOException, IllegalArgumentException
     {
-        Properties properties = null;
-        try {
-             vm = VirtualMachine.attach(Integer.toString(pid));
-        } catch (AttachNotSupportedException e) {
-            System.out.println("Install : unable to attach to process " + pid);
-            e.printStackTrace();
-            System.exit(2);
-        } catch (IOException e) {
-            System.out.println("Install : I/O exception attaching to process " + pid);
-            e.printStackTrace();
-            System.exit(3);
+
+        if (id.matches("[0-9]+")) {
+            // integer process id
+            int pid = Integer.valueOf(id);
+            if (pid <= 0) {
+                throw new IllegalArgumentException("Install : invalid pid " +id);
+            }
+            vm = VirtualMachine.attach(Integer.toString(pid));
+        } else {
+            // try to search for this VM with an exact match
+            List<VirtualMachineDescriptor> vmds = VirtualMachine.list();
+            for (VirtualMachineDescriptor vmd: vmds) {
+                String displayName = vmd.displayName();
+                int spacePos = displayName.indexOf(' ');
+                if (spacePos > 0) {
+                    displayName = displayName.substring(0, spacePos);
+                }
+                if (displayName.equals(id)) {
+                    String pid = vmd.id();
+                    vm = VirtualMachine.attach(vmd);
+                    return;
+                }
+            }
+            // hmm, ok, lets see if we can find a trailing match e.g. if the displayName
+            // is org.jboss.Main we will accept jboss.Main or Main
+            for (VirtualMachineDescriptor vmd: vmds) {
+                String displayName = vmd.displayName();
+                int spacePos = displayName.indexOf(' ');
+                if (spacePos > 0) {
+                    displayName = displayName.substring(0, spacePos);
+                }
+
+                if (displayName.indexOf('.') >= 0 && displayName.endsWith(id)) {
+                    // looking hopeful ensure the preceding char is a '.'
+                    int idx = displayName.length() - (id.length() + 1);
+                    if (displayName.charAt(idx) == '.') {
+                        // yes it's a match
+                        String pid = vmd.id();
+                        vm = VirtualMachine.attach(vmd);
+                        return;
+                    }
+                }
+            }
+
+            // no match so throw an exception
+
+            throw new IllegalArgumentException("Install : invalid pid " + id);
         }
 
-        try {
-            properties = vm.getAgentProperties();
-        } catch (IOException e) {
-            System.out.println("Install : I/O exception fetching agent properties " + pid);
-            e.printStackTrace();
-            System.exit(4);
-        }
 
+        //!! TODO -- find a way for the agent to notify it is already loaded via an agent property
         /*
+        Properties properties = vm.getAgentProperties();
+
         System.out.println("agent properties:");
         for (String name : properties.stringPropertyNames()) {
             System.out.print("  ");
@@ -228,9 +313,9 @@ public class Install
      * get the attached process to upload and install the agent jar using whatever agent options were
      * configured on the command line
      */
-    private void injectAgent()
+    private void injectAgent() throws AgentLoadException, AgentInitializationException, IOException
     {
-        if (agentJar != null) {
+        try {
             // we need at the very least to enable the listener so that scripts can be uploaded
             String agentOptions = "listener:true";
             if (host != null && host.length() != 0) {
@@ -245,31 +330,10 @@ public class Install
             if (props != null) {
                 agentOptions += props;
             }
-            try {
-                vm.loadAgent(agentJar, agentOptions);
-            } catch (AgentLoadException e) {
-                System.out.println("Install :load exception loading agent");
-                e.printStackTrace();
-                System.exit(5);
-            } catch (AgentInitializationException e) {
-                System.out.println("Install : initialization exception loading agent");
-                e.printStackTrace();
-                System.exit(6);
-            } catch (IOException e) {
-                System.out.println("Install : I/O exception loading agent");
-                e.printStackTrace();
-                System.exit(7);
-            }
-        }
-        
-        if (vm != null) {
-            try {
-                vm.detach();
-            } catch (IOException e) {
-                System.out.println("Install : I/O exception detaching from process " + pid);
-                e.printStackTrace();
-                System.exit(8);
-            }
+            
+            vm.loadAgent(agentJar, agentOptions);
+        } finally {
+            vm.detach();
         }
     }
 
@@ -279,9 +343,9 @@ public class Install
      */
     private static void usage(int exitValue)
     {
-        System.out.println("usage : Install [-h host] [-p porm] [-b] [-Dprop[=value]]* pid");
+        System.out.println("usage : Install [-h host] [-p port] [-b] [-Dprop[=value]]* pid");
         System.out.println("        upload the byteman agent into a running JVM");
-        System.out.println("    pid is the process id of the target JVM");
+        System.out.println("    pid is the process id of the target JVM or the unique name of the process as reported by the jps -l command");
         System.out.println("    -h host selects the host name or address the agent listener binds to");
         System.out.println("    -p port selects the port the agent listener binds to");
         System.out.println("    -b adds the byteman jar to the bootstrap classpath");
@@ -289,4 +353,14 @@ public class Install
         System.out.println("    expects to find a byteman agent jar in $BYTEMAN_HOME/lib/byteman.jar");
         System.exit(exitValue);
     }
+
+    private String agentJar;
+    private String id;
+    private int port;
+    private String host;
+    private boolean addToBoot;
+    private String props;
+    private VirtualMachine vm;
+
+    private static final String BYTEMAN_PREFIX="org.jboss.byteman.";
 }
