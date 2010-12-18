@@ -24,7 +24,7 @@ README.txt for Byteman contrib bmunit, a distributed test helper.
 
 This package simplifies use of  Byteman in JUnit  tests. It supports both old and
 new style testing either by subclassing the old JUnit Testcase class or by annotating
-your code  with @RunWith(BMUnitRunner) and @BMRules annotations.
+your code  with @RunWith(BMUnitRunner) and @BMScript annotations.
 
 If your test class inherits from BMTestCase then your test setup will load the Byteman
 agent on demand and will automatically install Byteman rules before running a test
@@ -32,10 +32,10 @@ method then unload rules after the test has ended. The name of the rule script
 is computed using the test class name and/or the test method name.
 
 If  your class is annotated with @RunWith(BMUnitRunner) then the runner will load the
-Byteman agent on demand and will load and unload rules in response to thepresence of
-@BMRules annotations. If the class is annotated then the associated rules will be loaded
+Byteman agent on demand and will load and unload rules in response to the presence of
+@BMScript annotations. If the class is annotated then the associated rules will be loaded
 before running any tests and only unloaded until after all tests have executed. If a
-test method (@Test annotated method) is also annotated with @BMRules then rules will
+test method (@Test annotated method) is also annotated with @BMScript then rules will
 be loaded specifically for that test and unloaded after the test completes. The name
 of the class rules  script is determined using the annotation value and test class name
 or, if the value is defaulted to "", just the class name. The name of the method rules

@@ -12,7 +12,7 @@ import org.junit.runners.model.Statement;
  */
 public class BMUnitRunner extends BlockJUnit4ClassRunner
 {
-    BMRules classAnnotation;
+    BMScript classAnnotation;
     Class<?> testKlazz;
 
     /**
@@ -24,7 +24,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     public BMUnitRunner(Class<?> klass) throws InitializationError {
         super(klass);
         testKlazz = getTestClass().getJavaClass();
-        classAnnotation = testKlazz.getAnnotation(BMRules.class);
+        classAnnotation = testKlazz.getAnnotation(BMScript.class);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     @Override
     protected Statement methodInvoker(FrameworkMethod method, Object test) {
         final Statement original = super.methodInvoker(method, test);
-        BMRules annotation = method.getAnnotation(BMRules.class);
+        BMScript annotation = method.getAnnotation(BMScript.class);
         if (annotation != null) {
             // ensure we always have an actual name here instead of null because using
             // null will clash with the name used for looking up rules when the clas
