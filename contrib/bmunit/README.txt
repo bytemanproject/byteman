@@ -22,29 +22,44 @@ README.txt for Byteman contrib bmunit, a distributed test helper.
 
 @author Andrew Dinn (adinn@redhat.com) 2010-12
 
-This package provides a subclass of the standard JUnit class testCase called BMTestCase
-which simplifies using  Byteman in JUnit  tests. If your test class inherits from
-BMTestCase then your test setup will automatically load the Byteman agent and install
-Byteman rules before running the test and the teardown will unload the rules after the
-test has ended.
+This package simplifies use of  Byteman in JUnit  tests. It supports both old and
+new style testing either by subclassing the old JUnit Testcase class or by annotating
+your code  with @RunWith(BMUnitRunner) and @BMRules annotations.
 
-BMtestCase uses the name of the test case and/or the name of the test class to locate
+If your test class inherits from BMTestCase then your test setup will load the Byteman
+agent on demand and will automatically install Byteman rules before running a test
+method then unload rules after the test has ended. The name of the rule script
+is computed using the test class name and/or the test method name.
+
+If  your class is annotated with @RunWith(BMUnitRunner) then the runner will load the
+Byteman agent on demand and will load and unload rules in response to thepresence of
+@BMRules annotations. If the class is annotated then the associated rules will be loaded
+before running any tests and only unloaded until after all tests have executed. If a
+test method (@Test annotated method) is also annotated with @BMRules then rules will
+be loaded specifically for that test and unloaded after the test completes. The name
+of the class rules  script is determined using the annotation value and test class name
+or, if the value is defaulted to "", just the class name. The name of the method rules
+script is determined using the annotation value and the test class name
+or, if the value is defaulted to "", the method name and class name.
+
+
+The script lookup employs the computed test name and/or the test class name to locate
 the rule script. It will look for script below the working directory but you can override
 this by setting System property org.jboss.byteman.contrib.bmunit.script.directory.
 Files are searched for as follows:
 
 Let
 
-  testName be the name of the test
+  testName be the computed name ("" or null means cases with * are ignored)
   org.my.TestCaseClass be the name of the test class
   <dir> be the configured script directory (default is the dir in which the test is run)
 
 Look for
 
-1) <dir>/testName.bmr
-2) <dir>/testName.txt
-3) <dir>/org/my/TestCaseClass-testName.bmr
-4) <dir>/org/my/TestCaseClass-testName.txt
+1) <dir>/testName.bmr *
+2) <dir>/testName.txt *
+3) <dir>/org/my/TestCaseClass-testName.bmr *
+4) <dir>/org/my/TestCaseClass-testName.txt *
 5) <dir>/org/my/TestCaseClass.bmr
 6) <dir>/org/my/TestCaseClass.txt
 7) <dir>/TestCaseClass.bmr

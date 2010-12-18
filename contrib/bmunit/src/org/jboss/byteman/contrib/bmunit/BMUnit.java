@@ -130,7 +130,10 @@ public class BMUnit
     {
         // turn '.' characters into file separator characters
         String className = clazz.getName();
-        String key = className + (testName == null ? "" : "#" + testName);
+        if (testName ==  null) {
+            testName = "";
+        }
+        String key = className + "#"  + testName;
         className = className.replace('.', File.separatorChar);
         int index = className.lastIndexOf(File.separatorChar);
         // we can also use the class name without package qualifier
@@ -139,7 +142,7 @@ public class BMUnit
         String filename = null;
         File file = null;
         // first try for rule file based on test name or class name  plus test name
-        if (testName != null) {
+        if (testName.length() > 0) {
             filename = loadDirectory + File.separator + testName + ".bmr";
             file = new File(filename);
             if (!file.exists()) {
@@ -203,7 +206,10 @@ public class BMUnit
     public static void unloadTestScript(Class<?> clazz, String testName) throws Exception
     {
         String className = clazz.getName();
-        String key = className + (testName == null ? "" : "#" + testName);
+        if (testName ==  null) {
+            testName = "";
+        }
+        String key = className + "#"  + testName;
         String filename = fileTable.remove(key);
         if (filename == null) {
             throw new FileNotFoundException("Rule file not found for Byteman test case " + key);
