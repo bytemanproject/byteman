@@ -58,12 +58,15 @@ public class BMUnit
 
         // if we can get a proper pid on Linux  we use it
         int pid = getPid();
-        pid =  0;
+        // uncomment to force lookup by name even on Linux
+        // pid =  0;
 
         try {
             if (pid != 0) {
                 Install.install(Integer.toString(pid), true, null, 0, properties);
             } else {
+                // TODO -- this only works if the junit test is forked
+                // TODO -- also need to allow for tests run inline
                 Install.install("org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner", true, null, 0, properties);
             }
         } catch (AgentInitializationException e) {
