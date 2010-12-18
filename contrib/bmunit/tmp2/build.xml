@@ -1,0 +1,93 @@
+<project name="byteman-bmunit-test" default="tests" basedir=".">
+
+    <!-- the directory in which your installed app server resides -->
+    <property environment="env"/>
+
+    <!-- pick up the byteman library -->
+    <property  name="root" location="../../.."/>
+    <property name="byteman.home" value="${root}/build/lib"/>
+    <property name="byteman.jar" value="byteman.jar"/>
+    <property name="install.jar" value="byteman-install.jar"/>
+
+    <!-- pick up the junit library -->
+    <property name="junit.home" value="${root}/ext"/>
+    <property name="junit.jar" value="junit.jar"/>
+
+    <!-- pick up the bmunit library -->
+    <property name="bmunit.home" value="../build/lib"/>
+    <property name="bmunit.jar" value="byteman-bmunit.jar"/>
+
+    <property name="src.dir"           value="src"/>
+    <property name="scripts.dir"       value="scripts"/>
+    <property name="build.dir"         value="build"/>
+    <property name="build.classes.dir" value="${build.dir}/classes"/>
+    <property name="build.lib.dir"     value="${build.dir}/lib"/>
+    <property name="build.output.dir"  value="${build.dir}/output"/>
+
+    <!-- enable debugging of compiled code including refs to local vars -->
+
+    <property name="javac.debug" value="on"/>
+
+    <target name="init">
+        <delete dir="${build.dir}"/>
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${build.classes.dir}"/>
+        <mkdir dir="${build.lib.dir}"/>
+        <mkdir dir="${build.output.dir}"/>
+        <mkdir dir="${build.output.dir}/location"/>
+    </target>
+
+    <target name="compile" depends="init">
+        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}">
+            <classpath>
+                <pathelement location="${byteman.home}/${byteman.jar}"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+                <pathelement location="${bmunit.home}/${bmunit.jar}"/>
+                <pathelement location="${java.home}/lib/tools.jar"/>
+            </classpath>
+        </javac>
+    </target>
+
+     <target name="jar" depends="compile">
+         <jar jarfile="${build.lib.dir}/tests.jar">
+             <fileset dir="${build.classes.dir}" includes="**/*"/>
+         </jar>
+    </target>
+
+    <target name="clean">
+       <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="tests"
+            depends="jar, tests.run"/>
+
+    <target name="tests.run">
+        <junit fork="true" showoutput="true">
+            <classpath>
+                <pathelement location="${byteman.home}/${install.jar}"/>
+                <pathelement location="${build.lib.dir}/tests.jar"/>
+                <pathelement location="${junit.home}/${junit.jar}"/>
+                <pathelement location="${bmunit.home}/${bmunit.jar}"/>
+                <pathelement location="${env.JAVA_HOME}/lib/tools.jar"/>
+            </classpath>
+            <!-- uncomment for verbose byteman output
+            <jvmarg value="-Dorg.jboss.byteman.verbose"/>
+            -->
+            <!-- uncomment to dump generated code
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+            <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+            -->
+            <!-- uncomment to enable debug
+            <jvmarg value="-Xdebug"/>
+            <jvmarg  value="-Xnoagent"/>
+            <jvmarg  value="-Djava.compiler=NONE"/>
+            <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
+            <!--
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=listener:true"/>
+            -->
+            <jvmarg value="-Dorg.jboss.byteman.contrib.bmunit.script.directory=${scripts.dir}"/>
+            <test name="test.UnitTest"/>
+        </junit>
+    </target>
+</project>
