@@ -26,7 +26,7 @@ public class BMUnit
     /**
      * hash table used to maintain association between test cases and rule files
      */
-    private static HashMap<BMTestCase, String> fileTable =new HashMap<BMTestCase, String>();
+    private static HashMap<String, String> fileTable = new HashMap<String, String>();
 
     /**
      * computes the load directory from system property org.jboss.byteman.contrib.bmunit.load.directory
@@ -126,34 +126,43 @@ public class BMUnit
      * @param name the name of the unit test
      * @throws Exception
      */
-    public static void loadTestScript(BMTestCase testCase) throws Exception
+    public static void loadTestScript(Class<?> clazz, String testName) throws Exception
     {
-        String name = testCase.getName();
-        String className = testCase.getClass().getName().replace('.', File.separatorChar);
+        // turn '.' characters into file separator characters
+        String className = clazz.getName();
+        String key = className + (testName == null ? "" : "#" + testName);
+        className = className.replace('.', File.separatorChar);
         int index = className.lastIndexOf(File.separatorChar);
+        // we can also use the class name without package qualifier
         String bareClassName = (index < 0 ? null : className.substring(index  + 1));
 
-        // first try for rule file based on test name
-        String filename = loadDirectory + File.separator + name + ".bmr";
-        boolean found = false;
-        File file = new File(filename);
-        if (!file.exists()) {
-            // try .txt extension for backwards compatibility
-            filename = loadDirectory + File.separator + name + ".txt";
+        String filename = null;
+        File file = null;
+        // first try for rule file based on test name or class name  plus test name
+        if (testName != null) {
+            filename = loadDirectory + File.separator + testName + ".bmr";
             file = new File(filename);
+            if (!file.exists()) {
+                // try .txt extension for backwards compatibility
+                filename = loadDirectory + File.separator + testName + ".txt";
+                file = new File(filename);
+            }
+
+            if (!file.exists()) {
+                // ok, now try for rule file based on class and test name
+                filename = loadDirectory + File.separator + className + "-" + testName + ".bmr";
+                file = new File(filename);
+            }
+
+            if (!file.exists()) {
+                // try .txt extension for backwards compatibility
+                filename = loadDirectory + File.separator + className + ".txt";
+                file = new File(filename);
+            }
         }
-        if (!file.exists()) {
-            // ok, now try for rule file based on class and test name
-            filename = loadDirectory + File.separator + className + "-" + name + ".bmr";
-            file = new File(filename);
-        }
-        if (!file.exists()) {
-            // try .txt extension for backwards compatibility
-            filename = loadDirectory + File.separator + className + ".txt";
-            file = new File(filename);
-        }
-        if (!file.exists()) {
-            // ok, try using just class name
+        // we may not have a file yet if the testname was null
+        if (file == null || !file.exists()) {
+            // ok, try using the package qualified classname to locate a directory hierarchy
             filename = loadDirectory + File.separator + className + ".bmr";
             file = new File(filename);
         }
@@ -162,12 +171,10 @@ public class BMUnit
             filename = loadDirectory + File.separator + className + ".txt";
             file = new File(filename);
         }
-        if (bareClassName != null) {
-            if (!file.exists()) {
-                // ok, final try using just base class name with no package qualifier
-                filename = loadDirectory + File.separator + bareClassName + ".bmr";
-                file = new File(filename);
-            }
+        if (!file.exists() && bareClassName != null) {
+            // ok, final try using just base class name with no package qualifier
+            filename = loadDirectory + File.separator + bareClassName + ".bmr";
+            file = new File(filename);
             if (!file.exists()) {
                 // try .txt extension for backwards compatibility
                 filename = loadDirectory + File.separator + bareClassName + ".txt";
@@ -175,7 +182,7 @@ public class BMUnit
             }
         }
         if (!file.exists()) {
-            throw new FileNotFoundException("Rule file not found for Byteman test case " + name); 
+            throw new FileNotFoundException("Rule file not found for Byteman test case " + key);
         }
         if (!file.canRead()) {
             throw new IOException("Cannot read Byteman rule file " + filename);
@@ -184,7 +191,7 @@ public class BMUnit
         List<String> files =  new ArrayList<String>();
         files.add(filename);
         submit.addRulesFromFiles(files);
-        fileTable.put(testCase, filename);
+        fileTable.put(key, filename);
     }
 
     /**
@@ -193,11 +200,13 @@ public class BMUnit
      * @param name the name of the unit test
      * @throws Exception
      */
-    public static void unloadTestScript(BMTestCase testCase) throws Exception
+    public static void unloadTestScript(Class<?> clazz, String testName) throws Exception
     {
-        String filename = fileTable.remove(testCase);
+        String className = clazz.getName();
+        String key = className + (testName == null ? "" : "#" + testName);
+        String filename = fileTable.remove(key);
         if (filename == null) {
-            throw new FileNotFoundException("Rule file not found for Byteman test case " + testCase.getName());
+            throw new FileNotFoundException("Rule file not found for Byteman test case " + key);
         }
         Submit submit = new Submit();
         List<String> files =  new ArrayList<String>();
