@@ -31,7 +31,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
-import java.util.Properties;
 import java.util.jar.JarFile;
 
 /**
@@ -100,6 +99,18 @@ public class Install
         install.locateAgent();
         install.attach();
         install.injectAgent();
+    }
+
+    public static VMInfo[] availableVMs()
+    {
+        List<VirtualMachineDescriptor> vmds = VirtualMachine.list();
+        VMInfo[] vmInfo = new VMInfo[vmds.size()];
+        int i = 0;
+        for (VirtualMachineDescriptor vmd : vmds) {
+            vmInfo[i++] = new VMInfo(vmd.id(), vmd.displayName());
+        }
+
+        return vmInfo;
     }
 
     /**

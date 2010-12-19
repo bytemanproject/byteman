@@ -14,6 +14,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
 {
     BMScript classAnnotation;
     Class<?> testKlazz;
+    String loadDirectory;
 
     /**
      * Creates a BMUnitRunner to run test in {@code klass}
@@ -25,6 +26,10 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         super(klass);
         testKlazz = getTestClass().getJavaClass();
         classAnnotation = testKlazz.getAnnotation(BMScript.class);
+        loadDirectory = classAnnotation.dir();
+        if (loadDirectory.length() == 0) {
+            loadDirectory = null;
+        }
     }
 
     @Override
@@ -36,7 +41,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
             final String name = computeBMRulesName(classAnnotation.value(), testKlazz);
             return new Statement() {
                 public void evaluate() throws Throwable {
-                    BMUnit.loadTestScript(testKlazz, name);
+                    BMUnit.loadTestScript(testKlazz, name, loadDirectory);
                     try {
                         original.evaluate();
                     } finally {
@@ -58,9 +63,10 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
             // null will clash with the name used for looking up rules when the clas
             // has a BMRules annotation
             final String name = computeBMRulesName(annotation.value(), method);
+            final String loadDirectory = computeLoadDirectory(annotation.dir(), this.loadDirectory);
             return new Statement() {
                 public void evaluate() throws Throwable {
-                    BMUnit.loadTestScript(testKlazz, name);
+                    BMUnit.loadTestScript(testKlazz, name, loadDirectory);
                     try {
                         original.evaluate();
                     } finally {
@@ -106,5 +112,13 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         }
 
         return null;
+    }
+
+    protected String computeLoadDirectory(String methodAnnotationDir, String classAnnotationDir)
+    {
+        if (methodAnnotationDir != null && methodAnnotationDir.length() > 0) {
+            return methodAnnotationDir;
+        }
+        return classAnnotationDir;
     }
 }

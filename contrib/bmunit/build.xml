@@ -28,6 +28,7 @@
     <!-- pick up the byteman library -->
     <property name="byteman.home" value="../../build/lib"/>
     <property name="byteman.jar" value="byteman.jar"/>
+    <property name="byteman.install.jar" value="byteman-install.jar"/>
     <property name="byteman.install" value="../../install"/>
     <property name="byteman.install.contrib" value="${byteman.install}/contrib"/>
     <property name="byteman.install.contrib.bmunit" value="${byteman.install.contrib}/bmunit"/>
@@ -72,7 +73,7 @@
     <target name="compile" depends="init">
         <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}">
             <classpath>
-                <fileset dir="${byteman.home}" includes="${byteman.jar}"/>
+                <fileset dir="${byteman.home}" includes="${byteman.jar} ${byteman.install.jar}"/>
                 <fileset dir="${junit.home}" includes="${junit.jar}"/>
                 <fileset dir="${java.home}/lib/" includes="tools.jar"/>
             </classpath>

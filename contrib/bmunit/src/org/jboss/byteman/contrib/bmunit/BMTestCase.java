@@ -8,10 +8,12 @@ import junit.framework.TestCase;
  */
 public class BMTestCase extends TestCase
 {
+    private String  loadDirectory;
+
     @Override
     protected void setUp() throws Exception {
         // load any script associated with this test
-        BMUnit.loadTestScript(this.getClass(), this.getName());
+        BMUnit.loadTestScript(this.getClass(), this.getName(), loadDirectory);
         super.setUp();
     }
 
@@ -20,6 +22,12 @@ public class BMTestCase extends TestCase
         super.tearDown();
         // load any script associated with this test
         BMUnit.unloadTestScript(this.getClass(), this.getName());
+    }
+
+    public BMTestCase(String name, String loadDirectory)
+    {
+        super(name);
+        this.loadDirectory = loadDirectory;
     }
 
     public BMTestCase(String name)
