@@ -114,6 +114,35 @@ public class Install
     }
 
     /**
+     * attach to the virtual machine identified by id and return the value of the named property. id must
+     * be the id of a virtual machine returned by method availableVMs. 
+     * @param id the id of the machine to attach to
+     * @param property the proeprty to be retrieved
+     * @return the value of the property or null if it is not set
+     */
+    public static String getSystemProperty(String id, String property)
+    {
+        VirtualMachine vm = null;
+        try {
+            vm = VirtualMachine.attach(id);
+            String value = (String)vm.getSystemProperties().get(property);
+            return value;
+        } catch (AttachNotSupportedException e) {
+            return null;
+        } catch (IOException e) {
+            return null;
+        } finally {
+            if (vm != null) {
+                try {
+                    vm.detach();
+                } catch (IOException e) {
+                    // ignore;
+                }
+            }
+        }
+    }
+
+    /**
      *  only this class creates instances
      */
     private Install()

@@ -99,6 +99,7 @@ public class BMUnit
         if (pid > 0) {
             id = Integer.toString(pid);
         } else {
+            /*
             VMInfo[] vmInfo = Install.availableVMs();
             // search for a JVM which looks like it is running a JUnit test
             // and install the agent into that JVM
@@ -115,6 +116,20 @@ public class BMUnit
                     break;
                 } else {
                     // TODO -- identify a forked maven test and then a test run directly or any other mode of running
+                }
+                */
+            // alternative strategy which will  work everywhere
+            // set a unique system property and then check each available VM until we find it
+            String prop = "org.jboss.byteman.contrib.bmunit.agent.unique";
+            String unique = Long.toHexString(System.currentTimeMillis());
+            System.setProperty(prop, unique);
+            VMInfo[] vmInfo = Install.availableVMs();
+            for (int i = 0; i < vmInfo.length; i++) {
+                String nextId = vmInfo[i].getId();
+                String value = Install.getSystemProperty(nextId, prop);
+                if (unique.equals(value)) {
+                    id = nextId;
+                    break;
                 }
             }
             // make sure we found a process
