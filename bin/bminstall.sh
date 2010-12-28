@@ -47,9 +47,18 @@ if [ -z "$BYTEMAN_HOME" ]; then
     fi
 fi
 
+# check that we can find  the byteman jar via BYTEMAN_HOME
+
 # the Install class is in the byteman-install jar
 if [ -r ${BYTEMAN_HOME}/lib/byteman.jar ]; then
     BYTEMAN_JAR=${BYTEMAN_HOME}/lib/byteman.jar
+else
+    echo "Cannot locate byteman jar"
+    exit
+fi
+# the Install class is in the byteman-install jar
+if [ -r ${BYTEMAN_HOME}/lib/byteman-install.jar ]; then
+    BYTEMAN_INSTALL_JAR=${BYTEMAN_HOME}/lib/byteman-install.jar
 else
     echo "Cannot locate byteman install jar"
     exit
@@ -68,4 +77,4 @@ fi
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 # attach class will validate arguments
 
-java ${BYTEMAN_JAVA_OPTS} -classpath ${BYTEMAN_JAR}:${TOOLS_JAR} org.jboss.byteman.agent.install.Install $*
+java ${BYTEMAN_JAVA_OPTS} -classpath ${BYTEMAN_INSTALL_JAR}:${TOOLS_JAR} org.jboss.byteman.agent.install.Install $*
