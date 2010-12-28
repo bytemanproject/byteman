@@ -84,7 +84,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestEntry.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestEntry.btm"/>
             <!-- uncomment for verbose byteman output
             <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
@@ -105,7 +105,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestExit.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestExit.btm"/>
             <test name="org.jboss.byteman.tests.location.TestExit"/>
         </junit>
         <junit fork="true" showoutput="true">
@@ -126,7 +126,7 @@
             <jvmarg  value="-Djava.compiler=NONE"/>
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             -->
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestCall.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestCall.btm"/>
             <test name="org.jboss.byteman.tests.location.TestCall"/>
         </junit>
         <junit fork="true" showoutput="true">
@@ -134,7 +134,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestSynch.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestSynch.btm"/>
             <test name="org.jboss.byteman.tests.location.TestSynch"/>
         </junit>
         <junit fork="true" showoutput="true">
@@ -142,7 +142,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestThrow.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestThrow.btm"/>
             <test name="org.jboss.byteman.tests.location.TestThrow"/>
         </junit>
         <junit fork="true" showoutput="true">
@@ -150,7 +150,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWrite.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWrite.btm"/>
             <test name="org.jboss.byteman.tests.location.TestReadWrite"/>
         </junit>
         <junit fork="true" showoutput="true">
@@ -158,7 +158,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWriteParams.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWriteParams.btm"/>
             <test name="org.jboss.byteman.tests.location.TestReadWriteParams"/>
         </junit>
         <junit fork="true" showoutput="true">
@@ -166,7 +166,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestAll.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestAll.btm"/>
             <test name="org.jboss.byteman.tests.location.TestAll"/>
         </junit>
         <junit fork="true" showoutput="true">
@@ -174,7 +174,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestLine.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestLine.btm"/>
             <test name="org.jboss.byteman.tests.location.TestLine"/>
         </junit>
     </target>
@@ -185,7 +185,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestEntry.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestEntry.btm"/>
             <!-- uncomment for verbose byteman output
             <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
@@ -207,7 +207,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestExit.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestExit.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <test name="org.jboss.byteman.tests.location.TestExit"/>
         </junit>
@@ -229,7 +229,7 @@
             <jvmarg  value="-Djava.compiler=NONE"/>
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
             -->
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestCall.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestCall.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <test name="org.jboss.byteman.tests.location.TestCall"/>
         </junit>
@@ -238,7 +238,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestSynch.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestSynch.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <test name="org.jboss.byteman.tests.location.TestSynch"/>
         </junit>
@@ -247,7 +247,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestThrow.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestThrow.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <test name="org.jboss.byteman.tests.location.TestThrow"/>
         </junit>
@@ -256,7 +256,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWrite.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWrite.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <test name="org.jboss.byteman.tests.location.TestReadWrite"/>
         </junit>
@@ -265,7 +265,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWriteParams.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestReadWriteParams.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <test name="org.jboss.byteman.tests.location.TestReadWriteParams"/>
         </junit>
@@ -274,7 +274,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestAll.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestAll.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <test name="org.jboss.byteman.tests.location.TestAll"/>
         </junit>
@@ -283,7 +283,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestLine.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/location/TestLine.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <test name="org.jboss.byteman.tests.location.TestLine"/>
         </junit>
@@ -295,7 +295,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestArithmetic.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestArithmetic.btm"/>
             <!--
             <jvmarg value="-Xdebug"/>
             <jvmarg  value="-Xnoagent"/>
@@ -309,7 +309,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestLogical.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestLogical.btm"/>
             <test name="org.jboss.byteman.tests.javaops.TestLogical"/>
         </junit>
         <junit fork="true" showoutput="true">
@@ -317,7 +317,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestComparison.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestComparison.btm"/>
             <test name="org.jboss.byteman.tests.javaops.TestComparison"/>
         </junit>
         <junit fork="true" showoutput="true">
@@ -325,7 +325,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestField.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestField.btm"/>
             <test name="org.jboss.byteman.tests.javaops.TestField"/>
         </junit>
         <junit fork="true" showoutput="true">
@@ -333,7 +333,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestMethod.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestMethod.btm"/>
             <!-- uncomment for verbose byteman output
             <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
@@ -357,7 +357,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestArray.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestArray.btm"/>
             <!-- uncomment for verbose byteman output
             <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
@@ -381,7 +381,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestAssign.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestAssign.btm"/>
             <!-- uncomment for verbose byteman output
             <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
@@ -405,7 +405,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestNew.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestNew.btm"/>
             <!-- uncomment for verbose byteman output
             <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
@@ -432,7 +432,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestArithmetic.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestArithmetic.btm"/>
             <!-- uncomment to dump generated code
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
@@ -451,7 +451,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestLogical.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestLogical.btm"/>
             <!-- uncomment for verbose byteman output
             <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
@@ -476,7 +476,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestComparison.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestComparison.btm"/>
             <!-- uncomment for verbose byteman output
             <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
@@ -501,7 +501,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestField.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestField.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!-- uncomment to dump generated code
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
@@ -520,7 +520,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestMethod.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestMethod.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!-- uncomment to dump generated code
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
@@ -539,7 +539,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestArray.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestArray.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!-- uncomment to dump generated code
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
@@ -558,7 +558,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestAssign.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestAssign.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!-- uncomment for verbose byteman output
             <jvmarg value="-Dorg.jboss.byteman.verbose"/>
@@ -580,7 +580,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestNew.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/javaops/TestNew.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!-- uncomment for verbose byteman output
             <jvmarg value="-Dorg.jboss.byteman.verbose"/>
@@ -605,7 +605,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/helpertests/TestStackTrace.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/helpertests/TestStackTrace.btm"/>
             <!--
             <jvmarg value="-Xdebug"/>
             <jvmarg  value="-Xnoagent"/>
@@ -619,7 +619,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/helpertests/TestCallerMatches.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/helpertests/TestCallerMatches.btm"/>
             <!--
             <jvmarg value="-Xdebug"/>
             <jvmarg  value="-Xnoagent"/>
@@ -636,7 +636,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/helpertests/TestStackTrace.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/helpertests/TestStackTrace.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!--
             <jvmarg value="-Xdebug"/>
@@ -651,7 +651,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/helpertests/TestCallerMatches.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/helpertests/TestCallerMatches.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!--
             <jvmarg value="-Xdebug"/>
@@ -668,7 +668,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestRecursiveTriggers.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestRecursiveTriggers.btm"/>
             <!--
             <jvmarg value="-Xdebug"/>
             <jvmarg  value="-Xnoagent"/>
@@ -682,7 +682,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestOverridingInjection.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestOverridingInjection.btm"/>
             <!--
             <jvmarg value="-Xdebug"/>
             <jvmarg  value="-Xnoagent"/>
@@ -696,7 +696,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestInterfaceInjection.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestInterfaceInjection.btm"/>
             <!--
             <jvmarg value="-Xdebug"/>
             <jvmarg  value="-Xnoagent"/>
@@ -710,7 +710,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestOverridingInterfaceInjection.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestOverridingInterfaceInjection.btm"/>
             <!--
             <jvmarg value="-Xdebug"/>
             <jvmarg  value="-Xnoagent"/>
@@ -724,7 +724,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestReturnBinding.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestReturnBinding.btm"/>
             <!-- uncomment to dump generated code
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
@@ -742,7 +742,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestReturnBindingAssignment.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestReturnBindingAssignment.btm"/>
             <!-- uncomment to dump generated code
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
@@ -760,7 +760,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestThrowBinding.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestThrowBinding.btm"/>
             <!-- uncomment to dump generated code
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
@@ -778,7 +778,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestParamBinding.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestParamBinding.btm"/>
             <!-- uncomment to dump generated code
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
@@ -799,7 +799,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestRecursiveTriggers.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestRecursiveTriggers.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!--
             <jvmarg value="-Xdebug"/>
@@ -814,7 +814,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestOverridingInjection.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestOverridingInjection.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!-- uncomment to dump generated code
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
@@ -833,7 +833,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestInterfaceInjection.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestInterfaceInjection.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!-- uncomment to dump generated code
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
@@ -852,7 +852,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestOverridingInterfaceInjection.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestOverridingInterfaceInjection.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!-- uncomment to dump generated code
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
@@ -871,7 +871,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestReturnBinding.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestReturnBinding.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!--
             <jvmarg value="-Xdebug"/>
@@ -886,7 +886,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestReturnBindingAssignment.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestReturnBindingAssignment.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!--
             <jvmarg value="-Xdebug"/>
@@ -905,7 +905,7 @@
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
             -->
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestThrowBinding.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestThrowBinding.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!--
             <jvmarg value="-Xdebug"/>
@@ -924,7 +924,7 @@
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
             -->
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestParamBinding.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/misc/TestParamBinding.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!--
             <jvmarg value="-Xdebug"/>
@@ -942,7 +942,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestEmptySignature.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestEmptySignature.btm"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
           -->
@@ -963,7 +963,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestEnclosedSynchronizationPropagation.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestEnclosedSynchronizationPropagation.btm"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
           -->
@@ -984,7 +984,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMethodParamName.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMethodParamName.btm"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
           -->
@@ -1005,7 +1005,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestThrowAction.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestThrowAction.btm"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
           -->
@@ -1026,7 +1026,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestWaitAfterSignalWakeMustMeet.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestWaitAfterSignalWakeMustMeet.btm"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
           -->
@@ -1047,7 +1047,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMultiMethodMatch.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMultiMethodMatch.btm"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
           -->
@@ -1068,7 +1068,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestPromotePrimitiveToObject.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestPromotePrimitiveToObject.btm"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
           -->
@@ -1089,7 +1089,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMethodClauseReturnType.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMethodClauseReturnType.btm"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
           -->
@@ -1110,7 +1110,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestInterfaceHierarchy.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestInterfaceHierarchy.btm"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
           -->
@@ -1135,7 +1135,7 @@
                 <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
             </classpath>
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestEmptySignature.txt"/>
+            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestEmptySignature.btm"/>
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
             <!-- uncomment for verbose byteman output
             <jvmarg value="-Dorg.jboss.byteman.verbose"/>
@@ -1157,7 +1157,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestEnclosedSynchronizationPropagation.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestEnclosedSynchronizationPropagation.btm"/>
           <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
@@ -1182,7 +1182,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMethodParamName.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMethodParamName.btm"/>
           <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
@@ -1204,7 +1204,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestThrowAction.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestThrowAction.btm"/>
           <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
@@ -1226,7 +1226,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestWaitAfterSignalWakeMustMeet.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestWaitAfterSignalWakeMustMeet.btm"/>
           <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
@@ -1248,7 +1248,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMultiMethodMatch.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMultiMethodMatch.btm"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
           -->
@@ -1270,7 +1270,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestPromotePrimitiveToObject.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestPromotePrimitiveToObject.btm"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
           -->
@@ -1292,7 +1292,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMethodClauseReturnType.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestMethodClauseReturnType.btm"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
           -->
@@ -1314,7 +1314,7 @@
               <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
               <pathelement location="${junit.home}/${junit.jar}"/>
           </classpath>
-          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestInterfaceHierarchy.txt"/>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestInterfaceHierarchy.btm"/>
           <!-- uncomment for verbose byteman output
           <jvmarg value="-Dorg.jboss.byteman.verbose"/>
           -->

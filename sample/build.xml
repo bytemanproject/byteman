@@ -72,7 +72,7 @@
     <target name="install" depends="jar, init-install">
         <copy todir="${install.sample.lib.dir}" file="${build.lib.dir}/${byteman.sample.jar}"/>
         <copy todir="${install.sample.scripts.dir}">
-            <fileset dir="${scripts.dir}" includes="*.txt *.bms"/>
+            <fileset dir="${scripts.dir}" includes="*.btm"/>
         </copy>
    </target>
 
