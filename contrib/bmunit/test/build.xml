@@ -62,7 +62,7 @@
 
     <target name="tests.run">
         <!--
-        <junit fork="true" showoutput="true">
+        <junit showoutput="true">
         -->
         <junit fork="true" showoutput="true" >
             <classpath>
@@ -81,11 +81,11 @@
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
             -->
             <!-- uncomment to enable debug
-            -->
             <jvmarg value="-Xdebug"/>
             <jvmarg  value="-Xnoagent"/>
             <jvmarg  value="-Djava.compiler=NONE"/>
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+            -->
             <!--
             <jvmarg value="-javaagent:${byteman.lib}/${byteman.jar}=listener:true"/>
             -->
