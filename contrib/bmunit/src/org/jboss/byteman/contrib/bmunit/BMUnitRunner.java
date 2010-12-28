@@ -1,5 +1,8 @@
 package org.jboss.byteman.contrib.bmunit;
 
+import org.junit.runner.Description;
+import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
@@ -32,6 +35,9 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         }
     }
 
+    /*
+     * this loads and unloads the class rules around each test. if we override childrenInvoker then
+     * we can load and unload the class rules once only around all tests
     @Override
     protected Statement methodBlock(FrameworkMethod method) {
         // if we have a BMRules annotation on the test class then surround the method block
@@ -46,6 +52,37 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
                         original.evaluate();
                     } finally {
                         BMUnit.unloadTestScript(testKlazz, name);
+                    }
+                }
+            };
+        } else {
+            return original;
+        }
+    }
+    */
+
+    @Override
+    protected Statement childrenInvoker(RunNotifier notifier) {
+        final Statement original = super.childrenInvoker(notifier);
+        if (classAnnotation !=null) {
+            final String name = computeBMRulesName(classAnnotation.value(), testKlazz);
+            final RunNotifier fnotifier = notifier;
+            final Description description = Description.createTestDescription(testKlazz, getName(), classAnnotation);
+            return new Statement() {
+                public void evaluate() throws Throwable {
+                    try {
+                        BMUnit.loadTestScript(testKlazz, name, loadDirectory);
+                        try {
+                            original.evaluate();
+                        } finally {
+                            try {
+                                BMUnit.unloadTestScript(testKlazz, name);
+                            } catch (Exception e) {
+                                fnotifier.fireTestFailure(new Failure(description, e));
+                            }
+                        }
+                    } catch (Exception e) {
+                        fnotifier.fireTestFailure(new Failure(description, e));
                     }
                 }
             };

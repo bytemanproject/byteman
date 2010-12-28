@@ -44,6 +44,16 @@ public class BMUnit
     public final static String AGENT_INHIBIT = "org.jboss.byteman.contrib.bmunit.agent.inhibit";
 
     /**
+     * System property which enables tracing of bmunit activity
+     */
+    public final static String VERBOSE = "org.jboss.byteman.contrib.bmunit.verbose";
+
+    /**
+     * flag which controls whether or not verbose trace output is enabled
+     */
+    private final static boolean verbose = (System.getProperty(VERBOSE) != null);
+
+    /**
      * the directory in which to look for rule scripts. this can be configured by setting system property
      * org.jboss.byteman.contrib.bmunit.load.directory
      */
@@ -114,6 +124,9 @@ public class BMUnit
         }
 
         try {
+            if (verbose) {
+                System.out.println("BMUNit : loading agent id = " + id);
+            }
             Install.install(id, true, host, port, properties);
         } catch (AgentInitializationException e) {
             // this probably indicates that the agent is already installed
@@ -259,7 +272,9 @@ public class BMUnit
         Submit submit = new Submit();
         List<String> files =  new ArrayList<String>();
         files.add(filename);
-        System.out.println("loading " + filename);
+        if (verbose) {
+            System.out.println("BMUNit : loading script = " + filename);
+        }
         submit.addRulesFromFiles(files);
         fileTable.put(key, filename);
     }
@@ -284,7 +299,9 @@ public class BMUnit
         Submit submit = new Submit();
         List<String> files =  new ArrayList<String>();
         files.add(filename);
-        System.out.println("unloading " + filename);
+        if (verbose) {
+            System.out.println("BMUNit : unloading script = " + filename);
+        }
         submit.deleteRulesFromFiles(files);
     }
 }
