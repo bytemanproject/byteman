@@ -25,16 +25,7 @@
 
 package org.jboss.byteman.agent.submit;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.StringReader;
+import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,17 +53,19 @@ public class Submit
     private final int port;
     private final String address;
 
+    private PrintStream out;
+
     /**
      * Create a client that will connect to a Byteman agent on the default host
-     * and port.
+     * and port and writing output to System.out.
      */
     public Submit() {
-        this(DEFAULT_ADDRESS, DEFAULT_PORT);
+        this(DEFAULT_ADDRESS, DEFAULT_PORT, System.out);
     }
 
     /**
      * Create a client that will connect to a Byteman agent on the given host
-     * and port.
+     * and port and writing output to System.out.
      *
      * @param address
      *            the hostname or IP address of the machine where Byteman agent
@@ -82,6 +75,21 @@ public class Submit
      *            If 0 or less, the default port is used.
      */
     public Submit(String address, int port) {
+        this(address, port, System.out);
+    }
+
+    /**
+     * Create a client that will connect to a Byteman agent on the given host
+     * and port and writing output to System.out.
+     *
+     * @param address
+     *            the hostname or IP address of the machine where Byteman agent
+     *            is located. If <code>null</code>, the default host is used.
+     * @param port
+     *            the port that the Byteman agent is listening to.
+     *            If 0 or less, the default port is used.
+     */
+    public Submit(String address, int port, PrintStream out) {
         if (address == null) {
             address = DEFAULT_ADDRESS;
         }
@@ -90,8 +98,13 @@ public class Submit
             port = DEFAULT_PORT;
         }
 
+        if (out == null) {
+            out = System.out;
+        }
+
         this.address = address;
         this.port = port;
+        this.out = out;
     }
 
     /**
@@ -879,6 +892,7 @@ public class Submit
      */
     public static void main(String[] args)
     {
+        String outfile = null;
         int port = DEFAULT_PORT;
         String hostname = DEFAULT_ADDRESS;
         int startIdx = 0;
@@ -890,17 +904,44 @@ public class Submit
         boolean showAddedClassloaderJars = false;
         boolean sysProps = false;
         int optionCount = 0;
+        PrintStream out = System.out;
 
         while (startIdx < maxIdx && args[startIdx].startsWith("-")) {
-            if (maxIdx >= startIdx + 2 && args[startIdx].equals("-p")) {
+            if (maxIdx >= startIdx + 2 && args[startIdx].equals("-o")) {
+                outfile = args[startIdx+1];
+                File file =  new File(outfile);
+                if (file.exists()) {
+                    // open for append
+                    if (file.isDirectory() || !file.canWrite()) {
+                        out.println("Submit : invalid output file " + outfile);
+                        System.exit(1);
+                    }
+                    FileOutputStream fos = null;
+                    try {
+                        fos =  new FileOutputStream(file, true);
+                    } catch (FileNotFoundException e) {
+                        out.println("Submit : error opening output file " + outfile);
+                    }
+                    out = new PrintStream(fos);
+                } else {
+                    FileOutputStream fos = null;
+                    try {
+                        fos =  new FileOutputStream(file, true);
+                    } catch (FileNotFoundException e) {
+                        out.println("Submit : error opening output file " + outfile);
+                    }
+                    out = new PrintStream(fos);
+                }
+                startIdx += 2;
+            } else if (maxIdx >= startIdx + 2 && args[startIdx].equals("-p")) {
                 try {
                     port = Integer.valueOf(args[startIdx+1]);
                 } catch (NumberFormatException e) {
-                    System.out.println("Submit : invalid port " + args[startIdx+1]);
+                    out.println("Submit : invalid port " + args[startIdx+1]);
                     System.exit(1);
                 }
                 if (port <= 0) {
-                    System.out.println("Submit : invalid port " + args[startIdx+1]);
+                    out.println("Submit : invalid port " + args[startIdx+1]);
                     System.exit(1);
                 }
                 startIdx += 2;
@@ -940,16 +981,16 @@ public class Submit
         }
 
         if (startIdx < maxIdx && args[startIdx].startsWith("-") || optionCount > 1) {
-            usage(1);
+            usage(out, 1);
         }
 
         // must have some file args if adding to sys or boot classpath
 
         if (startIdx == maxIdx && (addBoot || addSys)) {
-            usage(1);
+            usage(out, 1);
         }
 
-        Submit client = new Submit(hostname, port);
+        Submit client = new Submit(hostname, port, out);
         String results = null;
         List<String> argsList = null;
 
@@ -1025,43 +1066,50 @@ public class Submit
                 }
             }
         } catch (Exception e) {
-            System.out.println("Failed to process request: " + e);
+            out.println("Failed to process request: " + e);
             if (argsList != null) {
-                System.out.println("-- Args were: " + argsList);
+                out.println("-- Args were: " + argsList);
             }
             if (results != null) {
                 // rarely will results be non-null on error, but just in case, print it if we got it
-                System.out.println("-- Results were: " + results);
+                out.println("-- Results were: " + results);
             }
             e.printStackTrace();
             System.exit(1);
         }
 
-        System.out.println(results);
+        out.println(results);
+        if (out != System.out) {
+            out.close();
+        }
     }
 
-    private static void usage(int exitCode)
+    private static void usage(PrintStream out, int exitCode)
     {
-        System.out.println("usage : Submit [-p port] [-h hostname] [-l|-u] [scriptfile . . .]");
-        System.out.println("        Submit [-p port] [-h hostname] [-b|-s] jarfile . . .");
-        System.out.println("        Submit [-p port] [-h hostname] [-c]");
-        System.out.println("        Submit [-p port] [-h hostname] [-y] [prop1[=[value1]]. . .]");
-        System.out.println("        Submit [-p port] [-h hostname] [-v]");
-        System.out.println("        -p specifies listener port");
-        System.out.println("        -h specifies listener host");
-        System.out.println("        -l (default) with scriptfile(s) means load/reload all rules in scriptfile(s)");
-        System.out.println("                     with no scriptfile means list all currently loaded rules");
-        System.out.println("        -u with scriptfile(s) means unload all rules in scriptfile(s)");
-        System.out.println("           with no scriptfile means unload all currently loaded rules");
-        System.out.println("        -b with jarfile(s) means add jars to bootstrap classpath");
-        System.out.println("        -s with jarfile(s) means add jars to system classpath");
-        System.out.println("        -c prints the jars that have been added to the system and boot classloaders");
-        System.out.println("        -y with no args list all byteman config system properties");
-        System.out.println("           with args modifies specified byteman config system properties");
-        System.out.println("             prop=value sets system property 'prop' to value");
-        System.out.println("             prop= sets system property 'prop' to an empty string");
-        System.out.println("             prop unsets system property 'prop'");
-        System.out.println("        -v prints the version of the byteman agent and this client");
+        out.println("usage : Submit [-o outfile] [-p port] [-h hostname] [-l|-u] [scriptfile . . .]");
+        out.println("        Submit [-o outfile] [-p port] [-h hostname] [-b|-s] jarfile . . .");
+        out.println("        Submit [-o outfile] [-p port] [-h hostname] [-c]");
+        out.println("        Submit [-o outfile] [-p port] [-h hostname] [-y] [prop1[=[value1]]. . .]");
+        out.println("        Submit [-o outfile] [-p port] [-h hostname] [-v]");
+        out.println("        -o redirects output from System.out to outfile");
+        out.println("        -p specifies listener port");
+        out.println("        -h specifies listener host");
+        out.println("        -l (default) with scriptfile(s) means load/reload all rules in scriptfile(s)");
+        out.println("                     with no scriptfile means list all currently loaded rules");
+        out.println("        -u with scriptfile(s) means unload all rules in scriptfile(s)");
+        out.println("           with no scriptfile means unload all currently loaded rules");
+        out.println("        -b with jarfile(s) means add jars to bootstrap classpath");
+        out.println("        -s with jarfile(s) means add jars to system classpath");
+        out.println("        -c prints the jars that have been added to the system and boot classloaders");
+        out.println("        -y with no args list all byteman config system properties");
+        out.println("           with args modifies specified byteman config system properties");
+        out.println("             prop=value sets system property 'prop' to value");
+        out.println("             prop= sets system property 'prop' to an empty string");
+        out.println("             prop unsets system property 'prop'");
+        out.println("        -v prints the version of the byteman agent and this client");
+        if (out != System.out) {
+            out.close();
+        }
         System.exit(exitCode);
     }
 }
