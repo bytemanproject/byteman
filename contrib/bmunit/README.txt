@@ -72,13 +72,13 @@ Let
 
 Look for
 
-1) <dir>/testName.bmr *
+1) <dir>/testName.btm *
 2) <dir>/testName.txt *
-3) <dir>/org/my/TestCaseClass-testName.bmr *
+3) <dir>/org/my/TestCaseClass-testName.btm *
 4) <dir>/org/my/TestCaseClass-testName.txt *
-5) <dir>/org/my/TestCaseClass.bmr
+5) <dir>/org/my/TestCaseClass.btm
 6) <dir>/org/my/TestCaseClass.txt
-7) <dir>/TestCaseClass.bmr
+7) <dir>/TestCaseClass.btm
 8) <dir>/TestCaseClass.txt
 
 In order to run tests using BMTestCase you need several jars in your classpath

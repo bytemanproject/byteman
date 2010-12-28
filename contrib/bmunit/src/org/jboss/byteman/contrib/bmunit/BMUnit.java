@@ -184,7 +184,7 @@ public class BMUnit
     }
     /**
      * loads a script from the load directory using the name of a unit test as the root name for the script
-     * file and ".bmr" or, failing that, ".txt" for the file extension
+     * file and ".btm" or, failing that, ".txt" for the file extension
      * @param name the name of the unit test
      * @throws Exception
      */
@@ -209,7 +209,7 @@ public class BMUnit
         File file = null;
         // first try for rule file based on test name or class name  plus test name
         if (testName.length() > 0) {
-            filename = loadDirectory + File.separator + testName + ".bmr";
+            filename = loadDirectory + File.separator + testName + ".btm";
             file = new File(filename);
             if (!file.exists()) {
                 // try .txt extension for backwards compatibility
@@ -219,7 +219,7 @@ public class BMUnit
 
             if (!file.exists()) {
                 // ok, now try for rule file based on class and test name
-                filename = loadDirectory + File.separator + className + "-" + testName + ".bmr";
+                filename = loadDirectory + File.separator + className + "-" + testName + ".btm";
                 file = new File(filename);
             }
 
@@ -232,7 +232,7 @@ public class BMUnit
         // we may not have a file yet if the testname was null
         if (file == null || !file.exists()) {
             // ok, try using the package qualified classname to locate a directory hierarchy
-            filename = loadDirectory + File.separator + className + ".bmr";
+            filename = loadDirectory + File.separator + className + ".btm";
             file = new File(filename);
         }
         if (!file.exists()) {
@@ -242,7 +242,7 @@ public class BMUnit
         }
         if (!file.exists() && bareClassName != null) {
             // ok, final try using just base class name with no package qualifier
-            filename = loadDirectory + File.separator + bareClassName + ".bmr";
+            filename = loadDirectory + File.separator + bareClassName + ".btm";
             file = new File(filename);
             if (!file.exists()) {
                 // try .txt extension for backwards compatibility
@@ -266,7 +266,7 @@ public class BMUnit
 
     /**
      * loads a script from the load directory using the name of a unit test as the root name for the script
-     * file and ".bmr" or, failing that, ".txt" for the file extension
+     * file and ".btm" or, failing that, ".txt" for the file extension
      * @param name the name of the unit test
      * @throws Exception
      */
