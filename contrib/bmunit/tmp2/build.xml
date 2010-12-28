@@ -5,9 +5,9 @@
 
     <!-- pick up the byteman library -->
     <property  name="root" location="../../.."/>
-    <property name="byteman.home" value="${root}/build/lib"/>
+    <property name="byteman.lib" value="${root}/build/lib"/>
     <property name="byteman.jar" value="byteman.jar"/>
-    <property name="install.jar" value="byteman-install.jar"/>
+    <property name="byteman.install.jar" value="byteman-install.jar"/>
 
     <!-- pick up the junit library -->
     <property name="junit.home" value="${root}/ext"/>
@@ -40,7 +40,6 @@
     <target name="compile" depends="init">
         <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}">
             <classpath>
-                <pathelement location="${byteman.home}/${byteman.jar}"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
                 <pathelement location="${bmunit.home}/${bmunit.jar}"/>
                 <pathelement location="${java.home}/lib/tools.jar"/>
@@ -62,14 +61,18 @@
             depends="jar, tests.run"/>
 
     <target name="tests.run">
+        <!--
         <junit fork="true" showoutput="true">
+        -->
+        <junit fork="true" showoutput="true" >
             <classpath>
-                <pathelement location="${byteman.home}/${install.jar}"/>
+                <pathelement location="${byteman.lib}/${byteman.install.jar}"/>
                 <pathelement location="${build.lib.dir}/tests.jar"/>
                 <pathelement location="${junit.home}/${junit.jar}"/>
                 <pathelement location="${bmunit.home}/${bmunit.jar}"/>
                 <pathelement location="${env.JAVA_HOME}/lib/tools.jar"/>
             </classpath>
+            <jvmarg value="-Dorg.jboss.byteman.contrib.bmunit.verbose"/>
             <!-- uncomment for verbose byteman output
             <jvmarg value="-Dorg.jboss.byteman.verbose"/>
             -->
@@ -78,13 +81,13 @@
             <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
             -->
             <!-- uncomment to enable debug
+            -->
             <jvmarg value="-Xdebug"/>
             <jvmarg  value="-Xnoagent"/>
             <jvmarg  value="-Djava.compiler=NONE"/>
             <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
-            -->
             <!--
-            <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=listener:true"/>
+            <jvmarg value="-javaagent:${byteman.lib}/${byteman.jar}=listener:true"/>
             -->
             <jvmarg value="-Dorg.jboss.byteman.contrib.bmunit.script.directory=${scripts.dir}"/>
             <test name="test.UnitTest"/>
