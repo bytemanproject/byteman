@@ -13,8 +13,9 @@ import java.util.List;
 
 /**
  * Byteman Unit test manager class which provides support for loading and  unloading scripts.
- * This version assumes that the agent is loaded in the current JVM and is listening on the default
- * host and port.
+ * This version assumes loads the agent as needed (unless inhibited -- see below) using System
+ * properties to control what hostname and port it uses for the socket. Other system properties
+ * can be used to configure operation of the load/unload operations.
  */
 public class BMUnit
 {
