@@ -13,7 +13,7 @@ public class BMTestCase extends TestCase
     @Override
     protected void setUp() throws Exception {
         // load any script associated with this test
-        BMUnit.loadTestScript(this.getClass(), this.getName(), loadDirectory);
+        BMUnit.loadScriptFile(this.getClass(), this.getName(), loadDirectory);
         super.setUp();
     }
 
@@ -21,7 +21,7 @@ public class BMTestCase extends TestCase
     protected void tearDown() throws Exception {
         super.tearDown();
         // load any script associated with this test
-        BMUnit.unloadTestScript(this.getClass(), this.getName());
+        BMUnit.unloadScriptFile(this.getClass(), this.getName());
     }
 
     public BMTestCase(String name, String loadDirectory)

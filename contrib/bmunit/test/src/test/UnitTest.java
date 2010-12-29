@@ -4,6 +4,7 @@
 package test;
 
 import org.jboss.byteman.contrib.bmunit.BMRule;
+import org.jboss.byteman.contrib.bmunit.BMRules;
 import org.jboss.byteman.contrib.bmunit.BMScript;
 import org.jboss.byteman.contrib.bmunit.BMUnitRunner;
 import org.junit.Test;
@@ -12,9 +13,24 @@ import org.junit.runner.RunWith;
 // this runner is like the normal JUnit4 runner i.e. it runs all methods with an @Test annotation
 // but it also pays atention to BMRules annotations. it will autoload the agent into the JVM if needed
 @RunWith(BMUnitRunner.class)
-// A class level annotation identifies a rule script which is loaded before any test is run and only unloaded
-// at the end of testing
+// A class level annotation identifies a rule script file which is loaded before any test is run and only
+// unloaded at the end of testing
 @BMScript(dir="scripts")
+// You can also specify rules directly using annotations
+// either a one off rule using @BMRule(...)
+// or a set of rules using @BMRules( @BMRUle(...), ... @BMRule(...))
+// but not both
+// note that rules defined using @BMRule get loaded and, hence, injected after rules defined using
+// @BMScript
+// clearly this is a little clumsy, especially when embedding literal strings in the rule text
+// a macro facility as per any bog standard Lisp would be a big help here
+// but this does ensure that the rule is right beside the test it applies
+@BMRule(name="UnitTest tryAlways trace rule",
+        targetClass = "UnitTest",
+        targetMethod = "tryAlways",
+        condition = "TRUE",
+        action="traceln(\"Byteman: intercepted call to tryAlways from class @BMRules rule\");"
+)
 public class UnitTest
 {
     @Test
@@ -41,15 +57,25 @@ public class UnitTest
     }
 
     @Test
-    // At some point soon you should be able to specify rules directly using annotations
-    // either a one off rule using @BMRule(...)
-    // or a set of rules using @BMRules( @BMRUle(...), ... @BMRule(...))
-    @BMRule(name="UnitTest tryThree trace rule",
-            targetClass = "UnitTest",
-            targetMethod = "tryThree",
-            condition = "TRUE",
-            action="traceln(\"Byteman: intercepted call to tryThree\");"
-    )
+    @BMScript(value="three", dir="scripts")
+    // BMRule and BMRules annotations can also be used at the method level
+    // to configure rules specific to a given test method
+    // note that rules defined using @BMRule get loaded and, hence, injected after rules defined using
+    // @BMScript
+    @BMRules( rules = {
+            @BMRule(name="UnitTest.testThree tryThree trace rule",
+                    targetClass = "UnitTest",
+                    targetMethod = "tryThree",
+                    condition = "TRUE",
+                    action="traceln(\"Byteman: intercepted call to tryThree from method @BMRule rule\");"
+            ),
+            @BMRule(name="UnitTest.testThree tryAlways trace rule",
+                    targetClass = "UnitTest",
+                    targetMethod = "tryAlways",
+                    condition = "TRUE",
+                    action="traceln(\"Byteman: intercepted call to tryAlways from method @BMRule rule\");"
+            )
+    })
     public void testThree()
     {
         tryOne();

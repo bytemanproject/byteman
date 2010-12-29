@@ -64,7 +64,7 @@
         <!--
         <junit showoutput="true">
         -->
-        <junit fork="true" showoutput="true" >
+        <junit showoutput="true" >
             <classpath>
                 <pathelement location="${byteman.lib}/${byteman.install.jar}"/>
                 <pathelement location="${build.lib.dir}/tests.jar"/>

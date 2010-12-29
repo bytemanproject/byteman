@@ -16,46 +16,76 @@
 #
 # (C) 2010,
 #  @author JBoss, by Red Hat.
+#  @author Andrew Dinn (adinn@redhat.com) 2010-12
 
 
-README.txt for Byteman contrib bmunit, a distributed test helper.
+File
+----
 
-@author Andrew Dinn (adinn@redhat.com) 2010-12
+README.txt for Byteman contrib BMUnit
+
+Summary
+-------
+
+BMUnit is a user package which automates loading of Byteman rules into JUnit tests.
+
+Usage Guide
+-----------
 
 This package simplifies use of  Byteman in JUnit  tests. It supports both old and
-new style testing either by subclassing the old JUnit Testcase class or by annotating
-your code  with @RunWith(BMUnitRunner) and @BMScript annotations.
+new style testing either by subclassing the old JUnit TestCase class or by annotating
+your test class with @RunWith(BMUnitRunner) and adding @BMScript or @BMRule/@BMRules
+annotations to the test class or individual test methods.
 
 JUnit 4.8 Style Tests
 If  your class is annotated with @RunWith(BMUnitRunner) then the runner will load the
 Byteman agent on demand and will load and unload rules in response to the presence of
-@BMScript annotations. If the class is annotated then the associated rules will be loaded
-before running any tests and only unloaded until after all tests have executed. If a
-test method (@Test annotated method) is also annotated with @BMScript then rules will
-be loaded specifically for that test and unloaded after the test completes.
+@BMScript, @BMRule or @BMRules annotations. If the class is annotated then the associated
+rules will be loaded before running any tests and only unloaded until after all tests
+have executed. If a test method (@Test annotated method) is also annotated with @BMScript
+or @BMRule/@BMRules then rules will be loaded specifically for that test and unloaded after
+the test completes.
 
-The name of a class rules script is determined using the annotation value and the test
-class name or, if the value is omitted, just the class name. The name of a method rule
-script is determined using the annotation value and the test class name or, if the value
-is omitted, the method name and class name.
+@BMScript annotation
+
+This annotation is used  to load rules from a script file. It can be configured with
+a directory name (field dir) and a test name (field value). If not supplied these values
+will be defaulted and the rule file is searched for in a series of standard locations. The
+test will fail if the script cannot be found.
+
+The name of a class rules script file is determined using the annotation value and the test
+class name or, if the value is omitted, just the class name. The name of a method rule script
+file is determined using the annotation value and the test class name or, if the value
+is omitted, the method name and class name (exact details follow below).
 
 The directory from which to search for scripts can be configured using the dir field of
-the BMScript annoation. When set in a class level annotation it provides a value
+the BMScript annotation. When set in a class level annotation it provides a value
 used for all tests. When set in a method level annotation it provides a value for that
 specific test, overriding any class level setting. If it is left unconfigured in both
-class and method annotations then the default location is used (see below).
+class and method annotations then the default location is used (exact details follow below).
+
+@BMRule(s) annotation
+
+A @BMRule annotation can be used to specify the text of a single rule. Annotation
+fields define the target class, method, location, etc. Multiple rules can be
+specified using the @BMRules annotation whose rules field can be initialised with
+a series of @BMRule annotations. These annotations may be attached to either the
+test class or a test method but their use at each location is exclusive i.e. it is not
+legitimate for a class to be annotated with both annotations, ditto for a test method.
+These annotations may also be used in combination with @BMScript annotations. Note
+that @BMScript rules are always loaded before rules specified via @BMRule.
 
 JUnit 3 Style Tests
 If your test class inherits from BMTestCase then your test will load the Byteman
 agent on demand and will automatically install Byteman rules before running a test
 method then unload rules after the test has ended. The name of the rule script
 is computed using the test class name and/or the test name. The test name can be
-set in the constructor for the BMTtestCase. You can optionally pass a String in the
+set in the constructor for the BMTestCase. You can optionally pass a String in the
 constructor, identifying the directory from which to search for scripts. If this
 argument is omitted then the default location is used (see below).
 
-Script Lookup
-Script lookup employs the computed test name and/or the test class name to locate
+@BMScript fle Lookup
+File lookup employs the computed test name and/or the test class name to locate
 the rule script, trying various alternative combinations of these two values. If you
 have configured a lookup directory then files are searched for below that directory.
 Otherwise, System property org.jboss.byteman.contrib.bmunit.script.directory will be

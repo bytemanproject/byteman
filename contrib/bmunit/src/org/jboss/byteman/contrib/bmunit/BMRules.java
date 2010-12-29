@@ -12,5 +12,5 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD, ElementType.TYPE})
 public @interface BMRules
 {
-    BMRule[] rules() default {};
+    BMRule[] rules();
 }

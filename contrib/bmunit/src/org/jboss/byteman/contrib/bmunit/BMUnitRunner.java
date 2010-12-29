@@ -15,7 +15,9 @@ import org.junit.runners.model.Statement;
  */
 public class BMUnitRunner extends BlockJUnit4ClassRunner
 {
-    BMScript classAnnotation;
+    BMScript classScriptAnnotation;
+    BMRules classMultiRuleAnnotation;
+    BMRule classSingleRuleAnnotation;
     Class<?> testKlazz;
     String loadDirectory;
 
@@ -28,8 +30,13 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     public BMUnitRunner(Class<?> klass) throws InitializationError {
         super(klass);
         testKlazz = getTestClass().getJavaClass();
-        classAnnotation = testKlazz.getAnnotation(BMScript.class);
-        loadDirectory = classAnnotation.dir();
+        classScriptAnnotation = testKlazz.getAnnotation(BMScript.class);
+        classMultiRuleAnnotation = testKlazz.getAnnotation(BMRules.class);
+        classSingleRuleAnnotation = testKlazz.getAnnotation((BMRule.class));
+        if (classMultiRuleAnnotation != null && classSingleRuleAnnotation != null) {
+            throw new InitializationError("Use either BMRule and BMRules annotation but not both");
+        }
+        loadDirectory = classScriptAnnotation.dir();
         if (loadDirectory.length() == 0) {
             loadDirectory = null;
         }
@@ -43,15 +50,15 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         // if we have a BMRules annotation on the test class then surround the method block
         // with calls to load and unload the per class rules
         final Statement original =  super.methodBlock(method);
-        if (classAnnotation !=null) {
-            final String name = computeBMRulesName(classAnnotation.value(), testKlazz);
+        if (classScriptAnnotation !=null) {
+            final String name = computeBMRulesName(classScriptAnnotation.value(), testKlazz);
             return new Statement() {
                 public void evaluate() throws Throwable {
-                    BMUnit.loadTestScript(testKlazz, name, loadDirectory);
+                    BMUnit.loadScriptFile(testKlazz, name, loadDirectory);
                     try {
                         original.evaluate();
                     } finally {
-                        BMUnit.unloadTestScript(testKlazz, name);
+                        BMUnit.unloadScriptFile(testKlazz, name);
                     }
                 }
             };
@@ -63,20 +70,34 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
 
     @Override
     protected Statement childrenInvoker(RunNotifier notifier) {
-        final Statement original = super.childrenInvoker(notifier);
-        if (classAnnotation !=null) {
-            final String name = computeBMRulesName(classAnnotation.value(), testKlazz);
+        Statement statement = super.childrenInvoker(notifier);
+        // n.b. we add the wrapper code in reverse order to the preferred order of loading
+        // as it works by wrapping around and so execution is  in reverse order to wrapping
+        // i.e. this ensures that the class script rules get loaded before any rules specified
+        // using BMRule(s) annotations
+        statement = addClassSingleRuleLoader(statement, notifier);
+        statement = addClassMultiRuleLoader(statement, notifier);
+        statement = addClassScriptLoader(statement, notifier);
+        return statement;
+    }
+
+    protected Statement addClassScriptLoader(final Statement statement, RunNotifier notifier)
+    {
+        if (classScriptAnnotation == null) {
+            return statement;
+        } else {
+            final String name = computeBMRulesName(classScriptAnnotation.value(), testKlazz);
             final RunNotifier fnotifier = notifier;
-            final Description description = Description.createTestDescription(testKlazz, getName(), classAnnotation);
+            final Description description = Description.createTestDescription(testKlazz, getName(), classScriptAnnotation);
             return new Statement() {
                 public void evaluate() throws Throwable {
                     try {
-                        BMUnit.loadTestScript(testKlazz, name, loadDirectory);
+                        BMUnit.loadScriptFile(testKlazz, name, loadDirectory);
                         try {
-                            original.evaluate();
+                            statement.evaluate();
                         } finally {
                             try {
-                                BMUnit.unloadTestScript(testKlazz, name);
+                                BMUnit.unloadScriptFile(testKlazz, name);
                             } catch (Exception e) {
                                 fnotifier.fireTestFailure(new Failure(description, e));
                             }
@@ -86,16 +107,94 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
                     }
                 }
             };
+        }
+    }
+
+    protected Statement addClassMultiRuleLoader(final Statement statement, RunNotifier notifier)
+    {
+        if (classMultiRuleAnnotation == null) {
+            return statement;
         } else {
-            return original;
+            final String scriptText = constructScriptText(classMultiRuleAnnotation.rules());
+            final RunNotifier fnotifier = notifier;
+            final Description description = Description.createTestDescription(testKlazz, getName(), classMultiRuleAnnotation);
+            return new Statement() {
+                public void evaluate() throws Throwable {
+                    try {
+                        BMUnit.loadScriptText(testKlazz, null, scriptText);
+                        try {
+                            statement.evaluate();
+                        } finally {
+                            try {
+                                BMUnit.unloadScriptText(testKlazz, null);
+                            } catch (Exception e) {
+                                fnotifier.fireTestFailure(new Failure(description, e));
+                            }
+                        }
+                    } catch (Exception e) {
+                        fnotifier.fireTestFailure(new Failure(description, e));
+                    }
+                }
+            };
+        }
+    }
+
+    protected Statement addClassSingleRuleLoader(final Statement statement, RunNotifier notifier)
+    {
+        if (classSingleRuleAnnotation == null) {
+            return statement;
+        } else {
+            final String scriptText = constructScriptText(new BMRule[] {classSingleRuleAnnotation});
+            final RunNotifier fnotifier = notifier;
+            final Description description = Description.createTestDescription(testKlazz, getName(), classSingleRuleAnnotation);
+            return new Statement() {
+                public void evaluate() throws Throwable {
+                    try {
+                        BMUnit.loadScriptText(testKlazz, null, scriptText);
+                        try {
+                            statement.evaluate();
+                        } finally {
+                            try {
+                                BMUnit.unloadScriptText(testKlazz, null);
+                            } catch (Exception e) {
+                                fnotifier.fireTestFailure(new Failure(description, e));
+                            }
+                        }
+                    } catch (Exception e) {
+                        fnotifier.fireTestFailure(new Failure(description, e));
+                    }
+                }
+            };
         }
     }
 
     @Override
-    protected Statement methodInvoker(FrameworkMethod method, Object test) {
-        final Statement original = super.methodInvoker(method, test);
+    protected Statement methodInvoker(FrameworkMethod method, Object test)
+    {
+        Statement statement = super.methodInvoker(method, test);
+        // n.b. we add the wrapper code in reverse order to the preferred order of loading
+        // as it works by wrapping around and so execution is in reverse order to wrapping
+        // i.e. this ensures that the method script rules get loaded before any rules specified
+        // using BMRule(s) annotations
+        statement = addMethodSingleRuleLoader(statement, method);
+        statement = addMethodMultiRuleLoader(statement, method);
+        statement = addMethodScriptLoader(statement, method);
+        return statement;
+    }
+
+    /**
+     * wrap the test method execution statement with the necessary load and unload calls if it has
+     * a BMScript annotation
+     * @param statement
+     * @param method
+     * @return
+     */
+    protected Statement addMethodScriptLoader(final Statement statement, FrameworkMethod method)
+    {
         BMScript annotation = method.getAnnotation(BMScript.class);
-        if (annotation != null) {
+        if (annotation == null) {
+            return statement;
+        } else {
             // ensure we always have an actual name here instead of null because using
             // null will clash with the name used for looking up rules when the clas
             // has a BMRules annotation
@@ -103,17 +202,112 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
             final String loadDirectory = computeLoadDirectory(annotation.dir(), this.loadDirectory);
             return new Statement() {
                 public void evaluate() throws Throwable {
-                    BMUnit.loadTestScript(testKlazz, name, loadDirectory);
+                    BMUnit.loadScriptFile(testKlazz, name, loadDirectory);
                     try {
-                        original.evaluate();
+                        statement.evaluate();
                     } finally {
-                        BMUnit.unloadTestScript(testKlazz, name);
+                        BMUnit.unloadScriptFile(testKlazz, name);
                     }
                 }
             };
-        } else {
-            return original;
         }
+    }
+
+    /**
+     * wrap the test method execution statement with the necessary load and unload calls if it has
+     * a BMRules annotation
+     * @param statement
+     * @param method
+     * @return
+     */
+    protected Statement addMethodMultiRuleLoader(final Statement statement, FrameworkMethod method)
+    {
+        BMRules annotation = method.getAnnotation(BMRules.class);
+        if (annotation == null) {
+            return statement;
+        } else {
+            final String name = method.getName();
+            final String script = constructScriptText(annotation.rules());
+            return new Statement() {
+                public void evaluate() throws Throwable {
+                    BMUnit.loadScriptText(testKlazz, name, script);
+                    try {
+                        statement.evaluate();
+                    } finally {
+                        BMUnit.unloadScriptText(testKlazz, name);
+                    }
+                }
+            };
+        }
+    }
+
+    /**
+     * wrap the test method execution statement with the necessary load and unload calls if it has
+     * a BMRule annotation
+     * @param statement
+     * @param method
+     * @return
+     */
+    protected Statement addMethodSingleRuleLoader(final Statement statement, FrameworkMethod method)
+    {
+        BMRule annotation = method.getAnnotation(BMRule.class);
+        if (annotation == null) {
+            return statement;
+        } else {
+            final String name = method.getName();
+            final String script = constructScriptText(new BMRule[] {annotation });
+            return new Statement() {
+                public void evaluate() throws Throwable {
+                    BMUnit.loadScriptText(testKlazz, name, script);
+                    try {
+                        statement.evaluate();
+                    } finally {
+                        BMUnit.unloadScriptText(testKlazz, name);
+                    }
+                }
+            };
+        }
+    }
+
+    /**
+     * construct the text of a rule script from a  set of BMRule annotations
+     * @param bmRules
+     * @return
+     */
+    protected String constructScriptText(BMRule[] bmRules) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("# BMUnit autogenerated script ");
+        for (BMRule bmRule : bmRules) {
+            builder.append("\nRULE ");
+            builder.append(bmRule.name());
+            if (bmRule.isInterface()) {
+                builder.append("\nINTERFACE ");
+            } else {
+                builder.append("\nCLASS ");
+            }
+            if (bmRule.isOverriding()) {
+                builder.append("^");
+            }
+            builder.append(bmRule.targetClass());
+            builder.append("\nMETHOD ");
+            builder.append(bmRule.targetMethod());
+            String location = bmRule.targetLocation();
+            if (location  !=  null && location.length() > 0) {
+                builder.append("\nAT ");
+                builder.append(location);
+            }
+            String helper = bmRule.helper();
+            if (helper  !=  null && helper.length() > 0) {
+                builder.append("\nHELPER ");
+                builder.append(helper);
+            }
+            builder.append("\nIF ");
+            builder.append(bmRule.condition());
+            builder.append("\nDO ");
+            builder.append(bmRule.action());
+            builder.append("\nENDRULE\n");
+        }
+        return builder.toString();
     }
 
     /**

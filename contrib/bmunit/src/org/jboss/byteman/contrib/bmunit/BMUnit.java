@@ -3,6 +3,7 @@ package org.jboss.byteman.contrib.bmunit;
 import com.sun.tools.attach.AgentInitializationException;
 import org.jboss.byteman.agent.install.Install;
 import org.jboss.byteman.agent.install.VMInfo;
+import org.jboss.byteman.agent.submit.ScriptText;
 import org.jboss.byteman.agent.submit.Submit;
 
 import java.io.*;
@@ -201,14 +202,14 @@ public class BMUnit
     }
 
     /**
-     * loads a script by calling loadTestScript(clazz, testName, null)
-     * @param clazz
-     * @param testName
+     * loads a script by calling loadScriptFile(clazz, testName, null)
+     * @param clazz the test class
+     * @param testName the test name
      * @throws Exception
      */
-    public static void loadTestScript(Class<?> clazz, String testName) throws Exception
+    public static void loadScriptFile(Class<?> clazz, String testName) throws Exception
     {
-        loadTestScript(clazz, testName, null);
+        loadScriptFile(clazz, testName, null);
     }
     /**
      * loads a script from the load directory using the name of a unit test as the root name for the script
@@ -216,7 +217,7 @@ public class BMUnit
      * @param name the name of the unit test
      * @throws Exception
      */
-    public static void loadTestScript(Class<?> clazz, String testName, String dir) throws Exception
+    public static void loadScriptFile(Class<?> clazz, String testName, String dir) throws Exception
     {
         String loadDirectory = dir;
         if (dir == null) { 
@@ -288,7 +289,7 @@ public class BMUnit
         List<String> files =  new ArrayList<String>();
         files.add(filename);
         if (verbose) {
-            System.out.println("BMUNit : loading script = " + filename);
+            System.out.println("BMUNit : loading file script = " + filename);
         }
         submit.addRulesFromFiles(files);
         fileTable.put(key, filename);
@@ -297,10 +298,11 @@ public class BMUnit
     /**
      * loads a script from the load directory using the name of a unit test as the root name for the script
      * file and ".btm" or, failing that, ".txt" for the file extension
-     * @param name the name of the unit test
+     * @param clazz the test class
+     * @param testName the test name
      * @throws Exception
      */
-    public static void unloadTestScript(Class<?> clazz, String testName) throws Exception
+    public static void unloadScriptFile(Class<?> clazz, String testName) throws Exception
     {
         String className = clazz.getName();
         if (testName ==  null) {
@@ -315,8 +317,60 @@ public class BMUnit
         List<String> files =  new ArrayList<String>();
         files.add(filename);
         if (verbose) {
-            System.out.println("BMUNit : unloading script = " + filename);
+            System.out.println("BMUNit : unloading fle script = " + filename);
         }
         submit.deleteRulesFromFiles(files);
+    }
+
+    /**
+     * loads a script supplied as a text String rather than via a file on disk
+     * @param clazz the test class
+     * @param testName the test name
+     * @param scriptText the text of the rule or rules contained in the script
+     */
+    public static void loadScriptText(Class<?> clazz, String testname, String scriptText) throws Exception
+    {
+        String className = clazz.getName();
+        if (testname ==  null) {
+            testname = "";
+        }
+        String key = className + "+"  + testname;
+        fileTable.put(key, scriptText);
+        Submit submit = new Submit();
+        if (verbose) {
+            System.out.println("BMUNit : loading text script = " + key);
+            // System.out.println(scriptText);
+        }
+        List<ScriptText> scripts = new ArrayList<ScriptText>();
+        ScriptText script = new ScriptText(key, scriptText);
+        scripts.add(script);
+        submit.addScripts(scripts);
+    }
+
+    /**
+     * unloads a script previously supplied as a text String
+     * @param clazz the test class
+     * @param testName the test name
+     * @param scriptText the text of the rule or rules contained in the script
+     */
+    public static void unloadScriptText(Class<?> clazz, String testName) throws Exception
+    {
+        String className = clazz.getName();
+        if (testName ==  null) {
+            testName = "";
+        }
+        String key = className + "+"  + testName;
+        String scriptText = fileTable.remove(key);
+        if (scriptText == null) {
+            throw new Exception("Rule script not found " + key);
+        }
+        Submit submit = new Submit();
+        if (verbose) {
+            System.out.println("BMUNit : unloading text script = " + key);
+        }
+        List<ScriptText> scripts = new ArrayList<ScriptText>();
+        ScriptText script = new ScriptText(key, scriptText);
+        scripts.add(script);
+        submit.deleteScripts(scripts);
     }
 }

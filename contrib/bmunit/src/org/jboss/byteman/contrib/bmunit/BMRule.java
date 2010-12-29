@@ -13,6 +13,8 @@ import java.lang.annotation.Target;
 public @interface BMRule
 {
     String name();
+    boolean isInterface() default false;
+    boolean isOverriding() default false;
     String targetClass();
     String targetMethod();
     String targetLocation() default "";
