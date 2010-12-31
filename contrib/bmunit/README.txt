@@ -121,7 +121,12 @@ You also need to provide your test process with an explicit location for the Byt
 agent jar, byteman.jar, by setting environment variable BYTEMAN_HOME to the directory
 in which Byteman has been installed. The agent jar should be in the lib subdirectory.
 
-Note that JAVA_HOME is the location where you installed a Java JDK (not just a Java JRE)
+Note that you should not install the Byteman agent jar into your application classpath.
+When the agent is autoloaded it is automatically installed into the bootstrap classpath.
+If you locate the agent jar either in the system classpath or in your application deployment
+then all sorts of weird $#!+ will happen.
+
+Note also that JAVA_HOME is the location where you installed a Java JDK (not just a Java JRE)
 This jar is not normally added to the Java runtime path. That normally only includes jars
 from $JAVA_HOME/jre/lib. If you have only installed a Java runtime rather then a full JDK
 you may not find a tools jar.
