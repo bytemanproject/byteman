@@ -221,8 +221,8 @@ public class BMUnit
     public static void loadScriptFile(Class<?> clazz, String testName, String dir) throws Exception
     {
         String loadDirectory = dir;
-        if (dir == null) { 
-            dir = defaultLoadDirectory;
+        if (loadDirectory == null) {
+            loadDirectory = defaultLoadDirectory;
         }
         // turn '.' characters into file separator characters
         String className = clazz.getName();

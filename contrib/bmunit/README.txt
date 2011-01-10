@@ -40,18 +40,20 @@ annotations to the test class or individual test methods.
 JUnit 4.8 Style Tests
 If  your class is annotated with @RunWith(BMUnitRunner) then the runner will load the
 Byteman agent on demand and will load and unload rules in response to the presence of
-@BMScript, @BMRule or @BMRules annotations. If the class is annotated then the associated
-rules will be loaded before running any tests and only unloaded until after all tests
-have executed. If a test method (@Test annotated method) is also annotated with @BMScript
-or @BMRule/@BMRules then rules will be loaded specifically for that test and unloaded after
-the test completes.
+@BMScript, @BMScripts,  @BMRule or @BMRules annotations. If the class is annotated then
+the associated rules will be loaded before running any tests and only unloaded until
+after all tests have executed. If a test method (@Test annotated method) is also
+annotated with @BMScript/@BMScripts or @BMRule/@BMRules then rules will be loaded
+specifically for that test and unloaded after the test completes.
 
-@BMScript annotation
+@BMScript(s) annotation
 
-This annotation is used  to load rules from a script file. It can be configured with
+A @BMScript annotation is used  to load rules from a script file. It can be configured with
 a directory name (field dir) and a test name (field value). If not supplied these values
 will be defaulted and the rule file is searched for in a series of standard locations. The
-test will fail if the script cannot be found.
+test will fail if the script cannot be found. Multiple scripts can be specified using the
+@BMScripts annotation whose scripts field can be initialised with a series of @BMScript
+annotations.
 
 The name of a class rules script file is determined using the annotation value and the test
 class name or, if the value is omitted, just the class name. The name of a method rule script

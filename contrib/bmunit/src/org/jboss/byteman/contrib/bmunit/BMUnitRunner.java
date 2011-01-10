@@ -15,7 +15,8 @@ import org.junit.runners.model.Statement;
  */
 public class BMUnitRunner extends BlockJUnit4ClassRunner
 {
-    BMScript classScriptAnnotation;
+    BMScript classSingleScriptAnnotation;
+    BMScripts classMultiScriptAnnotation;
     BMRules classMultiRuleAnnotation;
     BMRule classSingleRuleAnnotation;
     Class<?> testKlazz;
@@ -30,15 +31,15 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     public BMUnitRunner(Class<?> klass) throws InitializationError {
         super(klass);
         testKlazz = getTestClass().getJavaClass();
-        classScriptAnnotation = testKlazz.getAnnotation(BMScript.class);
+        classSingleScriptAnnotation = testKlazz.getAnnotation(BMScript.class);
+        classMultiScriptAnnotation = testKlazz.getAnnotation(BMScripts.class);
         classMultiRuleAnnotation = testKlazz.getAnnotation(BMRules.class);
         classSingleRuleAnnotation = testKlazz.getAnnotation((BMRule.class));
         if (classMultiRuleAnnotation != null && classSingleRuleAnnotation != null) {
-            throw new InitializationError("Use either BMRule and BMRules annotation but not both");
+            throw new InitializationError("Use either BMRule or BMRules annotation but not both");
         }
-        loadDirectory = classScriptAnnotation.dir();
-        if (loadDirectory.length() == 0) {
-            loadDirectory = null;
+        if (classMultiScriptAnnotation != null && classSingleScriptAnnotation != null) {
+            throw new InitializationError("Use either BMScript or BMScripts annotation but not both");
         }
     }
 
@@ -50,8 +51,8 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         // if we have a BMRules annotation on the test class then surround the method block
         // with calls to load and unload the per class rules
         final Statement original =  super.methodBlock(method);
-        if (classScriptAnnotation !=null) {
-            final String name = computeBMRulesName(classScriptAnnotation.value(), testKlazz);
+        if (classSingleScriptAnnotation !=null) {
+            final String name = computeBMRulesName(classSingleScriptAnnotation.value(), testKlazz);
             return new Statement() {
                 public void evaluate() throws Throwable {
                     BMUnit.loadScriptFile(testKlazz, name, loadDirectory);
@@ -77,18 +78,20 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         // using BMRule(s) annotations
         statement = addClassSingleRuleLoader(statement, notifier);
         statement = addClassMultiRuleLoader(statement, notifier);
-        statement = addClassScriptLoader(statement, notifier);
+        statement = addClassSingleScriptLoader(statement, notifier);
+        statement = addClassMultiScriptLoader(statement, notifier);
         return statement;
     }
 
-    protected Statement addClassScriptLoader(final Statement statement, RunNotifier notifier)
+    protected Statement addClassSingleScriptLoader(final Statement statement, RunNotifier notifier)
     {
-        if (classScriptAnnotation == null) {
+        if (classSingleScriptAnnotation == null) {
             return statement;
         } else {
-            final String name = computeBMRulesName(classScriptAnnotation.value(), testKlazz);
+            final String name = computeBMRulesName(classSingleScriptAnnotation.value(), testKlazz);
             final RunNotifier fnotifier = notifier;
-            final Description description = Description.createTestDescription(testKlazz, getName(), classScriptAnnotation);
+            final Description description = Description.createTestDescription(testKlazz, getName(), classSingleScriptAnnotation);
+            final String loadDirectory = normaliseLoadDirectory(classSingleScriptAnnotation);
             return new Statement() {
                 public void evaluate() throws Throwable {
                     try {
@@ -107,6 +110,45 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
                     }
                 }
             };
+        }
+    }
+
+    protected Statement addClassMultiScriptLoader(final Statement statement, RunNotifier notifier)
+    {
+        if (classMultiScriptAnnotation == null) {
+            return statement;
+         } else {
+            BMScript[] scriptAnnotations = classMultiScriptAnnotation.scripts();
+            Statement result = statement;
+            // note we iterate down here because we generate statements by wraparound
+            // which means the the outer statement gets executed first
+            for (int i = scriptAnnotations.length; i> 0; i--) {
+                BMScript scriptAnnotation= scriptAnnotations[i - 1];
+                final String name = computeBMRulesName(scriptAnnotation.value(), testKlazz);
+                final RunNotifier fnotifier = notifier;
+                final Description description = Description.createTestDescription(testKlazz, getName(), scriptAnnotation);
+                final String loadDirectory = normaliseLoadDirectory(scriptAnnotation);
+                final Statement nextStatement = result;
+                result = new Statement() {
+                    public void evaluate() throws Throwable {
+                        try {
+                            BMUnit.loadScriptFile(testKlazz, name, loadDirectory);
+                            try {
+                                nextStatement.evaluate();
+                            } finally {
+                                try {
+                                    BMUnit.unloadScriptFile(testKlazz, name);
+                                } catch (Exception e) {
+                                    fnotifier.fireTestFailure(new Failure(description, e));
+                                }
+                            }
+                        } catch (Exception e) {
+                            fnotifier.fireTestFailure(new Failure(description, e));
+                        }
+                    }
+                };
+            }
+            return result;
         }
     }
 
@@ -178,7 +220,8 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         // using BMRule(s) annotations
         statement = addMethodSingleRuleLoader(statement, method);
         statement = addMethodMultiRuleLoader(statement, method);
-        statement = addMethodScriptLoader(statement, method);
+        statement = addMethodSingleScriptLoader(statement, method);
+        statement = addMethodMultiScriptLoader(statement, method);
         return statement;
     }
 
@@ -189,7 +232,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
      * @param method
      * @return
      */
-    protected Statement addMethodScriptLoader(final Statement statement, FrameworkMethod method)
+    protected Statement addMethodSingleScriptLoader(final Statement statement, FrameworkMethod method)
     {
         BMScript annotation = method.getAnnotation(BMScript.class);
         if (annotation == null) {
@@ -210,6 +253,46 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
                     }
                 }
             };
+        }
+    }
+
+    /**
+     * wrap the test method execution statement with the necessary load and unload calls if it has
+     * a BMScripts annotation
+     * @param statement
+     * @param method
+     * @return
+     */
+    protected Statement addMethodMultiScriptLoader(final Statement statement, FrameworkMethod method)
+    {
+        BMScripts scriptsAnnotation = method.getAnnotation(BMScripts.class);
+        if (scriptsAnnotation == null) {
+            return statement;
+        } else {
+            BMScript[] scriptAnnotations = scriptsAnnotation.scripts();
+            Statement result = statement;
+            // note we iterate down here because we generate statements by wraparound
+            // which means the the outer statement gets executed first
+            for (int i = scriptAnnotations.length; i> 0; i--) {
+                BMScript scriptAnnotation = scriptAnnotations[i - 1];
+                final Statement nextStatement = result;
+                // ensure we always have an actual name here instead of null because using
+                // null will clash with the name used for looking up rules when the clas
+                // has a BMRules annotation
+                final String name = computeBMRulesName(scriptAnnotation.value(), method);
+                final String loadDirectory = computeLoadDirectory(scriptAnnotation.dir(), this.loadDirectory);
+                result = new Statement() {
+                    public void evaluate() throws Throwable {
+                        BMUnit.loadScriptFile(testKlazz, name, loadDirectory);
+                        try {
+                            nextStatement.evaluate();
+                        } finally {
+                            BMUnit.unloadScriptFile(testKlazz, name);
+                        }
+                    }
+                };
+            }
+            return result;
         }
     }
 
@@ -267,6 +350,16 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
                 }
             };
         }
+    }
+
+    public String normaliseLoadDirectory(BMScript annotation)
+    {
+        String loadDirectory = annotation.dir();
+        if (loadDirectory != null && loadDirectory.length() > 0) {
+            return loadDirectory;
+        }
+
+        return null;
     }
 
     /**

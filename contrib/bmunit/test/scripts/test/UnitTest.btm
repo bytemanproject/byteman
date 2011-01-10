@@ -4,5 +4,5 @@ CLASS UnitTest
 METHOD tryAlways()
 AT ENTRY
 IF TRUE
-DO traceln("Byteman: intercepted call to tryAlways from class @BMScript script");
+DO traceln("Byteman: intercepted at entry in tryAlways from class @BMScript script");
 ENDRULE

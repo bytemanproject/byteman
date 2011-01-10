@@ -4,5 +4,5 @@ CLASS UnitTest
 METHOD testTwo
 AT CALL tryTwo
 IF TRUE
-DO traceln("Byteman: intercepted call to tryTwo from method @BMScript script");
+DO traceln("Byteman: intercepted call to tryTwo in testTwo from method @BMScript script");
 ENDRULE
