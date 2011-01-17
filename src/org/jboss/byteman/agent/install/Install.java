@@ -70,6 +70,7 @@ public class Install
      * values such as "org.jboss.byteman.verbose" or "org.jboss.byteman.dump.generated.classes.directory=./dump"
      * @throws IllegalArgumentException if any of the arguments  is invalid
      * @throws FileNotFoundException if the agent jar cannot be found using the environment variable BYTEMAN_HOME
+     * or the System property org.jboss.byteman.home
      * @throws IOException if the byteman jar cannot be opened or uploaded to the requested JVM
      * @throws AttachNotSupportedException if the requested JVM cannot be attached to
      * @throws AgentLoadException if an error occurs during upload of the agent into the JVM
@@ -252,9 +253,14 @@ public class Install
      */
     private void locateAgent() throws IOException
     {
-        String bmHome = System.getenv("BYTEMAN_HOME");
+        // use the current system property in preference to the environment setting
+
+        String bmHome = System.getProperty(BYTEMAN_HOME_SYSTEM_PROP);
         if (bmHome == null || bmHome.length() == 0) {
-            throw new  FileNotFoundException("Install : cannot find Byteman agent jar please set environment variable BYTEMAN_HOME");
+            bmHome = System.getenv(BYTEMAN_HOME_ENV_VAR);
+            if (bmHome == null || bmHome.length() == 0) {
+                throw new  FileNotFoundException("Install : cannot find Byteman agent jar please set environment variable " + BYTEMAN_HOME_ENV_VAR + " or System property " + BYTEMAN_HOME_SYSTEM_PROP);
+            }
         }
 
         if (bmHome.endsWith("/")) {
@@ -263,18 +269,18 @@ public class Install
 
         File bmHomeFile = new File(bmHome);
         if (!bmHomeFile.isDirectory()) {
-            throw new FileNotFoundException("Install : ${BYTEMAN_HOME} does not identify a directory");
+            throw new FileNotFoundException("Install : ${" + BYTEMAN_HOME_ENV_VAR + "} does not identify a directory");
         }
 
         File bmLibFile = new File(bmHome + "/lib");
         if (!bmLibFile.isDirectory()) {
-            throw new FileNotFoundException("Install : ${BYTEMAN_HOME}/lib does not identify a directory");
+            throw new FileNotFoundException("Install : ${" + BYTEMAN_HOME_ENV_VAR + "}/lib does not identify a directory");
         }
 
         try {
             JarFile bytemanJarFile = new JarFile(bmHome + "/lib/byteman.jar");
         } catch (IOException e) {
-            throw new IOException("Install : ${BYTEMAN_HOME}/lib/byteman.jar is not a valid jar file");
+            throw new IOException("Install : ${" + BYTEMAN_HOME_ENV_VAR + "}/lib/byteman.jar is not a valid jar file");
         }
 
         agentJar = bmHome + "/lib/byteman.jar";
@@ -390,7 +396,8 @@ public class Install
         System.out.println("    -p port selects the port the agent listener binds to");
         System.out.println("    -b adds the byteman jar to the bootstrap classpath");
         System.out.println("    -Dname=value can be used to set system properties whose name starts with \"org.jboss.byteman.\"");        
-        System.out.println("    expects to find a byteman agent jar in $BYTEMAN_HOME/lib/byteman.jar");
+        System.out.println("    expects to find a byteman agent jar in ${" + BYTEMAN_HOME_ENV_VAR + "}/lib/byteman.jar");
+        System.out.println("    (alternatively set System property " + BYTEMAN_HOME_SYSTEM_PROP + " to overide ${" + BYTEMAN_HOME_ENV_VAR + "})");
         System.exit(exitValue);
     }
 
@@ -403,4 +410,14 @@ public class Install
     private VirtualMachine vm;
 
     private static final String BYTEMAN_PREFIX="org.jboss.byteman.";
+
+    /**
+     * System property used to idenitfy the location of the installed byteman release.
+     */
+    private static final String BYTEMAN_HOME_SYSTEM_PROP = BYTEMAN_PREFIX + "home";
+
+    /**
+     * environment variable used to idenitfy the location of the installed byteman release.
+     */
+    private static final String BYTEMAN_HOME_ENV_VAR = "BYTEMAN_HOME";
 }
