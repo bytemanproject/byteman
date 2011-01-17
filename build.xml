@@ -26,7 +26,7 @@
     <property environment="env"/>
 
     <!-- version string stamped inside the manifests -->
-    <property name="version" value="1.4.1"/>
+    <property name="version" value="1.5.0"/>
 
     <property name="ext.asm.jars" value="asm-all-3.0.jar"/>
 
@@ -71,7 +71,7 @@
     <property name="byteman.src.jar" value="byteman-src.jar"/>
     <property name="byteman-submit.jar" value="byteman-submit.jar"/>
     <property name="byteman-install.jar" value="byteman-install.jar"/>
-    <property name="byteman.bin.scripts" value="bytemancheck.sh bmsubmit.sh bminstall.sh bmjava.sh"/>
+    <property name="byteman.bin.scripts" value="bmcheck.sh bytemancheck.sh bmsubmit.sh bminstall.sh bmjava.sh"/>
     <property name="byteman.doc.files" value="ProgrammersGuide.pdf copyright.txt"/>
     <property name="byteman.ext.lib.doc.files" value="third_party_licenses.txt"/>
     <property name="manifest.file" value="${dd.dir}/META-INF/MANIFEST.MF"/>
