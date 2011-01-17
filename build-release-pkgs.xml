@@ -232,6 +232,7 @@
         <mvn-artifact.macro artifact="byteman-submit" dir="${workdir}/${tag}/install/lib/"/>
         <mvn-artifact.macro artifact="byteman-install" dir="${workdir}/${tag}/install/lib/"/>
         <mvn-artifact.macro artifact="byteman-dtest" dir="${workdir}/${tag}/install/contrib/dtest/"/>
+        <mvn-artifact.macro artifact="byteman-bmunit" dir="${workdir}/${tag}/install/contrib/bmunit/"/>
         <mvn-artifact.macro artifact="byteman-sample" packaging="zip" dir="${workdir}"/>
         <mvn-artifact.macro artifact="byteman-contrib" packaging="zip" dir="${workdir}"/>
 
