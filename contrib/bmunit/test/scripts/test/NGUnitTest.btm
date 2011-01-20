@@ -1,0 +1,8 @@
+# Test script to check load and unload at class level
+RULE NG test autoload class rule
+CLASS NGUnitTest
+METHOD tryAlways()
+AT ENTRY
+IF TRUE
+DO traceln("Byteman: intercepted at entry in tryAlways from class @BMScript script");
+ENDRULE

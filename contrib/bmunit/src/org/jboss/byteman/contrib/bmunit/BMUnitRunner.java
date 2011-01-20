@@ -20,7 +20,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     BMRules classMultiRuleAnnotation;
     BMRule classSingleRuleAnnotation;
     Class<?> testKlazz;
-    String loadDirectory;
+    private final BMRunnerUtil BMRunnerUtil = new BMRunnerUtil();
 
     /**
      * Creates a BMUnitRunner to run test in {@code klass}
@@ -52,7 +52,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         // with calls to load and unload the per class rules
         final Statement original =  super.methodBlock(method);
         if (classSingleScriptAnnotation !=null) {
-            final String name = computeBMRulesName(classSingleScriptAnnotation.value(), testKlazz);
+            final String name = computeBMScriptName(classSingleScriptAnnotation.value());
             return new Statement() {
                 public void evaluate() throws Throwable {
                     BMUnit.loadScriptFile(testKlazz, name, loadDirectory);
@@ -88,10 +88,10 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         if (classSingleScriptAnnotation == null) {
             return statement;
         } else {
-            final String name = computeBMRulesName(classSingleScriptAnnotation.value(), testKlazz);
+            final String name = BMRunnerUtil.computeBMScriptName(classSingleScriptAnnotation.value());
             final RunNotifier fnotifier = notifier;
             final Description description = Description.createTestDescription(testKlazz, getName(), classSingleScriptAnnotation);
-            final String loadDirectory = normaliseLoadDirectory(classSingleScriptAnnotation);
+            final String loadDirectory = BMRunnerUtil.normaliseLoadDirectory(classSingleScriptAnnotation);
             return new Statement() {
                 public void evaluate() throws Throwable {
                     try {
@@ -124,10 +124,10 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
             // which means the the outer statement gets executed first
             for (int i = scriptAnnotations.length; i> 0; i--) {
                 BMScript scriptAnnotation= scriptAnnotations[i - 1];
-                final String name = computeBMRulesName(scriptAnnotation.value(), testKlazz);
+                final String name = BMRunnerUtil.computeBMScriptName(scriptAnnotation.value());
                 final RunNotifier fnotifier = notifier;
                 final Description description = Description.createTestDescription(testKlazz, getName(), scriptAnnotation);
-                final String loadDirectory = normaliseLoadDirectory(scriptAnnotation);
+                final String loadDirectory = BMRunnerUtil.normaliseLoadDirectory(scriptAnnotation);
                 final Statement nextStatement = result;
                 result = new Statement() {
                     public void evaluate() throws Throwable {
@@ -157,7 +157,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         if (classMultiRuleAnnotation == null) {
             return statement;
         } else {
-            final String scriptText = constructScriptText(classMultiRuleAnnotation.rules());
+            final String scriptText = BMRunnerUtil.constructScriptText(classMultiRuleAnnotation.rules());
             final RunNotifier fnotifier = notifier;
             final Description description = Description.createTestDescription(testKlazz, getName(), classMultiRuleAnnotation);
             return new Statement() {
@@ -186,7 +186,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         if (classSingleRuleAnnotation == null) {
             return statement;
         } else {
-            final String scriptText = constructScriptText(new BMRule[] {classSingleRuleAnnotation});
+            final String scriptText = BMRunnerUtil.constructScriptText(new BMRule[]{classSingleRuleAnnotation});
             final RunNotifier fnotifier = notifier;
             final Description description = Description.createTestDescription(testKlazz, getName(), classSingleRuleAnnotation);
             return new Statement() {
@@ -241,8 +241,8 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
             // ensure we always have an actual name here instead of null because using
             // null will clash with the name used for looking up rules when the clas
             // has a BMRules annotation
-            final String name = computeBMRulesName(annotation.value(), method);
-            final String loadDirectory = computeLoadDirectory(annotation.dir(), this.loadDirectory);
+            final String name = BMRunnerUtil.computeBMScriptName(annotation.value(), method.getMethod());
+            final String loadDirectory = BMRunnerUtil.normaliseLoadDirectory(annotation);
             return new Statement() {
                 public void evaluate() throws Throwable {
                     BMUnit.loadScriptFile(testKlazz, name, loadDirectory);
@@ -279,8 +279,8 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
                 // ensure we always have an actual name here instead of null because using
                 // null will clash with the name used for looking up rules when the clas
                 // has a BMRules annotation
-                final String name = computeBMRulesName(scriptAnnotation.value(), method);
-                final String loadDirectory = computeLoadDirectory(scriptAnnotation.dir(), this.loadDirectory);
+                final String name = BMRunnerUtil.computeBMScriptName(scriptAnnotation.value(), method.getMethod());
+                final String loadDirectory = BMRunnerUtil.normaliseLoadDirectory(scriptAnnotation);
                 result = new Statement() {
                     public void evaluate() throws Throwable {
                         BMUnit.loadScriptFile(testKlazz, name, loadDirectory);
@@ -310,7 +310,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
             return statement;
         } else {
             final String name = method.getName();
-            final String script = constructScriptText(annotation.rules());
+            final String script = BMRunnerUtil.constructScriptText(annotation.rules());
             return new Statement() {
                 public void evaluate() throws Throwable {
                     BMUnit.loadScriptText(testKlazz, name, script);
@@ -338,7 +338,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
             return statement;
         } else {
             final String name = method.getName();
-            final String script = constructScriptText(new BMRule[] {annotation });
+            final String script = BMRunnerUtil.constructScriptText(new BMRule[]{annotation});
             return new Statement() {
                 public void evaluate() throws Throwable {
                     BMUnit.loadScriptText(testKlazz, name, script);
@@ -350,99 +350,5 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
                 }
             };
         }
-    }
-
-    public String normaliseLoadDirectory(BMScript annotation)
-    {
-        String loadDirectory = annotation.dir();
-        if (loadDirectory != null && loadDirectory.length() > 0) {
-            return loadDirectory;
-        }
-
-        return null;
-    }
-
-    /**
-     * construct the text of a rule script from a  set of BMRule annotations
-     * @param bmRules
-     * @return
-     */
-    protected String constructScriptText(BMRule[] bmRules) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("# BMUnit autogenerated script ");
-        for (BMRule bmRule : bmRules) {
-            builder.append("\nRULE ");
-            builder.append(bmRule.name());
-            if (bmRule.isInterface()) {
-                builder.append("\nINTERFACE ");
-            } else {
-                builder.append("\nCLASS ");
-            }
-            if (bmRule.isOverriding()) {
-                builder.append("^");
-            }
-            builder.append(bmRule.targetClass());
-            builder.append("\nMETHOD ");
-            builder.append(bmRule.targetMethod());
-            String location = bmRule.targetLocation();
-            if (location  !=  null && location.length() > 0) {
-                builder.append("\nAT ");
-                builder.append(location);
-            }
-            String helper = bmRule.helper();
-            if (helper  !=  null && helper.length() > 0) {
-                builder.append("\nHELPER ");
-                builder.append(helper);
-            }
-            builder.append("\nIF ");
-            builder.append(bmRule.condition());
-            builder.append("\nDO ");
-            builder.append(bmRule.action());
-            builder.append("\nENDRULE\n");
-        }
-        return builder.toString();
-    }
-
-    /**
-     * method which computes the name of the BMRules file for a method test if it is not supplied in the
-     * method annotation
-     * @param name the value supplied in the annotation or "" if it has been defaulted
-     * @param method the Framework method annotated with an @BMRules annotation
-     * @return by default this returns the annotation value or the the bare method name if the annotation
-     * value is null or empty
-     */
-    protected String computeBMRulesName(String name, FrameworkMethod method)
-    {
-        // if the annotation has a real name  then use  it
-        if (name != null && name.length() > 0) {
-            return name;
-        }
-        // use the method name
-
-        return method.getName();
-    }
-
-    /**
-     * method which computes the name of the BMRules file for a test class if it is not supplied in the
-     * class annotation
-     * @param name the value supplied in the annotation or "" if it has been defaulted
-     * @param testClass the test class annotated with an @BMRules annotation
-     * @return by default this returns the annotation value or null if the annotation value is null or empty.
-     */
-    protected String computeBMRulesName(String name, Class<?> testClass)
-    {
-        if (name != null && name.length() > 0) {
-            return name;
-        }
-
-        return null;
-    }
-
-    protected String computeLoadDirectory(String methodAnnotationDir, String classAnnotationDir)
-    {
-        if (methodAnnotationDir != null && methodAnnotationDir.length() > 0) {
-            return methodAnnotationDir;
-        }
-        return classAnnotationDir;
     }
 }
