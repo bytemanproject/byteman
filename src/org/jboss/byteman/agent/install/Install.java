@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 import java.util.jar.JarFile;
 
 /**
@@ -61,7 +62,8 @@ public class Install
         }
     }
 
-    /**
+
+   /**
      * @param pid the process id of the JVM into which the agent should be installed or 0 for this JVM
      * @param addToBoot true if the agent jar should be installed into the bootstrap classpath
      * @param host the hostname to be used by the agent listener or null for localhost
@@ -76,8 +78,9 @@ public class Install
      * @throws AgentLoadException if an error occurs during upload of the agent into the JVM
      * @throws AgentInitializationException if the agent fails to initialize after loading. this almost always
      * indicates that the agent is already loaded into the JVM
+
      */
-    public static void install(String pid, boolean addToBoot, String host, int  port, String[] properties)
+    public static Install install(String pid, boolean addToBoot, String host, int  port, String[] properties)
             throws IllegalArgumentException, FileNotFoundException,
             IOException, AttachNotSupportedException,
             AgentLoadException, AgentInitializationException
@@ -85,7 +88,9 @@ public class Install
         if (port < 0) {
             throw new IllegalArgumentException("Install : port cannot be negative");
         }
-        
+
+        String bytemanHome = null;
+        boolean verbose = false;
         for (int i = 0; i < properties.length; i++) {
             String prop = properties[i];
             if (prop == null || prop.length()  == 0) {
@@ -94,12 +99,22 @@ public class Install
             if (prop.indexOf(',') >= 0) {
                 throw new IllegalArgumentException("Install : properties may not contain ','");
             }
+            if (prop.startsWith(BYTEMAN_HOME_SYSTEM_PROP)) {
+               String[] parts = prop.split("=");
+               bytemanHome = parts[1];
+            }
+            if (prop.startsWith("org.jboss.byteman.verbose")) {
+               String[] parts = prop.split("=");
+               verbose = Boolean.valueOf(parts[1]);
+            }
         }
         
         Install install = new Install(pid, addToBoot, host, port, properties);
-        install.locateAgent();
+        install.setVerbose(verbose);
+        install.locateAgent(bytemanHome);
         install.attach();
         install.injectAgent();
+        return install;
     }
 
     public static VMInfo[] availableVMs()
@@ -143,7 +158,43 @@ public class Install
         }
     }
 
-    /**
+   public String getAgentJar() {
+      return agentJar;
+   }
+
+   public String getId() {
+      return id;
+   }
+
+   public int getPort() {
+      return port;
+   }
+
+   public String getHost() {
+      return host;
+   }
+
+   public boolean isAddToBoot() {
+      return addToBoot;
+   }
+
+   public String getProps() {
+      return props;
+   }
+
+   public VirtualMachine getVm() {
+      return vm;
+   }
+
+   public boolean isVerbose() {
+      return verbose;
+   }
+
+   public void setVerbose(boolean verbose) {
+      this.verbose = verbose;
+   }
+
+   /**
      *  only this class creates instances
      */
     private Install()
@@ -163,7 +214,7 @@ public class Install
     {
         agentJar = null;
         this.id = pid;
-        this.port = 0;
+        this.port = port;
         this.addToBoot = addToBoot;
         this.host = host;
         if (properties != null) {
@@ -253,14 +304,28 @@ public class Install
      */
     private void locateAgent() throws IOException
     {
-        // use the current system property in preference to the environment setting
-
-        String bmHome = System.getProperty(BYTEMAN_HOME_SYSTEM_PROP);
+      String bmHome = System.getProperty(BYTEMAN_HOME_SYSTEM_PROP);
         if (bmHome == null || bmHome.length() == 0) {
             bmHome = System.getenv(BYTEMAN_HOME_ENV_VAR);
             if (bmHome == null || bmHome.length() == 0) {
                 throw new  FileNotFoundException("Install : cannot find Byteman agent jar please set environment variable " + BYTEMAN_HOME_ENV_VAR + " or System property " + BYTEMAN_HOME_SYSTEM_PROP);
             }
+        }
+       locateAgent(bmHome);
+    }
+    private void locateAgent(String bytemanHome) throws IOException
+    {
+        // use the current system property in preference to the environment setting
+
+        String bmHome = bytemanHome;
+        if (bmHome == null) {
+         System.getProperty(BYTEMAN_HOME_SYSTEM_PROP);
+           if (bmHome == null || bmHome.length() == 0) {
+               bmHome = System.getenv(BYTEMAN_HOME_ENV_VAR);
+               if (bmHome == null || bmHome.length() == 0) {
+                   throw new  FileNotFoundException("Install : cannot find Byteman agent jar please set environment variable " + BYTEMAN_HOME_ENV_VAR + " or System property " + BYTEMAN_HOME_SYSTEM_PROP);
+               }
+           }
         }
 
         if (bmHome.endsWith("/")) {
@@ -376,8 +441,18 @@ public class Install
             if (props != null) {
                 agentOptions += props;
             }
-            
+            if(verbose)
+               System.out.printf("Attaching to agent, address:%s, port:%d, agentJar:%s\n", host, port, agentJar);
             vm.loadAgent(agentJar, agentOptions);
+
+            if(verbose ) {
+               Properties agentProperties = vm.getAgentProperties();
+               System.out.println("VirtualMachine.agentProperties:");
+               System.out.println(agentProperties);
+               Properties sysProperties = vm.getSystemProperties();
+               System.out.println("VirtualMachine.sysProperties:");
+               System.out.println(sysProperties);
+            }
         } finally {
             vm.detach();
         }
@@ -406,6 +481,7 @@ public class Install
     private int port;
     private String host;
     private boolean addToBoot;
+    private boolean verbose;
     private String props;
     private VirtualMachine vm;
 

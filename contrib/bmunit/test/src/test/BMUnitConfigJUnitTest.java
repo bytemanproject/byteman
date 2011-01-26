@@ -16,21 +16,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.jboss.byteman.contrib.bmunit;
+package test;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.jboss.byteman.contrib.bmunit.BMUnitConfig;
 
 /**
- * Annotation attached to a test class or a test method identifying one or more Byteman rule files to be loaded
- * before running tests and unloaded after running tests.
- * @author Andrew Dinn (adinn@redhat.com) (C) 2010 Red Hat Inc.
+ * Tests of the BMUnitConfig annotation for JUnit based tests
+ * 
+ * @author Scott stark (sstark@redhat.com) (C) 2011 Red Hat Inc.
+ * @version $Revision:$
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.TYPE})
-public @interface BMScripts
-{
-    BMScript[] scripts();
+@BMUnitConfig(agentHost="localhost", agentPort = 10999,
+   isBmunitVerbose = true, isBytemanVerbose = true,
+   // Assumes test runs in root of source tree with install directory built
+   bytemanHome = "install"
+)
+public class BMUnitConfigJUnitTest {
+
 }

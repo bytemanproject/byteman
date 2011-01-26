@@ -1,3 +1,21 @@
+/*
+ * JBoss, Home of Professional Open Source
+ * Copyright 2011 Red Hat Inc. and/or its affiliates and other contributors
+ * as indicated by the @authors tag. All rights reserved.
+ * See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU Lesser General Public License, v. 2.1.
+ * This program is distributed in the hope that it will be useful, but WITHOUT A
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License,
+ * v.2.1 along with this distribution; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA  02110-1301, USA.
+ */
 package org.jboss.byteman.contrib.bmunit;
 
 import com.sun.tools.attach.AgentInitializationException;
@@ -16,6 +34,7 @@ import java.util.List;
  * This version assumes loads the agent as needed (unless inhibited -- see below) using System
  * properties to control what hostname and port it uses for the socket. Other system properties
  * can be used to configure operation of the load/unload operations.
+ * @author Andrew Dinn (adinn@redhat.com) (C) 2010 Red Hat Inc.
  */
 public class BMUnit
 {
@@ -53,7 +72,7 @@ public class BMUnit
     /**
      * flag which controls whether or not verbose trace output is enabled
      */
-    private final static boolean verbose = (System.getProperty(VERBOSE) != null);
+    private final static boolean verbose = (SecurityActions.getSystemProperty(VERBOSE, "false") != null);
 
     /**
      * the directory in which to look for rule scripts. this can be configured by setting system property
@@ -65,6 +84,7 @@ public class BMUnit
      * hash table used to maintain association between test cases and rule files
      */
     private static HashMap<String, String> fileTable = new HashMap<String, String>();
+    private static Install agent;
 
     /**
      * computes the default load directory from system property org.jboss.byteman.contrib.bmunit.load.directory
@@ -84,13 +104,18 @@ public class BMUnit
     /**
      * load the agent into this JVM if not already loaded. unfortunately this can only be done if we have
      * the pid of the current process and we cannot get that in a portable way
+     * @param config - the unit test configuration
      */
-    private static synchronized void loadAgent() throws Exception
+    public static synchronized void loadAgent(BMUnitConfig config) throws Exception
     {
-        String[] properties = new String[0];
-        String host = System.getProperty(AGENT_HOST);
-        String portString = System.getProperty(AGENT_PORT);
-        int port = (portString == null ? 0 : Integer.valueOf(portString));
+        if (config.isAgentLoadEnabled() == false) {
+           return;
+        }
+
+        // Get properties from the config
+       String[] properties = Helper.getProperties(config);
+        String host = Helper.getAgentHost(config);
+        int port = Helper.getAgentPort(config);
         String id = null;
 
         // if we can get a proper pid on Linux  we use it
@@ -144,10 +169,18 @@ public class BMUnit
             if (verbose) {
                 System.out.println("BMUNit : loading agent id = " + id);
             }
-            Install.install(id, true, host, port, properties);
+            agent = Install.install(id, true, host, port, properties);
         } catch (AgentInitializationException e) {
             // this probably indicates that the agent is already installed
         }
+    }
+
+   /**
+    * 
+    * @return
+    */
+    public static Install getInstalledAgent() {
+       return agent;
     }
 
     /**
@@ -192,6 +225,7 @@ public class BMUnit
         return pid;
     }
 
+    /* Need more control over when the agent is loaded
     static {
         if (System.getProperty(AGENT_INHIBIT) == null) {
             try {
@@ -201,6 +235,7 @@ public class BMUnit
             }
         }
     }
+    */
 
     /**
      * loads a script by calling loadScriptFile(clazz, null, dir)
@@ -215,7 +250,7 @@ public class BMUnit
     /**
      * loads a script from the load directory using the name of a unit test as the root name for the script
      * file and ".btm" or, failing that, ".txt" for the file extension
-     * @param name the name of the unit test
+     * @param testName the name of the unit test
      * @throws Exception
      */
     public static void loadScriptFile(Class<?> clazz, String testName, String dir) throws Exception
@@ -329,13 +364,13 @@ public class BMUnit
      * @param testName the test name
      * @param scriptText the text of the rule or rules contained in the script
      */
-    public static void loadScriptText(Class<?> clazz, String testname, String scriptText) throws Exception
+    public static void loadScriptText(Class<?> clazz, String testName, String scriptText) throws Exception
     {
         String className = clazz.getName();
-        if (testname ==  null) {
-            testname = "";
+        if (testName ==  null) {
+            testName = "";
         }
-        String key = className + "+"  + testname;
+        String key = className + "+"  + testName;
         fileTable.put(key, scriptText);
         Submit submit = new Submit();
         if (verbose) {
@@ -352,7 +387,6 @@ public class BMUnit
      * unloads a script previously supplied as a text String
      * @param clazz the test class
      * @param testName the test name
-     * @param scriptText the text of the rule or rules contained in the script
      */
     public static void unloadScriptText(Class<?> clazz, String testName) throws Exception
     {

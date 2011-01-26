@@ -39,7 +39,7 @@
 
     <!-- pick up the testng library -->
     <property name="testng.home" value="../../ext"/>
-    <property name="testng.jar" value="testng-5.14.6.jar"/>
+    <property name="testng.jar" value="testng.jar"/>
 
     <!-- locations for inputs ot build process-->
     <property name="src.dir"           value="src"/>
@@ -59,6 +59,7 @@
         <mkdir dir="${build.classes.dir}"/>
         <mkdir dir="${build.lib.dir}"/>
         <mkdir dir="${build.classes.dir}/META-INF"/>
+        <echoproperties />
     </target>
 
     <target name="install" depends="clean, jar">
