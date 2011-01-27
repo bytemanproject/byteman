@@ -70,7 +70,7 @@ public class Install
      * values such as "org.jboss.byteman.verbose" or "org.jboss.byteman.dump.generated.classes.directory=./dump"
      * @throws IllegalArgumentException if any of the arguments  is invalid
      * @throws FileNotFoundException if the agent jar cannot be found using the environment variable BYTEMAN_HOME
-     * or the System property org.jboss.byteman.home
+     * or the System property org.jboss.byteman.home and cannot be located in the current classpath
      * @throws IOException if the byteman jar cannot be opened or uploaded to the requested JVM
      * @throws AttachNotSupportedException if the requested JVM cannot be attached to
      * @throws AgentLoadException if an error occurs during upload of the agent into the JVM
@@ -259,10 +259,15 @@ public class Install
         if (bmHome == null || bmHome.length() == 0) {
             bmHome = System.getenv(BYTEMAN_HOME_ENV_VAR);
             if (bmHome == null || bmHome.length() == 0) {
-                throw new  FileNotFoundException("Install : cannot find Byteman agent jar please set environment variable " + BYTEMAN_HOME_ENV_VAR + " or System property " + BYTEMAN_HOME_SYSTEM_PROP);
+                locateAgentFromClasspath();
+            } else {
+                locateAgentFromHomeDir(bmHome);
             }
         }
+    }
 
+    public void locateAgentFromHomeDir(String bmHome) throws IOException
+    {
         if (bmHome.endsWith("/")) {
             bmHome = bmHome.substring(0, bmHome.length() - 1);
         }
@@ -284,6 +289,50 @@ public class Install
         }
 
         agentJar = bmHome + "/lib/byteman.jar";
+    }
+
+    public void locateAgentFromClasspath() throws IOException
+    {
+        String javaClassPath = System.getProperty("java.class.path");
+        String pathSepr = System.getProperty("path.separator");
+        String fileSepr = System.getProperty("file.separator");
+        final String EXTENSION = ".jar";
+        final int EXTENSION_LEN = EXTENSION.length();
+        final String NAME = "byteman";
+        final int NAME_LEN = NAME.length();
+        final String VERSION_PATTERN = "-[0-9]+\\.[0-9]+\\.[0-9]+.*";
+
+        String[] elements = javaClassPath.split(pathSepr);
+        String jarname = null;
+        for (String element : elements) {
+            if (element.endsWith(EXTENSION)) {
+                String name = element.substring(0, element.length() - EXTENSION_LEN);
+                int lastFileSepr = name.lastIndexOf(fileSepr);
+                if (lastFileSepr >= 0) {
+                    name= name.substring(lastFileSepr+1);
+                }
+                if (name.startsWith(NAME)) {
+                    if (name.length() == NAME_LEN) {
+                        jarname = element;
+                        break;
+                    }
+                    //  could be a contender --  check it only has a standard version suffix
+                    // i.e. "-NN.NN.NN-ANANAN"
+                    String version = name.substring(NAME_LEN);
+                    if (version.matches(VERSION_PATTERN)) {
+                        jarname =  element;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (jarname != null) {
+            agentJar = jarname;
+            System.out.println("byteman jar is " + jarname);
+        } else {
+            throw new  FileNotFoundException("Install : cannot find Byteman agent jar please set environment variable " + BYTEMAN_HOME_ENV_VAR + " or System property " + BYTEMAN_HOME_SYSTEM_PROP);
+        }
     }
 
     /**

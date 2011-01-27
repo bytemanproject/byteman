@@ -143,19 +143,17 @@ In order to run tests using BMTestCase you need several jars in your classpath
 
 byteman-bmunit,jar  -- the build product from this contrib package
 byteman-install.jar -- the jar which contains the class needed to install the agent
+byteman-submit.jar  -- the jar which contains the class needed to upload and unload rules
+byteman.jar         -- the jar which contains agent itself
 tools.jar           -- the JVM tools API jar which is normally found in $JAVA_HOME/lib.
 junit.jar/          -- one or both depending on which test model you are using.
 testng.jar             BMUnit has been tested with JUnit 4.8 or TestNG 5.14.6. Earlier
                        versions may also work, later ones should be fine
 
-You also need to provide your test process with an explicit location for the Byteman
-agent jar, byteman.jar, by setting environment variable BYTEMAN_HOME to the directory
-in which Byteman has been installed. The agent jar should be in the lib subdirectory.
-
-Note that you should not install the Byteman agent jar into your application classpath.
+Note that you do must ensure that your test does not refer to classes in the agent jar.
 When the agent is autoloaded it is automatically installed into the bootstrap classpath.
-If you locate the agent jar either in the system classpath or in your application deployment
-then all sorts of weird $#!+ will happen.
+If you load agent classes from your application via the system classpath then all sorts
+of weird $#!+ will happen.
 
 Note also that JAVA_HOME is the location where you installed a Java JDK (not just a Java JRE)
 This jar is not normally added to the Java runtime path. That normally only includes jars
