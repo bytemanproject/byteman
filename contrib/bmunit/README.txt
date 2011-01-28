@@ -139,7 +139,7 @@ methods.
 
 Test Environment Setup
 ----------------------
-In order to run tests using BMTestCase you need several jars in your classpath
+In order to run tests using BMUnit you need several jars in your classpath
 
 byteman-bmunit,jar  -- the build product from this contrib package
 byteman-install.jar -- the jar which contains the class needed to install the agent
@@ -150,15 +150,28 @@ junit.jar/          -- one or both depending on which test model you are using.
 testng.jar             BMUnit has been tested with JUnit 4.8 or TestNG 5.14.6. Earlier
                        versions may also work, later ones should be fine
 
-Note that you do must ensure that your test does not refer to classes in the agent jar.
-When the agent is autoloaded it is automatically installed into the bootstrap classpath.
-If you load agent classes from your application via the system classpath then all sorts
-of weird $#!+ will happen.
+n.b. with release BMUNit 1.5.1 and later when running with surefire under maven you can
+simply add the byteman and testng/junit jars as test dependencies. you also need to add
+an additionalClassPath element to your the surefire plugin configuration.
+  <configuration>
+    <additionalClasspathElements>
+      <additionalClasspathElement>${java.home}/lib/tools.jar</additionalClasspathElement>
+    </additionalClasspathElements>
+    . . .
+  </configuration>
+Property java.home must idenitfy the directory into which you have installed a JDK
+release. This is usually defined a sthe value of environment variable JAVA_HOME.
 
-Note also that JAVA_HOME is the location where you installed a Java JDK (not just a Java JRE)
-This jar is not normally added to the Java runtime path. That normally only includes jars
-from $JAVA_HOME/jre/lib. If you have only installed a Java runtime rather then a full JDK
-you may not find a tools jar.
+
+Note that you must ensure that your test does not reference classes from the agent jar.
+When the agent is autoloaded this jar is automatically installed into the bootstrap
+classpath. If you load agent classes from your application (i.e. via the system
+classpath) then all sorts of weird $#!+ will happen.
+
+Note also that JAVA_HOME is the location where you installed a Java _JDK_ (not just a Java
+_JRE_). The tools jar is not normally added to the Java runtime path. That normally only
+includes jars from $JAVA_HOME/jre/lib. If you have only installed a Java runtime rather
+then a full JDK you may not find a tools jar.
 
 BMUnit Configuration
 --------------------
