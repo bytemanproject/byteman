@@ -113,9 +113,9 @@ public class BMUnit
         }
 
         // Get properties from the config
-       String[] properties = Helper.getProperties(config);
-        String host = Helper.getAgentHost(config);
-        int port = Helper.getAgentPort(config);
+        String[] properties = BMRunnerUtil.getProperties(config);
+        String host = BMRunnerUtil.getAgentHost(config);
+        int port = BMRunnerUtil.getAgentPort(config);
         String id = null;
 
         // if we can get a proper pid on Linux  we use it

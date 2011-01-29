@@ -27,14 +27,22 @@ import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
 /**
- * Specialisation of the BlockJUnit4ClassRunner Runner class which can be attached to a text class
- * using the @RunWith annotation. It ensures that Byteman rules are loaded and unloaded for tests
- * which are annotated with an @Byteman annotation
+ * Specialisation of the BlockJUnit4ClassRunner Runner class which can be attached to a text class using the @RunWith
+ * annotation. It ensures that Byteman rules are loaded and unloaded for tests which are annotated with an @Byteman
+ * annotation
+ *
  * @author Andrew Dinn (adinn@redhat.com) (C) 2010 Red Hat Inc.
  * @author Scott Stark (sstark@redhat.com) (C) 2011 Red Hat Inc.
  */
-public class BMUnitRunner extends BlockJUnit4ClassRunner
-{
+@BMUnitConfig(agentHost = "localhost", agentPort = 9091,
+    isBmunitVerbose = false,
+    isBytemanVerbose = false,
+    isAgentLoadEnabled = true,
+    isBytemanDebug = false,
+    isPreferSystemProperties = true,
+    isReconfigurationEnabled = true
+)
+public class BMUnitRunner extends BlockJUnit4ClassRunner {
     BMUnitConfig classUnitConfig;
     BMScript classSingleScriptAnnotation;
     BMScripts classMultiScriptAnnotation;
@@ -52,17 +60,19 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     public BMUnitRunner(Class<?> klass) throws InitializationError {
         super(klass);
         testKlazz = getTestClass().getJavaClass();
-       classUnitConfig = testKlazz.getAnnotation(BMUnitConfig.class);
-       if (classUnitConfig == null) {
-          // Pickup the defaults from this class
-          classUnitConfig = getClass().getAnnotation(BMUnitConfig.class);
-       }
-       // Load the agent
-       try {
-           BMUnit.loadAgent(classUnitConfig);
-       } catch (Exception e) {
-          throw new InitializationError(e);
-       }
+        classUnitConfig = testKlazz.getAnnotation(BMUnitConfig.class);
+        if (classUnitConfig == null) {
+            // Pickup the defaults from this class
+            classUnitConfig = getClass().getAnnotation(BMUnitConfig.class);
+        }
+        // Load the agent
+        try {
+            if (BMRunnerUtil.isAgentLoadEnabled(classUnitConfig)) {
+                BMUnit.loadAgent(classUnitConfig);
+            }
+        } catch (Exception e) {
+            throw new InitializationError(e);
+        }
         classSingleScriptAnnotation = testKlazz.getAnnotation(BMScript.class);
         classMultiScriptAnnotation = testKlazz.getAnnotation(BMScripts.class);
         classMultiRuleAnnotation = testKlazz.getAnnotation(BMRules.class);
@@ -115,8 +125,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         return statement;
     }
 
-    protected Statement addClassSingleScriptLoader(final Statement statement, RunNotifier notifier)
-    {
+    protected Statement addClassSingleScriptLoader(final Statement statement, RunNotifier notifier) {
         if (classSingleScriptAnnotation == null) {
             return statement;
         } else {
@@ -145,17 +154,16 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         }
     }
 
-    protected Statement addClassMultiScriptLoader(final Statement statement, RunNotifier notifier)
-    {
+    protected Statement addClassMultiScriptLoader(final Statement statement, RunNotifier notifier) {
         if (classMultiScriptAnnotation == null) {
             return statement;
-         } else {
+        } else {
             BMScript[] scriptAnnotations = classMultiScriptAnnotation.scripts();
             Statement result = statement;
             // note we iterate down here because we generate statements by wraparound
             // which means the the outer statement gets executed first
-            for (int i = scriptAnnotations.length; i> 0; i--) {
-                BMScript scriptAnnotation= scriptAnnotations[i - 1];
+            for (int i = scriptAnnotations.length; i > 0; i--) {
+                BMScript scriptAnnotation = scriptAnnotations[i - 1];
                 final String name = BMRunnerUtil.computeBMScriptName(scriptAnnotation.value());
                 final RunNotifier fnotifier = notifier;
                 final Description description = Description.createTestDescription(testKlazz, getName(), scriptAnnotation);
@@ -184,8 +192,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         }
     }
 
-    protected Statement addClassMultiRuleLoader(final Statement statement, RunNotifier notifier)
-    {
+    protected Statement addClassMultiRuleLoader(final Statement statement, RunNotifier notifier) {
         if (classMultiRuleAnnotation == null) {
             return statement;
         } else {
@@ -213,8 +220,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         }
     }
 
-    protected Statement addClassSingleRuleLoader(final Statement statement, RunNotifier notifier)
-    {
+    protected Statement addClassSingleRuleLoader(final Statement statement, RunNotifier notifier) {
         if (classSingleRuleAnnotation == null) {
             return statement;
         } else {
@@ -243,8 +249,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     }
 
     @Override
-    protected Statement methodInvoker(FrameworkMethod method, Object test)
-    {
+    protected Statement methodInvoker(FrameworkMethod method, Object test) {
         Statement statement = super.methodInvoker(method, test);
         // n.b. we add the wrapper code in reverse order to the preferred order of loading
         // as it works by wrapping around and so execution is in reverse order to wrapping
@@ -258,14 +263,14 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     }
 
     /**
-     * wrap the test method execution statement with the necessary load and unload calls if it has
-     * a BMScript annotation
+     * wrap the test method execution statement with the necessary load and unload calls if it has a BMScript
+     * annotation
+     *
      * @param statement
      * @param method
      * @return
      */
-    protected Statement addMethodSingleScriptLoader(final Statement statement, FrameworkMethod method)
-    {
+    protected Statement addMethodSingleScriptLoader(final Statement statement, FrameworkMethod method) {
         BMScript annotation = method.getAnnotation(BMScript.class);
         if (annotation == null) {
             return statement;
@@ -289,14 +294,14 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     }
 
     /**
-     * wrap the test method execution statement with the necessary load and unload calls if it has
-     * a BMScripts annotation
+     * wrap the test method execution statement with the necessary load and unload calls if it has a BMScripts
+     * annotation
+     *
      * @param statement
      * @param method
      * @return
      */
-    protected Statement addMethodMultiScriptLoader(final Statement statement, FrameworkMethod method)
-    {
+    protected Statement addMethodMultiScriptLoader(final Statement statement, FrameworkMethod method) {
         BMScripts scriptsAnnotation = method.getAnnotation(BMScripts.class);
         if (scriptsAnnotation == null) {
             return statement;
@@ -305,7 +310,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
             Statement result = statement;
             // note we iterate down here because we generate statements by wraparound
             // which means the the outer statement gets executed first
-            for (int i = scriptAnnotations.length; i> 0; i--) {
+            for (int i = scriptAnnotations.length; i > 0; i--) {
                 BMScript scriptAnnotation = scriptAnnotations[i - 1];
                 final Statement nextStatement = result;
                 // ensure we always have an actual name here instead of null because using
@@ -329,14 +334,13 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     }
 
     /**
-     * wrap the test method execution statement with the necessary load and unload calls if it has
-     * a BMRules annotation
+     * wrap the test method execution statement with the necessary load and unload calls if it has a BMRules annotation
+     *
      * @param statement
      * @param method
      * @return
      */
-    protected Statement addMethodMultiRuleLoader(final Statement statement, FrameworkMethod method)
-    {
+    protected Statement addMethodMultiRuleLoader(final Statement statement, FrameworkMethod method) {
         BMRules annotation = method.getAnnotation(BMRules.class);
         if (annotation == null) {
             return statement;
@@ -357,14 +361,13 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     }
 
     /**
-     * wrap the test method execution statement with the necessary load and unload calls if it has
-     * a BMRule annotation
+     * wrap the test method execution statement with the necessary load and unload calls if it has a BMRule annotation
+     *
      * @param statement
      * @param method
      * @return
      */
-    protected Statement addMethodSingleRuleLoader(final Statement statement, FrameworkMethod method)
-    {
+    protected Statement addMethodSingleRuleLoader(final Statement statement, FrameworkMethod method) {
         BMRule annotation = method.getAnnotation(BMRule.class);
         if (annotation == null) {
             return statement;

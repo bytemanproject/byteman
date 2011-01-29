@@ -36,11 +36,19 @@ import java.lang.reflect.Method;
  * @author Andrew Dinn (adinn@redhat.com) (C) 2011 Red Hat Inc.
  * @author Scott Stark (sstark@redhat.com) (C) 2011 Red Hat Inc.
  */
+@BMUnitConfig(agentHost="localhost", agentPort = 9091,
+   isBmunitVerbose = false,
+   isBytemanVerbose = false,
+   isAgentLoadEnabled = true,
+   isBytemanDebug = false,
+   isPreferSystemProperties = true,
+   isReconfigurationEnabled = true
+)
 public class BMNGRunner implements IHookable
 {
 
     // TODO work out what to do if tests are run in parallel and their rule sets overlap or have ocnflicting behaviour
-
+    BMUnitConfig classUnitConfig;
     BMScript classSingleScriptAnnotation;
     BMScripts classMultiScriptAnnotation;
     BMRules classMultiRuleAnnotation;
@@ -58,6 +66,11 @@ public class BMNGRunner implements IHookable
         // TODO - track what we have loaded and ensure we always (try to) unload exavctly what we loaded
         // load rules associated with class annotations
         testKlazz = getClass();
+        classUnitConfig = testKlazz.getAnnotation(BMUnitConfig.class);
+        if (classUnitConfig == null) {
+           // Pickup the defaults from this class
+           classUnitConfig = getClass().getAnnotation(BMUnitConfig.class);
+        }
         classSingleScriptAnnotation = testKlazz.getAnnotation(BMScript.class);
         classMultiScriptAnnotation = testKlazz.getAnnotation(BMScripts.class);
         classSingleRuleAnnotation = testKlazz.getAnnotation(BMRule.class);
@@ -158,6 +171,7 @@ public class BMNGRunner implements IHookable
     public void bmngAfterTest(Method method) throws Exception
     {
         // TODO - track what we have loaded and ensure we always (try to) unload exavctly what we loaded
+        // TODO - interact with @BMUnitConfig.scriptDirectory if @BMScript does not have a dir
         BMScript methodSingleScriptAnnotation = method.getAnnotation(BMScript.class);
         BMScripts methodMultiScriptAnnotation = method.getAnnotation(BMScripts.class);
         BMRule methodSingleRuleAnnotation = method.getAnnotation(BMRule.class);
