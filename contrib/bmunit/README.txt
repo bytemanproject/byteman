@@ -1,5 +1,5 @@
 #  JBoss, Home of Professional Open Source
-#  Copyright 2010, Red Hat, Inc. and/or its affiliates,
+#  Copyright 2010, 2011 Red Hat, Inc. and/or its affiliates,
 #  and individual contributors as indicated by the @author tags.
 #  See the copyright.txt in the distribution for a
 #  full listing of individual contributors.
@@ -14,9 +14,9 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA  02110-1301, USA.
 #
-# (C) 2010,
+# (C) 2010-11,
 #  @author JBoss, by Red Hat.
-#  @author Andrew Dinn (adinn@redhat.com) 2010-12
+#  @author Andrew Dinn (adinn@redhat.com) 2010-11
 
 
 File
@@ -27,27 +27,46 @@ README.txt for Byteman contrib BMUnit
 Summary
 -------
 
-BMUnit is a user package which automates loading of Byteman rules into JUnit tests.
+BMUnit is a user package which automates loading of Byteman rules into JUnit
+or TestNG tests.
 
 Usage Guide
 -----------
 
-This package simplifies use of  Byteman in JUnit  tests. It supports both old and
-new style testing either by subclassing the old JUnit TestCase class or by annotating
-your test class with @RunWith(BMUnitRunner) and adding @BMScript or @BMRule/@BMRules
-annotations to the test class or individual test methods.
+This package simplifies use of  Byteman in JUnit and TestNG tests. It provides
+two annotations, BMRule and BMScript, which you attach either to a test class
+or to a test method. These annotations specify, respectively, the text of a
+Byteman rule or the location of a Byteman rule script file which should be
+installed before running your tests and deinstalled after the tests have
+completed.
 
-JUnit 4.8 Style Tests
-If  your class is annotated with @RunWith(BMUnitRunner) then the runner will load the
+Class annotations identify rules which should be present for all tests in the
+class. These rules are loaded before running any of the class's test methods
+and only unloaded once all test methods have been executed. Method annoations
+identify rules required for a specifc test. They are loaded just before the
+test method gets called and unloaded after it has finished (or failed) before
+executing the next test method.
+
+The package also provides two grouping annotations, BMScripts and BMRules,
+which allow multiple BMScript or BMRules annotations to be attached to a class
+or method. These grouping annotations contain a field whose value is an array
+of BMScript or BMRule annotations, respectively.
+
+TestNG Style Tests
+------------------
+Your test class should extend class BMNGRunner.It then inherits Before/AfterClass
+and Before/AfterMethod behaviour which loads the Byteman agent on demand and
+loads and unloads rules in response to the presence of @BMScript, @BMScripts,  @BMRule
+or @BMRules annotations.
+
+JUnit 4 Style Tests
+-------------------
+Your test class should be annotated with @RunWith(BMUnitRunner). The runner will load the
 Byteman agent on demand and will load and unload rules in response to the presence of
-@BMScript, @BMScripts,  @BMRule or @BMRules annotations. If the class is annotated then
-the associated rules will be loaded before running any tests and only unloaded until
-after all tests have executed. If a test method (@Test annotated method) is also
-annotated with @BMScript/@BMScripts or @BMRule/@BMRules then rules will be loaded
-specifically for that test and unloaded after the test completes.
+@BMScript, @BMScripts,  @BMRule or @BMRules annotations.
 
 @BMScript(s) annotation
-
+-----------------------
 A @BMScript annotation is used  to load rules from a script file. It can be configured with
 a directory name (field dir) and a test name (field value). If not supplied these values
 will be defaulted and the rule file is searched for in a series of standard locations. The
@@ -61,13 +80,11 @@ file is determined using the annotation value and the test class name or, if the
 is omitted, the method name and class name (exact details follow below).
 
 The directory from which to search for scripts can be configured using the dir field of
-the BMScript annotation. When set in a class level annotation it provides a value
-used for all tests. When set in a method level annotation it provides a value for that
-specific test, overriding any class level setting. If it is left unconfigured in both
-class and method annotations then the default location is used (exact details follow below).
+the BMScript annotation. If it is left unconfigured then the default location is used
+(exact details follow below).
 
 @BMRule(s) annotation
-
+---------------------
 A @BMRule annotation can be used to specify the text of a single rule. Annotation
 fields define the target class, method, location, etc. Multiple rules can be
 specified using the @BMRules annotation whose rules field can be initialised with
@@ -77,16 +94,8 @@ legitimate for a class to be annotated with both annotations, ditto for a test m
 These annotations may also be used in combination with @BMScript annotations. Note
 that @BMScript rules are always loaded before rules specified via @BMRule.
 
-JUnit 3 Style Tests
-If your test class inherits from BMTestCase then your test will load the Byteman
-agent on demand and will automatically install Byteman rules before running a test
-method then unload rules after the test has ended. The name of the rule script
-is computed using the test class name and/or the test name. The test name can be
-set in the constructor for the BMTestCase. You can optionally pass a String in the
-constructor, identifying the directory from which to search for scripts. If this
-argument is omitted then the default location is used (see below).
-
-@BMScript fle Lookup
+@BMScript file Lookup
+---------------------
 File lookup employs the computed test name and/or the test class name to locate
 the rule script, trying various alternative combinations of these two values. If you
 have configured a lookup directory then files are searched for below that directory.
@@ -113,22 +122,60 @@ Look for
 7) <dir>/TestCaseClass.btm
 8) <dir>/TestCaseClass.txt
 
-In order to run tests using BMTestCase you need several jars in your classpath
+JUnit 3 Style Tests
+-------------------
+If your test class inherits from BMTestCase then your test will load the Byteman
+agent on demand and will automatically install Byteman rules before running a test
+method then unload rules after the test has ended. The name of the rule script
+is computed using the test class name and/or the test name. The test name can be
+set in the constructor for the BMTestCase. You can optionally pass a String in the
+constructor, identifying the directory from which to search for scripts. If this
+argument is omitted then the default location is used (see below).
+
+Note that for JUnit 3 style tests the same script is loaded and unloaded before and
+after each test in the setup and tear down method. JUnit 3 stule tests do not
+provide a means fo configuring different setup/tear down behaviour for individual
+methods.
+
+Test Environment Setup
+----------------------
+In order to run tests using BMUnit you need several jars in your classpath
 
 byteman-bmunit,jar  -- the build product from this contrib package
 byteman-install.jar -- the jar which contains the class needed to install the agent
-tools.jar -- the JVM tools API jar which is normally found in $JAVA_HOME/lib.
+byteman-submit.jar  -- the jar which contains the class needed to upload and unload rules
+byteman.jar         -- the jar which contains agent itself
+tools.jar           -- the JVM tools API jar which is normally found in $JAVA_HOME/lib.
+junit.jar/          -- one or both depending on which test model you are using.
+testng.jar             BMUnit has been tested with JUnit 4.8 or TestNG 5.14.6. Earlier
+                       versions may also work, later ones should be fine
 
-You also need to provide your test process with an explicit location for the Byteman
-agent jar, byteman.jar, by setting environment variable BYTEMAN_HOME to the directory
-in which Byteman has been installed. The agent jar should be in the lib subdirectory.
+n.b. with release BMUNit 1.5.1 and later when running with surefire under maven you can
+simply add the byteman and testng/junit jars as test dependencies. you also need to add
+an additionalClassPath element to your the surefire plugin configuration.
+  <configuration>
+    <additionalClasspathElements>
+      <additionalClasspathElement>${java.home}/lib/tools.jar</additionalClasspathElement>
+    </additionalClasspathElements>
+    . . .
+  </configuration>
+Property java.home must idenitfy the directory into which you have installed a JDK
+release. This is usually defined a sthe value of environment variable JAVA_HOME.
 
-Note that you should not install the Byteman agent jar into your application classpath.
-When the agent is autoloaded it is automatically installed into the bootstrap classpath.
-If you locate the agent jar either in the system classpath or in your application deployment
-then all sorts of weird $#!+ will happen.
 
-Note also that JAVA_HOME is the location where you installed a Java JDK (not just a Java JRE)
-This jar is not normally added to the Java runtime path. That normally only includes jars
-from $JAVA_HOME/jre/lib. If you have only installed a Java runtime rather then a full JDK
-you may not find a tools jar.
+Note that you must ensure that your test does not reference classes from the agent jar.
+When the agent is autoloaded this jar is automatically installed into the bootstrap
+classpath. If you load agent classes from your application (i.e. via the system
+classpath) then all sorts of weird $#!+ will happen.
+
+Note also that JAVA_HOME is the location where you installed a Java _JDK_ (not just a Java
+_JRE_). The tools jar is not normally added to the Java runtime path. That normally only
+includes jars from $JAVA_HOME/jre/lib. If you have only installed a Java runtime rather
+then a full JDK you may not find a tools jar.
+
+BMUnit Configuration
+--------------------
+You can configure some of the behaviour of the BMUnit package by setting various System
+properties in the test JVM. See the BMUnit javadoc for full details.
+
+Annotation based configuration of BMUnit is planned for the next release.

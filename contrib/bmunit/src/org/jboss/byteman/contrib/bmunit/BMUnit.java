@@ -203,14 +203,14 @@ public class BMUnit
     }
 
     /**
-     * loads a script by calling loadScriptFile(clazz, testName, null)
+     * loads a script by calling loadScriptFile(clazz, null, dir)
      * @param clazz the test class
-     * @param testName the test name
+     * @param dir the directory to load the script from
      * @throws Exception
      */
-    public static void loadScriptFile(Class<?> clazz, String testName) throws Exception
+    public static void loadScriptFile(Class<?> clazz, String dir) throws Exception
     {
-        loadScriptFile(clazz, testName, null);
+        loadScriptFile(clazz, null, dir);
     }
     /**
      * loads a script from the load directory using the name of a unit test as the root name for the script
@@ -318,7 +318,7 @@ public class BMUnit
         List<String> files =  new ArrayList<String>();
         files.add(filename);
         if (verbose) {
-            System.out.println("BMUNit : unloading fle script = " + filename);
+            System.out.println("BMUNit : unloading file script = " + filename);
         }
         submit.deleteRulesFromFiles(files);
     }

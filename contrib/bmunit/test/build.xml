@@ -13,6 +13,10 @@
     <property name="junit.home" value="${root}/ext"/>
     <property name="junit.jar" value="junit.jar"/>
 
+    <!-- pick up the testng library -->
+    <property name="testng.home" value="${root}/ext"/>
+    <property name="testng.jar" value="testng.jar"/>
+
     <!-- pick up the bmunit library -->
     <property name="bmunit.home" value="../build/lib"/>
     <property name="bmunit.jar" value="byteman-bmunit.jar"/>
@@ -22,7 +26,7 @@
     <property name="build.dir"         value="build"/>
     <property name="build.classes.dir" value="${build.dir}/classes"/>
     <property name="build.lib.dir"     value="${build.dir}/lib"/>
-    <property name="build.output.dir"  value="${build.dir}/output"/>
+    <property name="testng.output.dir"  value="${build.dir}/test-output"/>
 
     <!-- enable debugging of compiled code including refs to local vars -->
 
@@ -33,16 +37,20 @@
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${build.classes.dir}"/>
         <mkdir dir="${build.lib.dir}"/>
-        <mkdir dir="${build.output.dir}"/>
-        <mkdir dir="${build.output.dir}/location"/>
     </target>
+
+    <path id="testngpath">
+      <pathelement location="${testng.home}/${testng.jar}"/>
+      <pathelement location="build"/>
+    </path>
 
     <target name="compile" depends="init">
         <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${javac.debug}">
             <classpath>
                 <pathelement location="${junit.home}/${junit.jar}"/>
+                <pathelement location="${testng.home}/${testng.jar}"/>
                 <pathelement location="${bmunit.home}/${bmunit.jar}"/>
-                <pathelement location="${java.home}/lib/tools.jar"/>
+                <pathelement location="${env.JAVA_HOME}/lib/tools.jar"/>
             </classpath>
         </javac>
     </target>
@@ -60,11 +68,13 @@
     <target name="tests"
             depends="jar, tests.run"/>
 
-    <target name="tests.run">
+    <target name="tests.run" depends="tests.run.junit, tests.run.testng" />
+
+    <target name="tests.run.junit">
         <!--
         <junit showoutput="true">
         -->
-        <junit showoutput="true" >
+        <junit showoutput="true" fork="true">
             <classpath>
                 <pathelement location="${byteman.lib}/${byteman.install.jar}"/>
                 <pathelement location="${build.lib.dir}/tests.jar"/>
@@ -92,5 +102,47 @@
             <jvmarg value="-Dorg.jboss.byteman.contrib.bmunit.script.directory=${scripts.dir}"/>
             <test name="test.UnitTest"/>
         </junit>
+    </target>
+
+    <path id="testngpath">
+        <pathelement location="${byteman.lib}/${byteman.install.jar}"/>
+        <pathelement location="${build.lib.dir}/tests.jar"/>
+        <pathelement location="${testng.home}/${testng.jar}"/>
+        <pathelement location="${bmunit.home}/${bmunit.jar}"/>
+        <pathelement location="${env.JAVA_HOME}/lib/tools.jar"/>
+    </path>
+
+     <taskdef name="testng" classpathref="testngpath"
+             classname="org.testng.TestNGAntTask" />
+
+    <target name="tests.run.testng">
+      <testng outputdir="${testng.output.dir}">
+          <classpath>
+              <pathelement location="${byteman.lib}/${byteman.install.jar}"/>
+              <pathelement location="${build.lib.dir}/tests.jar"/>
+              <pathelement location="${testng.home}/${testng.jar}"/>
+              <pathelement location="${bmunit.home}/${bmunit.jar}"/>
+              <pathelement location="${env.JAVA_HOME}/lib/tools.jar"/>
+          </classpath>
+          <jvmarg value="-Dorg.jboss.byteman.contrib.bmunit.verbose"/>
+          <!-- uncomment for verbose byteman output
+          <jvmarg value="-Dorg.jboss.byteman.verbose"/>
+          -->
+          <!-- uncomment to dump generated code
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+          -->
+          <!-- uncomment to enable debug
+          <jvmarg value="-Xdebug"/>
+          <jvmarg  value="-Xnoagent"/>
+          <jvmarg  value="-Djava.compiler=NONE"/>
+          <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+          -->
+          <!--
+          <jvmarg value="-javaagent:${byteman.lib}/${byteman.jar}=listener:true"/>
+          -->
+          <jvmarg value="-Dorg.jboss.byteman.contrib.bmunit.script.directory=${scripts.dir}"/>
+        <classfileset dir="build/classes" includes="**/NGUnitTest.class"/>
+      </testng>
     </target>
 </project>

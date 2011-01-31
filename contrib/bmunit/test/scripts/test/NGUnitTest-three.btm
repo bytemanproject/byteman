@@ -1,0 +1,8 @@
+# Test script to check load and unload at method level
+RULE NG test autoload method rule 3
+CLASS NGUnitTest
+METHOD testThree
+AT CALL tryThree
+IF TRUE
+DO traceln("Byteman: intercepted call to tryThree in testThree from method @BMScript script");
+ENDRULE

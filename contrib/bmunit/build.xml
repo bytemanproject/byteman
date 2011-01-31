@@ -37,6 +37,10 @@
     <property name="junit.home" value="../../ext"/>
     <property name="junit.jar" value="junit.jar"/>
 
+    <!-- pick up the testng library -->
+    <property name="testng.home" value="../../ext"/>
+    <property name="testng.jar" value="testng.jar"/>
+
     <!-- locations for inputs ot build process-->
     <property name="src.dir"           value="src"/>
 
@@ -75,6 +79,7 @@
             <classpath>
                 <fileset dir="${byteman.home}" includes="${byteman.jar} ${byteman.install.jar}"/>
                 <fileset dir="${junit.home}" includes="${junit.jar}"/>
+                <fileset dir="${testng.home}" includes="${testng.jar}"/>
                 <fileset dir="${java.home}/lib/" includes="tools.jar"/>
             </classpath>
         </javac>
