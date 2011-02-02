@@ -23,6 +23,7 @@ import java.util.ArrayList;
 
 /**
  * Class bundling some utility methods used by both JUnit and TestNG runner classes
+ *
  * @author Andrew Dinn (adinn@redhat.com) (C) 2011 Red Hat Inc.
  * @author Scott stark (sstark@redhat.com) (C) 2011 Red Hat Inc.
  */
@@ -80,13 +81,13 @@ public class BMRunnerUtil {
     }
 
     /**
-     * method which computes the name of the BMRules file for a method test if it is not supplied in the
-     * method annotation
+     * method which computes the name of the BMRules file for a method test if it is not supplied in the method
+     * annotation
      *
      * @param name   the value supplied in the annotation or "" if it has been defaulted
      * @param method the Framework method annotated with an @BMRules annotation
-     * @return by default this returns the annotation value or the the bare method name if the annotation
-     *         value is null or empty
+     * @return by default this returns the annotation value or the the bare method name if the annotation value is null
+     *         or empty
      */
     public static String computeBMScriptName(String name, Method method) {
         // if the annotation has a real name  then use  it
@@ -99,10 +100,10 @@ public class BMRunnerUtil {
     }
 
     /**
-     * method which computes the name of the BMRules file for a test class if it is not supplied in the
-     * class annotation
+     * method which computes the name of the BMRules file for a test class if it is not supplied in the class
+     * annotation
      *
-     * @param name      the value supplied in the annotation or "" if it has been defaulted
+     * @param name the value supplied in the annotation or "" if it has been defaulted
      * @return by default this returns the annotation value or null if the annotation value is null or empty.
      */
     public static String computeBMScriptName(String name) {
@@ -113,177 +114,222 @@ public class BMRunnerUtil {
         return null;
     }
 
-      /**
-    * Build a property array of the system properties that should be passed to an agent
-    * Install ctor.
-    *
-    * @param config - the unit test configuration annotation
-    * @return an array of system property names and their values in the form of key=value pairs.
-    */
-   public static String[] getProperties(BMUnitConfig config) {
-       // Get properties from the config
-       ArrayList<String> configProperties = new ArrayList<String>();
-       String host = getAgentHost(config);
-       int port = getAgentPort(config);
-      String home = getBytemanHome(config);
-      String scriptDirectory = getScriptDirectory(config);
-      boolean bmunitVerbose = isBmunitVerbose(config);
-      boolean bytemanVerbose = isBytemanVerbose(config);
-      boolean agentLoadEnabled = isAgentLoadEnabled(config);
+    /**
+     * Build a property array of the system properties that should be passed to an agent Install ctor.
+     *
+     * @param config - the unit test configuration annotation
+     * @return an array of system property names and their values in the form of key=value pairs.
+     */
+    public static String[] getProperties(BMUnitConfig config) {
+        // Get properties from the config
+        ArrayList<String> configProperties = new ArrayList<String>();
+        String host = getAgentHost(config);
+        int port = getAgentPort(config);
+        String home = getBytemanHome(config);
+        String scriptDirectory = getScriptDirectory(config);
+        boolean bmunitVerbose = isBmunitVerbose(config);
+        boolean bytemanDebug = isBytemanDebug(config);
+        boolean bytemanVerbose = isBytemanVerbose(config);
+        boolean agentLoadEnabled = isAgentLoadEnabled(config);
 
-      if(host.length() > 0)
-         configProperties.add("org.jboss.byteman.contrib.bmunit.agent.host="+host);
-      if(port != -1)
-         configProperties.add("org.jboss.byteman.contrib.bmunit.agent.port="+port);
-      if(home.length() > 0)
-         configProperties.add("org.jboss.byteman.home="+home);
-      configProperties.add("org.jboss.byteman.contrib.bmunit.verbose="+bmunitVerbose);
-      configProperties.add("org.jboss.byteman.verbose="+bytemanVerbose);
-      configProperties.add("org.jboss.byteman.contrib.bmunit.agent.inhibit"+!agentLoadEnabled);
+        if (host.length() > 0) {
+            configProperties.add("org.jboss.byteman.contrib.bmunit.agent.host=" + host);
+        }
+        if (port != -1) {
+            configProperties.add("org.jboss.byteman.contrib.bmunit.agent.port=" + port);
+        }
+        if (home.length() > 0) {
+            configProperties.add("org.jboss.byteman.home=" + home);
+        }
+        configProperties.add("org.jboss.byteman.contrib.bmunit.verbose=" + bmunitVerbose);
+        configProperties.add("org.jboss.byteman.debug=" + bytemanDebug);
+        configProperties.add("org.jboss.byteman.verbose=" + bytemanVerbose);
+        configProperties.add("org.jboss.byteman.contrib.bmunit.agent.inhibit=" + !agentLoadEnabled);
 
-      String[] properties = new String[configProperties.size()];
-      configProperties.toArray(properties);
-      return properties;
-   }
+        String[] properties = new String[configProperties.size()];
+        configProperties.toArray(properties);
+        return properties;
+    }
 
-   /**
-    * Determine the agent host value to use
-    * org.jboss.byteman.contrib.bmunit.agent.host
-    * @param config
-    * @return the agent host value
-    */
-   static String getAgentHost(BMUnitConfig config) {
-      String value = "";
-      String sysPropValue = SecurityActions.getSystemProperty(BMUnit.AGENT_HOST, "");
-      String configValue = config.agentHost();
-      // First try system property if preferred
-      if(config.isPreferSystemProperties())
-         value = sysPropValue;
-      // Next try config property
-      if(value.length() == 0 && configValue.length() > 0)
-         value = configValue;
-      else if(value.length() == 0 && sysPropValue.length() > 0)
-         value = sysPropValue;
-      return value;
-   }
-   /**
-    * Determine the agent port value to use
-    * org.jboss.byteman.contrib.bmunit.agent.port
-    * @param config
-    * @return the agent port value
-    */
-   static int getAgentPort(BMUnitConfig config) {
-      int value = -1;
-      String sysPropValue = SecurityActions.getSystemProperty(BMUnit.AGENT_PORT, "-1");
-      int configValue = config.agentPort();
-      // First try system property if preferred
-      if(config.isPreferSystemProperties())
-         value = Integer.valueOf(sysPropValue);
-      // Next try config property
-      if(value == -1 && configValue > 0)
-         value = configValue;
-      else if(value == -1 && sysPropValue.length() > 0)
-         value = Integer.valueOf(sysPropValue);
-      return value;
-   }
-   /**
-    * Determine the byteman agent jar home location
-    * org.jboss.byteman.home
-    * @param config
-    * @return the value for the bytemane home location
-    */
-   static String getBytemanHome(BMUnitConfig config) {
-      String value = "";
-      String sysPropValue = SecurityActions.getSystemProperty("org.jboss.byteman.home", "");
-      String configValue = config.bytemanHome();
-      // First try system property if preferred
-      if(config.isPreferSystemProperties())
-         value = sysPropValue;
-      // Next try config property
-      if(value.length() == 0 && configValue.length() > 0)
-         value = configValue;
-      else if(value.length() == 0 && sysPropValue.length() > 0)
-         value = sysPropValue;
-      return value;
-   }
-      /**
-    * Determine the byteman agent jar home location
-    * org.jboss.byteman.home
-    * @param config
-    * @return the value for the bytemane home location
-    */
-   static String getScriptDirectory(BMUnitConfig config) {
-      String value = "";
-      String sysPropValue = SecurityActions.getSystemProperty("org.jboss.byteman.home", "");
-      String configValue = config.bytemanHome();
-      // First try system property if preferred
-      if(config.isPreferSystemProperties())
-         value = sysPropValue;
-      // Next try config property
-      if(value.length() == 0 && configValue.length() > 0)
-         value = configValue;
-      else if(value.length() == 0 && sysPropValue.length() > 0)
-         value = sysPropValue;
-      return value;
-   }
+    /**
+     * Determine the agent host value to use org.jboss.byteman.contrib.bmunit.agent.host
+     *
+     * @param config
+     * @return the agent host value
+     */
+    static String getAgentHost(BMUnitConfig config) {
+        String value = "";
+        String sysPropValue = SecurityActions.getSystemProperty(BMUnit.AGENT_HOST, "");
+        String configValue = config.agentHost();
+        // First try system property if preferred
+        if (config.isPreferSystemProperties()) {
+            value = sysPropValue;
+        }
+        // Next try config property
+        if (value.length() == 0 && configValue.length() > 0) {
+            value = configValue;
+        } else if (value.length() == 0 && sysPropValue.length() > 0) {
+            value = sysPropValue;
+        }
+        return value;
+    }
 
-   /**
-    * Determine if the BMUnit classes should run with verbose logging
-    * org.jboss.byteman.contrib.bmunit.verbose
-    * @param config
-    * @return the BMUnit level verbose flag
-    */
-   static boolean isBmunitVerbose(BMUnitConfig config) {
-      boolean value = false;
-      String sysPropValue = SecurityActions.getSystemProperty(BMUnit.VERBOSE, "");
-      boolean configValue = config.isBmunitVerbose();
-      // First try system property if preferred
-      if(config.isPreferSystemProperties() && sysPropValue.length() > 0)
-         value = Boolean.valueOf(sysPropValue);
-      // Next try config property
-      else if(configValue)
-         value = configValue;
-      else if(sysPropValue.length() > 0)
-         value = Boolean.valueOf(sysPropValue);
-      return value;
-   }
+    /**
+     * Determine the agent port value to use org.jboss.byteman.contrib.bmunit.agent.port
+     *
+     * @param config
+     * @return the agent port value
+     */
+    static int getAgentPort(BMUnitConfig config) {
+        int value = -1;
+        String sysPropValue = SecurityActions.getSystemProperty(BMUnit.AGENT_PORT, "-1");
+        int configValue = config.agentPort();
+        // First try system property if preferred
+        if (config.isPreferSystemProperties()) {
+            value = Integer.valueOf(sysPropValue);
+        }
+        // Next try config property
+        if (value == -1 && configValue > 0) {
+            value = configValue;
+        } else if (value == -1 && sysPropValue.length() > 0) {
+            value = Integer.valueOf(sysPropValue);
+        }
+        return value;
+    }
 
-   /**
-    * Determine if the bytename core should run with verbose logging
-    * org.jboss.byteman.verbose
-    * @param config
-    * @return the byteman core level verbose flag
-    */
-   static boolean isBytemanVerbose(BMUnitConfig config) {
-      boolean value = false;
-      String sysPropValue = SecurityActions.getSystemProperty("org.jboss.byteman.verbose", "false");
-      boolean configValue = config.isBytemanVerbose();
-      // First try system property if preferred
-      if(config.isPreferSystemProperties())
-         value = Boolean.valueOf(sysPropValue);
-      // Next use config property
-      else
-         value = configValue;
-      return value;
-   }
-   /**
-    * Determine if the agent should be loaded into the current JVM. This is useful if e.g. the
-    * test is driving a remote app server and the rules need to be uploaded to the app server JVM.
-    * org.jboss.byteman.contrib.bmunit.agent.inhibit == true indicates isAgentLoadEnabled is false
-    * @param config
-    * @return the byteman core level verbose flag
-    */
-   public static boolean isAgentLoadEnabled(BMUnitConfig config) {
-      boolean value = false;
-      String sysPropValue = SecurityActions.getSystemProperty("org.jboss.byteman.contrib.bmunit.agent.inhibit", "");
-      boolean configValue = config.isAgentLoadEnabled();
-      // First try system property if preferred
-      if(config.isPreferSystemProperties())
-         value = ! Boolean.valueOf(sysPropValue);
-      // Next use config property
-      else
-         value = configValue;
-      return value;
-   }
+    /**
+     * Determine the byteman agent jar home location org.jboss.byteman.home
+     *
+     * @param config
+     * @return the value for the bytemane home location
+     */
+    static String getBytemanHome(BMUnitConfig config) {
+        String value = "";
+        String sysPropValue = SecurityActions.getSystemProperty("org.jboss.byteman.home", "");
+        String configValue = config.bytemanHome();
+        // First try system property if preferred
+        if (config.isPreferSystemProperties()) {
+            value = sysPropValue;
+        }
+        // Next try config property
+        if (value.length() == 0 && configValue.length() > 0) {
+            value = configValue;
+        } else if (value.length() == 0 && sysPropValue.length() > 0) {
+            value = sysPropValue;
+        }
+        return value;
+    }
+
+    /**
+     * Determine the byteman agent jar home location org.jboss.byteman.home
+     *
+     * @param config
+     * @return the value for the bytemane home location
+     */
+    static String getScriptDirectory(BMUnitConfig config) {
+        String value = "";
+        String sysPropValue = SecurityActions.getSystemProperty("org.jboss.byteman.home", "");
+        String configValue = config.bytemanHome();
+        // First try system property if preferred
+        if (config.isPreferSystemProperties()) {
+            value = sysPropValue;
+        }
+        // Next try config property
+        if (value.length() == 0 && configValue.length() > 0) {
+            value = configValue;
+        } else if (value.length() == 0 && sysPropValue.length() > 0) {
+            value = sysPropValue;
+        }
+        return value;
+    }
+
+    /**
+     * Determine if the BMUnit classes should run with verbose logging org.jboss.byteman.contrib.bmunit.verbose
+     *
+     * @param config
+     * @return the BMUnit level verbose flag
+     */
+    static boolean isBmunitVerbose(BMUnitConfig config) {
+        boolean value = false;
+        String sysPropValue = SecurityActions.getSystemProperty(BMUnit.VERBOSE, "");
+        boolean configValue = config.isBmunitVerbose();
+        // First try system property if preferred
+        if (config.isPreferSystemProperties() && sysPropValue.length() > 0) {
+            value = Boolean.valueOf(sysPropValue);
+        }
+        // Next try config property
+        else if (configValue) {
+            value = configValue;
+        } else if (sysPropValue.length() > 0) {
+            value = Boolean.valueOf(sysPropValue);
+        }
+        return value;
+    }
+        /**
+     * Determine if the byteman core should run with debug logging org.jboss.byteman.debug
+     *
+     * @param config
+     * @return the Byteman level debug flag
+     */
+    static boolean isBytemanDebug(BMUnitConfig config) {
+        boolean value = false;
+        String sysPropValue = SecurityActions.getSystemProperty("org.jboss.byteman.debug", "");
+        boolean configValue = config.isBmunitVerbose();
+        // First try system property if preferred
+        if (config.isPreferSystemProperties() && sysPropValue.length() > 0) {
+            value = Boolean.valueOf(sysPropValue);
+        }
+        // Next try config property
+        else if (configValue) {
+            value = configValue;
+        } else if (sysPropValue.length() > 0) {
+            value = Boolean.valueOf(sysPropValue);
+        }
+        return value;
+    }
+
+    /**
+     * Determine if the bytename core should run with verbose logging org.jboss.byteman.verbose
+     *
+     * @param config
+     * @return the byteman core level verbose flag
+     */
+    static boolean isBytemanVerbose(BMUnitConfig config) {
+        boolean value = false;
+        String sysPropValue = SecurityActions.getSystemProperty("org.jboss.byteman.verbose", "false");
+        boolean configValue = config.isBytemanVerbose();
+        // First try system property if preferred
+        if (config.isPreferSystemProperties()) {
+            value = Boolean.valueOf(sysPropValue);
+        }
+        // Next use config property
+        else {
+            value = configValue;
+        }
+        return value;
+    }
+
+    /**
+     * Determine if the agent should be loaded into the current JVM. This is useful if e.g. the test is driving a remote
+     * app server and the rules need to be uploaded to the app server JVM. org.jboss.byteman.contrib.bmunit.agent.inhibit
+     * == true indicates isAgentLoadEnabled is false
+     *
+     * @param config
+     * @return the byteman core level verbose flag
+     */
+    public static boolean isAgentLoadEnabled(BMUnitConfig config) {
+        boolean value = false;
+        String sysPropValue = SecurityActions.getSystemProperty("org.jboss.byteman.contrib.bmunit.agent.inhibit", "");
+        boolean configValue = config.isAgentLoadEnabled();
+        // First try system property if preferred
+        if (config.isPreferSystemProperties()) {
+            value = !Boolean.valueOf(sysPropValue);
+        }
+        // Next use config property
+        else {
+            value = configValue;
+        }
+        return value;
+    }
 
 }

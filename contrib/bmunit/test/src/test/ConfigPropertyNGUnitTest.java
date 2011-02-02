@@ -19,13 +19,13 @@
 package test;
 
 import com.sun.tools.attach.VirtualMachine;
-import junit.framework.Assert;
 import org.jboss.byteman.agent.install.Install;
+import org.jboss.byteman.contrib.bmunit.BMNGRunner;
 import org.jboss.byteman.contrib.bmunit.BMUnit;
 import org.jboss.byteman.contrib.bmunit.BMUnitConfig;
 import org.jboss.byteman.contrib.bmunit.BMUnitRunner;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.testng.annotations.Test;
+import org.testng.Assert;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -37,47 +37,46 @@ import java.util.Properties;
  * @author Scott stark (sstark@redhat.com) (C) 2011 Red Hat Inc.
  * @version $Revision:$
  */
-@RunWith(BMUnitRunner.class)
 @BMUnitConfig(agentHost = "localhost", agentPort = 10999,
     isBmunitVerbose = true, isBytemanVerbose = true,
     isBytemanDebug = true,
     // Assumes test runs in root of source tree with install directory built
     bytemanHome = "install"
 )
-public class ConfigPropertyJunitTest {
+public class ConfigPropertyNGUnitTest extends BMNGRunner {
 
     /** Validate that the @BMUnitConfig settings on this class are seen by the agent
      * virtual machine as the corresponding system properties.
-     * @throws IOException
+     * @throws java.io.IOException
      */
     @Test
     public void validateAgentProperties() throws IOException {
         Install agent = BMUnit.getInstalledAgent();
-        Assert.assertNotNull("Installed agent", agent);
+        Assert.assertNotNull(agent, "Installed agent");
         VirtualMachine vm = agent.getVm();
-        Assert.assertNotNull("Agent VM", vm);
+        Assert.assertNotNull(vm, "Agent VM");
         Properties agentProps = agent.getSysProps();
-        Assert.assertNotNull("Agent VM system properties", agentProps);
+        Assert.assertNotNull(agentProps, "Agent VM system properties");
         // byteman.verbose
         String prop = agentProps.getProperty("org.jboss.byteman.verbose");
-        Assert.assertEquals("org.jboss.byteman.verbose", "true", prop);
+        Assert.assertEquals("true", prop, "org.jboss.byteman.verbose");
         // byteman.debug
         prop = agentProps.getProperty("org.jboss.byteman.debug");
-        Assert.assertEquals("org.jboss.byteman.debug", "true", prop);
+        Assert.assertEquals("true", prop, "org.jboss.byteman.debug");
         // byteman.home
         prop = agentProps.getProperty("org.jboss.byteman.home");
-        Assert.assertEquals("org.jboss.byteman.home", "install", prop);
+        Assert.assertEquals("install", prop, "org.jboss.byteman.home");
         // bmunit.verbose
         prop = agentProps.getProperty("org.jboss.byteman.contrib.bmunit.verbose");
-        Assert.assertEquals("org.jboss.byteman.contrib.bmunit.verbose", "true", prop);
+        Assert.assertEquals("true", prop, "org.jboss.byteman.contrib.bmunit.verbose");
         // host
         prop = agentProps.getProperty("org.jboss.byteman.contrib.bmunit.agent.host");
-        Assert.assertEquals("org.jboss.byteman.contrib.bmunit.agent.host", "localhost", prop);
+        Assert.assertEquals("localhost", prop, "org.jboss.byteman.contrib.bmunit.agent.host");
         // port
         prop = agentProps.getProperty("org.jboss.byteman.contrib.bmunit.agent.port");
-        Assert.assertEquals("org.jboss.byteman.contrib.bmunit.agent.port", "10999", prop);
+        Assert.assertEquals("10999", prop, "org.jboss.byteman.contrib.bmunit.agent.port");
         // inhibit
         prop = agentProps.getProperty("org.jboss.byteman.contrib.bmunit.agent.inhibit");
-        Assert.assertEquals("org.jboss.byteman.contrib.bmunit.agent.inhibit", "false", prop);
+        Assert.assertEquals("false", prop, "org.jboss.byteman.contrib.bmunit.agent.inhibit");
     }
 }

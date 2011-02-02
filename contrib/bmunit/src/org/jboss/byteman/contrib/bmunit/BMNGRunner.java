@@ -18,6 +18,7 @@
  */
 package org.jboss.byteman.contrib.bmunit;
 
+import org.junit.runners.model.InitializationError;
 import org.testng.IHookCallBack;
 import org.testng.IHookable;
 import org.testng.ITestResult;
@@ -68,8 +69,14 @@ public class BMNGRunner implements IHookable
         testKlazz = getClass();
         classUnitConfig = testKlazz.getAnnotation(BMUnitConfig.class);
         if (classUnitConfig == null) {
-           // Pickup the defaults from this class
-           classUnitConfig = getClass().getAnnotation(BMUnitConfig.class);
+            // Pickup the defaults from this class
+            classUnitConfig = getClass().getAnnotation(BMUnitConfig.class);
+        }
+        // Load the agent
+        try {
+            BMUnit.loadAgent(classUnitConfig);
+        } catch (Exception e) {
+            throw new InitializationError(e);
         }
         classSingleScriptAnnotation = testKlazz.getAnnotation(BMScript.class);
         classMultiScriptAnnotation = testKlazz.getAnnotation(BMScripts.class);

@@ -108,7 +108,7 @@ public class BMUnit
      */
     public static synchronized void loadAgent(BMUnitConfig config) throws Exception
     {
-        if (config.isAgentLoadEnabled() == false) {
+        if (BMRunnerUtil.isAgentLoadEnabled(config) == false) {
            return;
         }
 

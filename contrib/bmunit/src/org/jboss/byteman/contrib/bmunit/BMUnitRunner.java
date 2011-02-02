@@ -67,9 +67,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner {
         }
         // Load the agent
         try {
-            if (BMRunnerUtil.isAgentLoadEnabled(classUnitConfig)) {
-                BMUnit.loadAgent(classUnitConfig);
-            }
+            BMUnit.loadAgent(classUnitConfig);
         } catch (Exception e) {
             throw new InitializationError(e);
         }
