@@ -69,8 +69,9 @@ public class NGUnitTest extends BMNGRunner
             @BMRule(name="NGUnitTest.testThree tryAlways trace rule",
                     targetClass = "NGUnitTest",
                     targetMethod = "tryAlways",
+                    binding = "test = $0;",
                     condition = "TRUE",
-                    action="traceln(\"Byteman: intercepted at entry in tryAlways from method @BMRule rule\");"
+                    action="traceln(\"Byteman: intercepted at entry in tryAlways from method @BMRule rule in test class \" + test.getClass().getName());"
             )
     })
     public void testThree()

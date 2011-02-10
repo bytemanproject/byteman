@@ -49,6 +49,10 @@ public class BMRunnerUtil {
                 builder.append("\nHELPER ");
                 builder.append(helper);
             }
+            String binding = bmRule.binding();
+            if (binding != null && binding.length() > 0) {
+                builder.append("\nBIND " + binding);
+            }
             builder.append("\nIF ");
             builder.append(bmRule.condition());
             builder.append("\nDO ");

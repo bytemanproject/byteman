@@ -73,8 +73,9 @@ public class UnitTest
             @BMRule(name="UnitTest.testThree tryAlways trace rule",
                     targetClass = "UnitTest",
                     targetMethod = "tryAlways",
+                    binding="test = $0;",
                     condition = "TRUE",
-                    action="traceln(\"Byteman: intercepted at entry in tryAlways from method @BMRule rule\");"
+                    action="traceln(\"Byteman: intercepted at entry in tryAlways from method @BMRule rule in test class \" + test.getClass().getName());"
             )
     })
     public void testThree()
