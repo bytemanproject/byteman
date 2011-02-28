@@ -1,0 +1,45 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2009, Red Hat and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+# Test for BYTEMAN-153 reported by Jeremy Whiting where a method call with more than
+# one potential candidate implementation was not being resolved when the argument type
+# was a subtype of the formal parameter type. e.g. a call to built-in
+# traceStack("got it", "myTraceStream") is matched by name and arity against
+# both traceStack(String, int) and traceStack(String, Object). Further type
+# checking should idenitfy that both are valid as regards the first parameter type
+# but only the second is valdi as regards the second parameter type. However, the
+# pruning algorithm was rejecting both the first and secodn calls because neither
+# formal type is equal to the actual type String. The pruning test should allow
+# any formal type which is equal to or a super of the actual type.
+
+RULE test method actual against formal
+CLASS TestMethodActualAgainstFormal
+METHOD checkMethod
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestMethodActualAgainstFormal = $0
+IF TRUE
+DO traceOpen("stream", "/dev/null");
+   traceStack("header", "stream");
+   test.log("AT ENTRY trace for checkMethod()");
+ENDRULE
