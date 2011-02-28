@@ -72,9 +72,9 @@ public class Helper
      * @return true if new file and stream was created, false if a stream identified by identifier
      * already existed or the identifer is null, "out" or "err"
      */
-    public boolean openTrace(Object identifier)
+    public boolean traceOpen(Object identifier)
     {
-        return openTrace(identifier, null);
+        return traceOpen(identifier, null);
     }
 
     /**
@@ -85,7 +85,7 @@ public class Helper
      * already existed or if a file of the same name already exists or the identifer is null, "out"
      * or "err"
      */
-    public boolean openTrace(Object identifier, String fileName)
+    public boolean traceOpen(Object identifier, String fileName)
     {
         if (identifier == null) {
             return false;
@@ -142,7 +142,7 @@ public class Helper
      * @return true if the stream was flushed and closed, false if no stream is identified by identifier
      * or the identifer is null, "out" or "err"
      */
-    public boolean closeTrace(Object identifier)
+    public boolean traceClose(Object identifier)
     {
         if (identifier == null ||
                 identifier.equals("out") ||
@@ -234,6 +234,28 @@ public class Helper
             ps.flush();
         }
         return true;
+    }
+
+    /**
+     * version for backwards compatibility -- docs and original code were mismatched
+     */
+    public boolean openTrace(Object identifier)
+    {
+        return traceOpen(identifier);
+    }
+    /**
+     * version for backwards compatibility -- docs and original code were mismatched
+     */
+    public boolean openTrace(Object identifier, String fileName)
+    {
+        return traceOpen(identifier, fileName);
+    }
+    /**
+     * version for backwards compatibility -- docs and original code were mismatched
+     */
+    public boolean closeTrace(Object identifier)
+    {
+        return traceClose(identifier);
     }
 
     // flag support
