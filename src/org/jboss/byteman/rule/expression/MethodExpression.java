@@ -215,7 +215,8 @@ public class MethodExpression extends Expression
                 } else {
                     methods = clazz.getDeclaredMethods();
                 }
-                List<Type> argumentTypes = new ArrayList<Type>();
+
+                argumentTypes = new ArrayList<Type>();
 
                 for (Method method : methods) {
                     int modifiers = method.getModifiers();
@@ -249,9 +250,11 @@ public class MethodExpression extends Expression
                     }
                 }
 
-                if (candidates.size() == 1) {
-                    // we found the best fit
-                    Method method = candidates.get(0);
+                // see if we have a unique best fit
+
+                Method method = bestMatchCandidate(candidates);
+
+                if (method != null) {
                     if (!Modifier.isPublic(method.getModifiers())) {
                         // see if we can actually access this method
                         try {
@@ -268,9 +271,8 @@ public class MethodExpression extends Expression
                         isPublicMethod =  true;
                     }
                     this.method = method;
-                    this.argumentTypes = argumentTypes;
                     return;
-                } else if (candidates.size() > 1) {
+                } else  if (candidates.size() > 1) {
                     // ambiguous method so throw up here
                     throw new TypeException("MethodExpression.typeCheck : ambiguous method signature " + name + " for target class " + rootType.getName() + getPos());
                 }
@@ -506,6 +508,14 @@ public class MethodExpression extends Expression
         return argClazz;
     }
 
+    /**
+     * prune the candidates list removing all methods whose parameter at index argIdx cannto be assigned to
+     * class argClazz
+     * @param candidates
+     * @param argIdx
+     * @param argClazz
+     * @return
+     */
     public List<Method> pruneCandidates(List<Method> candidates, int argIdx, Class argClazz)
     {
         for (int i = 0; i < candidates.size();) {
@@ -518,6 +528,58 @@ public class MethodExpression extends Expression
             }
         }
         return candidates;
+    }
+
+    /**
+     * return the method whose signature is the best fit for the call argument types. the selection
+     * is made by counting the number of cases where the argument type matches the parameter type
+     * exactly and then the number of cases where the argument type matches the parameter type without
+     * the need for type coersion (i.e. the parameter tyoe is a supertype of the argument type)
+     * @param candidates a list of methods all of whose signatures are assignable from the
+     *
+     * @return
+     */
+    public Method bestMatchCandidate(List<Method> candidates)
+    {
+        int argCount = argumentTypes.size();
+        Method bestFit = null;
+        int bestExactFitCount = -1;
+        int bestInheritedFitCount = 0;
+        boolean ambiguous = false;
+
+        for (int i = 0; i < candidates.size(); i++) {
+            Method m = candidates.get(i);
+            int exactFitCount = 0;
+            int inheritedFitCount = 0;
+
+            for (int j = 0; j < argCount; j++) {
+                Class argClazz = argumentTypes.get(j).getTargetClass();
+                Class methodParamClazz = m.getParameterTypes()[j];
+                if (argClazz == methodParamClazz) {
+                    exactFitCount++;
+                } else if (argClazz.isAssignableFrom(argClazz)) {
+                    inheritedFitCount++;
+                }
+            }
+
+            if (exactFitCount > bestExactFitCount) {
+                bestFit = m;
+                bestExactFitCount = exactFitCount;
+                bestInheritedFitCount = inheritedFitCount;
+                ambiguous = false;
+            } else if (exactFitCount == bestExactFitCount) {
+                if (inheritedFitCount > bestInheritedFitCount) {
+                    bestFit = m;
+                    bestExactFitCount = exactFitCount;
+                    bestInheritedFitCount = inheritedFitCount;
+                    ambiguous = false;
+                } else if (inheritedFitCount == bestInheritedFitCount) {
+                    ambiguous = true;
+                }
+            }
+        }
+
+        return (ambiguous ? null : bestFit);
     }
 
     public String getPath(int len)
