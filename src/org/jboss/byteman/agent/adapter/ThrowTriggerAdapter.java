@@ -117,7 +117,7 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
         {
             super.visitMethodInsn(opcode, owner, name, desc);
             // hmm, this probably means the super constructor has been invoked :-)
-            if (latched && opcode == Opcodes.INVOKESPECIAL) {
+            if (latched && isSuperOrSiblingConstructorCall(opcode, owner, name)) {
                 latched = false;
             }
 

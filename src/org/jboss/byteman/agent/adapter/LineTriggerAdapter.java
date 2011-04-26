@@ -103,7 +103,7 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
         {
             super.visitMethodInsn(opcode, owner, name, desc);
             // hmm, this probably means the super constructor has been invoked :-)
-            unlatched |= (opcode == Opcodes.INVOKESPECIAL);
+            unlatched |= isSuperOrSiblingConstructorCall(opcode, owner, name);
         }
     }
 
