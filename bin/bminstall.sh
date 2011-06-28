@@ -68,11 +68,16 @@ if [ -z "$JAVA_HOME" ]; then
      echo "please set JAVA_HOME"
      exit
 fi
-if [ -r ${JAVA_HOME}/lib/tools.jar ]; then
-    TOOLS_JAR=${JAVA_HOME}/lib/tools.jar
-else
-    echo "Cannot locate byteman install jar"
-    exit
+# on Linux we need to add the tools jar to the path
+# this is not currently needed on a Mac
+OS=`uname`
+if [ ${OS} != "Darwin" ]; then
+  if [ -r ${JAVA_HOME}/lib/tools.jar ]; then
+      TOOLS_JAR=${JAVA_HOME}/lib/tools.jar
+  else
+      echo "Cannot locate tools jar"
+      exit
+  fi
 fi
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 # attach class will validate arguments
