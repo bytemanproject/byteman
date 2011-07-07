@@ -124,6 +124,9 @@ public class ArrayExpression extends AssignableExpression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         Type valueType = arrayRef.getType().getBaseType();
         int currentStack = compileContext.getStackCount();
         int expected = 0;
@@ -240,6 +243,9 @@ public class ArrayExpression extends AssignableExpression
 
     @Override
     public void compileAssign(MethodVisitor mv, CompileContext compileContext) throws CompileException {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         Type valueType = arrayRef.getType().getBaseType();
         int currentStack = compileContext.getStackCount();
         boolean isTwoWords = (valueType.getNBytes() > 4);

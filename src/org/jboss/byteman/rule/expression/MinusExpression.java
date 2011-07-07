@@ -86,6 +86,9 @@ public class MinusExpression extends UnaryOperExpression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         Expression oper = getOperand(0);
         Type operType = oper.getType();
 

@@ -181,6 +181,9 @@ public class DollarExpression extends AssignableExpression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         String targetName = binding.getName();
 
         int currentStack = compileContext.getStackCount();
@@ -228,6 +231,9 @@ public class DollarExpression extends AssignableExpression
     @Override
     public void compileAssign(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         String targetName = binding.getName();
 
         int currentStack = compileContext.getStackCount();

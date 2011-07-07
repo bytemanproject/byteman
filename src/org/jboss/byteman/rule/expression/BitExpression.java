@@ -184,6 +184,9 @@ public class BitExpression extends BinaryOperExpression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         int currentStack = compileContext.getStackCount();
         int expected = 0;
         Expression oper0 = getOperand(0);

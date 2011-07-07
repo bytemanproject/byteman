@@ -125,6 +125,9 @@ public class Variable extends AssignableExpression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         // stack the current helper
         // stack the name for the variable
         // call the getBinding method
@@ -156,6 +159,9 @@ public class Variable extends AssignableExpression
     @Override
     public void compileAssign(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         int currentStack = compileContext.getStackCount();
         int size = ((type.getNBytes() > 4) ? 2 : 1);
         int max;

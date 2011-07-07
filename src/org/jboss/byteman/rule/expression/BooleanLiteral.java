@@ -74,6 +74,9 @@ public class BooleanLiteral extends Expression
     }
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         // load a boolean constant
         mv.visitLdcInsn(value);
         

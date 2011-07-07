@@ -77,6 +77,9 @@ public class NullLiteral extends Expression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         // load null or zero
 
         mv.visitInsn(Opcodes.ACONST_NULL);

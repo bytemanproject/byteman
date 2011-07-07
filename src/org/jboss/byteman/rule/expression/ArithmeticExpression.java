@@ -273,6 +273,9 @@ public class ArithmeticExpression extends BinaryOperExpression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         int currentStack = compileContext.getStackCount();
         int expectedStack = 0;
         Expression operand0 = getOperand(0);

@@ -86,6 +86,9 @@ public class ConditionalEvalExpression extends TernaryOperExpression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         Expression oper0 = getOperand(0);
         Expression oper1 = getOperand(1);
         Expression oper2 = getOperand(2);

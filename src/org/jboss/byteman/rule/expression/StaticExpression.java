@@ -118,6 +118,9 @@ public class StaticExpression extends AssignableExpression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         int currentStack = compileContext.getStackCount();
         int expected;
 
@@ -187,6 +190,9 @@ public class StaticExpression extends AssignableExpression
     @Override
     public void compileAssign(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         int currentStack =compileContext.getStackCount();
         int size = (type.getNBytes() > 4 ? 2 : 1);
 

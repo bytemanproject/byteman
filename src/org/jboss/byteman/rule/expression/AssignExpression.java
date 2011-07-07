@@ -71,6 +71,9 @@ public class AssignExpression extends BinaryOperExpression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         Expression oper1 = getOperand(1);
 
         int currentStack = compileContext.getStackCount();

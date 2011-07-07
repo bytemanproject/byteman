@@ -332,6 +332,9 @@ public class MethodExpression extends Expression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         int currentStack = compileContext.getStackCount();
         int extraParams = 0; // space used by stacked args after conversion
         int expected = 0;
