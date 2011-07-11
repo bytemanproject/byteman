@@ -1189,6 +1189,27 @@
           -->
           <test name="org.jboss.byteman.tests.bugfixes.TestMethodParamAssign"/>
         </junit>
+        <junit fork="true" showoutput="true">
+          <classpath>
+              <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+              <pathelement location="${junit.home}/${junit.jar}"/>
+          </classpath>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestThrowRuleInjection.btm"/>
+          <!-- uncomment for verbose byteman output
+          <jvmarg value="-Dorg.jboss.byteman.verbose"/>
+          -->
+          <!-- uncomment to dump generated code
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+          -->
+          <!-- uncomment to enable debug
+          <jvmarg value="-Xdebug"/>
+          <jvmarg  value="-Xnoagent"/>
+          <jvmarg  value="-Djava.compiler=NONE"/>
+          <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+          -->
+          <test name="org.jboss.byteman.tests.bugfixes.TestThrowRuleInjection"/>
+        </junit>
 
   </target>
 
@@ -1460,7 +1481,29 @@
             <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
           <test name="org.jboss.byteman.tests.bugfixes.TestMethodParamAssign"/>
         </junit>
-  </target>
+        <junit fork="true" showoutput="true">
+          <classpath>
+              <pathelement location="${build.lib.dir}/byteman-tests.jar"/>
+              <pathelement location="${junit.home}/${junit.jar}"/>
+          </classpath>
+          <jvmarg value="-javaagent:${byteman.home}/${byteman.jar}=script:${scripts.dir}/bugfixes/TestThrowRuleInjection.btm"/>
+          <!-- uncomment for verbose byteman output
+          <jvmarg value="-Dorg.jboss.byteman.verbose"/>
+          -->
+          <!-- uncomment to dump generated code
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes"/>
+          <jvmarg value="-Dorg.jboss.byteman.dump.generated.classes.directory=dump"/>
+          -->
+          <!-- uncomment to enable debug
+          <jvmarg value="-Xdebug"/>
+          <jvmarg  value="-Xnoagent"/>
+          <jvmarg  value="-Djava.compiler=NONE"/>
+          <jvmarg  value="-Xrunjdwp:transport=dt_socket,server=n,suspend=y,address=5005"/>
+          -->
+            <jvmarg value="-Dorg.jboss.byteman.compileToBytecode"/>
+          <test name="org.jboss.byteman.tests.bugfixes.TestThrowRuleInjection"/>
+        </junit>
+    </target>
 
     <target name="tests.submit">
           <junit fork="true" showoutput="true">
