@@ -205,6 +205,7 @@
         <copy todir="${install.bin.dir}">
             <fileset dir="${bin.src.dir}" includes="${byteman.bin.scripts}"/>
         </copy>
+        <chmod dir="${install.bin.dir}" includes="*.sh" perm="a+x"/>
         <copy todir="${install.docs.dir}">
             <fileset dir="${docs.src.dir}" includes="${byteman.doc.files}"/>
         </copy>
