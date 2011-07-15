@@ -23,13 +23,13 @@
 #
 # shell script which type checks a byteman rule set
 #
-# usage: bytemancheck [-cp classpath]* [-p package]* [-v] script1 . . . scriptN
+# usage: bmcheck [-cp classpath]* [-p package]* [-v] script1 . . . scriptN
 #
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then
 # use the root of the path to this file to locate the byteman jar
     BYTEMAN_HOME=${0%*/bin/bmcheck.sh}
-# allow for rename to plain bmjava
+# allow for rename to plain bmcheck
     if [ "$BYTEMAN_HOME" == "$0" ]; then
 	BYTEMAN_HOME=${0%*/bin/bmcheck}
     fi

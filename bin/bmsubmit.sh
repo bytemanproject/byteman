@@ -24,11 +24,11 @@
 # shell script which submits a request to the Byteman agent listener
 # either to list, install or uninstall rule scripts
 #
-# usage: submit [-o outfile] [-p port] [-h host] [-l|-u] [script1 . . . scriptN]
-#        submit [-o outfile] [-p port] [-h host] [-b | -s] bootjar1 . . .
-#        submit [-o outfile] [-p port] [-h host] -c
-#        submit [-o outfile] [-p port] [-h host] -y [prop1[=[value1]]. . .]
-#        submit [-o outfile] [-p port] [-h host] -v
+# usage: bmsubmit [-o outfile] [-p port] [-h host] [-l|-u] [script1 . . . scriptN]
+#        bmsubmit [-o outfile] [-p port] [-h host] [-b | -s] bootjar1 . . .
+#        bmsubmit [-o outfile] [-p port] [-h host] -c
+#        bmsubmit [-o outfile] [-p port] [-h host] -y [prop1[=[value1]]. . .]
+#        bmsubmit [-o outfile] [-p port] [-h host] -v
 #   -o redirects output from System.out to outfile
 #   -p specifies the listener port (default 9091)
 #   -h specifies the listener host name (default localhost)
@@ -54,10 +54,10 @@
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then
 # use the root of the path to this file to locate the byteman jar
-    BYTEMAN_HOME=${0%*/bin/submit.sh}
+    BYTEMAN_HOME=${0%*/bin/bmsubmit.sh}
 # allow for rename to plain submit
     if [ "$BYTEMAN_HOME" == "$0" ]; then
-	BYTEMAN_HOME=${0%*/bin/submit}
+	BYTEMAN_HOME=${0%*/bin/bmsubmit}
     fi
     if [ "$BYTEMAN_HOME" == "$0" ]; then
 	echo "Unable to find byteman home"

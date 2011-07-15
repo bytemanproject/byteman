@@ -25,14 +25,14 @@
 # agent installed
 #
 # usage: bmjava [-p port] [-h host] \
-#          [-r rulescript | -b bootjar | -s sysjar | -nl | -nb ]* [--] javaargs
+#          [-l rulescript | -b bootjar | -s sysjar | -nl | -nb ]* [--] javaargs
 #   -p use the number which follows as the port when opening the listener
 #      socket
 #
 #   -h use the string which follows as the host name when opening
 #      the listener socket
 #
-#   -r pass the file whose name follows this flag to the agent as
+#   -l pass the file whose name follows this flag to the agent as
 #      a rule script
 #
 #   -b pass the file whose name follows this flag to the agent as
