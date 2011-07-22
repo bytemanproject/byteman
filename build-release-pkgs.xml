@@ -74,7 +74,7 @@
 <!--
     <property name="svnbase" value="https://svn.jboss.org/repos/byteman"/>
     <property name="tag" value="trunk"/>
-    <property name="version" value="1.5.1-SNAPSHOT"/>
+    <property name="version" value="1.5.2-SNAPSHOT"/>
     <property name="mvn.repo.id" value="jboss-snapshots-repository"/>
     <property name="mvn.repo.url" value="https://repository.jboss.org/nexus/content/repositories/snapshots/"/>
 
@@ -85,10 +85,10 @@
     <!-- where to get the source -->
     <property name="svnbase" value="https://svn.jboss.org/repos/byteman/tags"/>
     <!-- The tag as it appears under svnbase -->
-    <property name="tag" value="Byteman_1_5_1"/>
+    <property name="tag" value="Byteman_1_5_2"/>
     <!-- The file name base for the user downloadable files. Derive it
     from the tag -->
-    <property name="version" value="1.5.1"/>
+    <property name="version" value="1.5.2"/>
     <!-- the location the Byteman web site content svn is checked out to -->
     <property name="cmsdir" value="/home/adinn/jboss/byteman/"/>
     <!-- you probably don't need to change anything below here -->

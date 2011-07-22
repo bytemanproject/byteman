@@ -28,10 +28,10 @@
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then
 # use the root of the path to this file to locate the byteman jar
-    BYTEMAN_HOME=${0%*/bin/bmjava.sh}
+    BYTEMAN_HOME=${0%*/bin/bytemancheck.sh}
 # allow for rename to plain bmjava
     if [ "$BYTEMAN_HOME" == "$0" ]; then
-	BYTEMAN_HOME=${0%*/bin/bmjava}
+	BYTEMAN_HOME=${0%*/bin/bytemancheck}
     fi
     if [ "$BYTEMAN_HOME" == "$0" ]; then
 	echo "Unable to find byteman home"

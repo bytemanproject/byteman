@@ -269,9 +269,17 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
         // owner of this method is an object
         // localTypes.add(Type.getType(Object.class));
         String name = getTriggerClass().replace('.', '/');
-        localTypes.add(Type.getType("L" + name + ";"));
+        if ((access | Opcodes.ACC_STATIC) == 0) {
+            // an instance method so slot 0 will contain the target object
+            localTypes.add(Type.getType("L" + name + ";"));
+        }
         for (int i = 0; i < argumentTypes.length; i++) {
-            localTypes.add(argumentTypes[i]);
+            Type argumentType = argumentTypes[i];
+            int size = argumentType.getSize();
+            localTypes.add(argumentType);
+            if (size > 1) {
+                localTypes.add(null);
+            }
         }
         nextLocal = localHighWater = localTypes.size();
     }

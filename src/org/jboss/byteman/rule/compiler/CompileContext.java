@@ -23,33 +23,35 @@
 */
 package org.jboss.byteman.rule.compiler;
 
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 /**
  * class which retains compiler state during recursive compilation of rule expressions to bytecode
  */
 public class CompileContext
 {
     private int sourceLine;
-    private int javaLine;
     private int stackCount;
     private int stackMax;
     private int localCount;
     private int localMax;
+    private MethodVisitor mv;
 
-    CompileContext(int initialSourceLine)
+    CompileContext(MethodVisitor mv)
     {
-        sourceLine = initialSourceLine;
-        javaLine = 1;
+        sourceLine = -1;
         stackCount = stackMax = localCount = localMax = 0;
+        this.mv = mv;
     }
 
     public int getSourceLine()
     {
         return sourceLine;
-    }
-
-    public int getJavaLine()
-    {
-        return javaLine;
     }
 
     public int getStackCount()
@@ -72,16 +74,6 @@ public class CompileContext
         return localMax;
     }
 
-    public void addSourceLine(int delta)
-    {
-        this.sourceLine += delta;
-    }
-
-    public void addJavaLine(int delta)
-    {
-        this.javaLine += delta;
-    }
-
     public void addStackCount(int count)
     {
         stackCount += count;
@@ -96,5 +88,22 @@ public class CompileContext
         if (localCount > localMax) {
             localMax = localCount;
         }
+    }
+
+    public void notifySourceLine(int line)
+    {
+        if (line > sourceLine) {
+            sourceLine = line;
+            Label label = new Label();
+            mv.visitLabel(label);
+            mv.visitLineNumber(sourceLine, label);
+        }
+    }
+
+    public void notifySourceEnd()
+    {
+        Label label = new Label();
+        mv.visitLabel(label);
+        mv.visitLineNumber(sourceLine + 1, label);
     }
 }

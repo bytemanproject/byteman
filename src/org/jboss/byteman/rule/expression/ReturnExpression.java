@@ -167,6 +167,9 @@ public class ReturnExpression extends Expression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         Type valueType = (returnValue == null ? Type.VOID : returnValue.getType());
         int currentStack = compileContext.getStackCount();
         int expected = 1;

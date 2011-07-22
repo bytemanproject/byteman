@@ -224,8 +224,7 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
             final String desc)
         {
             super.visitMethodInsn(opcode, owner, name, desc);
-            // hmm, this probably means the super constructor has been invoked :-)
-            unlatched |= (opcode == Opcodes.INVOKESPECIAL);
+            unlatched |= isSuperOrSiblingConstructorCall(opcode, owner, name);
         }
     }
 }

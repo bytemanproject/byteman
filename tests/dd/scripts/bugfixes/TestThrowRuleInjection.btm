@@ -1,0 +1,72 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2009, Red Hat and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+# Test for BYTEMAN-156. These rules check injection of throws into
+# interface and method implementations. The bug fix case is any
+# situation where the rule is injected into method X.m and there
+# is a class Y or interface Z such that
+#   i) X extends* Y or X implements* Z (the * implies the transitive
+#      closure of the relevant implementation chain)
+#   ii) Y.m throws E or Z.m throws E
+#   iii) not X.m throws E
+#   iv) the rule includes action throw E
+# This situation occurs for rules 2, 3 and 4. The test expects a
+# a TypeWarningException to be thrown at rule type check and
+# swallowed by the rule execution engine, inhibiting execution
+# of the injected rule.
+
+RULE test use of throw injection where implementor declares throw
+INTERFACE org.jboss.byteman.tests.auxiliary.TestThrowInterface
+METHOD throwMethod
+HELPER org.jboss.byteman.tests.helpers.Default
+AT RETURN
+IF TRUE
+DO throw Exception("test exception")
+ENDRULE
+
+RULE test use of throw injection where implementor does not declare throw
+INTERFACE org.jboss.byteman.tests.auxiliary.TestThrowInterface
+METHOD throwMethod2
+HELPER org.jboss.byteman.tests.helpers.Default
+AT RETURN
+IF TRUE
+DO throw Exception("test exception2")
+ENDRULE
+
+RULE test use of throw injection where superclass implementor does not declare throw
+INTERFACE ^org.jboss.byteman.tests.auxiliary.TestThrowSuperInterface
+METHOD throwMethod3
+HELPER org.jboss.byteman.tests.helpers.Default
+AT RETURN
+IF TRUE
+DO throw Exception("test exception3")
+ENDRULE
+
+RULE test use of throw injection where implementor does not declare throw but super does
+CLASS ^org.jboss.byteman.tests.auxiliary.TestThrowRuleSuper
+METHOD throwMethod4
+HELPER org.jboss.byteman.tests.helpers.Default
+AT RETURN
+IF TRUE
+DO throw Exception("test exception4")
+ENDRULE

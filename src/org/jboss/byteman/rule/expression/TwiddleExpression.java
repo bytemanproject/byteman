@@ -79,6 +79,9 @@ public class TwiddleExpression extends UnaryOperExpression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         // compile the operand and then bit twiddle it
         Expression oper = getOperand(0);
         Type operType = oper.getType();

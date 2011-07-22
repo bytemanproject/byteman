@@ -24,6 +24,7 @@
 package org.jboss.byteman.rule.expression;
 
 import org.jboss.byteman.rule.compiler.CompileContext;
+import org.jboss.byteman.rule.exception.TypeWarningException;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.type.TypeGroup;
 import org.jboss.byteman.rule.exception.TypeException;
@@ -33,10 +34,13 @@ import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.grammar.ParseNode;
+import org.jboss.byteman.rule.type.TypeHelper;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
+import java.lang.reflect.Method;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Iterator;
 import java.util.ArrayList;
@@ -169,24 +173,9 @@ public class ThrowExpression extends Expression
             paramTypes.add(typeGroup.ensureType(paramClasses[i]));
         }
 
-        // expected type should always be void since throw can only occur as a top level action
-        // however, we need to be sure that the trigering method throws this exception type or
-        // else that it is a subtype of runtime exception
+        checkThrownTypeIsValid();
 
-        if (RuntimeException.class.isAssignableFrom(type.getTargetClass())) {
-            return type;
-        } else {
-            Iterator<Type> iterator = typeGroup.getExceptionTypes().iterator();
-            while (iterator.hasNext()) {
-                Type exceptionType = iterator.next();
-                if (Type.dereference(exceptionType).isAssignableFrom(type)) {
-                    // ok we foudn a suitable declaration for the exception
-                    return type;
-                }
-            }
-            // didn't find a suitable type in the method type list
-            throw new TypeException("ThrowExpression.typeCheck : exception type not declared by trigger method "  + typeName + getPos());
-        }
+        return type;
     }
 
     public Class getCandidateArgClass(List<Constructor> candidates, int argIdx)
@@ -253,6 +242,9 @@ public class ThrowExpression extends Expression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         int currentStack = compileContext.getStackCount();
         int expected = 1;
         int extraParams = 0;
@@ -343,5 +335,186 @@ public class ThrowExpression extends Expression
         }
         stringWriter.write(")");
 
+    }
+
+    /**
+     * check that it is legitimate to throw an exception of the type computed for this expression from the
+     * trtiggering method. if the computed type is a subtype of runtime exception then it is valid whatever
+     * the trigger method. if the computed type or one of its super types is declared by the trigger method
+     * as a checked exception then it is valid. if no such declaration is found then a typeexception is raised.
+     * However, in the case of an overriding rule whose target class includes a version of the method which
+     * does declares the exception a type warning exception is raised as this is not strictly an error. See
+     * issue BYTEMAN-156 for an explanation.
+     * @throws TypeWarningException if it is not legitimate to throw a value of the computed type from the
+     * trigger method but it is legitimate to throw a value of this type from the rule target method.
+     * @throws TypeException if it is otherwise not legitimate to throw a value of the computed type from the trigger
+     * method
+     */
+    private void checkThrownTypeIsValid() throws TypeWarningException, TypeException
+    {
+        TypeGroup typeGroup = getTypeGroup();
+
+        // expected type should always be void since throw can only occur as a top level action
+        // however, we need to be sure that the trigering method throws this exception type or
+        // else that it is a subtype of runtime exception
+
+        if (!RuntimeException.class.isAssignableFrom(type.getTargetClass())) {
+            Iterator<Type> iterator = typeGroup.getExceptionTypes().iterator();
+            while (iterator.hasNext()) {
+                Type exceptionType = iterator.next();
+                if (Type.dereference(exceptionType).isAssignableFrom(type)) {
+                    // ok we found a suitable declaration for the exception
+                    return;
+                }
+            }
+        }
+        // look for a method declared on the target class which declares the computed type as a checked exception
+        ClassLoader loader = rule.getLoader();
+        String targetClassName = rule.getTargetClass();
+        String triggerClassName = rule.getTriggerClass();
+        String triggerMethodName = rule.getTriggerMethod();
+        String descriptor = rule.getTriggerDescriptor();
+        Class<?>[] paramTypes = null;
+        boolean isQualified = targetClassName.contains(".");
+        boolean isClass = !rule.isInterface();
+        try {
+            Class<?> triggerClass = loader.loadClass(triggerClassName);
+            SuperIterator iterator;
+            if (isClass) {
+                iterator = new ClassIterator(triggerClass.getSuperclass());
+            } else {
+                iterator = new InterfaceIterator(triggerClass);
+            }
+            while (iterator.hasNext()) {
+                Class<?> nextClass = iterator.next();
+                String nextClassName = nextClass.getName();
+                if (nextClassName.equals(targetClassName) ||
+                        (!isQualified && nextClassName.endsWith("." + targetClassName))) {
+                    // check whether the trigger method overrides a method on this class
+                    if (paramTypes == null) {
+                        paramTypes = createParamTypes(descriptor, loader);
+                    }
+                    try {
+                        Method method = nextClass.getMethod(triggerMethodName, paramTypes);
+                        Class<?>[] exceptionTypes = method.getExceptionTypes();
+                        for (int i = 0; i < exceptionTypes.length; i++) {
+                            if (exceptionTypes[i].isAssignableFrom(type.getTargetClass())) {
+                                throw new TypeWarningException("ThrowExpression.typeCheck : exception type declared by rule target method but not by trigger method "  + typeName + getPos());
+                            }
+                        }
+                    } catch (NoSuchMethodException e) {
+                        // ok, ignore
+                    }
+                }
+            }
+        } catch (ClassNotFoundException e) {
+            // drop through
+        }
+        // no extenuating circumstances so this is a type error
+        throw new TypeException("ThrowExpression.typeCheck : exception type not declared by trigger method "  + typeName + getPos());
+    }
+
+    public Class<?>[] createParamTypes(String descriptor, ClassLoader loader) throws TypeException
+    {
+        String external = TypeHelper.parseMethodDescriptor(descriptor).substring(1);
+        String typeNamesOnly = external.substring(0, external.indexOf(")")).trim();
+        if (typeNamesOnly.length() == 0) {
+            return new Class<?>[0];
+        } else {
+            String[] typeNameList = typeNamesOnly.split(",");
+            Class<?>[] classList = new Class<?>[typeNameList.length];
+            for (int i = 0; i < typeNameList.length; i++) {
+                String name = typeNameList[i].trim();
+                try {
+                    classList[i] = loader.loadClass(name);
+                } catch (ClassNotFoundException e) {
+                    throw new TypeException("ThrowExpression.createParamTypes : unexpected error looking up trigger method parameter type" + e);
+                }
+            }
+
+            return classList;
+        }
+    }
+
+    public abstract class SuperIterator implements Iterator<Class<?>>
+    {
+    }
+
+    public class ClassIterator extends SuperIterator
+    {
+        private Class<?> nextClass;
+
+        public ClassIterator(Class<?> startClass)
+        {
+            this.nextClass = startClass;
+        }
+
+        public boolean hasNext() {
+            return nextClass != null;
+        }
+
+        public Class<?> next() {
+            Class<?> next = nextClass;
+            nextClass = nextClass.getSuperclass();
+            return next;
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public class InterfaceIterator extends SuperIterator
+    {
+        private LinkedList<Class<?>> visited;
+        private LinkedList<Class<?>> unvisited;
+        private Class<?> nextClass;
+
+        public InterfaceIterator(Class<?> startClass)
+        {
+            visited = new LinkedList<Class<?>>();
+            unvisited = new LinkedList<Class<?>>();
+            nextClass = startClass;
+        }
+
+        private void pushInterfaces()
+        {
+            if (nextClass != null) {
+                LinkedList<Class<?>> candidates = new LinkedList<Class<?>>();
+                Class<?>[] ifaces = nextClass.getInterfaces();
+                for (int i = 0; i < ifaces.length; i++) {
+                    candidates.add(ifaces[i]);
+                }
+                while (!candidates.isEmpty()) {
+                    Class<?> iface = candidates.pop();
+                    if (!visited.contains(iface) && !unvisited.contains(iface)) {
+                        unvisited.add(iface);
+                        ifaces = iface.getInterfaces();
+                        for (int i = 0; i < ifaces.length; i++) {
+                            candidates.add(ifaces[i]);
+                        }
+                    }
+                }
+                nextClass = nextClass.getSuperclass();
+            }
+            return;
+        }
+
+        public boolean hasNext() {
+            if (unvisited.isEmpty()) {
+                pushInterfaces();
+            }
+            return !unvisited.isEmpty();
+        }
+
+        public Class<?> next() {
+            Class<?> next = unvisited.pop();
+            visited.add(next);
+            return next;
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
     }
 }

@@ -59,6 +59,7 @@ public class PlusExpression extends BinaryOperExpression
             type = Type.promote(type1, type2);
         } else if (type1.isString()) {
             type2 = getOperand(1).typeCheck(Type.STRING);
+            type = Type.STRING;
         } else {
             throw new TypeException("PlusExpression.typeCheck : invalid argument type " + type1.getName() + getPos());
         }
@@ -69,7 +70,7 @@ public class PlusExpression extends BinaryOperExpression
     public Object interpret(HelperAdapter helper) throws ExecuteException {
         Object value1 = getOperand(0).interpret(helper);
         Object value2 = getOperand(1).interpret(helper);
-        if (type == Type.S) {
+        if (type == Type.STRING) {
             String s1 = (String)value1;
             String s2 = (String)value2;
             return s1 + s2;
@@ -123,6 +124,9 @@ public class PlusExpression extends BinaryOperExpression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         Expression oper0 = getOperand(0);
         Expression oper1 = getOperand(1);
 
@@ -135,7 +139,7 @@ public class PlusExpression extends BinaryOperExpression
         oper1.compile(mv, compileContext);
         compileTypeConversion(oper1.getType(), type, mv, compileContext);
 
-        if (type == Type.S) {
+        if (type == Type.STRING) {
             // ok, we could optimize this for the case where the left or right operand is a String plus expression
             // by employing a StringBuffer but for now we will just evaluate the left and right operand and
             // then call concat to join them

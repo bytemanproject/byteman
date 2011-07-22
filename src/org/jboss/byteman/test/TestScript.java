@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.test;
 
+import org.jboss.byteman.rule.exception.TypeWarningException;
 import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.type.TypeGroup;
@@ -124,13 +125,15 @@ public class TestScript
                     count = fis.read(bytes, read, max - read);
                 }
                 if (read < max) {
-                    System.err.println("TestScript: unable to read full contents of file : " + file);
+                    System.err.println("ERROR : unable to read full contents of file : " + file);
+                    errorCount++;
                 }
                 String ruleText = new String(bytes);
                 ruleTexts.add(ruleText);
                 ruleFiles.add(file);
             } catch (IOException ioe) {
-                System.err.println("TestScript: unable to open file : " + file);
+                System.err.println("ERROR : unable to open file : " + file);
+                errorCount++;
             }
         }
         checkRules(packages, ruleTexts, ruleFiles);
@@ -158,7 +161,7 @@ public class TestScript
                 ruleScripts = repository.processScripts(ruleText, ruleFile);
                 allScripts.addAll(ruleScripts);
             } catch (Exception e) {
-                System.out.println("TestScript : Error processing rule file " + ruleFile + " : " + e);
+                System.out.println("ERROR : Could not process rule file " + ruleFile + " : " + e);
                 errorCount++;
             }
         }
@@ -190,7 +193,7 @@ public class TestScript
                         // hmm, need to check if it is in one of the supplied packages
                     } catch (Exception e) {
                         // eeuuurrrgghh must be a bad package name
-                        System.out.println("TestScript: unexpected error looking up " + targetClassName + " in package " + packages[i]);
+                        System.out.println("ERROR : Unexpected error looking up " + targetClassName + " in package " + packages[i]);
                         return;
                     }
                     if (targetClass != null) {
@@ -200,20 +203,20 @@ public class TestScript
             }
 
             if (targetClass == null) {
-                System.out.println("TestScript : Could not load class " + targetClassName + " declared in rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                System.out.println("ERROR : Could not load class " + targetClassName + " declared in rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                 errorCount++;
                 continue;
             }
 
             // make sure it is the right type of class
             if (script.isInterface() && !targetClass.isInterface()) {
-                System.out.println("TestScript : found class instead of interface for rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                System.out.println("ERROR : Found class instead of interface for rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                 errorCount++;
                 continue;
             }
 
             if (!script.isInterface() && targetClass.isInterface()) {
-                System.out.println("TestScript : found interface instead of class for rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                System.out.println("ERROR : Found interface instead of class for rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                 errorCount++;
                 continue;
             }
@@ -234,13 +237,13 @@ public class TestScript
                         read += count;
                     }
                     if (read < max) {
-                        System.out.println("TestScript : Could not load bytecode for class " + targetClassName + " declared in rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                        System.out.println("ERROR : Could not load bytecode for class " + targetClassName + " declared in rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                         System.out.println();
                         errorCount++;
                         continue;
                     }
                 } catch (Exception e) {
-                    System.out.println("TestScript : Could not load bytecode for class " + targetClassName + " declared in rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                    System.out.println("ERROR : Could not load bytecode for class " + targetClassName + " declared in rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                     System.out.println();
                     errorCount++;
                     continue;
@@ -274,18 +277,25 @@ public class TestScript
                     Rule rule = transform.getRule();
 
                     if (throwable != null) {
-                        errorCount++;
                         if (throwable  instanceof ParseException) {
-                            System.out.println("TestScript : Failed to parse rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                            System.out.println("ERROR : Failed to parse rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                             System.out.println();
                             parseErrorCount++;
+                            errorCount++;
+                        } else if (throwable instanceof TypeWarningException) {
+                            System.out.println("WARNING : Unable to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                            System.out.println();
+                            typeWarningCount++;
+                            warningCount++;
                         } else if (throwable instanceof TypeException) {
-                            System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                            System.out.println("ERROR : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                             System.out.println();
                             typeErrorCount++;
+                            errorCount++;
                         } else {
-                            System.out.println("TestScript : Error transforming class " + targetClassName + " using  rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                            System.out.println("ERROR : Unexpected exception transforming class " + targetClassName + " using  rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                             System.out.println();
+                            errorCount++;
                         }
                         throwable.printStackTrace(System.out);
                         System.out.println();
@@ -303,9 +313,17 @@ public class TestScript
 
                     try {
                         rule.typeCheck();
+                    } catch (TypeWarningException te) {
+                        System.out.println("WARNING : Unable to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                        typeWarningCount++;
+                        warningCount++;
+                        te.printStackTrace(System.out);
+                        System.out.println();
+                        continue;
                     } catch (TypeException te) {
-                        System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                        System.out.println("ERROR : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                         typeErrorCount++;
+                        errorCount++;
                         te.printStackTrace(System.out);
                         System.out.println();
                         continue;
@@ -324,21 +342,28 @@ public class TestScript
                 try {
                     rule = Rule.create(script, loader, null);
                 } catch (ParseException pe) {
-                    System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                    System.out.println("ERROR : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                     parseErrorCount++;
                     errorCount++;
                     pe.printStackTrace(System.out);
                     System.out.println();
                     continue;
+                } catch (TypeWarningException te) {
+                    System.out.println("WARNING : Unable to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                    typeWarningCount++;
+                    warningCount++;
+                    te.printStackTrace(System.out);
+                    System.out.println();
+                    continue;
                 } catch (TypeException te) {
-                    System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                    System.out.println("ERROR : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                     typeErrorCount++;
                     errorCount++;
                     te.printStackTrace(System.out);
                     System.out.println();
                     continue;
                 } catch (Throwable th) {
-                    System.out.println("TestScript : Failed to process rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                    System.out.println("ERROR : Failed to process rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                     errorCount++;
                     th.printStackTrace(System.out);
                     System.out.println();
@@ -354,17 +379,22 @@ public class TestScript
 
                 typeCheckAgainstMethodDeclaration(rule, script, targetClass, loader);
             } else {
-                System.out.println("TestScript : Failed to transform class " + targetClassName + " using rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                System.out.println("WARNING : Unable to transform class " + targetClassName + " using rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                 System.out.println();
-                errorCount++;
+                warningCount++;
             }
         }
         
         if (errorCount != 0) {
             System.err.println("TestScript: " + errorCount + " total errors");
+            System.err.println("            " + typeWarningCount + " total warnings");
             System.err.println("            " + parseErrorCount + " parse errors");
             System.err.println("            " + typeErrorCount + " type errors");
+            System.err.println("            " + typeWarningCount + " type warnings");
 
+        } else if (warningCount != 0) {
+            System.err.println("TestScript: " + warningCount + " total warnings");
+            System.err.println("            " + typeWarningCount + " type warnings");
         } else {
             System.err.println("TestScript: no errors");
         }
@@ -381,7 +411,7 @@ public class TestScript
      */
     private void typeCheckAgainstMethodDeclaration(Rule rule, RuleScript script, Class targetClass, ClassLoader loader)
     {
-        // ok, we have a rule wich cannot be used to transform its declared class, either because
+        // ok, we have a rule which cannot be used to transform its declared class, either because
         // it applies to an interface or it can inject into overriding methods but does not
         // apply to the parent method. so we need to find a candidate method for the rule and
         // then see if we can use it to set up the type info needed to type check the rule
@@ -391,19 +421,22 @@ public class TestScript
         String targetDesc = TypeHelper.parseMethodDescriptor(targetMethodName);
 
         if (targetName == "<clinit>") {
-            System.err.println("TestScript: cannot type check <clinit> rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+            System.err.println("WARNING : cannot type check <clinit> rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
             System.err.println();
+            warningCount++;
             return;
         }
         if (targetMethodName == "<init>") {
             // oops this is an error one way or another. firstly constructor rules don't make sense for either
             if (script.isInterface()) {
-                System.err.println("TestScript: invalid target method <init> for interface rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                System.err.println("ERROR : invalid target method <init> for interface rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                 System.err.println();
+                errorCount++;
                 return;
             } else {
-                System.err.println("TestScript: invalid target method <init> for overriding rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                System.err.println("ERROR : invalid target method <init> for overriding rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                 System.err.println();
+                errorCount++;
                 return;
             }
         } else {
@@ -448,9 +481,17 @@ public class TestScript
                     if (paramErrorCount == 0) {
                         try {
                             rule.typeCheck();
+                        } catch (TypeWarningException te) {
+                            System.out.println("WARNING : Unable to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                            typeWarningCount++;
+                            warningCount++;
+                            te.printStackTrace(System.out);
+                            System.out.println();
+                            return;
                         } catch (TypeException te) {
-                            System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                            System.out.println("ERROR : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                             typeErrorCount++;
+                            errorCount++;
                             te.printStackTrace(System.out);
                             System.out.println();
                             return;
@@ -458,13 +499,13 @@ public class TestScript
                         if (script.isInterface()) {
                             System.err.println("type checked interface rule \"" + script.getName() + "\" against method declaration");
                         } else {
-                            System.err.println("TestScript: type checked overriding rule \"" + script.getName() + "\" against method declaration");
+                            System.err.println("type checked overriding rule \"" + script.getName() + "\" against method declaration");
                         }
                         System.err.println();
                     } else {
                         errorCount += paramErrorCount;
                         typeErrorCount += paramErrorCount;
-                        System.out.println("TestScript : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
+                        System.out.println("ERROR : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine());
                         System.err.println();
                     }
                 }
@@ -524,13 +565,13 @@ public class TestScript
                     // n.b. param indices are 1-based so use > here not >=
                     if (idx > paramCount) {
                         errorCount++;
-                        System.err.println("TestScript: invalid method parameter reference $" + idx  + " in rule \"" + rule.getName() + "\"");
+                        System.err.println("ERROR : Invalid method parameter reference $" + idx  + " in rule \"" + rule.getName() + "\"");
                     } else {
                         binding.setDescriptor(paramTypes.get(idx - 1));
                     }
                 } else if (binding.isLocalVar()) {
-                    errorCount++;
-                    System.err.println("TestScript: cannot typecheck local variable " + binding.getName()  + " in rule \"" + rule.getName() + "\"");
+                    warningCount++;
+                    System.err.println("WARNING : Cannot typecheck local variable " + binding.getName()  + " in rule \"" + rule.getName() + "\"");
                 }
             }
         }
@@ -541,13 +582,17 @@ public class TestScript
     private TestScript(boolean verbose)
     {
         errorCount = 0;
+        warningCount = 0;
         parseErrorCount = 0;
         typeErrorCount =  0;
+        typeWarningCount =  0;
         this.verbose = verbose;
     }
 
     private int errorCount;
+    private int warningCount;
     private int parseErrorCount;
     private int typeErrorCount;
+    private int typeWarningCount;
     boolean verbose;
 }

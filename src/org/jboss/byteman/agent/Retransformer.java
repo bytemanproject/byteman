@@ -132,7 +132,14 @@ public class Retransformer extends Transformer {
                 }
             }
             synchronized(this) {
-                inst.retransformClasses(transformedArray);
+                try {
+                    inst.retransformClasses(transformedArray);
+                } catch(VerifyError ve) {
+                    System.out.println("Retransformer : VerifyError during retransformation : some rules may not have been correctly injected or uninjected!");
+                    ve.printStackTrace();
+                    out.println("VerifyError during retransformation : some rules may not have been correctly injected or uninjected!");
+                    ve.printStackTrace(out);
+                }
             }
         }
         
@@ -281,8 +288,13 @@ public class Retransformer extends Transformer {
                     System.out.println("retransforming " + transformedArray[i].getName());
                 }
             }
-            synchronized(inst) {
+            try {
                 inst.retransformClasses(transformedArray);
+            } catch(VerifyError ve) {
+                System.out.println("Retransformer : VerifyError during retransformation : some rules may not have been correctly uninjected!");
+                ve.printStackTrace();
+                out.println("VerifyError during retransformation : some rules may not have been correctly uninjected!");
+                ve.printStackTrace(out);
             }
         }
 

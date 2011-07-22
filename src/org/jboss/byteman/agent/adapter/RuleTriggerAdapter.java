@@ -31,8 +31,28 @@ import org.objectweb.asm.*;
  */
 public class RuleTriggerAdapter extends RuleAdapter
 {
+    protected String className;
+    protected String superName;
     protected RuleTriggerAdapter(ClassVisitor cv, TransformContext transformContext)
     {
         super(cv, transformContext);
+        className = null;
+        superName =  null;
+    }
+
+    @Override
+    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+        super.visit(version, access, name, signature, superName, interfaces);
+        // keep track of the name and super name in case we need to check that a
+        // constructor ahs actually been constructed
+        this.className = name;
+        this.superName = superName;
+    }
+
+    protected boolean isSuperOrSiblingConstructorCall(int opcode, String owner, String name)
+    {
+        return (opcode == Opcodes.INVOKESPECIAL &&
+                name.equals("<init>") &&
+                (superName.equals(owner) || className.equals(owner)));
     }
 }

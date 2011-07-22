@@ -202,6 +202,9 @@ public class FieldExpression extends AssignableExpression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         int currentStack = compileContext.getStackCount();
         int expected = (type.getNBytes() > 4 ? 2 : 1);
 
@@ -344,6 +347,9 @@ public class FieldExpression extends AssignableExpression
             // this is just wrapping a static field expression so compile it
             indirectStatic.compileAssign(mv, compileContext);
         } else {
+            // make sure we are at the right source line
+            compileContext.notifySourceLine(line);
+
             int currentStack = compileContext.getStackCount();
             int size = (type.getNBytes() > 4 ? 2 : 1);
 

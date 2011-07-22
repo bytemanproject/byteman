@@ -289,6 +289,14 @@ public class Rule
         return triggerClass;
     }
 
+    public String getTriggerMethod() {
+        return triggerMethod;
+    }
+
+    public String getTriggerDescriptor() {
+        return triggerDescriptor;
+    }
+
     public Type getReturnType()
     {
         return returnType;
@@ -442,6 +450,16 @@ public class Rule
                 compile();
                 checked = true;
                 installed();
+            } catch (TypeWarningException te) {
+                checkFailed = true;
+                if (Transformer.isVerbose()) {
+                    StringWriter stringWriter = new StringWriter();
+                    PrintWriter writer = new PrintWriter(stringWriter);
+                    writer.println("Rule.ensureTypeCheckedCompiled : warning type checking rule " + getName());
+                    te.printStackTrace(writer);
+                    detail = stringWriter.toString();
+                    System.out.println(detail);
+                }
             } catch (TypeException te) {
                 checkFailed = true;
                 StringWriter stringWriter = new StringWriter();

@@ -363,6 +363,10 @@ public class ScriptRepository
         // see if we have any scripts for the class or its supers
         Class nextClazz = clazz;
         boolean isOverride = false;
+        // we create these lazily to avoid unnecessary work
+
+        LinkedList<Class> visited = null;
+        LinkedList<Class> toVisit = null;
 
         while (nextClazz != null) {
             String name = nextClazz.getName();
@@ -383,18 +387,42 @@ public class ScriptRepository
 
             if (checkInterfaces()) {
                 Class[] interfaces = nextClazz.getInterfaces();
-                boolean found = false;
+                int l = interfaces.length;
+                if (l > 0) {
+                    // ok, so we have to create the lists here
+                    if (visited == null) {
+                        visited = new LinkedList<Class>();
+                        toVisit = new LinkedList<Class>();
+                    }
+                    // add the implements list of this class as interfaces to consider
+                    for (int i = 0; i < interfaces.length; i++) {
+                        Class interfaze = interfaces[i];
+                        if (!visited.contains(interfaze)) {
+                            toVisit.add(interfaze);
+                        }
+                    }
 
-                for (int i =  0; i < interfaces.length; i++) {
-                    Class interfaze = interfaces[i];
-                    name = interfaze.getName();
-                    if (matchTarget(name, clazz, true, isOverride)) {
-                        return true;
-                    } else {
-                        lastDot = name.lastIndexOf('.');
-                        if (lastDot >= 0) {
-                            if (matchTarget(name.substring(lastDot + 1), clazz, true, isOverride)) {
-                                return true;
+                    while (!toVisit.isEmpty()) {
+                        // check the next interface
+                        Class interfaze = toVisit.pop();
+                        name = interfaze.getName();
+                        if (matchTarget(name, clazz, true, isOverride)) {
+                            return true;
+                        } else {
+                            lastDot = name.lastIndexOf('.');
+                            if (lastDot >= 0) {
+                                if (matchTarget(name.substring(lastDot + 1), clazz, true, isOverride)) {
+                                    return true;
+                                }
+                            }
+                        }
+                        visited.add(interfaze);
+                        // check the extends list of this interface for new interfaces to consider
+                        interfaces = interfaze.getInterfaces();
+                        for (int i = 0; i < interfaces.length; i++) {
+                            interfaze = interfaces[i];
+                            if (!visited.contains(interfaze)) {
+                                toVisit.add(interfaze);
                             }
                         }
                     }

@@ -107,12 +107,12 @@ public class InterpretedHelper extends Helper implements HelperAdapter
             Binding binding = iterator.next();
             String name = binding.getName();
             if (binding.isAlias()) {
-                binding = binding.getAlias();
+                continue;
             }
 
             if (binding.isUpdated()) {
                 // if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
-                if (!binding.isBindVar()) {
+                if (!binding.isBindVar() && !binding.isAlias()) {
                     Object value = bindingMap.get(name);
                     int idx = binding.getCallArrayIndex();
                     args[idx] = value;

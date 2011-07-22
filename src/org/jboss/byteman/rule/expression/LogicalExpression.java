@@ -68,6 +68,9 @@ public class LogicalExpression extends BooleanExpression
 
     public void compile(MethodVisitor mv, CompileContext compileContext) throws CompileException
     {
+        // make sure we are at the right source line
+        compileContext.notifySourceLine(line);
+
         Expression oper0 = getOperand(0);
         Expression oper1 = getOperand(1);
 
