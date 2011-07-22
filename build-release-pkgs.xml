@@ -117,13 +117,29 @@
              includes="**/*"/>
         <jar basedir="${workdir}/${tag}" jarfile="${workdir}/byteman-sources.jar"
              includes="**/*"/>
+	<!-- package the byteman-submit sources -->
+        <jar basedir="${workdir}/${tag}" jarfile="${workdir}/byteman-submit-sources.jar"
+             includes="**/submit/Submit*.java"/>
+	<!-- package the byteman-install sources -->
+        <jar basedir="${workdir}/${tag}" jarfile="${workdir}/byteman-install-sources.jar"
+             includes="**/install/Install*.java, **/install/VMInfo.java"/>
+	<!-- package the byteman-bmunit sources -->
+        <jar basedir="${workdir}/${tag}" jarfile="${workdir}/byteman-bmunit-sources.jar"
+             includes="contrib/bmunit/**/*.java"/>
+	<!-- package the byteman-dtest sources -->
+        <jar basedir="${workdir}/${tag}" jarfile="${workdir}/byteman-dtest-sources.jar"
+             includes="contrib/dtest/**/*.java"/>
         <!-- build the binary release -->
         <ant dir="${workdir}/${tag}" antfile="build.xml" target="zip">
             <property name="version" value="${version}"/>
             <property name="obfuscate.3rd.party" value="true"/>
         </ant>
-        <!-- relocate source jar to install lib directory -->
+        <!-- relocate source jars to install lib directory -->
         <copy file="${workdir}/byteman-sources.jar" tofile="${workdir}/${tag}/install/lib/byteman-sources.jar"/>
+        <copy file="${workdir}/byteman-submit-sources.jar" tofile="${workdir}/${tag}/install/lib/byteman-submit-sources.jar"/>
+        <copy file="${workdir}/byteman-install-sources.jar" tofile="${workdir}/${tag}/install/lib/byteman-install-sources.jar"/>
+        <copy file="${workdir}/byteman-bmunit-sources.jar" tofile="${workdir}/${tag}/install/contrib/bmunit/byteman-bmunit-sources.jar"/>
+        <copy file="${workdir}/byteman-dtest-sources.jar" tofile="${workdir}/${tag}/install/contrib/dtest/byteman-dtest-sources.jar"/>
         <!-- relocate binary zip release to top level of workdir -->
         <copy tofile="${workdir}/byteman-${version}.zip" file="${workdir}/${tag}/build/byteman.zip">
         </copy>
@@ -229,9 +245,13 @@
 
         <mvn-artifact.src.macro artifact="byteman" dir="${workdir}/${tag}/install/lib/"/>
         <mvn-artifact.macro artifact="byteman" dir="${workdir}/${tag}/install/lib/"/>
+        <mvn-artifact.src.macro artifact="byteman-submit" dir="${workdir}/${tag}/install/lib/"/>
         <mvn-artifact.macro artifact="byteman-submit" dir="${workdir}/${tag}/install/lib/"/>
+        <mvn-artifact.src.macro artifact="byteman-install" dir="${workdir}/${tag}/install/lib/"/>
         <mvn-artifact.macro artifact="byteman-install" dir="${workdir}/${tag}/install/lib/"/>
+        <mvn-artifact.src.macro artifact="byteman-dtest" dir="${workdir}/${tag}/install/contrib/dtest/"/>
         <mvn-artifact.macro artifact="byteman-dtest" dir="${workdir}/${tag}/install/contrib/dtest/"/>
+        <mvn-artifact.src.macro artifact="byteman-bmunit" dir="${workdir}/${tag}/install/contrib/bmunit/"/>
         <mvn-artifact.macro artifact="byteman-bmunit" dir="${workdir}/${tag}/install/contrib/bmunit/"/>
         <mvn-artifact.macro artifact="byteman-sample" packaging="zip" dir="${workdir}"/>
         <mvn-artifact.macro artifact="byteman-contrib" packaging="zip" dir="${workdir}"/>
