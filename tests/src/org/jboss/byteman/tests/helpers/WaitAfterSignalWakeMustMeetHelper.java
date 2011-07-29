@@ -30,9 +30,9 @@ import org.jboss.byteman.rule.Rule;
 
 /**
  */
-public class TestWaitAfterSignalWakeMustMeetHelper extends Helper
+public class WaitAfterSignalWakeMustMeetHelper extends Helper
 {
-    protected TestWaitAfterSignalWakeMustMeetHelper(Rule rule) {
+    protected WaitAfterSignalWakeMustMeetHelper(Rule rule) {
         super(rule);
     }
 

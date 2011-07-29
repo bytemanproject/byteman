@@ -25,7 +25,7 @@
 RULE test promotion of primitive to object
 CLASS TestPromotePrimitiveToObject
 METHOD triggerMethod(int)
-HELPER org.jboss.byteman.tests.helpers.TestPromotePrimitiveToObjectHelper
+HELPER org.jboss.byteman.tests.helpers.PromotePrimitiveToObjectHelper
 AT ENTRY
 BIND test : Test = $0
 IF TRUE

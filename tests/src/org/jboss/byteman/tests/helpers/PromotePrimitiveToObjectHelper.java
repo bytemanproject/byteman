@@ -31,9 +31,9 @@ import org.jboss.byteman.rule.helper.Helper;
 /**
  * helper class to test fix for BYTEMAN-93
  */
-public class TestPromotePrimitiveToObjectHelper extends Helper
+public class PromotePrimitiveToObjectHelper extends Helper
 {
-    protected TestPromotePrimitiveToObjectHelper(Rule rule) {
+    protected PromotePrimitiveToObjectHelper(Rule rule) {
         super(rule);
     }
 

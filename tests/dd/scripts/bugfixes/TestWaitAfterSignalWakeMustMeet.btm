@@ -29,7 +29,7 @@
 RULE setup
 CLASS TestWaitAfterSignalWakeMustMeet
 METHOD test
-HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
+HELPER org.jboss.byteman.tests.helpers.WaitAfterSignalWakeMustMeetHelper
 IF TRUE
 DO createRendezvous("test", 2, true)
 ENDRULE
@@ -43,7 +43,7 @@ ENDRULE
 RULE ensureSignalWait
 CLASS TestWaitAfterSignalWakeMustMeet
 METHOD ensureSignalWake
-HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
+HELPER org.jboss.byteman.tests.helpers.WaitAfterSignalWakeMustMeetHelper
 IF TRUE
 DO ensureSignalWake()
 ENDRULE
@@ -56,7 +56,7 @@ ENDRULE
 RULE ensureWaitFor
 CLASS TestWaitAfterSignalWakeMustMeet
 METHOD ensureWaitFor
-HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
+HELPER org.jboss.byteman.tests.helpers.WaitAfterSignalWakeMustMeetHelper
 IF TRUE
 DO ensureWaitFor()
 ENDRULE
@@ -67,7 +67,7 @@ ENDRULE
 RULE triggerWaitFor
 CLASS TestWaitAfterSignalWakeMustMeet
 METHOD triggerWaitFor
-HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
+HELPER org.jboss.byteman.tests.helpers.WaitAfterSignalWakeMustMeetHelper
 BIND test : TestEmptySignature = $0
 IF TRUE
 DO test.log("waitFor");
@@ -80,7 +80,7 @@ ENDRULE
 RULE triggerSignalWake
 CLASS TestWaitAfterSignalWakeMustMeet
 METHOD triggerSignalWake
-HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
+HELPER org.jboss.byteman.tests.helpers.WaitAfterSignalWakeMustMeetHelper
 BIND test : TestEmptySignature = $0
 IF TRUE
 DO test.log("signalWake");
@@ -93,7 +93,7 @@ ENDRULE
 RULE triggerRendezvous
 CLASS TestWaitAfterSignalWakeMustMeet
 METHOD triggerRendezvous
-HELPER org.jboss.byteman.tests.helpers.TestWaitAfterSignalWakeMustMeetHelper
+HELPER org.jboss.byteman.tests.helpers.WaitAfterSignalWakeMustMeetHelper
 IF TRUE
 DO rendezvous("test")
 ENDRULE
