@@ -1,0 +1,73 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.jboss.byteman</groupId>
+    <artifactId>byteman-bmunit</artifactId>
+    <packaging>jar</packaging>
+    <description>
+        The Byteman bmunit jar provides integration of Byteman into TestNG and JUnit tests.
+    </description>
+    <name>byteman-bmunit</name>
+    <parent>
+        <groupId>org.jboss.byteman</groupId>
+        <artifactId>byteman-root</artifactId>
+        <version>1.6.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+    <build>
+        <sourceDirectory>src</sourceDirectory>
+        <testSourceDirectory>test/src</testSourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.4.3</version>
+                <configuration>
+                    <includes>
+                        <include>test/NGUnitTest.class</include>
+                    </includes>
+                    <forkMode>always</forkMode>
+                    <!-- ensure we don't inherit a byteman jar form any 3env settings -->
+                    <argLine>-Dorg.jboss.byteman.home=""</argLine>
+                    <environmentVariables>
+                        <BYTEMAN_HOME></BYTEMAN_HOME>
+                    </environmentVariables>
+                    <!-- make sure maven puts the byteman jar in the classpath rather than in a manifest jar -->
+                    <useManifestOnlyJar>false</useManifestOnlyJar>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>5.14.6</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- the bmunit code depends on the submit, install and agent jars
+        -->
+        <dependency>
+          <groupId>org.jboss.byteman</groupId>
+          <artifactId>byteman</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.jboss.byteman</groupId>
+          <artifactId>byteman-submit</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.jboss.byteman</groupId>
+          <artifactId>byteman-install</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>

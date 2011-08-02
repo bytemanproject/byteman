@@ -1,0 +1,207 @@
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <id>full</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <!-- bin sctipts -->
+    <fileSets>
+        <fileSet>
+            <directory>../bin</directory>
+            <includes>
+                <include>**</include>
+            </includes>
+            <fileMode>0755</fileMode>
+            <lineEnding>unix</lineEnding>
+        </fileSet>
+    <!-- sample scripts -->
+        <fileSet>
+            <directory>../sample/</directory>
+            <includes>
+                <include>scripts/**</include>
+            </includes>
+            <lineEnding>unix</lineEnding>
+        </fileSet>
+        <!-- agent sources -->
+        <fileSet>
+            <directory>../agent/</directory>
+            <includes>
+                <include>src/**</include>
+                <include>grammar/**</include>
+                <include>pom.xml</include>
+            </includes>
+            <lineEnding>keep</lineEnding>
+        </fileSet>
+        <!-- install sources -->
+        <fileSet>
+            <directory>../install/</directory>
+            <includes>
+                <include>src/**</include>
+                <include>pom.xml</include>
+            </includes>
+            <lineEnding>keep</lineEnding>
+        </fileSet>
+        <!-- submit sources -->
+        <fileSet>
+            <directory>../submit/</directory>
+            <includes>
+                <include>src/**</include>
+                <include>pom.xml</include>
+            </includes>
+            <lineEnding>keep</lineEnding>
+        </fileSet>
+        <!-- contrib sources -->
+        <fileSet>
+            <directory>../contrib/</directory>
+            <includes>
+                <include>bmunit/src/**</include>
+                <include>bmunit/test/**</include>
+                <include>bmunit/README.txt</include>
+                <include>bmunit/pom.xml</include>
+            </includes>
+            <lineEnding>keep</lineEnding>
+        </fileSet>
+        <fileSet>
+            <directory>../contrib/</directory>
+            <includes>
+                <include>dtest/src/**</include>
+                <include>dtest/README.txt</include>
+                <include>dtest/pom.xml</include>
+            </includes>
+            <lineEnding>keep</lineEnding>
+        </fileSet>
+        <!-- sample sources -->
+        <fileSet>
+            <directory>../sample/</directory>
+            <includes>
+                <include>src/**</include>
+                <include>pom.xml</include>
+            </includes>
+            <lineEnding>keep</lineEnding>
+        </fileSet>
+        <!-- agent javadoc -->
+        <fileSet>
+            <directory>../agent/target/site</directory>
+            <outputDirectory>agent</outputDirectory>
+            <includes>
+                <include>apidocs/**</include>
+            </includes>
+            <lineEnding>keep</lineEnding>
+        </fileSet>
+        <!-- install javadoc -->
+        <fileSet>
+            <directory>../submit/target/site</directory>
+            <outputDirectory>submit</outputDirectory>
+            <includes>
+                <include>apidocs/**</include>
+            </includes>
+            <lineEnding>keep</lineEnding>
+        </fileSet>
+        <!-- submit javadoc -->
+        <fileSet>
+            <directory>../install/target/site</directory>
+            <outputDirectory>install</outputDirectory>
+            <includes>
+                <include>apidocs/**</include>
+            </includes>
+            <lineEnding>keep</lineEnding>
+        </fileSet>
+        <!-- contrib javadoc -->
+        <fileSet>
+            <directory>../contrib/dtest/target/site</directory>
+            <outputDirectory>contrib/dtest</outputDirectory>
+            <includes>
+                <include>apidocs/**</include>
+            </includes>
+            <lineEnding>keep</lineEnding>
+        </fileSet>
+        <fileSet>
+            <directory>../contrib/bmunit/target/site</directory>
+            <outputDirectory>contrib/bmunit</outputDirectory>
+            <includes>
+                <include>apidocs/**</include>
+            </includes>
+            <lineEnding>keep</lineEnding>
+        </fileSet>
+        <!-- sample javadoc -->
+        <fileSet>
+            <directory>../sample/target/site</directory>
+            <outputDirectory>sample</outputDirectory>
+            <includes>
+                <include>apidocs/**</include>
+            </includes>
+            <lineEnding>keep</lineEnding>
+        </fileSet>
+    </fileSets>
+    <files>
+        <!-- agent, install and submit lib jars -->
+        <file>
+            <source>../agent/target/byteman-${project.version}.jar</source>
+            <outputDirectory>lib</outputDirectory>
+            <destName>byteman.jar</destName>
+            <lineEnding>keep</lineEnding>
+        </file>
+        <file>
+            <source>../submit/target/byteman-submit-${project.version}.jar</source>
+            <outputDirectory>lib</outputDirectory>
+            <destName>byteman-submit.jar</destName>
+            <lineEnding>keep</lineEnding>
+        </file>
+        <file>
+            <source>../install/target/byteman-install-${project.version}.jar</source>
+            <outputDirectory>lib</outputDirectory>
+            <destName>byteman-install.jar</destName>
+            <lineEnding>keep</lineEnding>
+        </file>
+        <!-- sample jar -->
+        <file>
+            <source>../sample/target/byteman-sample-${project.version}.jar</source>
+            <outputDirectory>sample/lib</outputDirectory>
+            <destName>byteman-sample.jar</destName>
+            <lineEnding>keep</lineEnding>
+        </file>
+        <!-- contrib jars and READMEs -->
+        <file>
+            <source>../contrib/dtest/target/byteman-dtest-${project.version}.jar</source>
+            <outputDirectory>contrib/dtest</outputDirectory>
+            <destName>byteman-dtest.jar</destName>
+            <lineEnding>keep</lineEnding>
+        </file>
+        <file>
+            <source>../contrib/dtest/README.txt</source>
+            <outputDirectory>contrib/dtest</outputDirectory>
+            <lineEnding>keep</lineEnding>
+        </file>
+        <file>
+            <source>../contrib/bmunit/target/byteman-bmunit-${project.version}.jar</source>
+            <outputDirectory>contrib/bmunit</outputDirectory>
+            <destName>byteman-bmunit.jar</destName>
+            <lineEnding>keep</lineEnding>
+        </file>
+        <file>
+            <source>../contrib/bmunit/README.txt</source>
+            <outputDirectory>contrib/bmunit</outputDirectory>
+            <lineEnding>keep</lineEnding>
+        </file>
+        <!-- documentation -->
+        <file>
+            <source>../README</source>
+            <lineEnding>keep</lineEnding>
+        </file>
+        <file>
+            <source>../docs/copyright.txt</source>
+            <outputDirectory>docs</outputDirectory>
+            <lineEnding>keep</lineEnding>
+        </file>
+        <file>
+            <source>../docs/ProgrammersGuide.pdf</source>
+            <outputDirectory>docs</outputDirectory>
+            <lineEnding>keep</lineEnding>
+        </file>
+        <file>
+            <source>../ext/third_party_licenses.txt</source>
+            <outputDirectory>docs</outputDirectory>
+            <lineEnding>keep</lineEnding>
+        </file>
+    </files>
+</assembly>

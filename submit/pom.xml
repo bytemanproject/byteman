@@ -1,0 +1,18 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.jboss.byteman</groupId>
+    <artifactId>byteman-submit</artifactId>
+    <packaging>jar</packaging>
+    <description>
+        The Byteman install jar contains classes whcih canbe used to install an agent into the
+        current JVM or into a remote JVM
+    </description>
+    <name>byteman-submit</name>
+    <parent>
+        <groupId>org.jboss.byteman</groupId>
+        <artifactId>byteman-root</artifactId>
+        <version>1.6.0-SNAPSHOT</version>
+    </parent>
+</project>

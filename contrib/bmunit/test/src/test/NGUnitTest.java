@@ -8,7 +8,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 // this runner extends the BMNGRunner which allows it to be executed via TestNG
-@BMScript(dir="scripts")
+@BMScript(dir="test/scripts")
 // You can also specify rules directly using annotations
 // either a one off rule using @BMRule(...)
 // or a set of rules using @BMRules( @BMRUle(...), ... @BMRule(...))
@@ -29,7 +29,7 @@ public class NGUnitTest extends BMNGRunner
     @Test()
     // A method annotation identifies a rule script which is loaded before calling the test method and
     // then unloaded after the test has run
-    @BMScript(dir="scripts")
+    @BMScript(dir="test/scripts")
     public void testOne()
     {
         tryOne();
@@ -40,7 +40,7 @@ public class NGUnitTest extends BMNGRunner
 
     @Test()
     // If you supply a value then this is used when looking for the script otherwise the method name is used
-    @BMScript(value="two", dir="scripts")
+    @BMScript(value="two", dir="test/scripts")
     public void testTwo()
     {
         tryOne();
@@ -53,7 +53,7 @@ public class NGUnitTest extends BMNGRunner
     // you can load several scripts using the BMScripts annotation. this is useful if you want
     // several test to share some rules but also have their own specific rules
     @BMScripts(
-            scripts = { @BMScript(value="three", dir="scripts"),  @BMScript(value="three-extra", dir="scripts") }
+            scripts = { @BMScript(value="three", dir="test/scripts"),  @BMScript(value="three-extra", dir="test/scripts") }
     )
     // BMRule and BMRules annotations can also be used at the method level
     // to configure rules specific to a given test method

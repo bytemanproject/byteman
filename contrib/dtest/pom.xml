@@ -1,0 +1,42 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.jboss.byteman</groupId>
+    <artifactId>byteman-dtest</artifactId>
+    <packaging>jar</packaging>
+    <description>
+        The Byteman dtest jar supports instrumentation of test code executed on remote server hosts
+        and validation of assertions describing the expected operation of the instrumented methods.
+    </description>
+    <name>byteman-dtest</name>
+    <parent>
+        <groupId>org.jboss.byteman</groupId>
+        <artifactId>byteman-root</artifactId>
+        <version>1.6.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+    <build>
+        <sourceDirectory>src</sourceDirectory>
+    </build>
+    <dependencies>
+        <!-- the dtest code depends on the submit and agent jars
+        -->
+        <dependency>
+          <groupId>org.jboss.byteman</groupId>
+          <artifactId>byteman</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.jboss.byteman</groupId>
+          <artifactId>byteman-submit</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <!-- dtest reuses JUnit assertions -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+        </dependency>
+    </dependencies>
+</project>
