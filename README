@@ -7,20 +7,13 @@ purpose of tracing and testing application behaviour.
 Installation
 ------------
 
-If you have downloaded a binary release then unzip it into a target
-install directory. This directory contains everything you need to
+When you unzip the downloaded release it will explode to a single
+target install directory containing everything you need to
 use byteman. You should set environment variable BYTEMAN_HOME so
-that it points to the target install directory.
+that it points to this target install directory.
 
-If you have downloaded a full release then unzip into a target
-release directory. The release includes a subdirectory called install
-which contains everything you need to use byteman. You should set
-environment variable BYTEMAN_HOME so that it points to the install
-subdirectory. If you execute command 'ant install' in the target
-release directory then this will rebuild the byteman release from
-the sources overwriting the original contents of directory install.
-
-The install directory contains the following subdirectories
+The install directory for the binary release contains the following
+subdirectories
 
   bin -- contains Unix scripts to simplify: using Byteman (bmjava.sh);
       typechecking Byteman rule scripts (bytemancheck.sh);
@@ -37,15 +30,31 @@ The install directory contains the following subdirectories
       client (byteman-submit.jar); the subset of this code needed
       to compile/run the install client (byteman-install.jar).
 
-  sample/lib -- contains helper code for the sample scripts
-
   sample/scripts -- contains example rule scripts showing how to
       use Byteman
 
+  sample/lib -- contains helper code for the sample scripts
+
    contrib -- contains software contributed by other Byteman users
+       see the README in each contrib subdirectory for details of
+       how to use the package
+
+The install directory for the full source release contains all the
+above directories plus the following extra directories
+
+  sources -- contains source code jars for each of the component
+      jars in lib, sample/lib, contrib/dtest and contrib/bmunit
+
+  javadoc -- contains javadoc format documentation jars for each of
+      the component jars in lib, sample/lib, contrib/dtest and
+      contrib/bmunit
 
 Using Byteman
 -------------
+Access to the Byteman project downlaods, documentation, user and
+developer forums and source code is available from the project
+home page at http://www.jboss.org/byteman
+
 Please consult the Programmer's Guide for details of how Byteman
 operates, how to write Byteman rule scripts and how to run a Java
 program with the Byteman agent in place.
