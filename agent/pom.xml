@@ -796,12 +796,10 @@
                             <dependency>
                                 <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
                                 <artifactId>java-cup</artifactId>
-                                <version>0.11a</version>
                             </dependency>
                             <dependency>
                                 <groupId>de.jflex</groupId>
                                 <artifactId>jflex</artifactId>
-                                <version>1.4.3</version>
                             </dependency>
                         </dependencies>
                     </plugin>
@@ -813,24 +811,20 @@
         <dependency>
             <groupId>asm</groupId>
             <artifactId>asm-all</artifactId>
-            <version>3.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
             <artifactId>java-cup</artifactId>
-            <version>0.11a</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.8.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jboss.byteman</groupId>
             <artifactId>byteman-submit</artifactId>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -67,6 +67,155 @@
             <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
+
+    <properties>
+        <tools.jar>${java.home}/../lib/tools.jar</tools.jar>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+
+             <!-- Internal dependencies -->
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>sources</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>javadoc</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-submit</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-submit</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>sources</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-submit</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>javadoc</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-install</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-install</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>sources</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-install</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>javadoc</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-sample</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-sample</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>sources</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-sample</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>javadoc</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-bmunit</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-bmunit</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>sources</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-bmunit</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>javadoc</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-dtest</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-dtest</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>sources</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-dtest</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>javadoc</classifier>
+             </dependency>
+
+             <!-- External dependencies -->
+             <dependency>
+                 <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
+                 <artifactId>java-cup</artifactId>
+                 <version>0.11a</version>
+             </dependency>
+            <dependency>
+                 <groupId>asm</groupId>
+                 <artifactId>asm-all</artifactId>
+                 <version>3.0</version>
+            </dependency>
+            <dependency>
+                 <groupId>de.jflex</groupId>
+                 <artifactId>jflex</artifactId>
+                 <version>1.4.3</version>
+            </dependency>
+             <dependency>
+                 <groupId>junit</groupId>
+                 <artifactId>junit</artifactId>
+                 <version>4.8.2</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.testng</groupId>
+                 <artifactId>testng</artifactId>
+                 <version>5.14.6</version>
+             </dependency>
+             <dependency>
+                 <groupId>com.sun</groupId>
+                 <artifactId>tools</artifactId>
+                 <version>1.6</version>
+                 <scope>system</scope>
+                 <systemPath>${tools.jar}</systemPath>
+             </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
     <build>
         <plugins>
             <plugin>
@@ -109,6 +258,7 @@
             </plugin>
         </plugins>
     </build>
+
     <modules>
         <module>submit</module>
         <module>agent</module>
@@ -118,4 +268,19 @@
         <module>sample</module>
         <module>download</module>
     </modules>
+
+    <!-- We override the tools.jar property on mac osx -->
+    <profiles>
+        <profile>
+            <id>mac</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <properties>
+                <tools.jar>${java.home}/../Classes/classes.jar</tools.jar>
+            </properties>
+        </profile>
+    </profiles>
 </project>
