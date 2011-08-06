@@ -26,8 +26,8 @@
     </licenses>
 
     <scm>
-        <connection>scm:git://github.com/adinn/byteman.git</connection>
-        <developerConnection>scm:git@github.com:adinn/byteman.git</developerConnection>
+        <connection>scm:git:git://github.com/adinn/byteman.git</connection>
+        <developerConnection>scm:git:git://github.com/adinn/byteman.git</developerConnection>
         <url>http://fisheye.jboss.org/browse/byteman/</url>
     </scm>
 
@@ -67,12 +67,227 @@
             <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
+
+    <properties>
+        <tools.jar>${java.home}/../lib/tools.jar</tools.jar>
+
+        <!-- Decouple file encoding of the platform encoding -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- maven-release-plugin -->
+        <useReleaseProfile>false</useReleaseProfile>
+        <pushChanges>false</pushChanges>
+        <autoVersionSubmodules>true</autoVersionSubmodules>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+
+             <!-- Internal dependencies -->
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>sources</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>javadoc</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-submit</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-submit</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>sources</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-submit</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>javadoc</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-install</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-install</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>sources</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-install</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>javadoc</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-sample</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-sample</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>sources</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-sample</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>javadoc</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-bmunit</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-bmunit</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>sources</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-bmunit</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>javadoc</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-dtest</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-dtest</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>sources</classifier>
+             </dependency>
+             <dependency>
+                 <groupId>org.jboss.byteman</groupId>
+                 <artifactId>byteman-dtest</artifactId>
+                 <version>1.6.0-SNAPSHOT</version>
+                 <classifier>javadoc</classifier>
+             </dependency>
+
+             <!-- External dependencies -->
+             <dependency>
+                 <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
+                 <artifactId>java-cup</artifactId>
+                 <version>0.11a</version>
+             </dependency>
+            <dependency>
+                 <groupId>asm</groupId>
+                 <artifactId>asm-all</artifactId>
+                 <version>3.0</version>
+            </dependency>
+            <dependency>
+                 <groupId>de.jflex</groupId>
+                 <artifactId>jflex</artifactId>
+                 <version>1.4.3</version>
+            </dependency>
+             <dependency>
+                 <groupId>junit</groupId>
+                 <artifactId>junit</artifactId>
+                 <version>4.8.2</version>
+             </dependency>
+             <dependency>
+                 <groupId>org.testng</groupId>
+                 <artifactId>testng</artifactId>
+                 <version>5.14.6</version>
+             </dependency>
+             <dependency>
+                 <groupId>com.sun</groupId>
+                 <artifactId>tools</artifactId>
+                 <version>1.6</version>
+                 <scope>system</scope>
+                 <systemPath>${tools.jar}</systemPath>
+             </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>2.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.1.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.4.3</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.2.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>1.4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>2.9</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-verifier-plugin</artifactId>
+                    <version>1.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>2.3</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.6</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.1</version>
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
@@ -81,7 +296,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.1.1</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -94,7 +308,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.5</version>
                 <configuration>
                   <attach>true</attach>
                 </configuration>
@@ -109,6 +322,7 @@
             </plugin>
         </plugins>
     </build>
+
     <modules>
         <module>submit</module>
         <module>agent</module>
@@ -118,4 +332,19 @@
         <module>sample</module>
         <module>download</module>
     </modules>
+
+    <!-- We override the tools.jar property on mac osx -->
+    <profiles>
+        <profile>
+            <id>mac</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <properties>
+                <tools.jar>${java.home}/../Classes/classes.jar</tools.jar>
+            </properties>
+        </profile>
+    </profiles>
 </project>
