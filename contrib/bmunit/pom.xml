@@ -22,7 +22,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.4.3</version>
                 <configuration>
                     <includes>
                         <include>test/NGUnitTest.class</include>
@@ -43,13 +42,11 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>5.14.6</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.8</version>
             <scope>compile</scope>
         </dependency>
         <!-- the bmunit code depends on the submit, install and agent jars
@@ -57,17 +54,14 @@
         <dependency>
           <groupId>org.jboss.byteman</groupId>
           <artifactId>byteman</artifactId>
-          <version>${project.version}</version>
         </dependency>
         <dependency>
           <groupId>org.jboss.byteman</groupId>
           <artifactId>byteman-submit</artifactId>
-          <version>${project.version}</version>
         </dependency>
         <dependency>
           <groupId>org.jboss.byteman</groupId>
           <artifactId>byteman-install</artifactId>
-          <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

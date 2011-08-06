@@ -25,18 +25,15 @@
         <dependency>
           <groupId>org.jboss.byteman</groupId>
           <artifactId>byteman</artifactId>
-          <version>${project.version}</version>
         </dependency>
         <dependency>
           <groupId>org.jboss.byteman</groupId>
           <artifactId>byteman-submit</artifactId>
-          <version>${project.version}</version>
         </dependency>
         <!-- dtest reuses JUnit assertions -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.8.2</version>
         </dependency>
     </dependencies>
 </project>

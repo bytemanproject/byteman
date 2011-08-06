@@ -1,0 +1,6 @@
+release.properties
+*.releaseBackup
+.idea
+target
+*.iml
+
