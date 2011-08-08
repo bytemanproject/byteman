@@ -1,0 +1,143 @@
+########################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2011, Red Hat and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @author Andrew Dinn
+# @author Scott Stark
+#
+# ThreadMonitorHistory
+#
+# A byteman script which stores thread creation, start, run and exit events
+#
+# to use ths script to trace execution of java program org.my.App execute
+#
+#  -- set the directory in which byteman has been installed
+#  BYTEMAN_HOME= ...
+#
+#   -- identify the samples helper jar to the boot path
+#   SAMPLE_JAR=${BYTEMAN_HOME}/sample/lib/byteman-sample.jar
+#
+#   -- identify this script
+#   SCRIPT={BYTEMAN_HOME}/sample/scripts/ThreadMonitorHistory.btm
+#
+#  ${BYTEMAN_HOME}/bin/bmjava.sh -l $SCRIPT -b $SAMPLE_JAR org.my.App
+#
+# alternatively to load the script dynamically
+#
+#   -- start the program with the agent
+#  ${BYTEMAN_HOME}/bin/bmjava.sh org.my.App
+#
+#   -- install the helper library into the bootstrap classpath
+#  ${BYTEMAN_HOME}/bin/bmsubmit.sh -b $SAMPLE_JAR
+#
+#   -- install the script
+#  ${BYTEMAN_HOME}/bin/bmsubmit.sh -l $SCRIPT
+
+########################################################################
+#
+# Rule to trace thread creation
+#
+
+RULE ThreadMonitor trace create
+CLASS ^java.lang.Thread
+METHOD <init>
+HELPER org.jboss.byteman.sample.helper.ThreadHistoryMonitorHelper
+AT EXIT
+IF TRUE
+DO traceCreate($0, 5)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace thread start
+#
+
+RULE ThreadMonitor trace start
+CLASS ^java.lang.Thread
+METHOD start()
+HELPER org.jboss.byteman.sample.helper.ThreadHistoryMonitorHelper
+AT ENTRY
+IF TRUE
+DO traceStart($0)
+ENDRULE
+
+########################################################################
+#
+# Rule to trace thread exit
+#
+
+RULE ThreadMonitor trace exit
+CLASS ^java.lang.Thread
+METHOD exit()
+HELPER org.jboss.byteman.sample.helper.ThreadHistoryMonitorHelper
+AT ENTRY
+IF TRUE
+DO traceExit($0)
+ENDRULE
+
+########################################################################
+#
+# Interface rule to trace calls to implementations of Runnable.run
+# n.b. this is injected into overriding implementations of run as well
+# as direct implementations. In some cases the overriding method will
+# call the super method causing multiple trace lines to be displayed for
+# a given run call.
+#
+
+RULE ThreadMonitor trace Runnable run
+INTERFACE ^java.lang.Runnable
+METHOD run()
+HELPER org.jboss.byteman.sample.helper.ThreadHistoryMonitorHelper
+AT ENTRY
+IF TRUE
+DO traceRun($0)
+ENDRULE
+
+# A rule to trigger the registration of the ThreadHistoryMonitorHelper mbean.
+# This has to be done after the installation of the platform mbean to avoid
+# conflicts with installing the j.u.l.LogManager.
+RULE Register ThreadHistoryMonitorHelper mbean
+CLASS org.jboss.modules.Main
+METHOD main
+HELPER org.jboss.byteman.sample.helper.ThreadHistoryMonitorHelper
+AT EXIT
+IF TRUE
+DO registerHelperMBean("org.jboss.byteman:helper=ThreadHistoryMonitorHelper")
+ENDRULE
+
+# A rule to trigger a flush of the events after the initial server bootstrap
+RULE write ThreadHistoryMonitorHelper boot events
+CLASS org.jboss.as.server.ApplicationServerService
+METHOD start
+HELPER org.jboss.byteman.sample.helper.ThreadHistoryMonitorHelper
+AT EXIT
+IF TRUE
+do writeAllEventsToFile("/tmp/thread-boot.txt")
+ENDRULE
+
+# A rule to trigger a flush of the events after the server startup msg
+RULE write ThreadHistoryMonitorHelper to start msg events
+CLASS org.jboss.as.server.BootstrapListener
+METHOD finish
+HELPER org.jboss.byteman.sample.helper.ThreadHistoryMonitorHelper
+AT EXIT
+IF TRUE
+do writeAllEventsToFile("/tmp/thread-events.txt")
+ENDRULE
