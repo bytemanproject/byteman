@@ -102,8 +102,6 @@
 # a statistically significant event occurs and their action, fired when
 # that event needs to be counted, is to incremment the relevant counter.
 #
-# In this example the rules measure various operations in the JVM such as
-# thread, file and class loads operations.
 
 # ensure all rules employ the JMX helper class.
 
@@ -182,16 +180,25 @@ ENDRULE
 # DO RETURN <replace me with a port number>
 # ENDRULE
 
-# this rule is triggered when a call is made to Transaction.begin
+# this rule is triggered when a JBoss JTA Transaction instance is created
 
 RULE count begin request
-INTERFACE javax.transaction.Transaction
-METHOD begin()
+CLASS com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionImple
+METHOD <init>
 IF TRUE
 DO incrementCounter("TX begin")
 ENDRULE
 
-# this rule is triggered when a call is made to Transaction.commit
+# this rule is triggered when a call is made to Transaction.<init>
+
+RULE count begin request
+CLASS com.arjuna.ats.internal.jta.transaction.jts.TransactionImple
+METHOD <init>
+IF TRUE
+DO incrementCounter("TX begin")
+ENDRULE
+
+# this rule is triggered when a JBoss JTS Transaction instance is created
 
 RULE count commit request
 INTERFACE javax.transaction.Transaction
