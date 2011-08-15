@@ -102,8 +102,6 @@
 # a statistically significant event occurs and their action, fired when
 # that event needs to be counted, is to incremment the relevant counter.
 #
-# In this example the rules measure various operations in the JVM such as
-# thread, file and class loads operations.
 
 # ensure all rules employ the JMX helper class.
 
@@ -121,7 +119,6 @@ IF TRUE
 DO keyInfo.addKey("TX begin", KeyInfo.KEY_TYPE_CUMULATIVE, "TX begin total");
    keyInfo.addKey("TX commit", KeyInfo.KEY_TYPE_CUMULATIVE, "TX commit total");
    keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_CUMULATIVE, "TX rollback total");
-   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_CUMULATIVE, "TX rollback total");
    keyInfo.addKey("TX setRollbackOnly", KeyInfo.KEY_TYPE_CUMULATIVE, "TX setRollbackOnly total");
    keyInfo.addKey("TX enlistResource", KeyInfo.KEY_TYPE_CUMULATIVE, "TX enlistResource total");
    keyInfo.addKey("TX delistResource", KeyInfo.KEY_TYPE_CUMULATIVE, "TX delistResource total");
@@ -129,14 +126,12 @@ DO keyInfo.addKey("TX begin", KeyInfo.KEY_TYPE_CUMULATIVE, "TX begin total");
    keyInfo.addKey("TX begin", KeyInfo.KEY_TYPE_RATE, "TX begin request/second");
    keyInfo.addKey("TX commit", KeyInfo.KEY_TYPE_RATE, "TX commit request/second");
    keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_RATE, "TX rollback request/second");
-   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_RATE, "TX rollback request/second");
    keyInfo.addKey("TX setRollbackOnly", KeyInfo.KEY_TYPE_RATE, "TX setRollbackOnly request/second");
    keyInfo.addKey("TX enlistResource", KeyInfo.KEY_TYPE_RATE, "TX enlistResource request/second");
    keyInfo.addKey("TX delistResource", KeyInfo.KEY_TYPE_RATE, "TX delistResource request/second");
    keyInfo.addKey("TX registerSynchronization", KeyInfo.KEY_TYPE_RATE, "TX registerSynchronization request/second");
    keyInfo.addKey("TX begin", KeyInfo.KEY_TYPE_MEAN, "TX begin average");
    keyInfo.addKey("TX commit", KeyInfo.KEY_TYPE_MEAN, "TX commit average");
-   keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_MEAN, "TX rollback average");
    keyInfo.addKey("TX rollback", KeyInfo.KEY_TYPE_MEAN, "TX rollback average");
    keyInfo.addKey("TX setRollbackOnly", KeyInfo.KEY_TYPE_MEAN, "TX setRollbackOnly average");
    keyInfo.addKey("TX enlistResource", KeyInfo.KEY_TYPE_MEAN, "TX enlistResource average");
@@ -185,22 +180,31 @@ ENDRULE
 # DO RETURN <replace me with a port number>
 # ENDRULE
 
-# this rule is triggered when a call is made to Transaction.begin
+# this rule is triggered when a JBoss JTA Transaction instance is created
 
 RULE count begin request
-INTERFACE javax.transaction.Transaction
-METHOD begin()
+CLASS com.arjuna.ats.internal.jta.transaction.arjunacore.TransactionImple
+METHOD <init>
 IF TRUE
-DO incrementCounter("TX begin request")
+DO incrementCounter("TX begin")
 ENDRULE
 
-# this rule is triggered when a call is made to Transaction.commit
+# this rule is triggered when a call is made to Transaction.<init>
+
+RULE count begin request
+CLASS com.arjuna.ats.internal.jta.transaction.jts.TransactionImple
+METHOD <init>
+IF TRUE
+DO incrementCounter("TX begin")
+ENDRULE
+
+# this rule is triggered when a JBoss JTS Transaction instance is created
 
 RULE count commit request
 INTERFACE javax.transaction.Transaction
 METHOD commit()
 IF TRUE
-DO incrementCounter("TX commit request")
+DO incrementCounter("TX commit")
 ENDRULE
 
 # this rule is triggered when a call is made to Transaction.rollback
@@ -209,7 +213,7 @@ RULE count rollback request
 INTERFACE javax.transaction.Transaction
 METHOD rollback()
 IF TRUE
-DO incrementCounter("TX rollback request")
+DO incrementCounter("TX rollback")
 ENDRULE
 
 # this rule is triggered when a call is made to Transaction.setRollbackOnly
@@ -218,7 +222,7 @@ RULE count setRollbackOnly request
 INTERFACE javax.transaction.Transaction
 METHOD setRollbackOnly()
 IF TRUE
-DO incrementCounter("TX setRollbackOnly request")
+DO incrementCounter("TX setRollbackOnly")
 ENDRULE
 
 # this rule is triggered when a call is made to Transaction.enlistResource
@@ -227,7 +231,7 @@ RULE count enlistResource request
 INTERFACE javax.transaction.Transaction
 METHOD enlistResource()
 IF TRUE
-DO incrementCounter("TX enlistResource request")
+DO incrementCounter("TX enlistResource")
 ENDRULE
 
 # this rule is triggered when a call is made to Transaction.delistResource
@@ -236,7 +240,7 @@ RULE count delistResource request
 INTERFACE javax.transaction.Transaction
 METHOD delistResource()
 IF TRUE
-DO incrementCounter("TX delistResource request")
+DO incrementCounter("TX delistResource")
 ENDRULE
 
 # this rule is triggered when a call is made to Transaction.registerSynchronization
@@ -245,5 +249,5 @@ RULE count registerSynchronization request
 INTERFACE javax.transaction.Transaction
 METHOD registerSynchronization()
 IF TRUE
-DO incrementCounter("TX registerSynchronization request")
+DO incrementCounter("TX registerSynchronization")
 ENDRULE
