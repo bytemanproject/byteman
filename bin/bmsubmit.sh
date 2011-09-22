@@ -65,17 +65,20 @@ if [ -z "$BYTEMAN_HOME" ]; then
     fi
 fi
 
-# the binary release puts byteman jar in lib while source puts it in
-# build/lib so add both paths to the classpath just in case
+# the byteman and byteman-submit jars should be in ${BYTEMAN_HOME}/lib
 if [ -r ${BYTEMAN_HOME}/lib/byteman.jar ]; then
     BYTEMAN_JAR=${BYTEMAN_HOME}/lib/byteman.jar
-elif [ -r ${BYTEMAN_HOME}/build/lib/byteman.jar ]; then
-    BYTEMAN_JAR=${BYTEMAN_HOME}/build/lib/byteman.jar
 else
     echo "Cannot locate byteman jar"
+    exit
+fi
+if [ -r ${BYTEMAN_HOME}/lib/byteman-submit.jar ]; then
+    BYTEMAN_SUBMIT_JAR=${BYTEMAN_HOME}/lib/byteman-submit.jar
+else
+    echo "Cannot locate byteman-submit jar"
     exit
 fi
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 # Submit class will validate arguments
 
-java ${BYTEMAN_JAVA_OPTS} -classpath ${BYTEMAN_JAR} org.jboss.byteman.agent.submit.Submit $*
+java ${BYTEMAN_JAVA_OPTS} -classpath ${BYTEMAN_JAR}:${BYTEMAN_SUBMIT_JAR} org.jboss.byteman.agent.submit.Submit $*

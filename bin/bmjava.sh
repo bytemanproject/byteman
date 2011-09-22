@@ -114,12 +114,9 @@ if [ -z "$BYTEMAN_HOME" ]; then
     fi
 fi
 
-# the binary release puts byteman jar in lib while source puts it in
-# build/lib so add both paths to the classpath just in case
+# the byteman jar shouldbe in the lib directory
 if [ -r ${BYTEMAN_HOME}/lib/byteman.jar ]; then
     BYTEMAN_JAR=${BYTEMAN_HOME}/lib/byteman.jar
-elif [ -r ${BYTEMAN_HOME}/build/lib/byteman.jar ]; then
-    BYTEMAN_JAR=${BYTEMAN_HOME}/build/lib/byteman.jar
 else
     echo "Cannot locate byteman jar"
     exit
