@@ -940,16 +940,56 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
                 // saved exception then protect it with a try catch block and update
                 // the details so that it is the target of this block
 
+                // collect the list of synchronization var indexes
+                List<Integer> varIndexes = new ArrayList<Integer>();
+                while (openEnters.hasNext()) {
+                    CodeLocation enterLocation = openEnters.next();
+                    int varIdx = cfg.getSavedMonitorIdx(enterLocation);
+                    varIndexes.add(varIdx);
+                }
+                int numVarIndexes = varIndexes.size();
+
+                // generate a rethrow handler for each exception type
+
                 Label newStart = newLabel();
                 Label newEnd = newLabel();
-                Label newExecute = newLabel();
                 Label newEarlyReturn = newLabel();
-                Label newThrow = newLabel();
-                // make the old exceptions arrive here
-                visitLabel(details.getExecuteHandler());
+                // make the old exception arrive here
                 visitLabel(details.getEarlyReturnHandler());
+                visitLabel(newStart);
+                for (int i = 0; i < numVarIndexes; i++) {
+                    int varIdx = varIndexes.get(i);
+                    visitVarInsn(Opcodes.ALOAD, varIdx);
+                    visitInsn(Opcodes.MONITOREXIT);
+                }
+                visitInsn(Opcodes.ATHROW);
+                // add try catch blocks for the exception type
+                visitTryCatchBlock(newStart, newEnd, newEarlyReturn, CFG.EARLY_RETURN_EXCEPTION_TYPE_NAME);
+                // visit the end of the handler block so it gets processed
+                visitLabel(newEnd);
+
+                // same again for next handler
+                newStart = newLabel();
+                newEnd = newLabel();
+                Label newThrow = newLabel();
                 visitLabel(details.getThrowHandler());
-                // now add a rethrow handler which exits the open monitors
+                visitLabel(newStart);
+                for (int i = 0; i < numVarIndexes; i++) {
+                    int varIdx = varIndexes.get(i);
+                    visitVarInsn(Opcodes.ALOAD, varIdx);
+                    visitInsn(Opcodes.MONITOREXIT);
+                }
+                visitInsn(Opcodes.ATHROW);
+                // add try catch blocks for the exception type
+                visitTryCatchBlock(newStart, newEnd, newThrow, CFG.THROW_EXCEPTION_TYPE_NAME);
+                // visit the end of the handler block so it gets processed
+                visitLabel(newEnd);
+
+                // same again for last handler
+                newStart = newLabel();
+                newEnd = newLabel();
+                Label newExecute = newLabel();
+                visitLabel(details.getExecuteHandler());
                 visitLabel(newStart);
                 while (openEnters.hasNext()) {
                     CodeLocation enterLocation = openEnters.next();
@@ -958,19 +998,12 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
                     visitVarInsn(Opcodes.ALOAD, varIdx);
                     visitInsn(Opcodes.MONITOREXIT);
                 }
-                // throw must be in scope of the try catch
-                // call super method to avoid creating new blocks
                 visitInsn(Opcodes.ATHROW);
-                // add try catch blocks for each of the exception types
-                visitTryCatchBlock(newStart, newEnd, newEarlyReturn, CFG.EARLY_RETURN_EXCEPTION_TYPE_NAME);
-                visitTryCatchBlock(newStart, newEnd, newThrow, CFG.THROW_EXCEPTION_TYPE_NAME);
-                // this comes last because it is the superclass of the previous two
+                // add try catch blocks for the exception type
                 visitTryCatchBlock(newStart, newEnd, newExecute, CFG.EXECUTE_EXCEPTION_TYPE_NAME);
-                // now visit label so they get processed
+                // visit the end of the handler block so it gets processed
                 visitLabel(newEnd);
-                // and update the details so it will catch these exceptions
-                details.setStart(newStart);
-                details.setEnd(newEnd);
+                // update the details so it will catch these exceptions
                 details.setExecuteHandler(newExecute);
                 details.setEarlyReturnHandler(newEarlyReturn);
                 details.setThrowHandler(newThrow);
