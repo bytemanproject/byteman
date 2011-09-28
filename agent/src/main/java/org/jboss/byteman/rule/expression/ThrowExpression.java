@@ -354,21 +354,28 @@ public class ThrowExpression extends Expression
     {
         TypeGroup typeGroup = getTypeGroup();
 
-        // expected type should always be void since throw can only occur as a top level action
-        // however, we need to be sure that the trigering method throws this exception type or
-        // else that it is a subtype of runtime exception
+        // if the thrown type can be assigned to RuntimeException then we are out of here
 
-        if (!RuntimeException.class.isAssignableFrom(type.getTargetClass())) {
-            Iterator<Type> iterator = typeGroup.getExceptionTypes().iterator();
-            while (iterator.hasNext()) {
-                Type exceptionType = iterator.next();
-                if (Type.dereference(exceptionType).isAssignableFrom(type)) {
-                    // ok we found a suitable declaration for the exception
-                    return;
-                }
+        if (RuntimeException.class.isAssignableFrom(type.getTargetClass())) {
+            return;
+        }
+
+        // see if the trigering method declares this exception type as a thrown exception
+
+        Iterator<Type> iterator = typeGroup.getExceptionTypes().iterator();
+        while (iterator.hasNext()) {
+            Type exceptionType = iterator.next();
+            if (Type.dereference(exceptionType).isAssignableFrom(type)) {
+                // ok we found a suitable declaration for the exception
+                return;
             }
         }
-        // look for a method declared on the target class which declares the computed type as a checked exception
+
+        // search for a method declared on the target class which declares
+        // the computed type as a checked exception --in that case we throw a type
+        // warning because we cannot safely inject the rule into this implementation
+        // but the rule is still valid
+
         ClassLoader loader = rule.getLoader();
         String targetClassName = rule.getTargetClass();
         String triggerClassName = rule.getTriggerClass();
@@ -379,14 +386,14 @@ public class ThrowExpression extends Expression
         boolean isClass = !rule.isInterface();
         try {
             Class<?> triggerClass = loader.loadClass(triggerClassName);
-            SuperIterator iterator;
+            SuperIterator superIterator;
             if (isClass) {
-                iterator = new ClassIterator(triggerClass.getSuperclass());
+                superIterator = new ClassIterator(triggerClass.getSuperclass());
             } else {
-                iterator = new InterfaceIterator(triggerClass);
+                superIterator = new InterfaceIterator(triggerClass);
             }
-            while (iterator.hasNext()) {
-                Class<?> nextClass = iterator.next();
+            while (superIterator.hasNext()) {
+                Class<?> nextClass = superIterator.next();
                 String nextClassName = nextClass.getName();
                 if (nextClassName.equals(targetClassName) ||
                         (!isQualified && nextClassName.endsWith("." + targetClassName))) {
