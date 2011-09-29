@@ -691,51 +691,28 @@ public class CFG
     }
 
     /**
-     * forward details of open monitor and try catch block locations from the current
-     * block to its reachable labels. This is always called just before splitting the current block.
+     * test whether there are any open monitorenters with no corresponding monitorexit on a path to
+     * the current instruction
+     *
+     * @return true if there are open monitorenters otherwise false
      */
-    private void carryForward()
+    public boolean inOpenMonitor()
     {
-        if (Transformer.isDumpCFGPartial()) {
-            int blockIdx = current.getBlockIdx();
-            if (blockIdx ==  0) {
-                System.out.println("Intermediate Control Flow Graph for " + methodName);
-            }
-            System.out.println("Carry forward for block " + blockIdx);
-        }
-        
-        Label label = current.getLabel();
-        int nOuts = current.nOuts();
+        List<CodeLocation> currentOpenEnters = currentOpenEnters(false);
+        return currentOpenEnters.size() > 0;
+    }
 
-        // identify which try start regions overlap this block
-        //
-        // the current try start list will include try catch regions which subsume the whole of this block
-        // however, some regions may have partially overlapped so we need to add them too. to do this we need
-        // to add any starts which have block offset greater than 0
 
-        List<TryCatchDetails> active = new ArrayList<TryCatchDetails>(currentTryCatchStarts);
+    /**
+     * return a list of all open monitorenters with no corresponding monitorexit on a path to
+     * the current instruction
+     *
+     * @param dumpOk true if it is appropriate todump the cfg at this point
+     * @return true if there are open monitorenters otherwise false
+     */
 
-        Iterator<TryCatchDetails> ends = current.getTryEnds();
-
-        while (ends.hasNext()) {
-            TryCatchDetails details = ends.next();
-            CodeLocation location = getLocation(details.getEnd());
-            if (location.getInstructionIdx() > 0) {
-                active.add(details);
-            }
-        }
-
-        // any remaining starts are active somewhere in the block and hence indicate
-        // possible exception control flow
-
-        current.setActiveTryStarts(active);
-
-        if (Transformer.isDumpCFGPartial()) {
-            System.out.println(current);
-        }
-
-        // now update the list of outstanding monitor enter calls
-        //
+    private List<CodeLocation> currentOpenEnters(boolean dumpOk)
+    {
         // any opens which were not closed in this block will have been retained in
         // the monitorEnters list in reverse order of appearance.
         //
@@ -755,7 +732,9 @@ public class CFG
 
         Iterator<CodeLocation> openEntersIter = openEnters.iterator();
 
+        // if we are dumping debug info then do it now
         if (Transformer.isDumpCFGPartial()) {
+            List<TryCatchDetails> active = current.getActiveTryStarts();
             int openEntersCount = openEnters.size();
 
             System.out.print("Carry forward open monitors for " + current.getBlockIdx() +" ==> {" );
@@ -819,7 +798,7 @@ public class CFG
         // now pair off propagated enters with any non local exits
 
         exitsIter = nonLocalExits.iterator();
-        
+
         while (exitsIter.hasNext() && openEntersIter.hasNext()) {
             CodeLocation exit = exitsIter.next();
             CodeLocation enter = openEntersIter.next();
@@ -846,6 +825,56 @@ public class CFG
             }
         }
 
+        return newOpenEnters;
+    }
+
+    /**
+     * forward details of open monitor and try catch block locations from the current
+     * block to its reachable labels. This is always called just before splitting the current block.
+     */
+    private void carryForward()
+    {
+        if (Transformer.isDumpCFGPartial()) {
+            int blockIdx = current.getBlockIdx();
+            if (blockIdx ==  0) {
+                System.out.println("Intermediate Control Flow Graph for " + methodName);
+            }
+            System.out.println("Carry forward for block " + blockIdx);
+        }
+        
+        Label label = current.getLabel();
+        int nOuts = current.nOuts();
+
+        // identify which try start regions overlap this block
+        //
+        // the current try start list will include try catch regions which subsume the whole of this block
+        // however, some regions may have partially overlapped so we need to add them too. to do this we need
+        // to add any starts which have block offset greater than 0
+
+        List<TryCatchDetails> active = new ArrayList<TryCatchDetails>(currentTryCatchStarts);
+
+        Iterator<TryCatchDetails> ends = current.getTryEnds();
+
+        while (ends.hasNext()) {
+            TryCatchDetails details = ends.next();
+            CodeLocation location = getLocation(details.getEnd());
+            if (location.getInstructionIdx() > 0) {
+                active.add(details);
+            }
+        }
+
+        // any remaining starts are active somewhere in the block and hence indicate
+        // possible exception control flow
+
+        current.setActiveTryStarts(active);
+
+        if (Transformer.isDumpCFGPartial()) {
+            System.out.println(current);
+        }
+
+        // compute the list of monitorenters which are still open at the current instruction
+        List<CodeLocation> newOpenEnters = currentOpenEnters(true);
+
         int newOpenCount = newOpenEnters.size();
         
         // ok, now attach the list to all blocks reachable via normal control flow
@@ -857,8 +886,8 @@ public class CFG
 
         for (int i = 1; i <= nOuts; i++) {
             label = current.nthOut(i);
-            openEnters = openMonitorEnters.get(label);
-            if (openEnters == null) {
+            List<CodeLocation> blockOpenEnters = openMonitorEnters.get(label);
+            if (blockOpenEnters == null) {
                 openMonitorEnters.put(label, newOpenEnters);
                 if (Transformer.isDumpCFGPartial()) {
                     System.out.print("open monitors " + label + " ==> {");
@@ -877,12 +906,12 @@ public class CFG
             } else {
                 // sanity check
                 // this should contain the same locations as our current list!
-                int openCount = openEnters.size();
+                int openCount = blockOpenEnters.size();
                 if (openCount != newOpenCount) {
                     System.out.println("CFG.carryForward: unexpected! invalid open enters count for block " + label + " in method " + methodName);
                 }
                 for (int j = 0; j < newOpenCount && j < openCount; j++) {
-                    CodeLocation l1 = openEnters.get(j);
+                    CodeLocation l1 = blockOpenEnters.get(j);
                     CodeLocation l2 = newOpenEnters.get(j);
                     if (l1.getBlock() != l2.getBlock()) {
                         System.out.println("CFG.carryForward: unexpected! invalid open enters block for block " + label + " at index " + j + " in method " + methodName);
