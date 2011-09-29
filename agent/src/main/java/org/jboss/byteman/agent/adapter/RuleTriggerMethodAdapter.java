@@ -811,7 +811,11 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
         // tell the CFG to visit this label
 
         cfg.visitLabel(label);
+
         // if this is a try catch block end then we need to visit the try catch block now
+        // this ensures that try catch blocks which enclose trigger blocks are listed after the
+        //try catch blocks
+
         if (cfg.tryCatchEnd(label)) {
             for (TryCatchDetails details : cfg.tryCatchEndDetails(label)) {
                 super.visitTryCatchBlock(details.getStart(), details.getEnd(), details.getHandler(), details.getType());
@@ -840,22 +844,23 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
 
         TriggerDetails details = cfg.triggerEndDetails(label);
 
-        Label returnHandler = newLabel();
-        Label throwHandler = newLabel();
+        // we always add an execute handler
+        // we don't need a return or throw handler if we are in the scope of a monitor enter/exit pair
+        // all the handler regions end here so we use the same end label for all of them
+        Label end = new Label();
         Label executeHandler = newLabel();
 
-        details.setEarlyReturnHandler(returnHandler);
-        details.setThrowHandler(throwHandler);
+        if (!cfg.inOpenMonitor()) {
+            // ok this one needs the full set of handlers and the subtype handlers need to come first
+            Label returnHandler = newLabel();
+            details.setEarlyReturnHandler(returnHandler);
+            visitTryCatchBlock(details.getStart(), end, returnHandler, CFG.EARLY_RETURN_EXCEPTION_TYPE_NAME);
+            Label throwHandler = newLabel();
+            details.setThrowHandler(throwHandler);
+            visitTryCatchBlock(details.getStart(), end, throwHandler, CFG.THROW_EXCEPTION_TYPE_NAME);
+        }
+
         details.setExecuteHandler(executeHandler);
-
-        // ok now we set up try catch handlers for the triggger block
-        // n.b. we need to use a new label for the end because insertion of the handler is set off when
-        // its end label is visited
-
-        Label end = new Label();
-
-        visitTryCatchBlock(details.getStart(), end, returnHandler, CFG.EARLY_RETURN_EXCEPTION_TYPE_NAME);
-        visitTryCatchBlock(details.getStart(), end, throwHandler, CFG.THROW_EXCEPTION_TYPE_NAME);
         visitTryCatchBlock(details.getStart(), end, executeHandler, CFG.EXECUTE_EXCEPTION_TYPE_NAME);
 
         // ok this fixes the  handler end label at the same pont as the trigger end label
@@ -910,11 +915,11 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
     @Override
     public void visitTryCatchBlock(Label start, Label end, Label handler, String type)
     {
-        // don't notify this until we reach the end label so we can slip
-        // trigger sequence try catch blocks in.
+        // don't forward details to the next visitor in line until we reach the end label
+        //this ensures we can insert trigger catch blocks in between the existing handlers
         // super.visitTryCatchBlock(start, end, handler, type);
 
-        // tell the cfg to visit this block
+        // now tell the cfg to visit this block
 
         cfg.visitTryCatchBlock(start, end, handler, type);
     }
@@ -938,58 +943,26 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
             if (openEnters.hasNext()) {
                 // add a handler here which unlocks each object and rethrows the
                 // saved exception then protect it with a try catch block and update
-                // the details so that it is the target of this block
-
-                // collect the list of synchronization var indexes
-                List<Integer> varIndexes = new ArrayList<Integer>();
-                while (openEnters.hasNext()) {
-                    CodeLocation enterLocation = openEnters.next();
-                    int varIdx = cfg.getSavedMonitorIdx(enterLocation);
-                    varIndexes.add(varIdx);
-                }
-                int numVarIndexes = varIndexes.size();
+                // the trigger details so that it is the target of this block
 
                 // generate a rethrow handler for each exception type
 
                 Label newStart = newLabel();
                 Label newEnd = newLabel();
+
+                // if we get here the return and throw handlers labels should be null
+                if (details.getEarlyReturnHandler() != null || details.getThrowHandler() != null) {
+                    System.out.println("unexpected : trigger region with open monitorenters has subtype handler!");
+                }
+
+                // generate rethrow code and mark the handler as a try catch block for all
+                // three exception types
+                newStart = newLabel();
+                newEnd = newLabel();
                 Label newEarlyReturn = newLabel();
-                // make the old exception arrive here
-                visitLabel(details.getEarlyReturnHandler());
-                visitLabel(newStart);
-                for (int i = 0; i < numVarIndexes; i++) {
-                    int varIdx = varIndexes.get(i);
-                    visitVarInsn(Opcodes.ALOAD, varIdx);
-                    visitInsn(Opcodes.MONITOREXIT);
-                }
-                visitInsn(Opcodes.ATHROW);
-                // add try catch blocks for the exception type
-                visitTryCatchBlock(newStart, newEnd, newEarlyReturn, CFG.EARLY_RETURN_EXCEPTION_TYPE_NAME);
-                // visit the end of the handler block so it gets processed
-                visitLabel(newEnd);
-
-                // same again for next handler
-                newStart = newLabel();
-                newEnd = newLabel();
                 Label newThrow = newLabel();
-                visitLabel(details.getThrowHandler());
-                visitLabel(newStart);
-                for (int i = 0; i < numVarIndexes; i++) {
-                    int varIdx = varIndexes.get(i);
-                    visitVarInsn(Opcodes.ALOAD, varIdx);
-                    visitInsn(Opcodes.MONITOREXIT);
-                }
-                visitInsn(Opcodes.ATHROW);
-                // add try catch blocks for the exception type
-                visitTryCatchBlock(newStart, newEnd, newThrow, CFG.THROW_EXCEPTION_TYPE_NAME);
-                // visit the end of the handler block so it gets processed
-                visitLabel(newEnd);
-
-                // same again for last handler
-                newStart = newLabel();
-                newEnd = newLabel();
-                Label newExecute = newLabel();
                 visitLabel(details.getExecuteHandler());
+                Label newExecute = newLabel();
                 visitLabel(newStart);
                 while (openEnters.hasNext()) {
                     CodeLocation enterLocation = openEnters.next();
@@ -999,14 +972,16 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
                     visitInsn(Opcodes.MONITOREXIT);
                 }
                 visitInsn(Opcodes.ATHROW);
-                // add try catch blocks for the exception type
+                // add try catch blocks for the 3 exception types
+                visitTryCatchBlock(newStart, newEnd, newEarlyReturn, CFG.EARLY_RETURN_EXCEPTION_TYPE_NAME);
+                visitTryCatchBlock(newStart, newEnd, newThrow, CFG.THROW_EXCEPTION_TYPE_NAME);
                 visitTryCatchBlock(newStart, newEnd, newExecute, CFG.EXECUTE_EXCEPTION_TYPE_NAME);
-                // visit the end of the handler block so it gets processed
+                // visit the end of the handler blocks so they gets processed
                 visitLabel(newEnd);
-                // update the details so it will catch these exceptions
-                details.setExecuteHandler(newExecute);
-                details.setEarlyReturnHandler(newEarlyReturn);
+                // update the details so it tracks these new ecetpion regions
                 details.setThrowHandler(newThrow);
+                details.setEarlyReturnHandler(newEarlyReturn);
+                details.setExecuteHandler(newExecute);
             }
         }
 
