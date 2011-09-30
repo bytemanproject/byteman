@@ -163,9 +163,14 @@ public class BBlock
             monitorEnters.push(new CodeLocation(this, index));
         } else if (instruction == Opcodes.MONITOREXIT) {
             CodeLocation exit = new CodeLocation(this, index);
-            // we need to keep track of exits
+            // we need to keep track of exits for when we can collate monitor section ends
+            // with try catch blocks which overlapthis block so we don't drop them here
+            // even if there is a matching enter in this block
             monitorExits.add(exit);
-            // if there is an enter in this block then it belongs to this one so pop it and record the pairing
+            // however if there is an enter in this block then it belongs to this exit
+            // so we pop it to ensurewe only retain active local enters
+            // we also record the pairing so we can work back from the matched exit to
+            //its enter. pairing with non-local enters is done at block end carry forward
             if (!monitorEnters.isEmpty()) {
                 CodeLocation enter = monitorEnters.pop();
                 cfg.addMonitorPair(enter, exit);

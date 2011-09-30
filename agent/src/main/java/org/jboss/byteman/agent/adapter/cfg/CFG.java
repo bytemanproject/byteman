@@ -594,12 +594,8 @@ public class CFG
      */
     public Iterator<CodeLocation> getOpenMonitors(TriggerDetails triggerDetails)
     {
-        // there should be 3 try catch handlers associated with the trigger start label
+        // there should be at least one try catch handlers associated with the trigger start label
         List<TryCatchDetails> tryCatchDetails = tryCatchStartDetails(triggerDetails.getStart());
-        if (tryCatchDetails.size() != 3) {
-            // hmm, this is weird
-            System.out.println("unexpected handler count for trigger code try catch label" + tryCatchDetails.size()  + " in method " + methodName);
-        }
         // all 3 handler should have the same open monitor enters list
         return tryCatchDetails.get(0).getOpenEnters();
     }
@@ -616,9 +612,11 @@ public class CFG
             paired = new LinkedList<CodeLocation>();
             monitorPairs.put(enter, paired);
         }
-        paired.add(exit);
-        // we also need to be able to query this relationship in reverse order
-        CodeLocation inverse = inverseMonitorPairs.put(exit, enter);
+        if (!paired.contains(exit)) {
+            paired.add(exit);
+            // we also need to be able to query this relationship in reverse order
+            CodeLocation inverse = inverseMonitorPairs.put(exit, enter);
+        }
     }
 
     /**
@@ -733,7 +731,7 @@ public class CFG
         Iterator<CodeLocation> openEntersIter = openEnters.iterator();
 
         // if we are dumping debug info then do it now
-        if (Transformer.isDumpCFGPartial()) {
+        if (Transformer.isDumpCFGPartial() && dumpOk) {
             List<TryCatchDetails> active = current.getActiveTryStarts();
             int openEntersCount = openEnters.size();
 
@@ -787,10 +785,10 @@ public class CFG
 
         while (exitsIter.hasNext()) {
             CodeLocation exit = exitsIter.next();
-            // see if this one was paired off already
+            // see if this one is paired off with a local enter
             CodeLocation enter = getPairedEnter(exit);
-            if (enter ==  null) {
-                // this one must match a propagated enter so save it for later
+            if (enter ==  null || enter.getBlock() != current) {
+                // this is a non-local exit matching a a propagated enter
                 nonLocalExits.add(exit);
             }
         }
@@ -802,6 +800,7 @@ public class CFG
         while (exitsIter.hasNext() && openEntersIter.hasNext()) {
             CodeLocation exit = exitsIter.next();
             CodeLocation enter = openEntersIter.next();
+            // we may have already done this but it is idempotent
             addMonitorPair(enter, exit);
         }
 
