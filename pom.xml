@@ -109,103 +109,103 @@
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
                  <classifier>sources</classifier>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
                  <classifier>javadoc</classifier>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-submit</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-submit</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
                  <classifier>sources</classifier>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-submit</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
                  <classifier>javadoc</classifier>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-install</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-install</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
                  <classifier>sources</classifier>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-install</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
                  <classifier>javadoc</classifier>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-sample</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-sample</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
                  <classifier>sources</classifier>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-sample</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
                  <classifier>javadoc</classifier>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-bmunit</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-bmunit</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
                  <classifier>sources</classifier>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-bmunit</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
                  <classifier>javadoc</classifier>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-dtest</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-dtest</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
                  <classifier>sources</classifier>
              </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-dtest</artifactId>
-                 <version>1.6.0-SNAPSHOT</version>
+                 <version>1.6.0</version>
                  <classifier>javadoc</classifier>
              </dependency>
 
