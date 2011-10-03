@@ -29,14 +29,14 @@
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-root</artifactId>
-        <version>1.6.0-SNAPSHOT</version>
+        <version>1.6.0</version>
     </parent>
     <description>
         The Byteman download includes the byteman agent, submit and install jars. the contributed
         tool jars, the binary scripts used to drive byteman, the Byteman user guide plus the
         sample jar and scripts which provide some simple examples of how to use Byteman.
     </description>
-    <version>1.6.0-SNAPSHOT</version>
+    <version>1.6.0</version>
     <name>byteman-download</name>
     <url>http://www.jboss.org/byteman</url>
 
