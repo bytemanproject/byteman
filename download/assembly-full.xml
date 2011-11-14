@@ -9,31 +9,47 @@
         <dependencySet>
             <outputDirectory>lib</outputDirectory>
             <includes>
-                <include>org.jboss.byteman:byteman:jar:${project.version}</include>
-                <include>org.jboss.byteman:byteman-submit:jar:${project.version}</include>
-                <include>org.jboss.byteman:byteman-install:jar:${project.version}</include>
+                <include>org.jboss.byteman:byteman:jar:*</include>
+                <include>org.jboss.byteman:byteman-submit:jar:*</include>
+                <include>org.jboss.byteman:byteman-install:jar:*</include>
             </includes>
+            <excludes>
+                <exclude>*:javadoc</exclude>
+                <exclude>*:sources</exclude>
+            </excludes>
             <outputFileNameMapping>${artifact.artifactId}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
         </dependencySet>
         <dependencySet>
             <outputDirectory>sample/lib</outputDirectory>
             <includes>
-                <include>org.jboss.byteman:byteman-sample:jar:${project.version}</include>
+                <include>org.jboss.byteman:byteman-sample:jar:*</include>
             </includes>
+            <excludes>
+                <exclude>*:javadoc</exclude>
+                <exclude>*:sources</exclude>
+            </excludes>
             <outputFileNameMapping>${artifact.artifactId}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
         </dependencySet>
         <dependencySet>
             <outputDirectory>contrib/dtest</outputDirectory>
             <includes>
-                <include>org.jboss.byteman:byteman-dtest:jar:${project.version}</include>
+                <include>org.jboss.byteman:byteman-dtest:jar:*</include>
             </includes>
+            <excludes>
+                <exclude>*:javadoc</exclude>
+                <exclude>*:sources</exclude>
+            </excludes>
             <outputFileNameMapping>${artifact.artifactId}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
         </dependencySet>
         <dependencySet>
             <outputDirectory>contrib/bmunit</outputDirectory>
             <includes>
-                <include>org.jboss.byteman:byteman-bmunit:jar:${project.version}</include>
+                <include>org.jboss.byteman:byteman-bmunit:jar:*</include>
             </includes>
+            <excludes>
+                <exclude>*:javadoc</exclude>
+                <exclude>*:sources</exclude>
+            </excludes>
             <outputFileNameMapping>${artifact.artifactId}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
         </dependencySet>
         <dependencySet>
