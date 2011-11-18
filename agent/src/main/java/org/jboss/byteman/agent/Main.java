@@ -69,9 +69,18 @@ public class Main {
                     sysJarPaths.add(arg.substring(SYS_PREFIX.length(), arg.length()));
                 } else if (arg.startsWith(ADDRESS_PREFIX)) {
                     hostname = arg.substring(ADDRESS_PREFIX.length(), arg.length());
+                    // setting host name forces listener on
+                    allowRedefine = true;
                 } else if (arg.startsWith(PORT_PREFIX)) {
                     try {
                         port = Integer.valueOf(arg.substring(PORT_PREFIX.length(), arg.length()));
+                        if (port <= 0) {
+                            System.err.println("Invalid port specified [" + port + "]");
+                            port = null;
+                        } else {
+                            // setting port forces listener on
+                            allowRedefine = true;
+                        }
                     } catch (Exception e) {
                         System.err.println("Invalid port specified [" + arg + "]. Cause: " + e);
                     }
@@ -80,10 +89,18 @@ public class Main {
                 } else if (arg.startsWith(LISTENER_PREFIX)) {
                     String value = arg.substring(LISTENER_PREFIX.length(), arg.length());
                     allowRedefine = Boolean.parseBoolean(value);
+                    // clearing listener when port or host is set should be flagged
+                    if (!allowRedefine && (hostname != null || port != null)) {
+                        System.err.println("listener disabled with host/port set");
+                    }
                 } else if (arg.startsWith(REDEFINE_PREFIX)) {
                     // this is only for backwards compatibility -- it is the same as listener
                     String value = arg.substring(REDEFINE_PREFIX.length(), arg.length());
                     allowRedefine = Boolean.parseBoolean(value);
+                    // clearing listener when port or host is set should be flagged
+                    if (!allowRedefine && (hostname != null || port != null)) {
+                        System.err.println("listener disabled with host/port set");
+                    }
                 } else if (arg.startsWith(PROP_PREFIX)) {
                     // this can be used to set byteman properties
                     String prop = arg.substring(PROP_PREFIX.length(), arg.length());
