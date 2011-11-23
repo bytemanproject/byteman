@@ -658,7 +658,9 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
         {
             case Opcodes.IRETURN:
             case Opcodes.LRETURN:
+            case Opcodes.FRETURN:
             case Opcodes.DRETURN:
+            case Opcodes.ARETURN:
             case Opcodes.RETURN:
             case Opcodes.ATHROW:
             {
