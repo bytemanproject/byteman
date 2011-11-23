@@ -65,11 +65,13 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
         <!-- the bmunit code depends on the submit, install and agent jars
         -->
