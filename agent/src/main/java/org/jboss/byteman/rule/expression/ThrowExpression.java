@@ -360,6 +360,12 @@ public class ThrowExpression extends Expression
             return;
         }
 
+        // if the thrown type can be assigned to Error then we are out of here
+
+        if (Error.class.isAssignableFrom(type.getTargetClass())) {
+            return;
+        }
+
         // see if the trigering method declares this exception type as a thrown exception
 
         Iterator<Type> iterator = typeGroup.getExceptionTypes().iterator();
