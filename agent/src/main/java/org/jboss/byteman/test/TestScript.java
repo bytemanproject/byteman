@@ -387,7 +387,7 @@ public class TestScript
         
         if (errorCount != 0) {
             System.err.println("TestScript: " + errorCount + " total errors");
-            System.err.println("            " + typeWarningCount + " total warnings");
+            System.err.println("            " + warningCount + " total warnings");
             System.err.println("            " + parseErrorCount + " parse errors");
             System.err.println("            " + typeErrorCount + " type errors");
             System.err.println("            " + typeWarningCount + " type warnings");
@@ -545,8 +545,8 @@ public class TestScript
 
     public int installParamTypes(Rule rule, String targetClassName, int access, String candidateName, String candidateDesc)
     {
-        List<String> paramTypes = Type.parseMethodDescriptor(candidateDesc, false);
-        int paramCount = paramTypes.size();
+        List<String> paramTypes = Type.parseMethodDescriptor(candidateDesc, true);
+        int paramCount = paramTypes.size() - 1;
         int errorCount = 0;
 
         TypeGroup typegroup = rule.getTypeGroup();
@@ -569,9 +569,25 @@ public class TestScript
                     } else {
                         binding.setDescriptor(paramTypes.get(idx - 1));
                     }
+                } else if (binding.isReturn()) {
+                    if (rule.getTargetLocation().getLocationType() != LocationType.INVOKE_COMPLETED) {
+                        // return type is on end of list
+                        String returnType = paramTypes.get(paramCount);
+                        if ("void".equals(returnType)) {
+                            errorCount++;
+                            System.err.println("ERROR : Invalid return value reference $! in rule \"" + rule.getName() + "\"");
+                        } else {
+                            binding.setDescriptor(returnType);
+                        }
+                    } else {
+                        warningCount++;
+                        System.err.println("WARNING : cannot infer type for $! in AFTER INVOKE rule \"" + rule.getName() + "\"");
+                        binding.setDescriptor("void");
+                    }
                 } else if (binding.isLocalVar()) {
                     warningCount++;
                     System.err.println("WARNING : Cannot typecheck local variable " + binding.getName()  + " in rule \"" + rule.getName() + "\"");
+                    binding.setDescriptor("void");
                 }
             }
         }
