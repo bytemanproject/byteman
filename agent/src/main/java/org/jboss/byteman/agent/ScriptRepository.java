@@ -473,7 +473,7 @@ public class ScriptRepository
                     if (signaturePos > 0) {
                         methodName = methodName.substring(0, signaturePos).trim();
                     }
-                    if (methodName == "<init>" || methodName == "<clinit>") {
+                    if ("<init>".equals(methodName) || "<clinit>".equals(methodName)) {
                         // every class has some sort of constructor so accept it
                         return true;
                     }
