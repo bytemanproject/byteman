@@ -46,7 +46,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
 {
     RuleTriggerMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
     {
-        super(mv, transformContext, access, name, descriptor);
+        super(mv, transformContext, access, name, descriptor, transformContext.lookupRule(name, descriptor));
         this.signature = signature;
         this.exceptions = exceptions;
         this.callArrayBindings = new ArrayList<Binding>();

@@ -52,8 +52,7 @@ public class IndexParamAccessCheckAdapter extends RuleCheckAdapter
         final String[] exceptions)
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if ((access & (Opcodes.ACC_NATIVE|Opcodes.ACC_ABSTRACT|Opcodes.ACC_SYNTHETIC)) == 0 &&
-                matchTargetMethod(name, desc)) {
+        if (matchTargetMethod(access, name, desc)) {
             int paramSlotIdx = Type.paramSlotIdx(access, desc, paramIdx);
             if (paramSlotIdx >= 0) {
                 setVisited();

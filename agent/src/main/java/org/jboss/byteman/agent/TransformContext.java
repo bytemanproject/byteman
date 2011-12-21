@@ -73,17 +73,19 @@ public class TransformContext
         }
     }
 
-    public Rule getRule(String triggerMethodName, String triggerMethodDescriptor)
+    public Rule lookupRule(String triggerMethodName, String triggerMethodDescriptor)
     {
         String key = getRuleKey(triggerMethodName, triggerMethodDescriptor);
-        Rule rule = ruleMap.get(key);
-        if (rule != null) {
-            return rule;
-        }
+        return ruleMap.get(key);
+    }
 
-        // no existign rule -- use the initially parsed rule if we can otherwise create one
+    public Rule createRule(String triggerMethodName, String triggerMethodDescriptor)
+    {
+        String key = getRuleKey(triggerMethodName, triggerMethodDescriptor);
 
-        rule = ruleMap.remove(triggerClass);
+        // use the initially parsed rule if we can otherwise create one
+
+        Rule rule = ruleMap.remove(triggerClass);
 
         if (rule == null) {
             try {

@@ -41,7 +41,7 @@ import java.util.*;
 public class RuleCheckMethodAdapter extends RuleMethodAdapter {
     RuleCheckMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor)
     {
-        super(mv, transformContext, access, name, descriptor);
+        super(mv, transformContext, access, name, descriptor, transformContext.createRule(name, descriptor));
         this.triggerPoints = null;
     }
 

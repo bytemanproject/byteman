@@ -53,7 +53,7 @@ public class IndexParamAccessTriggerAdapter extends RuleTriggerAdapter
         final String[] exceptions)
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if (matchTargetMethod(name, desc)) {
+        if (matchTargetMethod(access, name, desc)) {
             int paramSlotIdx = Type.paramSlotIdx(access, desc, paramIdx);
             if (name.equals("<init>")) {
                 return new IndexParamAccessTriggerConstructorAdapter(mv, getTransformContext(), paramSlotIdx, access, name, desc, signature, exceptions);

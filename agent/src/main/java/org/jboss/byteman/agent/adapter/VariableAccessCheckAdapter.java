@@ -51,7 +51,7 @@ public class VariableAccessCheckAdapter extends RuleCheckAdapter
         final String[] exceptions)
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if ((access & (Opcodes.ACC_NATIVE|Opcodes.ACC_ABSTRACT|Opcodes.ACC_SYNTHETIC)) == 0 && matchTargetMethod(name, desc)) {
+        if (matchTargetMethod(access, name, desc)) {
             setVisited();
             return new VariableAccessCheckMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
         }

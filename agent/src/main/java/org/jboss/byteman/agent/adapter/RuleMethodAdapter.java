@@ -40,13 +40,13 @@ import java.util.List;
 
 // public class RuleMethodAdapter extends GeneratorAdapter {
 public class RuleMethodAdapter extends MethodAdapter {
-    public RuleMethodAdapter(final MethodVisitor mv, final TransformContext transformContext, final int access, final String name, final String desc) {
+    public RuleMethodAdapter(final MethodVisitor mv, final TransformContext transformContext, final int access, final String name, final String desc, Rule rule) {
         super(mv);
         this.access = access;
         this.name = name;
         this.descriptor = desc;
         this.transformContext = transformContext;
-        this.rule = transformContext.getRule(name, desc);
+        this.rule = rule;
     }
 
     public String getTriggerClass()

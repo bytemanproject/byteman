@@ -46,7 +46,7 @@ public class ThrowTriggerAdapter extends RuleTriggerAdapter
         final String[] exceptions)
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if (matchTargetMethod(name, desc)) {
+        if (matchTargetMethod(access, name, desc)) {
             if (name.equals("<init>")) {
                 return new ThrowTriggerConstructorAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
             } else {

@@ -47,7 +47,7 @@ public class SynchronizeTriggerAdapter extends RuleTriggerAdapter
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         // we can use the same adapter for methods and constructors
-        if (matchTargetMethod(name, desc)) {
+        if (matchTargetMethod(access, name, desc)) {
             return new SynchronizeTriggerMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
         }
         return mv;

@@ -43,7 +43,7 @@ public class ExitTriggerAdapter extends RuleTriggerAdapter
         final String[] exceptions)
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if (matchTargetMethod(name, desc)) {
+        if (matchTargetMethod(access, name, desc)) {
             return new ExitTriggerMethodAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
         }
 

@@ -57,6 +57,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.jboss.byteman.agent.TransformContext;
+import org.jboss.byteman.rule.Rule;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.Method;
 import org.objectweb.asm.commons.TableSwitchGenerator;
@@ -249,9 +250,10 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
         final TransformContext transformContext,
         final int access,
         final String name,
-        final String desc)
+        final String desc,
+        final Rule rule)
     {
-        super(mv, transformContext, access, name, desc);
+        super(mv, transformContext, access, name, desc, rule);
         this.argumentTypes = Type.getArgumentTypes(desc);
         this.returnType = Type.getReturnType(desc);
         localTypes = new ArrayList();
