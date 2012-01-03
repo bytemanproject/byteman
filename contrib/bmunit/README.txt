@@ -28,7 +28,11 @@ Summary
 -------
 
 BMUnit is a user package which automates loading of Byteman rules into JUnit
-or TestNG tests.
+or TestNG tests. For guidance on how to use BMUnit from maven or ant see the
+2nd Byteman tutorial at
+
+  http://community.jboss.org/wiki/FaultInjectionTestingWithByteman#top
+
 
 Usage Guide
 -----------
@@ -150,28 +154,50 @@ junit.jar/          -- one or both depending on which test model you are using.
 testng.jar             BMUnit has been tested with JUnit 4.8 or TestNG 5.14.6. Earlier
                        versions may also work, later ones should be fine
 
-n.b. with release BMUNit 1.5.1 and later when running with surefire under maven you can
-simply add the byteman and testng/junit jars as test dependencies. you also need to add
-an additionalClassPath element to your the surefire plugin configuration.
-  <configuration>
-    <additionalClasspathElements>
-      <additionalClasspathElement>${java.home}/lib/tools.jar</additionalClasspathElement>
-    </additionalClasspathElements>
-    . . .
-  </configuration>
-Property java.home must idenitfy the directory into which you have installed a JDK
-release. This is usually defined a sthe value of environment variable JAVA_HOME.
-
-
-Note that you must ensure that your test does not reference classes from the agent jar.
-When the agent is autoloaded this jar is automatically installed into the bootstrap
-classpath. If you load agent classes from your application (i.e. via the system
-classpath) then all sorts of weird $#!+ will happen.
-
 Note also that JAVA_HOME is the location where you installed a Java _JDK_ (not just a Java
 _JRE_). The tools jar is not normally added to the Java runtime path. That normally only
 includes jars from $JAVA_HOME/jre/lib. If you have only installed a Java runtime rather
 then a full JDK you may not find a tools jar.
+
+When running with surefire under maven you can simply add the byteman and testng/junit
+jars as test dependencies, for example:
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.byteman</groupId>
+            <artifactId>byteman</artifactId>
+            <scope>test</scope>
+            <version>${byteman.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.byteman</groupId>
+            <artifactId>byteman-submit</artifactId>
+            <scope>test</scope>
+            <version>${byteman.version}</version>
+        </dependency>
+        . . .
+
+You can also add the tools jar as a system dependency:
+
+        . . .
+        <dependency>
+            <groupId>com.sun</groupId>
+            <artifactId>tools</artifactId>
+            <version>1.6</version>
+            <scope>system</scope>
+            <systemPath>${tools.jar}</systemPath>
+        </dependency>
+        . . .
+
+Note that you must ensure that your test does not directly reference classes from the
+agent jar. When the agent is autoloaded this jar is automatically installed into the
+bootstrap classpath. If you load agent classes from your application (i.e. via the
+system classpath) then all sorts of weird $#!+ will happen.
 
 BMUnit Configuration
 --------------------
