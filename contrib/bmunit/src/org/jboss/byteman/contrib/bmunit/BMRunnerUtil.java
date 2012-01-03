@@ -41,7 +41,11 @@ public class BMRunnerUtil {
             builder.append(bmRule.targetMethod());
             String location = bmRule.targetLocation();
             if (location != null && location.length() > 0) {
-                builder.append("\nAT ");
+		// if we have AT XXX or AFTER XXX then use it
+		// otherwise prepend AT
+		if (!location.startsWith("AFTER ") && !location.startsWith("AT ") ) {
+		    builder.append("\nAT ");
+		}
                 builder.append(location);
             }
             String helper = bmRule.helper();
