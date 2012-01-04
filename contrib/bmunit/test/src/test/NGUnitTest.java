@@ -5,6 +5,7 @@ package test;
 
 import org.jboss.byteman.contrib.bmunit.*;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 // this runner extends the BMNGRunner which allows it to be executed via TestNG
@@ -24,7 +25,11 @@ import org.testng.annotations.Test;
         condition = "TRUE",
         action="traceln(\"Byteman: intercepted at entry in tryAlways from class @BMRules rule\");"
 )
-public class NGUnitTest extends BMNGRunner
+// annottaing the class with BMNGListener mixes in the behaviour which processes
+// @BMRule and @BMScript annotations. ANother option is to have the test class
+// inherit from class BMNGRunner
+@Listeners(BMNGListener.class)
+public class NGUnitTest
 {
     @Test()
     // A method annotation identifies a rule script which is loaded before calling the test method and

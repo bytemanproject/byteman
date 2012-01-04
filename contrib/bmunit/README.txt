@@ -58,16 +58,57 @@ of BMScript or BMRule annotations, respectively.
 
 TestNG Style Tests
 ------------------
-Your test class should extend class BMNGRunner.It then inherits Before/AfterClass
-and Before/AfterMethod behaviour which loads the Byteman agent on demand and
-loads and unloads rules in response to the presence of @BMScript, @BMScripts,  @BMRule
-or @BMRules annotations.
+Your test class should extend class BMNGRunner. It inherits Before/AfterClass
+and Before/AfterMethod behaviour to load the Byteman agent on demand and
+load and unload rules in response to the presence of @BMScript, @BMScripts,
+@BMRule or @BMRules annotations. So, your test class declaration will look
+something like this
+
+@BMScript(dir="test/scripts")
+public class MyTestClass extends BMNGRunner
+{
+  @Test
+  @BMRule(name="trace thread exit",
+          targetClass = "FileInputStream",
+          targetMethod = "<init>(String)",
+          condition="$1.contains(\"andrew\")",
+          action="throw new FileNotFoundException(\"ha ha\")")
+  public void myTestMethod() {
+    . . .
+
+If you are using Byteman version 2.0.0 or later you can attach the Before
+and After load behaviour to your test class by annotating it with class
+org.testng.Listeners, supplying class BMNGListener as argument to the
+annotation.
+
+@BMRule(. . .)
+@Listeners(BMNGListener.class)
+public class MyTestClass
+{
+  @Test
+  @BMScript(. . .)
+  public void myTestMethod() {
+    . . .
+
+This is particulary useful when your test class needs to inherit
+behaviour from a libray class.
 
 JUnit 4 Style Tests
 -------------------
-Your test class should be annotated with @RunWith(BMUnitRunner). The runner will load the
-Byteman agent on demand and will load and unload rules in response to the presence of
-@BMScript, @BMScripts,  @BMRule or @BMRules annotations.
+Your test class should be annotated with annotation class org.junit.RunWith
+supplyng class BMUnitRunner as argument to the annotation. BMUnitRunner will
+load the Byteman agent on demand and will load and unload rules in response
+to the presence of @BMScript, @BMScripts,  @BMRule or @BMRules annotations.
+
+@BMScript(. . .)
+@RunWith(BMUnitRunner.class)
+public class MyTestClass
+{
+  @Test
+  @BMScript(. . .)
+  public void myTestMethod() {
+    . . .
+
 
 @BMScript(s) annotation
 -----------------------
