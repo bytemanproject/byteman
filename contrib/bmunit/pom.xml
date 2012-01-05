@@ -30,11 +30,11 @@
         The Byteman bmunit jar provides integration of Byteman into TestNG and JUnit tests.
     </description>
     <name>byteman-bmunit</name>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>2.0.0</version>
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-root</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
+        <version>2.0.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <build>
