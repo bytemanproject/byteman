@@ -7,6 +7,7 @@ import org.jboss.byteman.agent.submit.ScriptText;
 import org.jboss.byteman.agent.submit.Submit;
 
 import java.io.*;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -215,7 +216,9 @@ public class BMUnit
     /**
      * loads a script from the load directory using the name of a unit test as the root name for the script
      * file and ".btm" or, failing that, ".txt" for the file extension
-     * @param name the name of the unit test
+     * @param clazz the classname of the unit test
+     * @param testName the name of the unit test method
+     * @param dir the directory in which the scripts are located
      * @throws Exception
      */
     public static void loadScriptFile(Class<?> clazz, String testName, String dir) throws Exception
@@ -238,49 +241,14 @@ public class BMUnit
         String filename = null;
         File file = null;
         // first try for rule file based on test name or class name  plus test name
-        if (testName.length() > 0) {
-            filename = loadDirectory + File.separator + testName + ".btm";
-            file = new File(filename);
-            if (!file.exists()) {
-                // try .txt extension for backwards compatibility
-                filename = loadDirectory + File.separator + testName + ".txt";
-                file = new File(filename);
-            }
+        filename=findScript(loadDirectory,
+                            testName,
+                            className + "-" + testName,
+                            className, bareClassName);
+        if(filename != null)
+            file=new File(filename);
 
-            if (!file.exists()) {
-                // ok, now try for rule file based on class and test name
-                filename = loadDirectory + File.separator + className + "-" + testName + ".btm";
-                file = new File(filename);
-            }
-
-            if (!file.exists()) {
-                // try .txt extension for backwards compatibility
-                filename = loadDirectory + File.separator + className + ".txt";
-                file = new File(filename);
-            }
-        }
-        // we may not have a file yet if the testname was null
         if (file == null || !file.exists()) {
-            // ok, try using the package qualified classname to locate a directory hierarchy
-            filename = loadDirectory + File.separator + className + ".btm";
-            file = new File(filename);
-        }
-        if (!file.exists()) {
-            // try .txt extension for backwards compatibility
-            filename = loadDirectory + File.separator + className + ".txt";
-            file = new File(filename);
-        }
-        if (!file.exists() && bareClassName != null) {
-            // ok, final try using just base class name with no package qualifier
-            filename = loadDirectory + File.separator + bareClassName + ".btm";
-            file = new File(filename);
-            if (!file.exists()) {
-                // try .txt extension for backwards compatibility
-                filename = loadDirectory + File.separator + bareClassName + ".txt";
-                file = new File(filename);
-            }
-        }
-        if (!file.exists()) {
             throw new FileNotFoundException("Rule file not found for Byteman test case " + key);
         }
         if (!file.canRead()) {
@@ -373,5 +341,47 @@ public class BMUnit
         ScriptText script = new ScriptText(key, scriptText);
         scripts.add(script);
         submit.deleteScripts(scripts);
+    }
+
+    /**
+     * Tries to find dir/name in the working directory. If not found, tries to add the ".btm", then ".txt" suffixes.
+     * If still not found, tries to find the above on the classpath
+     * @param dir The name of the directory
+     * @param name The file name
+     * @return The fully qualified name of the file, or null if not found
+     */
+    protected static String findScript(String dir, String name) {
+        String filename=name;
+        if(filename == null) return null;
+        if(dir != null && dir.length() > 0)
+            filename=dir + File.separator + filename;
+
+        final String[] filenames={filename, filename + ".btm", filename + ".txt"};
+
+        for(String fname: filenames) {
+            File file=new File(fname);
+            if(file.exists() && file.isFile())
+                return fname;
+        }
+
+        for(String fname: filenames) {
+            URL resource=Thread.currentThread().getContextClassLoader().getResource(fname);
+            if(resource != null) {
+                File file=new File(resource.getFile());
+                if(file.exists() && file.isFile())
+                    return resource.getFile();
+            }
+        }
+        
+        return null;
+    }
+
+    protected static String findScript(String dir, String ... names) {
+        for(String name: names) {
+            String filename=findScript(dir, name);
+            if(filename != null)
+                return filename;
+        }
+        return null;
     }
 }
