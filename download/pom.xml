@@ -23,7 +23,6 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.jboss.byteman</groupId>
     <artifactId>byteman-download</artifactId>
     <packaging>pom</packaging>
     <parent>
@@ -36,7 +35,6 @@
         tool jars, the binary scripts used to drive byteman, the Byteman user guide plus the
         sample jar and scripts which provide some simple examples of how to use Byteman.
     </description>
-    <version>2.0.1-SNAPSHOT</version>
     <name>byteman-download</name>
     <url>http://www.jboss.org/byteman</url>
 

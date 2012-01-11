@@ -23,7 +23,6 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.jboss.byteman</groupId>
     <artifactId>byteman-install</artifactId>
     <packaging>jar</packaging>
     <description>
@@ -31,7 +30,6 @@
         or a remote JVM
     </description>
     <name>byteman-install</name>
-    <version>2.0.1-SNAPSHOT</version>
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-root</artifactId>
