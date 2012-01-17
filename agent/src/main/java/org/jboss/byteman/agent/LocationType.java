@@ -121,7 +121,6 @@ public enum LocationType
      * specifies a location for trigger insertion by identifying catch block of an exception of the nth such catch block
      * if a count is supplied or all catch if ALL is specified
      * script syntax : 'AT' 'CATCH' [<typename>] [ <count> | 'ALL' ]
-     * n.b. exception typename parsed but not yet implemented
      */
     CATCH;
 
