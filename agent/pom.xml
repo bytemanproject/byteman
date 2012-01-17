@@ -267,6 +267,21 @@
                       </configuration>
                     </execution>
                     <execution>
+                      <id>location.TestCatch</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                         <forkMode>once</forkMode>
+                         <includes>
+                           <include>org/jboss/byteman/tests/location/TestCatch.class</include>
+                         </includes>
+                         <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/location/TestCatch.btm</argLine>
+                      </configuration>
+                    </execution>
+                    <execution>
                       <id>location.TestEntry</id>
                       <phase>integration-test</phase>
                       <goals>

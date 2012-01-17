@@ -75,7 +75,7 @@ public class Binding extends RuleElement
             index = DollarExpression.RETURN_VALUE_IDX;
         } else if (name.equals("$^")) {
             // $^ refers to the current throwable value for the trigger method and is only valid when
-            // the rule is triggered AT THROW
+            // the rule is triggered AT THROW or AT CATCH
             index = DollarExpression.THROWABLE_VALUE_IDX;
         } else if (name.equals("$#")) {
             // $# refers to the parameter count for the trigger method

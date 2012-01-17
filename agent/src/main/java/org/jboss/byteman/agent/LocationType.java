@@ -115,7 +115,15 @@ public enum LocationType
      * injected at ALL return points
      * script syntax : 'AT' 'RETURN'
      */
-    EXIT;
+    EXIT,
+
+    /**
+     * specifies a location for trigger insertion by identifying catch block of an exception of the nth such catch block
+     * if a count is supplied or all catch if ALL is specified
+     * script syntax : 'AT' 'CATCH' [<typename>] [ <count> | 'ALL' ]
+     * n.b. exception typename parsed but not yet implemented
+     */
+    CATCH;
 
     public String specifierText()
     {
@@ -181,6 +189,7 @@ public enum LocationType
             "AFTER[ \t]*SYNCHRONIZE",
             "AT[ \t]*THROW",
             "AT[ \t]*EXIT",
+            "AT[ \t]*CATCH",
             "LINE", // for compatibility
             "AT[ \t]*CALL", // for ambiguity :-)
             "AFTER[ \t]*CALL", // for ambiguity :-)
@@ -202,6 +211,7 @@ public enum LocationType
             SYNCHRONIZE_COMPLETED,
             THROW,
             EXIT,
+            CATCH,
             LINE,
             INVOKE,
             INVOKE_COMPLETED,
