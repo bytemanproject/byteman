@@ -183,7 +183,7 @@ public class PlusExpression extends BinaryOperExpression
         } else if (type == Type.D) {
             // add two doubles leaving one double
             expected = 2;
-            mv.visitInsn(Opcodes.FADD);
+            mv.visitInsn(Opcodes.DADD);
             compileContext.addStackCount(-2);
         }
 
