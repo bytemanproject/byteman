@@ -570,8 +570,9 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
         // the old return value
 
         if (returnIdx >= 0) {
-            // get rid of old return value
-            if (returnType.getSize() == 2) {
+            // get rid of old return value remembering to use the correct type for $!
+            // which varies depending if this is an AT EXIT or AFTER CALL rule
+            if (saveValueType.getSize() == 2) {
                 mv.visitInsn(Opcodes.DUP_X2);
                 mv.visitInsn(Opcodes.POP);
                 mv.visitInsn(Opcodes.POP2);
@@ -582,7 +583,8 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
 
             push(returnIdx);
             arrayLoad(objectType);
-            unbox(returnType);
+            // use the correct type for $! which varies depending if this is an AT EXIT or AFTER CALL rule
+            unbox(saveValueType);
         }
     }
     /**
