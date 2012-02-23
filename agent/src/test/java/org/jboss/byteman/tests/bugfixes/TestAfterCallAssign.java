@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2011, Red Hat and individual contributors as identified
+ * Copyright 2012, Red Hat and individual contributors as identified
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
