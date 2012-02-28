@@ -761,7 +761,7 @@ public class Helper
             {
                 // added child and parent was waiting so remove joiner from map now
                 synchronized (joinerMap) {
-                    joinerMap.remove(joiner);
+                    joinerMap.remove(key);
                 }
                 return true;
             }
@@ -785,7 +785,7 @@ public class Helper
         if (joiner.joinChildren(current)) {
             // successfully joined all child threads so remove joiner form map
             synchronized (joinerMap) {
-                joinerMap.remove(joiner);
+                joinerMap.remove(key);
             }
             return true;
         } else {
