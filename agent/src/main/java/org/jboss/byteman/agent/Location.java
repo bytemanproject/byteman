@@ -66,6 +66,8 @@ public abstract class Location
                 return ThrowLocation.create(parameters);
             case EXIT:
                 return ExitLocation.create(parameters);
+            case CATCH:
+                return CatchLocation.create(parameters);
         }
 
         return null;
@@ -931,6 +933,106 @@ public abstract class Location
 
         public String toString() {
             return "AT EXIT";
+        }
+    }
+    /**
+     * location identifying a catch trigger point
+     */
+    private static class CatchLocation extends Location
+    {
+        /**
+         * count identifying which catch operation should be taken as the trigger point. if not specified
+         * as a parameter this defaults to the first catch.
+         */
+        private int count;
+
+        /**
+         * the name of the exception type to which the method belongs or null if any type will do
+         */
+        private String typeName;
+
+        /**
+         * construct a location identifying a catch trigger point
+         * @param count count identifying which catch should be taken as the trigger point
+         * @param typeName the name of the exception type associated with the catch operation
+         */
+        private CatchLocation(int count, String typeName)
+        {
+            this.count = count;
+            this.typeName = typeName;
+        }
+
+        /**
+         * create a location identifying a catch trigger point
+         * @param parameters the text of the parameters appended to the location specifier
+         * @return a catch location or null if the parameters does not contain a valid type name
+         */
+        protected static Location create(String parameters)
+        {
+            String text = parameters.trim();
+            String typeName;
+            int count;
+            int spaceIdx = text.indexOf(' ');
+            
+            if (spaceIdx == -1) {
+            	typeName = text;
+            	count = 0;
+            } else {
+            	typeName = text.substring(0, spaceIdx);
+            	String countText = text.substring(spaceIdx).trim();
+
+                // text may be either blank, a count or ALL
+                if (countText.equals("ALL")) {
+                    // a zero count means all
+                    count = 0;
+                } else {
+                    try {
+                        count = Integer.valueOf(countText);
+                    } catch (NumberFormatException nfe) {
+                        return null;
+                    }
+                }
+            }
+
+            // TODO sanity check type name
+
+            return new CatchLocation(count, typeName);
+        }
+
+        /**
+         * return an adapter which can be used to check whether a method contains a trigger point whose position
+         * matches this location
+         * @return the required adapter
+         */
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new CatchCheckAdapter(cv, transformContext, typeName, count);
+        }
+
+        /**
+         * return an adapter which can be used to insert a trigger call in a method containing a trigger point whose
+         * position matches this location
+         * @return the required adapter
+         */
+        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
+            return new CatchTriggerAdapter(cv, transformContext, typeName, count);
+        }
+
+        public LocationType getLocationType() {
+            return LocationType.CATCH;
+        }
+
+        public String toString() {
+            String text = "AT CATCH";
+
+            if (count != 1) {
+                if (count == 0) {
+                    text += " ALL";
+                } else {
+                    text += " " + count;
+                }
+            }
+
+            return text;
         }
     }
 

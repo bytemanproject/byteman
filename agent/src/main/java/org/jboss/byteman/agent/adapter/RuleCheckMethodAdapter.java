@@ -99,9 +99,9 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                     return false;
                 }
             } else if (binding.isThrowable()) {
-                // we can only allow reference to the current throwable in an AT THROW rule
-                if (rule.getTargetLocation().getLocationType() != LocationType.THROW) {
-                    System.out.println("RuleCheckMethodAdapter.checkBindings : found throwable value binding $^ in non-THROW rule " + rule.getName());
+                // we can only allow reference to the current throwable in an AT THROW or AT CATCH rule
+                if (rule.getTargetLocation().getLocationType() != LocationType.THROW && rule.getTargetLocation().getLocationType() != LocationType.CATCH) {
+                    System.out.println("RuleCheckMethodAdapter.checkBindings : found throwable value binding $^ in non-THROW/CATCH rule " + rule.getName());
                     return false;
                 }
                 // we will need to set the descriptor at some point
