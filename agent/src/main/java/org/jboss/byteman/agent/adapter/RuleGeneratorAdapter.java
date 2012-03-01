@@ -1589,6 +1589,8 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
             localTypes.remove(i - 1);
         }
 
+        int nextLocal = 0;
+
         for (int i = 0; i < nLocal; i++) {
             Object t = local[i];
             if (t == Opcodes.TOP) {
@@ -1601,8 +1603,12 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
                 localTypes.add(Type.FLOAT_TYPE);
             } else if (t == Opcodes.DOUBLE) {
                 localTypes.add(Type.DOUBLE_TYPE);
+                nextLocal++;
+                localTypes.add(null);
             } else if (t == Opcodes.LONG) {
                 localTypes.add(Type.LONG_TYPE);
+                nextLocal++;
+                localTypes.add(null);
             } else if (t == Opcodes.NULL) {
                 localTypes.add(null);
             } else if (t == Opcodes.UNINITIALIZED_THIS) {
@@ -1612,9 +1618,10 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
             } else {
                 localTypes.add(null);
             }
+            nextLocal++;
         }
         
-        nextLocal = nLocal;
+        this.nextLocal = nextLocal;
 
         mv.visitFrame(type, nLocal, local, nStack, stack);
     }
