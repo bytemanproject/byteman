@@ -90,14 +90,6 @@ public class SynchronizeCheckAdapter extends RuleCheckAdapter
             }
             super.visitInsn(opcode);
         }
-
-        public void visitEnd()
-        {
-            if (checkBindings()) {
-                setVisitOk();
-            }
-            super.visitEnd();
-        }
    }
 
     private int count;

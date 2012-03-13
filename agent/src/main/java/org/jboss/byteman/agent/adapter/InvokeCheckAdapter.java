@@ -23,10 +23,11 @@
 */
 package org.jboss.byteman.agent.adapter;
 
-import org.objectweb.asm.*;
+import org.jboss.byteman.rule.type.Type;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
+
 import org.jboss.byteman.rule.type.TypeHelper;
-import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.agent.RuleScript;
 import org.jboss.byteman.agent.TransformContext;
 
 /**
@@ -83,6 +84,7 @@ public class InvokeCheckAdapter extends RuleCheckAdapter
             this.signature = signature;
             this.exceptions = exceptions;
             visitedCount = 0;
+            matchedReturnType = null;
         }
 
         public void visitMethodInsn(
@@ -99,14 +101,6 @@ public class InvokeCheckAdapter extends RuleCheckAdapter
                 }
             }
             super.visitMethodInsn(opcode, owner, name, desc);
-        }
-
-        public void visitEnd()
-        {
-            if (checkBindings()) {
-                setVisitOk();
-            }
-            super.visitEnd();
         }
 
         private boolean matchCall(String owner, String name, String desc)
@@ -135,14 +129,36 @@ public class InvokeCheckAdapter extends RuleCheckAdapter
                     return false;
                 }
             }
-            
+
+            // save the descriptor for the call or void if the descriptors don't match
+
+            if (matchedReturnType == null) {
+                matchedReturnType = Type.parseMethodReturnType(desc);
+            } else if (!matchedReturnType.equals("void")) {
+                String newReturnType = Type.parseMethodReturnType(desc);
+                // TODO - allow for one type to be a subtype of the other?
+                if (newReturnType != matchedReturnType) {
+                    matchedReturnType = "void";
+                }
+            }
+
             return true;
+        }
+
+        @Override
+        protected String getReturnBindingType() {
+            if (matchedReturnType != null) {
+                return matchedReturnType;
+            }
+
+            return "void";
         }
     }
 
     private String calledClass;
     private String calledMethodName;
     private String calledMethodDescriptor;
+    private String matchedReturnType;
     private int count;
     private int visitedCount;
 }

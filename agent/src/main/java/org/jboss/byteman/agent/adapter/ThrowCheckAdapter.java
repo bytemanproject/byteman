@@ -94,14 +94,6 @@ public class ThrowCheckAdapter extends RuleCheckAdapter
 
             super.visitInsn(opcode);
         }
-
-        public void visitEnd()
-        {
-            if (checkBindings()) {
-                setVisitOk();
-            }
-            super.visitEnd();
-        }
     }
 
     private String exceptionClass;

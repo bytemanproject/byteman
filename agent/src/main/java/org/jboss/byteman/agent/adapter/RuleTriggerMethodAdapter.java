@@ -50,13 +50,12 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
         this.signature = signature;
         this.exceptions = exceptions;
         this.callArrayBindings = new ArrayList<Binding>();
-        this.returnType = Type.getReturnType(descriptor);
+        this.returnBindingType = Type.getReturnType(descriptor);
         this.argumentTypes = Type.getArgumentTypes(descriptor);
         this.argLocalIndices = new int[argumentTypes.length];
         this.bindReturnOrThrowableValue = false;
         this.bindInvokeParams = false;
         this.bindingIndicesSet =  false;
-        this.injected = false;
     }
 
     /**
@@ -77,7 +76,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
      */
     public Type getReturnBindingType()
     {
-        return returnType;
+        return returnBindingType;
     }
 
     private void setBindingIndices()
@@ -359,60 +358,6 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
             }
         }
 
-/*
-        // pop each argument into a local var slot so we can restore it later
-        int argSlots[] = new int[savedValueCount];
-        // n.b. count down because args are on stack in reverse order
-        for (int i = savedValueCount - 1; i >= 0; i--) {
-            Type paramType = invokeParamTypes[i];
-            if (paramType == null) {
-                // recipient of static method no need to allocate slot
-            } else {
-                int argSlot = newLocal(paramType);
-                argSlots[i] = argSlot;
-                storeLocal(argSlot);
-            }
-        }
-
-        // now reload the saved values and insert them into the object array
-
-        for (int i = 0; i < savedValueCount; i++) {
-            loadLocal(arrayValueSlot);
-            push(i);
-            Type paramType = invokeParamTypes[i];
-            if (paramType == null) {
-                // recipient of static method no need to allocate slot just install a null
-                push((Type)null);
-            } else {
-                int argSlot = argSlots[i];
-                loadLocal(argSlot);
-                box(paramType);
-            }
-            arrayStore(objectType);
-        }
-
-        // now restack the arguments in increasing order
-        
-        for (int i = 0; i < savedValueCount; i++) {
-            Type paramType = invokeParamTypes[i];
-            if (paramType == null) {
-                // recipient of static method no need to allocate slot just install a null
-                push((Type)null);
-            } else {
-                int argSlot = argSlots[i];
-                loadLocal(argSlot);
-            }
-        }
-        // release the local variable slots in reverse order of allocation
-
-        for (int i = 0; i < savedValueCount; i++) {
-            Type paramType = invokeParamTypes[i];
-            if (paramType != null) {
-                popLocal(argSlots[i]);
-            }
-        }
-*/
-
         return arrayValueSlot;
     }
 
@@ -622,7 +567,6 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
     private RuleScript ruleScript;
     private String signature;
     protected String[] exceptions;
-    private Type returnType;
     private Type[] argumentTypes;
     private Type saveValueType;
     private int[] argLocalIndices;
@@ -630,7 +574,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
     private boolean bindReturnOrThrowableValue;
     private boolean bindInvokeParams;
     private boolean bindingIndicesSet;
-    private boolean injected;
+    private Type returnBindingType;
 
     private CFG cfg;
 
@@ -645,7 +589,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
     {
         super.visitCode();
         // create a control flow graph for the method
-        String methodName = getTriggerClass() + "." + this.name + this.descriptor;
+        String methodName = getTriggerClassName() + "." + this.name + this.descriptor;
         Label newStart = super.newLabel();
         this.cfg = new CFG(methodName, newStart);
         visitLabel(newStart);
@@ -1064,12 +1008,6 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
         super.visitEnd();
         // trash the current label
         cfg.visitEnd();
-
-        // if we injected any triggers then we need to record the transform for this method
-
-        if (injected) {
-            transformContext.recordMethodTransform(name, descriptor);
-        }
     }
 
     /**
@@ -1079,13 +1017,13 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
     {
         // we need to set this here to avoid recursive re-entry into inject routine
 
-        rule.setTypeInfo(getTriggerClass(), access, name, descriptor, exceptions);
+        rule.setTypeInfo(getTriggerClassName(), access, name, descriptor, exceptions);
         String key = rule.getKey();
         Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.Rule"));
         Method method = Method.getMethod("void execute(String, Object, Object[])");
         // we are at the relevant line in the method -- so add a trigger call here
         if (Transformer.isVerbose()) {
-            System.out.println("RuleTriggerMethodAdapter.injectTriggerPoint : inserting trigger into " + getTriggerClass() + "." + getMethodName() + " for rule " + rule.getName());
+            System.out.println("RuleTriggerMethodAdapter.injectTriggerPoint : inserting trigger into " + getTriggerClassName() + "." + getMethodName() + " for rule " + rule.getName());
         }
         Label startLabel = newLabel();
         Label endLabel = newLabel();
@@ -1125,7 +1063,5 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
             doArgUpdate();
         }
         visitTriggerEnd(endLabel);
-
-        injected = true;
     }
 }

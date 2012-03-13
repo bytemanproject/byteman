@@ -38,12 +38,11 @@ public class RuleAdapter extends ClassAdapter
         this.transformContext =  transformContext;
     }
 
-    private TransformContext transformContext;
+    protected TransformContext transformContext;
 
     protected boolean matchTargetMethod(int access, String name, String desc)
     {
-        return ((access & (Opcodes.ACC_NATIVE|Opcodes.ACC_ABSTRACT|Opcodes.ACC_SYNTHETIC)) == 0 &&
-                transformContext.matchTargetMethod(name, desc));
+        return transformContext.matchTargetMethod(access, name, desc);
     }
     
     protected TransformContext getTransformContext()

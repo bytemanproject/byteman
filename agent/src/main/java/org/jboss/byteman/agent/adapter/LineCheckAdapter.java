@@ -84,14 +84,6 @@ public class LineCheckAdapter extends RuleCheckAdapter
             }
             super.visitLineNumber(line, start);
         }
-
-        public void visitEnd()
-        {
-            if (checkBindings()) {
-                setVisitOk();
-            }
-            super.visitEnd();
-        }
     }
 
     private int targetLine;

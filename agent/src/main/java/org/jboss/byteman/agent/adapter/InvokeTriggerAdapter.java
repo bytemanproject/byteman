@@ -52,7 +52,7 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
         final String[] exceptions)
     {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        if (matchTargetMethod(access, name, desc)) {
+        if (injectIntoMethod(name, desc)) {
             if (name.equals("<init>")) {
                 return new InvokeTriggerConstructorAdapter(mv, getTransformContext(), access, name, desc, signature, exceptions);
             } else {

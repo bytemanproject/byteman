@@ -99,14 +99,6 @@ public class FieldAccessCheckAdapter extends RuleCheckAdapter
             super.visitFieldInsn(opcode, owner, name, desc);
         }
 
-        public void visitEnd()
-        {
-            if (checkBindings()) {
-                setVisitOk();
-            }
-            super.visitEnd();
-        }
-
         private boolean matchCall(int opcode, String owner, String name, String desc)
         {
             if (!fieldName.equals(name)) {

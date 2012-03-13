@@ -78,13 +78,5 @@ public class EntryCheckAdapter extends RuleCheckAdapter
             // any instruction counts as a trigger point
             setTriggerPoint();
         }
-
-        public void visitEnd()
-        {
-            if (checkBindings()) {
-                setVisitOk();
-            }
-            super.visitEnd();
-        }
     }
 }

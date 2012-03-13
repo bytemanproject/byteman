@@ -669,103 +669,9 @@ public class Transformer implements ClassFileTransformer {
      */
     public byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, byte[] targetClassBytes)
     {
-        final String targetMethodSpec = ruleScript.getTargetMethod();
-        final Location handlerLocation = ruleScript.getTargetLocation();
-        /**
-         * we cannot afford to lookup the helper class at this point because that involves valling a synchronized
-         * method on loader while we are synchronized on the transformer. That is no problem if the transform request
-         * has itself been initiated under a load but it presents a potential deadlock when the transform request
-         * occurs under Instrumentation.retransformClasses(). So, we have to install the helper name and defer
-         * checking for the helper until type check time when the rule is first executed
-         */
-//        Class helperClass = null;
-//        if (helperName != null) {
-//            try {
-//                helperClass = loader.loadClass(helperName);
-//            } catch (ClassNotFoundException e) {
-//                System.out.println("org.jboss.byteman.agent.Transformer : unknown helper class " + helperName + " for rule " + ruleScript.getName());
-//            }
-//        }
+        TransformContext transformContext = new TransformContext(ruleScript, className, loader, helperManager);
 
-        TransformContext transformContext = new TransformContext(ruleScript, className, targetMethodSpec, loader, helperManager);
-        
-        String ruleName = ruleScript.getName();
-        try {
-            transformContext.parseRule();
-        } catch (ParseException pe) {
-            System.out.println("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + "\n" + pe);
-            return targetClassBytes;
-        } catch (TypeException te) {
-            System.out.println("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + "\n" + te);
-            return targetClassBytes;
-        } catch (Throwable th) {
-            System.out.println("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + "\n" + th);
-            return targetClassBytes;
-        }
-
-        // ok, we have a rule with a matching class and a candidate method and location
-        // we need to see if the class has a matching method/location and, if so, add a call to
-        // execute the rule when we hit the relevant line
-
-        // there may be more than one matching method. if so we need to associate a separate Rule instance with
-        // each transformed method because we bind the argument/local vars using types specific to that method
-        // so we
-
-        ClassReader cr = new ClassReader(targetClassBytes);
-        // need to provide a real writer here so that labels get resolved
-        ClassWriter dummy = getNonLoadingClassWriter(0);
-        RuleCheckAdapter checkAdapter = handlerLocation.getRuleCheckAdapter(dummy, transformContext);
-        try {
-            // insert a local scope adapter between the reader and the adapter so
-            // we see info about vars going in and out of scope
-            BMLocalScopeAdapter localScopeAdapter = new BMLocalScopeAdapter(checkAdapter);
-            cr.accept(localScopeAdapter, ClassReader.EXPAND_FRAMES);
-        } catch (Throwable th) {
-            if (isVerbose()) {
-                System.out.println("org.jboss.byteman.agent.Transformer : error applying rule " + ruleScript.getName() + " to class " + className + "\n" + th);
-                th.printStackTrace(System.out);
-            }
-            transformContext.recordFailedTransform(th);
-            return targetClassBytes;
-        }
-        // only insert the rule trigger call if there is a suitable location in the target method
-        if (!checkAdapter.isVisited()) {
-            //  there was no matching method so ignore
-            return targetClassBytes;
-        } else if (checkAdapter.isVisitOk()) {
-            if (isVerbose()) {
-                System.out.println("org.jboss.byteman.agent.Transformer : possible trigger for rule " + ruleScript.getName() + " in class " + className);
-            }
-            cr = new ClassReader(targetClassBytes);
-            ClassWriter cw = getNonLoadingClassWriter(ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
-            RuleTriggerAdapter adapter = handlerLocation.getRuleAdapter(cw, transformContext);
-            // insert a JSR inliner between the reader and the adapter so we don't see JSR/RET sequences
-            // we use a specialised version which provides us with info about vars going in and out of scope
-            BMJSRInliner jsrInliner = new BMJSRInliner(adapter);
-            try {
-                cr.accept(jsrInliner, ClassReader.EXPAND_FRAMES);
-            } catch (Throwable th) {
-                if (isVerbose()) {
-                    System.out.println("org.jboss.byteman.agent.Transformer : error injecting trigger for rule " + ruleScript.getName() + " into class " + className + "\n" +  th);
-                    th.printStackTrace(System.out);
-                }
-                transformContext.recordFailedTransform(th);
-                return targetClassBytes;
-            }
-            // hand back the transformed byte code
-            if (isVerbose()) {
-                System.out.println("org.jboss.byteman.agent.Transformer : inserted trigger for " + ruleScript.getName() + " in class " + className);
-            }
-            return cw.toByteArray();
-
-        } else {
-            // record a failed match with an ersatz error instance
-
-            Error error =  new Error("Failed to transform class " + className + " using rule " + ruleName);
-            error.setStackTrace(new StackTraceElement[0]);
-            transformContext.recordFailedTransform(error);
-            return targetClassBytes;
-        }
+        return transformContext.transform(targetClassBytes);
     }
 
     /**
@@ -1371,22 +1277,4 @@ public class Transformer implements ClassFileTransformer {
     private final static Integer DISABLED = new Integer(1);
     private final static Integer ENABLED = null;
 
-    /**
-     * get a class writer which will not attempt to load classes.The default classwriter tries this when a
-     * reference type local var frame slot aligns with a slot of reference type in a successor block's
-     * frame. This is merely so it can optimize a slot out of the frame change set in the special case where
-     * f1[slot].type < f2[slot].type or vice versa by using whichever is the maximal class. We avoid classloading
-     * by returning class Object. 
-     * @param flags
-     * @return
-     */
-    private ClassWriter getNonLoadingClassWriter(int flags)
-    {
-        return new ClassWriter(flags) {
-            protected String getCommonSuperClass(final String type1, final String type2) {
-                // if we always return Object we cannot go wrong
-                return "java/lang/Object"; 
-            }
-        };
-    }
 }

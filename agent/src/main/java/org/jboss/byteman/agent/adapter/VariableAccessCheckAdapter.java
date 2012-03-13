@@ -88,14 +88,6 @@ public class VariableAccessCheckAdapter extends RuleCheckAdapter
             visitedCount = 0;
         }
 
-        public void visitEnd()
-        {
-            if (checkBindings()) {
-                setVisitOk();
-            }
-            super.visitEnd();
-        }
-
         private boolean matchCall(int opcode)
         {
             if (opcode < Opcodes.ISTORE)  {

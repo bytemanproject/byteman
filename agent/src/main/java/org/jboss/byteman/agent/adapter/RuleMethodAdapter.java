@@ -49,9 +49,9 @@ public class RuleMethodAdapter extends MethodAdapter {
         this.rule = rule;
     }
 
-    public String getTriggerClass()
+    public String getTriggerClassName()
     {
-        return transformContext.getTriggerClass();
+        return transformContext.getTriggerClassName();
     }
 
     public void visitLocalVariable(

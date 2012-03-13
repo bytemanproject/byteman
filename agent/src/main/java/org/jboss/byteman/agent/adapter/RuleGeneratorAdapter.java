@@ -270,7 +270,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
     {
         // owner of this method is an object
         // localTypes.add(Type.getType(Object.class));
-        String name = getTriggerClass().replace('.', '/');
+        String name = getTriggerClassName().replace('.', '/');
         if ((access | Opcodes.ACC_STATIC) == 0) {
             // an instance method so slot 0 will contain the target object
             localTypes.add(Type.getType("L" + name + ";"));
@@ -1394,7 +1394,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
                 case Opcodes.ASTORE:
                     // we don't know exactly what type this is but at least we know it is an object
                 {
-                    String name = getTriggerClass().replace('.', '/');
+                    String name = getTriggerClassName().replace('.', '/');
                     type = Type.getType("L" + name + ";");
                 }
                 // type = Type.getType(Object.class);
