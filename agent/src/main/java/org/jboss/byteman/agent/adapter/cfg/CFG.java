@@ -1555,10 +1555,13 @@ public class CFG
             }
             // handlers planted by previous transforms will not be tagged but will be for a byteman exception type
             String typeName = details.getType();
-            if (typeName.equals(CFG.EARLY_RETURN_EXCEPTION_TYPE_NAME) ||
+	    // n.b. handlers for finally blocks will have a null  type name
+	    if (typeName != null) {
+		if (typeName.equals(CFG.EARLY_RETURN_EXCEPTION_TYPE_NAME) ||
                     typeName.equals(CFG.EXECUTE_EXCEPTION_TYPE_NAME) ||
                     typeName.equals(CFG.THROW_EXCEPTION_TYPE_NAME)) {
-                return true;
+		    return true;
+		}
             }
         }
         
