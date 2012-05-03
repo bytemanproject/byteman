@@ -154,7 +154,7 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                     }
                     transformContext.warn(name, descriptor, "unknown local variable " + binding);
                 } else {
-                    String descriptor = null;
+                    String localDescriptor = null;
                     int index = -1;
                     Iterator<Label> labelIter = triggerPoints.iterator();
                     while (labelIter.hasNext()) {
@@ -167,11 +167,11 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                             int end = localVar.end.getOffset();
                             if (start <= triggerPos && triggerPos < end) {
                                 // only accept if the descriptor and index are the same or are not yet set
-                                if (descriptor == null && index == -1) {
-                                    descriptor = localVar.desc;
+                                if (localDescriptor == null) {
+                                    localDescriptor = localVar.desc;
                                     index = localVar.index;
                                     found = true;
-                                } else if (descriptor.equals(localVar.desc) && index == localVar.index) {
+                                } else if (localDescriptor.equals(localVar.desc) && index == localVar.index) {
                                     found = true;
                                 }
                                 // terminate the loop here
@@ -184,13 +184,18 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                                 System.out.println("RuleCheckMethodAdapter.checkBindings : invalid local variable binding " + binding + " checking method " + name + descriptor);
                             }
                             transformContext.warn(name, descriptor, "invalid local variable binding " + binding);
+                            // ok no point checking any further
+                            break;
                         }
                     }
-                    // if we got here then we have a unique local var descriptor and index for
-                    // all trigger points so update the binding
-
-                    binding.setDescriptor(Type.parseFieldDescriptor(descriptor));
-                    binding.setLocalIndex(index);
+                    // if we got here with a non-null localDescriptor then we have a unique
+                    // local var descriptor and index for all trigger points so update the binding
+                    // if not then we have notified a fail for the transform so there is no
+                    // need to do the update  anyway
+                    if (localDescriptor != null) {
+                        binding.setDescriptor(Type.parseFieldDescriptor(localDescriptor));
+                        binding.setLocalIndex(index);
+                    }
                 }
             }
         }
