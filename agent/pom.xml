@@ -1515,6 +1515,7 @@
                 <plugins>
                     <plugin>
                         <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.7</version>
                         <executions>
                             <execution>
                                 <phase>generate-sources</phase>
@@ -1526,6 +1527,7 @@
                                             <arg value="-v"/>
                                             <arg value="-d"/>
                                             <arg value="${basedir}/src/main/java/org/jboss/byteman/rule/grammar"/>
+                                            <classpath refid="maven.compile.classpath"/>
                                         </java>
                                         <java classname="java_cup.Main">
                                             <arg value="-package"/>
@@ -1536,6 +1538,7 @@
                                             <arg value="-destdir"/>
                                             <arg value="${basedir}/src/main/java/org/jboss/byteman/rule/grammar"/>
                                             <arg value="${basedir}/grammar/cup/ECAGrammar.cup"/>
+                                            <classpath refid="maven.compile.classpath"/>
                                         </java>
                                     </target>
                                 </configuration>
@@ -1544,19 +1547,16 @@
                                 </goals>
                             </execution>
                         </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
-                                <artifactId>java-cup</artifactId>
-                            </dependency>
-                            <dependency>
-                                <groupId>de.jflex</groupId>
-                                <artifactId>jflex</artifactId>
-                            </dependency>
-                        </dependencies>
                     </plugin>
                 </plugins>
             </build>
+            <dependencies>
+                <dependency>
+                    <groupId>de.jflex</groupId>
+                    <artifactId>jflex</artifactId>
+                </dependency>
+            </dependencies>
+
         </profile>
     </profiles>
     <dependencies>
