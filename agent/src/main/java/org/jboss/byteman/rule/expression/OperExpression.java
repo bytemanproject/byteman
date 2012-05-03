@@ -121,6 +121,9 @@ public abstract class OperExpression extends Expression
     final public static int BOR         = 0x0100 | BINARY;
     final public static int BAND        = 0x0101 | BINARY;
     final public static int BXOR        = 0x0102 | BINARY;
+    final public static int URSH        = 0x0103 | BINARY;
+    final public static int RSH         = 0x0104 | BINARY;
+    final public static int LSH         = 0x0105 | BINARY;
 
     final public static int UMINUS      = 0x0200 | UNARY;
 
@@ -148,6 +151,9 @@ public abstract class OperExpression extends Expression
             BOR,
             BAND,
             BXOR,
+            URSH,
+            RSH,
+            LSH,
             UMINUS,
             MUL,
             DIV,
@@ -174,6 +180,9 @@ public abstract class OperExpression extends Expression
             org.jboss.byteman.rule.grammar.ParseNode.BOR,
             org.jboss.byteman.rule.grammar.ParseNode.BAND,
             org.jboss.byteman.rule.grammar.ParseNode.BXOR,
+            org.jboss.byteman.rule.grammar.ParseNode.URSH,
+            org.jboss.byteman.rule.grammar.ParseNode.RSH,
+            org.jboss.byteman.rule.grammar.ParseNode.LSH,
             org.jboss.byteman.rule.grammar.ParseNode.UMINUS,
             org.jboss.byteman.rule.grammar.ParseNode.MUL,
             org.jboss.byteman.rule.grammar.ParseNode.DIV,
@@ -198,6 +207,9 @@ public abstract class OperExpression extends Expression
             "|",
             "&",
             "^",
+            ">>>",
+            ">>",
+            "<<",
             "-",
             "*",
             "/",

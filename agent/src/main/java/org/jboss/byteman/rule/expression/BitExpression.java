@@ -55,6 +55,8 @@ public class BitExpression extends BinaryOperExpression
         // result so correct the promotion here
         if (type.isFloating()) {
             type = type.J;
+        } else if (type1 == type.C || type2 == type.C) {
+            throw new TypeException("BitExpression.typeCheck : invalid operand type java.lang.character " + getPos());
         }
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
             throw new TypeException("BitExpression.typeCheck : invalid expected result type " + expected.getName() + getPos());
@@ -65,7 +67,6 @@ public class BitExpression extends BinaryOperExpression
 
     public Object interpret(HelperAdapter helper) throws ExecuteException {
         try {
-// n.b. be careful with characters here
             Number value1 = (Number)getOperand(0).interpret(helper);
             Number value2 = (Number)getOperand(1).interpret(helper);
             // type is the result of promoting one or other or both of the operands
@@ -133,7 +134,7 @@ public class BitExpression extends BinaryOperExpression
                         break;
                 }
                 return new Integer(result);
-            }  else if (type == type.J || type == type.F || type == type.D) {
+            }  else if (type == type.J) {
                 long l1 = value1.longValue();
                 long l2 = value2.longValue();
                 long result;
@@ -197,7 +198,7 @@ public class BitExpression extends BinaryOperExpression
         oper1.compile(mv, compileContext);
         compileTypeConversion(oper1.getType(), type, mv, compileContext);
 
-        if (type == Type.B || type == Type.S || type == Type.C || type == Type.I) {
+        if (type == Type.B || type == Type.S || type == Type.I) {
             switch (oper)
             {
                 case BOR:
@@ -217,6 +218,8 @@ public class BitExpression extends BinaryOperExpression
             } else if (type == Type.C) {
                 mv.visitInsn(Opcodes.I2C);
             }
+            // ok, we popped two words but added one
+            compileContext.addStackCount(-2);
             expected =  1;
         } else if (type == Type.J) {
             switch (oper)
@@ -231,39 +234,11 @@ public class BitExpression extends BinaryOperExpression
                     mv.visitInsn(Opcodes.LXOR);
                     break;
             }
-            expected =  2;
-        } else if (type == Type.F) {
-            mv.visitInsn(Opcodes.F2L);
-            switch (oper)
-            {
-                case BOR:
-                    mv.visitInsn(Opcodes.LOR);
-                    break;
-                case BAND:
-                    mv.visitInsn(Opcodes.LAND);
-                    break;
-                case BXOR:
-                    mv.visitInsn(Opcodes.LXOR);
-                    break;
-            }
-            expected =  2;
-        } else if (type == Type.D) {
-            mv.visitInsn(Opcodes.D2L);
-            switch (oper)
-            {
-                case BOR:
-                    mv.visitInsn(Opcodes.LOR);
-                    break;
-                case BAND:
-                    mv.visitInsn(Opcodes.LAND);
-                    break;
-                case BXOR:
-                    mv.visitInsn(Opcodes.LXOR);
-                    break;
-            }
+            // ok, we popped four words but added two
+            compileContext.addStackCount(-2);
             expected =  2;
         }
-        // we have either a 1 byte or a 2 byte result
+        // we have either a 1 words or a 2 words result
         // check that the stack height is what we expect
 
         compileContext.addStackCount(expected);

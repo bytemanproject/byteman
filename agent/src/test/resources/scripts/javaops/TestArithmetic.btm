@@ -109,3 +109,45 @@ DO test.log("triggerMethod4 : i == " + i);
    test.log("triggerMethod4 : b % 0.5 == " + (b % 0.5));
    return (c * (b + s))
 ENDRULE
+
+RULE test shifts
+CLASS TestArithmetic
+METHOD triggerMethod5(int,short,byte,long,float,double)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER CALL log
+BIND test : Test = $0;
+     i : int = $1;
+     s : short = $2;
+     b : byte = $3;
+     j : long = $4;
+     f : float = $5;
+     d : double = $6
+IF TRUE
+DO test.log("triggerMethod5 : i == " + i);
+   test.log("triggerMethod5 : s == " + s);
+   test.log("triggerMethod5 : b == " + b);
+   test.log("triggerMethod5 : j == " + j);
+   test.log("triggerMethod5 : f == " + f);
+   test.log("triggerMethod5 : d == " + d);
+
+   test.log("triggerMethod5 : i << 3 == " + (i << 3));
+   test.log("triggerMethod5 : s << 3 == " + (s << 3));
+   test.log("triggerMethod5 : b << 3 == " + (b << 3));
+   test.log("triggerMethod5 : j << 33 == " + (j << 33));
+   test.log("triggerMethod5 : f << 33 == " + (f << 33));
+   test.log("triggerMethod5 : d << 33 == " + (d << 33));
+
+   test.log("triggerMethod5 : i >> 3 == " + (i >> 3));
+   test.log("triggerMethod5 : s >> 3 == " + (s >> 3));
+   test.log("triggerMethod5 : b >> 3 == " + (b >> 3));
+   test.log("triggerMethod5 : j >> 3 == " + (j >> 3));
+   test.log("triggerMethod5 : f >> 3 == " + (f >> 3));
+   test.log("triggerMethod5 : d >> 3 == " + (d >> 3));
+
+   test.log("triggerMethod5 : i >>> 3 == " + (i >>> 3));
+   test.log("triggerMethod5 : s >>> 3 == " + (s >>> 3));
+   test.log("triggerMethod5 : b >>> 3 == " + (b >>> 3));
+   test.log("triggerMethod5 : j >>> 3 == " + (j >>> 3));
+   test.log("triggerMethod5 : f >>> 3 == " + (f >>> 3));
+   test.log("triggerMethod5 : d >>> 3 == " + (d >>> 3));
+ENDRULE

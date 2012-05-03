@@ -519,6 +519,17 @@ public class ExpressionHelper
                 expr = new ArithmeticExpression(rule, convertedOper, exprTree, operand1, operand2);
             }
             break;
+            case URSH:
+            case RSH:
+            case LSH:
+            {
+                Expression operand1 = createExpression(rule, bindings, child1, Type.NUMBER);
+                Expression operand2 = createExpression(rule, bindings, child2, Type.NUMBER);
+
+                int convertedOper = OperExpression.convertOper(oper);
+                expr = new ShiftExpression(rule, convertedOper, exprTree, operand1, operand2);
+            }
+            break;
             case BAND:
             case BOR:
             case BXOR:

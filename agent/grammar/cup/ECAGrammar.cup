@@ -237,7 +237,7 @@ terminal	OR, AND;
 terminal	LT, LE, EQ, NE, GE, GT;
 
 /* bitwise operators */
-terminal	BOR, BAND, BXOR;
+terminal	URSH, RSH, LSH, BOR, BAND, BXOR;
 
 /* arithmetic operators */
 terminal	MUL, DIV, PLUS, MINUS, MOD;
@@ -337,7 +337,7 @@ precedence nonassoc EQ, NE;
 precedence left LT, LE, GE, GT;
 precedence left PLUS, MINUS;
 precedence left MUL, DIV, MOD;
-precedence left BOR, BAND, BXOR;
+precedence left URSH, RSH, LSH, BOR, BAND, BXOR;
 precedence left TWIDDLE;
 precedence left UMINUS;
 precedence left DOT;
@@ -549,6 +549,9 @@ binary_oper_expr
 	|	expr:e1 GE:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.GE, oleft, oright), e1, e2); :}
 	|	expr:e1 GT:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.GT, oleft, oright), e1, e2); :}
 	// bitwise operators
+	|	expr:e1 URSH:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.URSH, oleft, oright), e1, e2); :}
+	|	expr:e1 RSH:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.RSH, oleft, oright), e1, e2); :}
+	|	expr:e1 LSH:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.LSH, oleft, oright), e1, e2); :}
 	|	expr:e1 BOR:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.BOR, oleft, oright), e1, e2); :}
 	|	expr:e1 BAND:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.BAND, oleft, oright), e1, e2); :}
 	|	expr:e1 BXOR:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.BXOR, oleft, oright), e1, e2); :}

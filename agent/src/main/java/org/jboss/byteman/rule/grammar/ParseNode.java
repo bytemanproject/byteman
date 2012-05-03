@@ -75,6 +75,10 @@ public abstract class ParseNode
     public final static int TWIDDLE = 48;
     public final static int UMINUS = 49;
 
+    public final static int LSH = 50;
+    public final static int RSH = 51;
+    public final static int URSH = 52;
+
     /**
      * the type tag for this node
      */
@@ -241,6 +245,12 @@ public abstract class ParseNode
                     return "NOTHING";
                 case AND:
                     return "&&";
+                case LSH:
+                    return "<<";
+                case RSH:
+                    return ">>";
+                case URSH:
+                    return ">>>";
                 case BAND:
                     return "&";
                 case BOR:

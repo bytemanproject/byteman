@@ -174,6 +174,22 @@ Float = {Sign}? {PosFloat}
 
 "!" | "NOT" | "not"	{ return symbol(sym.NOT); }
 
+/* bitwise operators */
+
+">>>"        { return symbol(sym.URSH); }
+
+">>"        { return symbol(sym.RSH); }
+
+"<<"        { return symbol(sym.LSH); }
+
+"|"			{ return symbol(sym.BOR); }
+
+"&"			{ return symbol(sym.BAND); }
+
+"^"			{ return symbol(sym.BXOR); }
+
+"~"			{ return symbol(sym.TWIDDLE); }
+
 /* comparison operators */
 
 "<" | "LT" | "lt"	{ return symbol(sym.LT); }
@@ -187,16 +203,6 @@ Float = {Sign}? {PosFloat}
 ">=" | "GE" | "ge"	{ return symbol(sym.GE); }
 
 ">" | "GT" | "gt"	{ return symbol(sym.GT); }
-
-/* bitwise operators */
-
-"|"			{ return symbol(sym.BOR); }
-
-"&"			{ return symbol(sym.BAND); }
-
-"^"			{ return symbol(sym.BXOR); }
-
-"~"			{ return symbol(sym.TWIDDLE); }
 
 /* arithmetic operators */
 

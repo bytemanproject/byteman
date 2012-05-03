@@ -43,6 +43,7 @@ public class TestArithmetic extends Test
         char cres;
         short sres;
         byte bres;
+	float fres;
 
         runNumber = 1;
         try {
@@ -87,6 +88,17 @@ public class TestArithmetic extends Test
         }
 
         checkOutput(true);
+
+        runNumber = 5;
+        try {
+            log("calling TestArithmetic.triggerMethod5");
+            fres = triggerMethod5(3 << 8, (short)-128, (byte)0xf, 16L, 24.0F, 24.0D);
+            log("called TestArithmetic.triggerMethod5 : result == " + fres);
+        } catch (Exception e) {
+            log(e);
+        }
+
+        checkOutput(true);
     }
 
     public int triggerMethod1(int i, char c, short s, byte b)
@@ -113,16 +125,16 @@ public class TestArithmetic extends Test
         return (byte)0;
     }
 
-    public float triggerMethod5(int i, char c, short s, byte b, float f, double d)
+    public float triggerMethod5(int i, short s, byte b, long j, float f, double d)
     {
         log("inside TestArithmetic.triggerMethod5");
-        return (byte)0;
+        return (float)0;
     }
 
-    public double triggerMethod6(int i, char c, short s, byte b, float f, double d)
+    public double triggerMethod6(int i, char c, short s, byte b, long j, float f, double d)
     {
         log("inside TestArithmetic.triggerMethod6");
-        return (byte)0;
+        return (double)0;
     }
 
     @Override
@@ -188,6 +200,42 @@ public class TestArithmetic extends Test
                 logExpected("called TestArithmetic.triggerMethod4 : result == " + (byte)('0' * (99 + 0xf)));
             }
             break;
+            case 5:
+            {
+                logExpected("calling TestArithmetic.triggerMethod5");
+                logExpected("inside TestArithmetic.triggerMethod5");
+
+		// triggerMethod4(3 << 8, (short)-128, (byte)0xf, 24.0, 24.0D);
+                logExpected("triggerMethod5 : i == " + (3 << 8));
+                logExpected("triggerMethod5 : s == " + ((short)-128));
+                logExpected("triggerMethod5 : b == " + (byte)0xf);
+                logExpected("triggerMethod5 : j == 16");
+                logExpected("triggerMethod5 : f == 24.0");
+                logExpected("triggerMethod5 : d == 24.0");
+
+                logExpected("triggerMethod5 : i << 3 == " + (3 << 11));
+                logExpected("triggerMethod5 : s << 3 == " + (short)(((short)-128) << 3));
+                logExpected("triggerMethod5 : b << 3 == " + (byte)(((byte)0xf) << 3));
+                logExpected("triggerMethod5 : j << 33 == " + (16L << 33));
+		logExpected("triggerMethod5 : f << 33 == " + (24L << 33));
+                logExpected("triggerMethod5 : d << 33 == " + (24L << 33));
+
+                logExpected("triggerMethod5 : i >> 3 == " + (3 << 5));
+                logExpected("triggerMethod5 : s >> 3 == " + (short)(((short)-128) >> 3));
+                logExpected("triggerMethod5 : b >> 3 == " + (byte)(((byte)0xf) >> 3));
+                logExpected("triggerMethod5 : j >> 3 == " + (16L >> 3));
+		logExpected("triggerMethod5 : f >> 3 == " + (24L >> 3));
+                logExpected("triggerMethod5 : d >> 3 == " + (24L >> 3));
+
+                logExpected("triggerMethod5 : i >>> 3 == " + (3 << 5));
+                logExpected("triggerMethod5 : s >>> 3 == " + (short)(((short)-128) >>> 3));
+                logExpected("triggerMethod5 : b >>> 3 == " + (byte)(((byte)0xf) >>> 3));
+                logExpected("triggerMethod5 : j >>> 3 == " + (16L >>> 3));
+		logExpected("triggerMethod5 : f >>> 3 == " + (24L >>> 3));
+                logExpected("triggerMethod5 : d >>> 3 == " + (24L >>> 3));
+
+                logExpected("called TestArithmetic.triggerMethod5 : result == " + 0.0);
+            }
         }
 
         return super.getExpected();
