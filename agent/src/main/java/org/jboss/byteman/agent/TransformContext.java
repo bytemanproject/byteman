@@ -359,7 +359,7 @@ public class TransformContext
     {
         int firstHash = key.indexOf('#');
         int secondHash = key.lastIndexOf('#');
-        return key.substring(firstHash + 1, secondHash - 1);
+        return key.substring(firstHash + 1, secondHash);
     }
 
     /**
