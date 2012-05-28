@@ -356,18 +356,69 @@
         <module>download</module>
     </modules>
 
-    <!-- We override the tools.jar property on mac osx -->
     <profiles>
-        <profile>
-            <id>mac</id>
-            <activation>
-                <os>
-                    <family>mac</family>
-                </os>
-            </activation>
-            <properties>
-                <tools.jar>${java.home}/../Classes/classes.jar</tools.jar>
-            </properties>
-        </profile>
+      <!-- We override the tools.jar property on mac osx -->
+      <profile>
+	<id>mac</id>
+	<activation>
+	  <os>
+	    <family>mac</family>
+	  </os>
+	</activation>
+	<properties>
+	  <tools.jar>${java.home}/../Classes/classes.jar</tools.jar>
+	</properties>
+      </profile>
+      <!--
+	  new profile for releasing to maven central
+	  to do a release update the version number from a SNAPSHOT
+	  version to a full version and execute
+	  
+	    mvn -P centralRelease deploy
+
+	  you will need to have permission to upload the jars to
+	  the sonatype repo and to have configured the relevant gpg
+	  key settings in ~/.m2/settings.xml
+
+            <profile>
+              <id>centralRelease</id>
+              <properties>
+                  <gpg.passphrase>XXXXXXXXXX</gpg.passphrase>
+              </properties>
+            </profile>
+      -->
+      <profile>
+	<id>centralRelease</id>
+	<!-- obviously we need to use the Sonatype staging repo for upload -->
+	<distributionManagement>
+	  <repository>
+	    <id>sonatype-releases-repository</id>
+	    <name>Sonatype Releases Repository</name>
+	    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+	  </repository>
+	</distributionManagement>
+	<!-- we need to be able to sign the jars we install -->
+	<build>
+	  <plugins>
+	    <plugin>
+	      <groupId>org.apache.maven.plugins</groupId>
+	      <artifactId>maven-gpg-plugin</artifactId>
+	      <configuration>
+		<passphrase>${gpg.passphrase}</passphrase>
+		<useAgent>${gpg.useAgent}</useAgent>
+	      </configuration>
+	      <executions>
+		<execution>
+		  <id>sign-artifacts</id>
+		  <phase>verify</phase>
+		  <goals>
+		    <goal>sign</goal>
+		  </goals>
+		</execution>
+	      </executions>
+	    </plugin>
+	  </plugins>
+	</build>
+      </profile>
     </profiles>
 </project>
