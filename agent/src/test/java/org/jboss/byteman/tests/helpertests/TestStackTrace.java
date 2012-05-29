@@ -216,7 +216,6 @@ public class TestStackTrace extends Test
             {
                 logExpected("calling TestStackTrace.triggerMethod4");
                 logExpected("Stack trace for thread TestThread-false");
-                logExpected("org.jboss.byteman.tests.helpers.TestThread.run(TestThread.java:25)");
                 logExpected("");
                 logExpected("called TestStackTrace.triggerMethod4");
             }
