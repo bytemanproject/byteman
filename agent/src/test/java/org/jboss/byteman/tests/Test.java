@@ -91,6 +91,45 @@ public abstract class Test extends TestCase
         }
     }
 
+    // variant of method checkOutput which ensures that all expected
+    // lines occur in the correct order in the actual output but
+    // tolerates extra lines in output which are not present in
+    // expected.
+    public void checkOutputPartial(boolean reset)
+    {
+        String output = getOutput();
+        String expected = getExpected();
+    	String[] outputLines = output.split("\n");
+        String[] expectedLines = expected.split("\n");
+        int outlen = outputLines.length;
+        int explen = expectedLines.length;
+        int outidx = 0;
+        int expidx = 0;
+        while (expidx < explen) {
+            boolean matched = false;
+            while (outidx < outlen && !matched) {
+                if (outputLines[outidx++].equals(expectedLines[expidx])) {
+                    matched = true;
+                }
+            }
+            if (matched) {
+                expidx++;
+            } else {
+                break;
+            }
+        }
+
+        if (expidx < explen) {
+            fail("Test " + name + "failure\n" + "\n<expectedPartial>\n" + expected + "</expectedPartial>\n\n<log>\n" + output +"</log>\n");
+        } else {
+            System.out.println("Test " + name + " success");
+        }
+
+        if (reset) {
+            this.output = new StringBuffer();
+            this.expected = new StringBuffer();
+        }
+    }
     public String getOutput()
     {
         return output.toString();

@@ -24,6 +24,7 @@
 package org.jboss.byteman.tests.helpertests;
 
 import org.jboss.byteman.tests.Test;
+import org.jboss.byteman.tests.helpers.TestThread;
 
 /**
  * Test to ensure arithmetic operations compute as expected
@@ -71,6 +72,23 @@ public class TestStackTrace extends Test
         }
 
         checkOutput(true);
+
+        runNumber = 4;
+        try {
+            log("calling TestStackTrace.triggerMethod4");
+        	Thread t1 = new TestThread(this, true);
+        	Thread t2 = new TestThread(this, false);
+
+        	t1.start();
+        	t2.start();
+        	t1.join();
+        	t2.join();
+            log("called TestStackTrace.triggerMethod4");
+        } catch (Exception e) {
+            log(e);
+        }
+
+        checkOutputPartial(true);
     }
 
     public void triggerMethod1()
@@ -132,8 +150,8 @@ public class TestStackTrace extends Test
 
     @Override
     public String getExpected() {
-        int lineTriggerMethod1 = 76;
-        int lineTest = 40;
+        int lineTriggerMethod1 = 94;
+        int lineTest = 41;
         switch (runNumber) {
             case 1:
             {
@@ -145,7 +163,7 @@ public class TestStackTrace extends Test
                 logExpected("inside TestStackTrace.triggerMethod1");
                 logExpected("called TestStackTrace.triggerMethod1");
             }
-            break;
+	    break;
             case 2:
             {
                 logExpected("calling TestStackTrace.triggerMethod2");
@@ -164,7 +182,7 @@ public class TestStackTrace extends Test
                 logExpected("inside TestStackTrace.triggerMethod22");
                 logExpected("called TestStackTrace.triggerMethod2");
             }
-            break;
+	    break;
             case 3:
             {
                 logExpected("calling TestStackTrace.triggerMethod3");
@@ -193,9 +211,18 @@ public class TestStackTrace extends Test
                         "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod3(TestStackTrace.java:" + (lineTriggerMethod1 + 37) + ")\n");
                 logExpected("called TestStackTrace.triggerMethod3");
             }
-            break;
+	    break;
+            case 4:
+            {
+                logExpected("calling TestStackTrace.triggerMethod4");
+                logExpected("Stack trace for thread TestThread-false");
+                logExpected("org.jboss.byteman.tests.helpers.TestThread.run(TestThread.java:25)");
+                logExpected("");
+                logExpected("called TestStackTrace.triggerMethod4");
+            }
+	    break;
         }
 
-        return super.getExpected();
+	return super.getExpected();
     }
 }

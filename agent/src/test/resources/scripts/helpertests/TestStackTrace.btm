@@ -96,3 +96,14 @@ DO test.log(formatStackBetween("org.jboss.byteman.tests.helpertests.TestStackTra
                                 "org.jboss.byteman.tests.helpertests.TestStackTrace.triggerMethod3",
                                 true, true, "stacktrace between frames\n"))
 ENDRULE
+
+
+RULE test all-threads stacktrace, dump stacks
+CLASS org.jboss.byteman.tests.helpers.TestThread
+METHOD fire
+HELPER org.jboss.byteman.tests.helpers.Default
+AT EXIT
+BIND test : TestStackTrace = $0.inner
+IF TRUE
+DO test.log(formatThreadStack("TestThread-false"))
+ENDRULE

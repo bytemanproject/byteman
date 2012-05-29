@@ -1288,7 +1288,7 @@ public class Helper
     }
 
     /**
-     * print a stack trace to System.out by calling traceStack(prefix, key, 0)
+     * print a stack trace to the trace stream identified by key by calling traceStack(prefix, key, 0)
      */
     public void traceStack(String prefix, Object key)
     {
@@ -1324,6 +1324,119 @@ public class Helper
         String stackTrace = formatStack(prefix, maxFrames);
         trace(key, stackTrace);
     }
+
+    // tracing frames of all stacks
+
+    /**
+     * print trace of all threads' stacks to System.out by calling traceAllStacks(null)
+     */
+    public void traceAllStacks()
+    {
+    	traceAllStacks(null);
+    }
+
+    /**
+     * print trace of all threads' stacks to System.out by calling traceAllStacks(prefix, "out")
+     */
+    public void traceAllStacks(String prefix)
+    {
+    	traceAllStacks(prefix, "out");
+    }
+
+    /**
+     * print trace of all threads' stacks to the trace stream identified by key by calling traceAllStacks(prefix, key, 0)
+     */
+    public void traceAllStacks(String prefix, Object key)
+    {
+    	traceAllStacks(prefix, key, 0);
+    }
+
+    /**
+     * print trace of all threads' stacks to System.out by calling traceAllStacks(null, maxFrames)
+     */
+    public void traceAllStacks(int maxFrames)
+    {
+    	traceAllStacks(null, maxFrames);
+    }
+
+    /**
+     * print trace of all threads' stacks to System.out by calling traceAllStacks(prefix, "out", maxFrames)
+     */
+    public void traceAllStacks(String prefix, int maxFrames)
+    {
+    	traceAllStacks(prefix, "out", maxFrames);
+    }
+
+    /**
+     * print trace of all threads' stacks to the trace stream identified by key
+     *
+     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
+     * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + "\n" is used
+     * @param key an object identifying the trace stream to which output should be generated
+     * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
+     */
+    public void traceAllStacks(String prefix, Object key, int maxFrames)
+    {
+    	trace(key, formatAllStacks(prefix, maxFrames));
+    }
+    
+    
+    // trace stack of a specific thread
+
+    /**
+     * print a stack trace of a specific thread to System.out by calling traceThreadStack(threadName, null)
+     */
+    public void traceThreadStack(String threadName)
+    {
+    	traceThreadStack(threadName, null);
+    }
+
+    /**
+     * print a stack trace of a specific thread to System.out by calling traceThreadStack(threadName, prefix, "out")
+     */
+    public void traceThreadStack(String threadName, String prefix)
+    {
+    	traceThreadStack(threadName, prefix, "out");
+    }
+
+    /**
+     * print a stack trace of a specific thread to the trace stream identified by key by calling traceThreadStack(threadName, prefix, key, 0)
+     */
+    public void traceThreadStack(String threadName, String prefix, Object key)
+    {
+    	traceThreadStack(threadName, prefix, key, 0);
+    }
+
+    /**
+     * print a stack trace of a specific thread to System.out by calling traceThreadStack(threadName, null, maxFrames)
+     */
+    public void traceThreadStack(String threadName, int maxFrames)
+    {
+    	traceThreadStack(threadName, null, maxFrames);
+    }
+
+    /**
+     * print a stack trace of a specific thread of a specific thread to System.out by calling traceThreadStack(threadName, prefix, "out", maxFrames)
+     */
+    public void traceThreadStack(String threadName, String prefix, int maxFrames)
+    {
+    	traceThreadStack(threadName, prefix, "out", maxFrames);
+    }
+
+    /**
+     * print a stack trace to the trace stream identified by key
+     *
+     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
+     * then the prefix "Stack trace for thread " + threadName + "\n" is used
+     * @param key an object identifying the trace stream to which output should be generated
+     * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
+     */
+    public void traceThreadStack(String threadName, String prefix, Object key, int maxFrames)
+    {
+        String stackTrace = formatThreadStack(threadName, prefix, maxFrames);
+        trace(key, stackTrace);
+    }
+
 
     /**
      * print all stack frames which match pattern to System.out by calling traceStackMatching(pattern, null)
@@ -1671,23 +1784,141 @@ public class Helper
     public String formatStack(String prefix, int maxFrames)
     {
         StringBuffer buffer = new StringBuffer();
-        StackTraceElement[] stack = getStack();
+        appendStack(buffer, prefix, maxFrames, Thread.currentThread(), getStack());
+        return buffer.toString();
+    }
+    
+
+    //
+    // retrieving frames for all threads
+
+    /**
+     * return all stack traces by calling formatAllStacks(null)
+     */
+    public String formatAllStacks()
+    {
+        return formatAllStacks(null);
+    }
+
+    /**
+     * return all stack traces by calling formatAllStacks(prefix, 0)
+     */
+    public String formatAllStacks(String prefix)
+    {
+        return formatAllStacks(prefix, 0);
+    }
+
+    /**
+     * return all stack traces by calling formatAllStacks(null, maxFrames)
+     */
+    public String formatAllStacks(int maxFrames)
+    {
+        return formatAllStacks(null, maxFrames);
+    }
+
+    /**
+     * return all stack traces
+     *
+     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
+     * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + "\n" is used
+     * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
+     */
+
+    public String formatAllStacks(String prefix, int maxFrames)
+    {
+    	StringBuffer buffer = new StringBuffer();
+
+    	Map<Thread, StackTraceElement[]> stacks = Thread.getAllStackTraces();
+    	for (Map.Entry<Thread, StackTraceElement[]> entry : stacks.entrySet()) {
+	    	appendStack(buffer, prefix, maxFrames, entry.getKey(), entry.getValue());
+    		buffer.append('\n');
+    	}
+
+    	return buffer.toString();
+    }
+
+    //
+    // retrieving frames for all threads
+
+    /**
+     * return stack traces of a specific thread by calling formatThreadStack(threadName, null)
+     */
+    public String formatThreadStack(String threadName)
+    {
+        return formatThreadStack(threadName, null);
+    }
+
+    /**
+     * return all stack traces by calling formatThreadStack(threadName, prefix, 0)
+     */
+    public String formatThreadStack(String threadName, String prefix)
+    {
+        return formatThreadStack(threadName, prefix, 0);
+    }
+
+    /**
+     * return all stack traces by calling formatThreadStack(threadName, null, maxFrames)
+     */
+    public String formatThreadStack(String threadName, int maxFrames)
+    {
+        return formatThreadStack(threadName, null, maxFrames);
+    }
+
+    /**
+     * return all stack traces
+     *
+     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
+     * then the prefix "Stack trace for thread " + threadName + "\n" is used
+     * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
+     */
+
+    public String formatThreadStack(String threadName, String prefix, int maxFrames)
+    {
+    	StringBuffer buffer = new StringBuffer();
+    	Map<Thread, StackTraceElement[]> stacks = Thread.getAllStackTraces();
+
+    	boolean found = false;
+
+    	for (Map.Entry<Thread, StackTraceElement[]> entry : stacks.entrySet()) {
+    		Thread thread = entry.getKey();
+    		if (thread.getName().equals(threadName)) {
+        		appendStack(buffer, prefix, maxFrames, thread, entry.getValue());
+        		found = true;
+    		}
+    	}
+
+    	if (!found) {
+    		buffer.append("Thread ");
+    		buffer.append(threadName);
+    		buffer.append(" not found\n");
+    	}
+
+    	return buffer.toString();
+    }
+
+    private void appendStack(StringBuffer buffer, String prefix, int maxFrames, Thread thread, StackTraceElement[] stack) {
         int l = stack.length;
-        int i = triggerIndex(stack);
+        int i;
 
-        if (i < 0) {
-            return "";
-        }
+    	if (thread == Thread.currentThread()) {
+	    	// trim off the byteman trigger parts
+            i = triggerIndex(stack);
+            if (i < 0) {
+                return;
+            }
+    	} else {
+    		i = 0;
+    	}
 
-        if (prefix != null) {
-            buffer.append(prefix);
-        } else {
-            buffer.append("Stack trace for thread ");
-            buffer.append(Thread.currentThread().getName());
-            buffer.append('\n');
-        }
+    	if (prefix != null) {
+    		buffer.append(prefix);
+    	} else {
+    		buffer.append("Stack trace for thread ");
+    		buffer.append(thread.getName());
+    		buffer.append('\n');
+    	}
+
         boolean dotdotdot = false;
-
         if (maxFrames > 0 && (i + maxFrames) < l) {
             l = i + maxFrames;
             dotdotdot = true;
@@ -1699,8 +1930,6 @@ public class Helper
         if (dotdotdot) {
             buffer.append("  . . .\n");
         }
-
-        return buffer.toString();
     }
 
     // retrieving caller frames which match a regular expression
