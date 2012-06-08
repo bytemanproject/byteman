@@ -163,7 +163,7 @@ public class Install
     {
         agentJar = null;
         this.id = pid;
-        this.port = 0;
+        this.port = port;
         this.addToBoot = addToBoot;
         this.host = host;
         if (properties != null) {
