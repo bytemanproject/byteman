@@ -28,8 +28,8 @@ RULE test use of method param names
 CLASS TestMethodParamName
 METHOD callWithNamedParams
 # HELPER org.jboss.byteman.tests.helpers.Default
-AT ENTRY
+AT CALL log
 BIND test : TestMethodParamName = $0
 IF TRUE
-DO test.log("injected foo() " + $this + " " + $bar + " " + $baz)
+DO test.log("injected foo() " + $this + " " + $bar + " " + $baz + " " + $fred)
 ENDRULE

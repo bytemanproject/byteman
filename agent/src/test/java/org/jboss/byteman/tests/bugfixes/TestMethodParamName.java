@@ -49,13 +49,14 @@ public class TestMethodParamName extends Test
 
     public void callWithNamedParams(String bar, String baz)
     {
-        log("inside foo() " + this + " " + bar + " " + baz);
+	String fred = "fred";
+        log("inside foo() " + this + " " + bar + " " + baz + " " + fred);
     }
 
     @Override
     public String getExpected() {
-        logExpected("injected foo() " + this + " bar baz");
-        logExpected("inside foo() " + this + " bar baz");
+        logExpected("injected foo() " + this + " bar baz fred");
+        logExpected("inside foo() " + this + " bar baz fred");
 
         return super.getExpected();
     }
