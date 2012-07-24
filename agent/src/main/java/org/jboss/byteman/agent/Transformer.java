@@ -669,7 +669,7 @@ public class Transformer implements ClassFileTransformer {
      */
     public byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, byte[] targetClassBytes)
     {
-        TransformContext transformContext = new TransformContext(ruleScript, className, loader, helperManager);
+        TransformContext transformContext = new TransformContext(this, ruleScript, className, loader, helperManager);
 
         return transformContext.transform(targetClassBytes);
     }
@@ -827,7 +827,7 @@ public class Transformer implements ClassFileTransformer {
      * @param baseLoader the class loader of the subclass's bytecode
      * @return the requisite checker or null if the class does not need to be checked or cannot be loaded
      */
-    private org.jboss.byteman.agent.check.ClassChecker getClassChecker(String name, ClassLoader baseLoader)
+    public org.jboss.byteman.agent.check.ClassChecker getClassChecker(String name, ClassLoader baseLoader)
     {
         // we would like to just do this
         // Class superClazz = baseLoader.loadClass(name)

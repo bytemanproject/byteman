@@ -28,6 +28,7 @@ import org.jboss.byteman.agent.adapter.BMJSRInliner;
 import org.jboss.byteman.agent.adapter.BMLocalScopeAdapter;
 import org.jboss.byteman.agent.adapter.RuleCheckAdapter;
 import org.jboss.byteman.agent.adapter.RuleTriggerAdapter;
+import org.jboss.byteman.agent.check.ClassChecker;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.exception.ParseException;
 import org.jboss.byteman.rule.exception.TypeException;
@@ -39,8 +40,10 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Class used to localise the context information employed when creating a rule from a rule script and
@@ -48,7 +51,7 @@ import java.util.Iterator;
  */
 public class TransformContext
 {
-    public TransformContext(RuleScript ruleScript, String triggerClassName, ClassLoader loader, HelperManager helperManager)
+    public TransformContext(Transformer transformer, RuleScript ruleScript, String triggerClassName, ClassLoader loader, HelperManager helperManager)
     {
         // the target method spec may just be a bare method name or it may optionally include a
         // parameter type list and a return type. With Java syntax the return type appears before
@@ -57,6 +60,7 @@ public class TransformContext
         // parseMethodDescriptor call below will eat specs in this latter format.
         final String targetMethodSpec = ruleScript.getTargetMethod();
         String mungedMethodSpec = mungeMethodSpecReturnType(targetMethodSpec);
+        this.transformer = transformer;
         this.ruleScript =  ruleScript;
         this.triggerClassName = triggerClassName;
         this.targetMethodName = TypeHelper.parseMethodName(mungedMethodSpec);
@@ -399,24 +403,184 @@ public class TransformContext
     }
 
     /**
-     * get a class writer which will not attempt to load classes.The default classwriter tries this when a
+     * get a class writer which will not attempt to load classes. The default classwriter tries this when a
      * reference type local var frame slot aligns with a slot of reference type in a successor block's
      * frame. This is merely so it can optimize a slot out of the frame change set in the special case where
-     * f1[slot].type < f2[slot].type or vice versa by using whichever is the maximal class. We avoid classloading
-     * by returning class Object.
+     * f1[slot].type < f2[slot].type or vice versa by using the least common supereclass. We have to use
+     * the Transformer to reuse existing loaded classes and, where a class has not been loaded, to
+     * attempt to load the bytecode as a resource and identify supers via the bytecode.
+     *
      * @param flags
      * @return
      */
     private ClassWriter getNonLoadingClassWriter(int flags)
     {
+        final TransformContext finalContext = this;
         return new ClassWriter(flags) {
+        TransformContext context = finalContext;
             protected String getCommonSuperClass(final String type1, final String type2) {
                 // if we always return Object we cannot go wrong
-                return "java/lang/Object";
+                return context.findLeastCommonSuper(type1, type2);
             }
         };
     }
 
+    public final static String TOFU = "java/lang/Object";       // TOFU = top of universe
+
+    public String findLeastCommonSuper(final String t1, final String t2)
+    {
+        // check the simple cases first
+
+        if (TOFU.equals(t1) || TOFU.equals(t2)) {
+            return TOFU;
+        }
+        if (t1.equals(t2)) {
+            return t2;
+        }
+        // switch to canonical names containing "." instead of "/" when
+        // checking against names found in bytecode but ensure the returned
+        // name contains "/"
+
+        String type1 = t1.replaceAll("/", ".");
+        String type2 = t2.replaceAll("/", ".");
+        ClassChecker checker1 = transformer.getClassChecker(type1, loader);
+        ClassChecker checker2 = transformer.getClassChecker(type2, loader);
+
+        if (checker1.isInterface()) {
+            if (checker2.isInterface()) {
+                // both are interfaces so find the first common parent interface
+                // (including the original interfaces) or return Object
+                LinkedList<String> interfaces2 = listInterfaces(checker2);
+                if (interfaces2.contains(type1)) {
+                    return t1;
+                } else {
+                    LinkedList<String> interfaces1 = listInterfaces(checker1);
+                    while (!interfaces1.isEmpty()) {
+                        String next = interfaces1.pop();
+                        if (next.equals(type2)) {
+                            return t2;
+                        }
+                        if (interfaces2.contains(next)) {
+                            return next.replaceAll("\\.", "/");
+                        }
+                    }
+                    return TOFU;
+                }
+            } else {
+                // type1 is an interface but type2 is a class so return the
+                // first parent interface of type2 which implements either type1 or
+                // one of type1's parent interfaces or return Object
+                LinkedList<String> interfaces2 = listInterfaces(checker2);
+                if (interfaces2.contains(type1)) {
+                    // type1 is an interface of type2
+                    return t1;
+                } else {
+                    LinkedList<String> interfaces1 = listInterfaces(checker1);
+                    while (!interfaces1.isEmpty()) {
+                        String next = interfaces1.pop();
+                        if (interfaces2.contains(next)) {
+                            return next.replaceAll("\\.", "/");
+                        }
+                    }
+                    return TOFU;
+                }
+            }
+        } else {
+            if (checker2.isInterface()) {
+                // type2 is an interface but type1 is a class so return the
+                // first parent interface of type1 which implements either type1 or
+                // one of type1's parent interfaces or return Object
+                LinkedList<String> interfaces1 = listInterfaces(checker1);
+                if (interfaces1.contains(type2)) {
+                    // type2 is an interface of type1
+                    return t1;
+                } else {
+                    LinkedList<String> interfaces2 = listInterfaces(checker2);
+                    while (!interfaces2.isEmpty()) {
+                        String next = interfaces2.pop();
+                        if (interfaces1.contains(next)) {
+                            return next.replaceAll("\\.", "/");
+                        }
+                    }
+                    return TOFU;
+                }
+            } else {
+                // see if the classes have a common super class before Object
+                LinkedList<String> supers2 = listSupers(checker2);
+                if (supers2.contains(type1)) {
+                    // type2 implements interface type1
+                    return t1;
+                } else {
+                    LinkedList<String> supers1 = listSupers(checker1);
+                    while (!supers1.isEmpty()) {
+                        String next = supers1.pop();
+                        if (next.equals(type2)) {
+                            return t2;
+                        }
+                        if (supers2.contains(next)) {
+                            return next.replaceAll("\\.", "/");
+                        }
+                    }
+                    return TOFU;
+                }
+            }
+        }
+    }
+
+    private LinkedList<String> listInterfaces(ClassChecker checker)
+    {
+        LinkedList<String> interfaces = new LinkedList<String>();
+        ClassChecker current = checker;
+        while (current != null) {
+            LinkedList<String> toCheck = new LinkedList<String>();
+            int count = current.getInterfaceCount();
+            for (int i = 0; i < count; i++) {
+                toCheck.add(current.getInterface(i));
+            }
+            // now recursively work through unchecked interfaces adding them
+            // if not already processed and including the interfaces they extend
+            // in the toCheck list.
+            while (!toCheck.isEmpty()) {
+                String next = toCheck.pop();
+                if (!interfaces.contains(next)) {
+                    interfaces.add(next);
+                    ClassChecker newChecker = transformer.getClassChecker(next, loader);
+                    count = newChecker.getInterfaceCount();
+                    for (int i = 0; i < count; i++) {
+                        toCheck.add(newChecker.getInterface(i));
+                    }
+                }
+            }
+            // repeat for the next super in line up to java/lang/Object
+            String superType = current.getSuper();
+            if (superType == null || TOFU.equals(superType)) {
+                current = null;
+            } else {
+                current = transformer.getClassChecker(superType, loader);
+            }
+        }
+
+        return interfaces;
+    }
+
+    private LinkedList<String> listSupers(ClassChecker checker)
+    {
+        LinkedList<String> supers = new LinkedList<String>();
+        ClassChecker current = checker;
+        while (current != null) {
+            String superType = current.getSuper();
+            if (superType != null) {
+                supers.add(superType);
+                current = transformer.getClassChecker(superType, loader);
+            } else {
+                current = null;
+            }
+        }
+
+        return supers;
+    }
+
+    private Transformer transformer;
     private RuleScript ruleScript;
     private String triggerClassName;
     private String targetMethodName;
