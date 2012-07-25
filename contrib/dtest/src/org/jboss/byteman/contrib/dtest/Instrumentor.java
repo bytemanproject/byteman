@@ -164,16 +164,43 @@ public class Instrumentor
      */
     public void injectOnCall(Class clazz, String methodName, String action) throws Exception
     {
+        injectOnMethod(clazz, methodName, "true", action, "ENTRY");
+    }
+
+    /**
+     * Inject an action to take place upon exit of the specified class.method
+     *
+     * @param clazz The Class in which the injection point resides.
+     * @param methodName The method which should be intercepted.
+     * @param action The action that should take place upon invocation of the method.
+     * @throws Exception in case of failure.
+     */
+    public void injectOnExit(Class clazz, String methodName, String action) throws Exception
+    {
+        injectOnMethod(clazz, methodName, "true", action, "EXIT");
+    }
+
+    /**
+     * Inject an action to take place at a given point within the specified class.method
+     *
+     * @param clazz The Class in which the injection point resides.
+     * @param methodName The method which should be intercepted.
+     * @param action The action that should take place upon invocation of the method.
+     * @param where the injection point e.g. "ENTRY".
+     * @throws Exception in case of failure.
+     */
+    public void injectOnMethod(Class clazz, String methodName, String condition, String action, String where) throws Exception
+    {
         String className = clazz.getCanonicalName();
-        String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_callinjection";
+        String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_injectionat"+where;
 
         RuleBuilder ruleBuilder = new RuleBuilder(ruleName);
-        ruleBuilder.onClass(className).inMethod(methodName).atEntry();
+        ruleBuilder.onClass(className).inMethod(methodName).at(where);
         ruleBuilder.usingHelper(BytemanTestHelper.class);
-        ruleBuilder.whenTrue().doAction(action);
+        ruleBuilder.when(condition).doAction(action);
 
         String ruleText = ruleBuilder.toString();
-        installScript("onCall"+className+"."+methodName, ruleText);
+        installScript("onCall"+className+"."+methodName+"."+where, ruleText);
     }
 
     /**
@@ -282,7 +309,7 @@ public class Instrumentor
      */
     public void crashAtMethod(String className, String methodName, String where) throws Exception
     {
-        String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_crashatexit";
+        String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_crashat"+where;
 
         String action = "debug(\"killing JVM\"), killJVM()";
 
@@ -291,7 +318,7 @@ public class Instrumentor
         ruleBuilder.usingHelper(BytemanTestHelper.class);
         ruleBuilder.whenTrue().doAction(action);
         
-        installScript("crash"+className+"."+methodName, ruleBuilder.toString());
+        installScript("crash"+className+"."+methodName+"."+where, ruleBuilder.toString());
     }
 
     /**
@@ -303,7 +330,7 @@ public class Instrumentor
      * @param scriptString The text of the script i.e. one or more Rules.
      * @throws Exception in case of failure.
      */
-    private void installScript(String scriptName, String scriptString)
+    public void installScript(String scriptName, String scriptString)
             throws Exception
     {
         System.out.println("installing: "+scriptString);
