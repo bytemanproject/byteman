@@ -50,6 +50,13 @@ public abstract class AssignableExpression extends Expression
     }
 
     /**
+     * typecheck the expression as an lvalue of an assignment operation
+     * @throws TypeException
+     */
+    public abstract Type typeCheckAssign(Type expected)
+            throws TypeException;
+
+    /**
      * execute an assignment to the referenced location by interpretation of the expression,
      * using the object passed in this call
      * @param helperAdapter an execution context associated with the rule which contains a map of

@@ -37,6 +37,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
@@ -54,6 +55,7 @@ public class FieldExpression extends AssignableExpression
         this.ownerType = null;
         this.indirectStatic = null;
         this.fieldIndex = -1;
+        this.isArrayLength = false;
     }
 
     /**
@@ -100,8 +102,44 @@ public class FieldExpression extends AssignableExpression
     {
         bind();
     }
-
     public Type typeCheck(Type expected) throws TypeException {
+        checkIndirectStatic();
+        if (indirectStatic != null) {
+            // this is really a static field reference pointed to by owner so get it to type check
+            type = Type.dereference(indirectStatic.typeCheck(expected));
+        } else {
+            typeCheckAny();
+
+            if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
+                throw new TypeException("FieldExpresssion.typeCheck : invalid expected type " + expected.getName() + getPos());
+            }
+        }
+        return type;
+    }
+
+    public Type typeCheckAssign(Type expected) throws TypeException {
+        checkIndirectStatic();
+        if (indirectStatic != null) {
+            // this is really a static field reference pointed to by owner so get it to type check
+            type = Type.dereference(indirectStatic.typeCheckAssign(expected));
+            return type;
+        } else {
+            typeCheckAny();
+
+            // we cannot accept an array length access in this position
+            if (isArrayLength) {
+                throw new TypeException("FieldExpresssion.typeCheck : invalid attempt to update array length " + owner + getPos());
+            }
+
+            if (Type.dereference(expected).isDefined() && !type.isAssignableFrom(expected)) {
+                throw new TypeException("FieldExpresssion.typeCheck : invalid value type " + expected.getName() + "for assignment" + getPos());
+            }
+        }
+        return type;
+    }
+
+    private void checkIndirectStatic() throws TypeException
+    {
         if (owner == null && pathList != null) {
             // factor off a typename from the path
             TypeGroup typeGroup = getTypeGroup();
@@ -137,24 +175,29 @@ public class FieldExpression extends AssignableExpression
             // get rid of the path list now
             this.pathList = null;
         }
+    }
 
-        if (indirectStatic  != null) {
-            // this is really a static field reference pointed to by owner so get it to type check
-            type = Type.dereference(indirectStatic.typeCheck(expected));
-            return type;
-        } else {
+    private void typeCheckAny() throws TypeException {
 
-            // ok, type check the owner and then use it to derive the field type
+        // ok, type check the owner and then use it to derive the field type
 
-            ownerType = Type.dereference(owner.typeCheck(Type.UNDEFINED));
+        ownerType = Type.dereference(owner.typeCheck(Type.UNDEFINED));
             
-            if (ownerType.isUndefined()) {
-                throw new TypeException("FieldExpresssion.typeCheck : unbound owner type for field " + fieldName + getPos());
+        if (ownerType.isUndefined()) {
+            throw new TypeException("FieldExpresssion.typeCheck : unbound owner type for field " + fieldName + getPos());
+        }
+
+        Class ownerClazz = ownerType.getTargetClass();
+        Class valueClass = null;
+
+        if (ownerType.isArray()) {
+            if (fieldName.equals("length")) {
+                isArrayLength = true;
+                type = Type.I;
+            } else {
+                throw new TypeException("FieldExpresssion.typeCheck : array type " + ownerType.getName() + " does not accept field reference " + fieldName + getPos());
             }
-
-            Class ownerClazz = ownerType.getTargetClass();
-            Class valueClass = null;
-
+        } else {
             try {
                 field  = lookupField(ownerClazz);
             } catch (NoSuchFieldException e) {
@@ -167,12 +210,6 @@ public class FieldExpression extends AssignableExpression
 
             valueClass = field.getType();
             type = getTypeGroup().ensureType(valueClass);
-
-            if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
-                throw new TypeException("FieldExpresssion.typeCheck : invalid expected type " + expected.getName() + getPos());
-            }
-
-            return type;
         }
     }
 
@@ -180,13 +217,23 @@ public class FieldExpression extends AssignableExpression
     {
         if (indirectStatic != null) {
             return indirectStatic.interpret(helper);
+        } else if (isArrayLength) {
+            Object value = owner.interpret(helper);
+            if (value == null) {
+                throw new ExecuteException("FieldExpression.interpret : attempted array length indirection through null value " + owner + getPos());
+            }
+            try {
+                return Array.getLength(value);
+            } catch (Exception e) {
+                throw new ExecuteException("FieldExpression.interpret : exception accessing array length " + owner + getPos(), e);
+            }
         } else {
             try {
                 // TODO the reference should really be an expression?
                 Object value = owner.interpret(helper);
 
                 if (value == null) {
-                    throw new ExecuteException("FieldExpression.interpret : attempted field indirection through null value " + token.getText() + getPos());
+                    throw new ExecuteException("FieldExpression.interpret : attempted field indirection through null value " + owner + getPos());
                 }
 
                 return field.get(value);
@@ -211,6 +258,11 @@ public class FieldExpression extends AssignableExpression
         if (indirectStatic != null) {
             // this is just wrapping a static field expression so compile it
             indirectStatic.compile(mv, compileContext);
+        } else if (isArrayLength) {
+            owner.compile(mv, compileContext);
+            mv.visitInsn(Opcodes.ARRAYLENGTH);
+            // we removed the owner and replaced with expected words
+            compileContext.addStackCount(expected - 1);
         } else {
             if (isPublicField) {
                 // we can use GETFIELD to access a public field
@@ -303,6 +355,8 @@ public class FieldExpression extends AssignableExpression
     private Type ownerType;
     private Field field;
     private AssignableExpression indirectStatic;
+    private boolean isArrayLength;
+
     /**
      * true if this is a public field otherwise false
      */
@@ -323,7 +377,7 @@ public class FieldExpression extends AssignableExpression
                 Object ownerInstance = owner.interpret(helperAdapter);
 
                 if (ownerInstance == null) {
-                    throw new ExecuteException("FieldExpression.interpret : attempted field indirection through null value " + token.getText() + getPos());
+                    throw new ExecuteException("FieldExpression.interpret : attempted field indirection through null value " + owner + getPos());
                 }
 
                 field.set(ownerInstance, value);

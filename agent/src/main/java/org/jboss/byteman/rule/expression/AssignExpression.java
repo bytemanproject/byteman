@@ -54,11 +54,14 @@ public class AssignExpression extends BinaryOperExpression
     }
 
     public Type typeCheck(Type expected) throws TypeException {
-        // we accept any type we are given and check the var type then we use its type to check the expression
+        // we accept any type we are given and check the rhs expression
+        // then we type check the lhs ensuring that it can be assigned
+        // with a value of this type. the resulting type has to be that
+        // of the lhs.
         // if either operand cannot type check then it will throw an error
 
-        Type type1 = lhs.typeCheck(expected);
-        Type type2 = getOperand(1).typeCheck(type1);
+        Type type2 = getOperand(1).typeCheck(expected);
+        Type type1 = lhs.typeCheckAssign(type2);
         type = type1;
         return type;
     }

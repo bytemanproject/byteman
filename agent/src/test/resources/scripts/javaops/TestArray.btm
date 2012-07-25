@@ -35,3 +35,20 @@ DO test.log("triggerMethod1 : iarray[0] == " + iarray[0]);
    test.log("triggerMethod1 : oarray[0][0] == " + oarray[0][0]);
    return oarray[0]
 ENDRULE
+
+RULE test array length and array updates
+CLASS TestArray
+METHOD triggerMethod2(int[], Object[][])
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER CALL log
+BIND test : Test = $0;
+     iarray : int[] = $1;
+     oarray : Object[][] = $2;
+     l : int = oarray[0].length
+IF TRUE
+DO test.log("triggerMethod2 : iarray.length == " + iarray.length);
+   test.log("triggerMethod2 : oarray[0].length == " + l);
+   test.log("triggerMethod2 : oarray[0][" + (l - 1) + "] == " + oarray[0][l - 1]);
+   oarray[0][l - 1] = "goodbye";
+ENDRULE
+

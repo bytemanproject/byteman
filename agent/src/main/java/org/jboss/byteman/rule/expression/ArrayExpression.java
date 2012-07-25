@@ -75,6 +75,26 @@ public class ArrayExpression extends AssignableExpression
     }
 
     public Type typeCheck(Type expected) throws TypeException {
+        typeCheckAny();
+        if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
+            throw new TypeException("ArrayExpression.typeCheck : invalid expected result type " + expected.getName() + getPos());
+        }
+
+        return type;
+    }
+
+    public Type typeCheckAssign(Type expected) throws TypeException
+    {
+        typeCheckAny();
+        if (Type.dereference(expected).isDefined() && !type.isAssignableFrom(expected)) {
+            throw new TypeException("ArrayExpression.typeCheckAssign : invalid value type " + expected.getName() + " for array assignment " + getPos());
+        }
+
+        return type;
+    }
+
+    private void typeCheckAny() throws TypeException
+    {
         Type arrayType = arrayRef.typeCheck(Type.UNDEFINED);
         Type nextType = arrayType;
         for (Expression expr : idxList) {
@@ -85,11 +105,6 @@ public class ArrayExpression extends AssignableExpression
             expr.typeCheck(Type.N);
         }
         type = nextType;
-        if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
-            throw new TypeException("ArrayExpression.typeCheck : invalid expected result type " + expected.getName() + getPos());
-        }
-
-        return type;
     }
 
     public Object interpret(HelperAdapter helper) throws ExecuteException {

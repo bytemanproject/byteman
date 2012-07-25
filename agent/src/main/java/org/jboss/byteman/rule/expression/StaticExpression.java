@@ -75,6 +75,25 @@ public class StaticExpression extends AssignableExpression
     }
 
     public Type typeCheck(Type expected) throws TypeException {
+        typeCheckAny();
+
+        if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
+            throw new TypeException("StaticExpression.typeCheck : invalid expected return type " + expected.getName() + getPos());
+        }
+        return type;
+    }
+
+    public Type typeCheckAssign(Type expected) throws TypeException {
+        typeCheckAny();
+
+        if (Type.dereference(expected).isDefined() && !type.isAssignableFrom(expected)) {
+            throw new TypeException("StaticExpression.typeCheck : invalid value type " + expected.getName() + " for static field assignment " + getPos());
+        }
+        return type;
+    }
+
+    public void typeCheckAny() throws TypeException {
+
         // look for a class whose name matches some initial segment of pathList
         TypeGroup typeGroup = getTypeGroup();
         ownerType = Type.dereference(typeGroup.create(ownerTypeName));
@@ -97,11 +116,6 @@ public class StaticExpression extends AssignableExpression
 
         clazz = field.getType();
         type = typeGroup.ensureType(clazz);
-
-        if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
-            throw new TypeException("StaticExpression.typeCheck : invalid expected return type " + expected.getName() + getPos());
-        }
-        return type;
     }
 
     public Object interpret(HelperAdapter helper) throws ExecuteException {

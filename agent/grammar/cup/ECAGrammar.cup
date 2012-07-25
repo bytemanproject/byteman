@@ -604,6 +604,8 @@ expr_field_expr
 		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, se); :}
 	|	meth_expr:me DOT simple_name:f
 		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, me); :}
+	|	array_expr:ae DOT simple_name:f
+		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, ae); :}
 	|	expr_field_expr:efe DOT simple_name:f
 		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, efe); :}
 	;

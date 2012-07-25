@@ -104,6 +104,26 @@ public class Variable extends AssignableExpression
     }
 
     public Type typeCheck(Type expected) throws TypeException {
+
+        typeCheckAny();
+
+        if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
+            throw new TypeException("Variable.typeCheck() : invalid result type : " + expected.getName() + getPos());
+        }
+        return type;
+    }
+
+    public Type typeCheckAssign(Type expected) throws TypeException {
+
+        typeCheckAny();
+
+        if (Type.dereference(expected).isDefined() && !type.isAssignableFrom(expected)) {
+            throw new TypeException("Variable.typeCheck() : invalid value type : " + expected.getName() + " for assignment " + getPos());
+        }
+        return type;
+    }
+
+    public void typeCheckAny() throws TypeException {
         // type must be defined by now or we are in trouble
 
         Binding binding = getBindings().lookup(name);
@@ -113,10 +133,6 @@ public class Variable extends AssignableExpression
         if (type.isUndefined()) {
             throw new TypeException("Variable.typeCheck : unable to derive type for variable " + name +  getPos());
         }
-        if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
-            throw new TypeException("Variable.typeCheck() : invalid result type : " + expected.getName() + getPos());
-        }
-        return type;
     }
 
     public Object interpret(HelperAdapter helper) throws ExecuteException {

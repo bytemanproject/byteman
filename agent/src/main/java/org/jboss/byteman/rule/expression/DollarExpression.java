@@ -160,6 +160,27 @@ public class DollarExpression extends AssignableExpression
     }
 
     public Type typeCheck(Type expected) throws TypeException {
+
+       typeCheckAny();
+
+        if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
+            throw new TypeException("DollarExpression.typeCheck : invalid expected type " + expected.getName() + " for bound parameter " + name + getPos());            
+        }
+        return type;
+    }
+
+    public Type typeCheckAssign(Type expected) throws TypeException {
+
+        typeCheckAny();
+
+        if (Type.dereference(expected).isDefined() && !type.isAssignableFrom(expected)) {
+            throw new TypeException("DollarExpression.typeCheck : invalid value type " + expected.getName() + " for assignment to bound parameter " + name + getPos());
+        }
+        return type;
+    }
+
+    private void typeCheckAny()
+    {
         // if the associated binding is an alias then dereference it
 
         if (binding.isAlias()) {
@@ -167,11 +188,6 @@ public class DollarExpression extends AssignableExpression
         }
 
         type = binding.getType();
-        
-        if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
-            throw new TypeException("DollarExpression.typeCheck : invalid expected type " + expected.getName() + " for bound parameter " + name + getPos());            
-        }
-        return type;
     }
 
     public Object interpret(HelperAdapter helper) throws ExecuteException

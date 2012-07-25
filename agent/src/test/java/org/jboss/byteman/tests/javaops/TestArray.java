@@ -37,6 +37,7 @@ public class TestArray extends Test
 
     static int[] iarray;
     static Object[][] oarray;
+    static int runNumber = 0;
 
     public void test()
     {
@@ -55,6 +56,21 @@ public class TestArray extends Test
         }
 
         checkOutput(true);
+
+	runNumber++;
+
+	oarray[0] = new Object[2];
+	oarray[0][0] = oarray[0][1] = "hello";
+
+        try {
+            log("calling TestArray.triggerMethod2");
+            triggerMethod2(iarray, oarray);
+            log("called TestArray.triggerMethod2 : oarray[0][1] == " + oarray[0][1]);
+        } catch (Exception e) {
+            log(e);
+        }
+
+	checkOutput(true);
     }
 
     public Object[] triggerMethod1(int[] iarray, Object[][] oarray)
@@ -63,13 +79,27 @@ public class TestArray extends Test
         return null;
     }
 
+    public void triggerMethod2(int[] iarray, Object[][] oarray)
+    {
+        log("inside TestArray.triggerMethod2");
+    }
+
     @Override
     public String getExpected() {
-        logExpected("calling TestArray.triggerMethod1");
-        logExpected("inside TestArray.triggerMethod1");
-        logExpected("triggerMethod1 : iarray[0] == " + iarray[0]);
-        logExpected("triggerMethod1 : oarray[0][0] == " + oarray[0][0]);
-        logExpected("called TestArray.triggerMethod1 : result == " + oarray[0]);
+	if (runNumber == 0) {
+	    logExpected("calling TestArray.triggerMethod1");
+	    logExpected("inside TestArray.triggerMethod1");
+	    logExpected("triggerMethod1 : iarray[0] == " + iarray[0]);
+	    logExpected("triggerMethod1 : oarray[0][0] == " + oarray[0][0]);
+	    logExpected("called TestArray.triggerMethod1 : result == " + oarray[0]);
+	} else {
+	    logExpected("calling TestArray.triggerMethod2");
+	    logExpected("inside TestArray.triggerMethod2");
+	    logExpected("triggerMethod2 : iarray.length == " + 1);
+	    logExpected("triggerMethod2 : oarray[0].length == " + 2);
+	    logExpected("triggerMethod2 : oarray[0][1] == hello");
+	    logExpected("called TestArray.triggerMethod2 : oarray[0][1] == goodbye");
+	}
 
         return super.getExpected();
     }
