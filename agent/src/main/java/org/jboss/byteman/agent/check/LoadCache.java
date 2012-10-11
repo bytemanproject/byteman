@@ -53,6 +53,11 @@ public class LoadCache
 
     public Class lookupClass(String name, ClassLoader baseLoader)
     {
+        // if we get used by the offline type checker inst will be null so fail quick without an NPE
+        if (inst == null) {
+            return null;
+        }
+
         HashMap<String, Class> baseLoaderMap = null;
         Class clazz;
 
