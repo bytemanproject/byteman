@@ -923,4 +923,9 @@ public class Rule
             throw new  ExecuteException("Rule.invokeAccessibleMethod : unexpected error invoking non-public method in rule " + getName(), e);
         }
     }
+
+    public long getObjectSize(Object o)
+    {
+        return helperManager.getObjectSize(o);
+    }
 }

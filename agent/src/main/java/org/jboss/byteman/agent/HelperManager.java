@@ -138,6 +138,21 @@ public class HelperManager
         }
     }
 
+    /**
+     * This method exposes a capability of the Byteman agent's
+     * Instrumentation instance while avoding exposing the instance
+     * itself. It returns an estimate of the object size or -1 in case
+     * an agent has not been installed.
+     */
+    public long getObjectSize(Object o)
+    {
+        if (inst == null) {
+            System.out.println("Cannot calculate object size since a Byteman agent has not been installed");
+            return -1;
+        }
+        return this.inst.getObjectSize(o);
+    }
+
     // private parts
 
     /**

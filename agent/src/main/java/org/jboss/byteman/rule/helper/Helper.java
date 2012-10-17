@@ -2244,6 +2244,18 @@ public class Helper
         }
     }
 
+    // exposed functionality of the instrumentation instance
+
+    /**
+     * provide an estimate of an object's size
+     *
+     * return -1 if not running in a real agent
+     */
+    public long getObjectSize(Object o)
+    {
+        return rule.getObjectSize(o);
+    }
+
     /**
      * return a unique name for the trigger point associated with this rule. n.b. a single rule may
      * give rise to more than one trigger point if the rule applies to several methods with the same
