@@ -36,6 +36,7 @@ import org.jboss.byteman.rule.grammar.ParseNode;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Iterator;
 import java.util.ArrayList;
@@ -205,9 +206,41 @@ public class MethodExpression extends Expression
         boolean isStatic = (recipient == null);
 
         int arity = arguments.size();
-        while (clazz != null) {
+        LinkedList<Class<?>> clazzes = new LinkedList<Class<?>>();
+        if (publicOnly) {
+            // we can use getDeclaredMethods on just one class to list all possible candidates
+            clazzes.add(clazz);
+        } else {
+            // we need to iterate over the class and interface hierarchy bottom up
+            while (clazz != null) {
+                clazzes.add(clazz);
+                // collect all direct interfaces in order
+                Class[] ifaces = clazz.getInterfaces();
+                LinkedList<Class<?>> toBeChecked = new LinkedList<Class<?>>();
+                for (int i = 0; i < ifaces.length; i++) {
+                    toBeChecked.addLast(ifaces[i]);
+                }
+                // process each interface in turn, also collecting its parent interfaces for consideration
+                while (!toBeChecked.isEmpty()) {
+                    Class<?> iface = toBeChecked.pop();
+                    // only need to process it if we have not already seen it
+                    if (!clazzes.contains(iface)) {
+                        clazzes.addLast(iface);
+                        Class[] ifaces2 = iface.getInterfaces();
+                        // don't bother to check for repeats here as we check later anyway
+                        for (int j = 0; j < ifaces2.length; j++) {
+                            toBeChecked.addLast(ifaces2[j]);
+                        }
+                    }
+                }
+                // move on to the next class
+                clazz = clazz.getSuperclass();
+            }
+        }
+        // now check for a matching method in each class or interface in order
+        while (!clazzes.isEmpty()) {
+            clazz = clazzes.pop();
             List<Method> candidates = new ArrayList<Method>();
-            Class<?> superClazz = clazz.getSuperclass();
             try {
                 Method[] methods;
                 if (publicOnly) {
@@ -279,12 +312,6 @@ public class MethodExpression extends Expression
 
             } catch (SecurityException e) {
                 // continue in case we can find an implementation
-            }
-
-            if (publicOnly) {
-                clazz = null;
-            } else {
-                clazz = superClazz;
             }
         }
 
