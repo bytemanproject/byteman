@@ -92,7 +92,8 @@
     </distributionManagement>
 
     <properties>
-        <tools.jar>${java.home}/../lib/tools.jar</tools.jar>
+        <!-- actual path to tools.jar is defined in the profiles below -->
+        <tools.jar>/file-not-found/tools.jar</tools.jar>
 
         <!-- Decouple file encoding of the platform encoding -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -357,18 +358,31 @@
     </modules>
 
     <profiles>
-      <!-- We override the tools.jar property on mac osx -->
+      <!-- tools classes are needed by byteman -->
       <profile>
-	<id>mac</id>
-	<activation>
-	  <os>
-	    <family>mac</family>
-	  </os>
-	</activation>
-	<properties>
-	  <tools.jar>${java.home}/../Classes/classes.jar</tools.jar>
-	</properties>
+        <!-- normally tools jar is in ../lib/tools.jar -->
+        <id>default-toolsjar-profile</id>
+        <activation>
+          <file>
+            <exists>${java.home}/../lib/tools.jar</exists>
+          </file>
+        </activation>
+        <properties>
+          <tools.jar>${java.home}/../lib/tools.jar</tools.jar>
+        </properties>
       </profile>
+      <profile>
+        <!-- on pre-jdk7 mac releases tools jar is in ../Classes/classes.jar -->
+        <id>mac-toolsjar-profile</id>
+        <activation>
+          <file>
+            <exists>${java.home}/../Classes/classes.jar</exists>
+          </file>
+        </activation>
+        <properties>
+          <tools.jar>${java.home}/../Classes/classes.jar</tools.jar>
+        </properties>
+      </profile>      <!-- We override the tools.jar property on mac osx -->
       <!--
 	  new profile for releasing to maven central
 	  to do a release update the version number from a SNAPSHOT
