@@ -21,23 +21,22 @@
 #
 # @authors Andrew Dinn
 #
-# Test for bug reported by Flavia Rainone JIRA BYTEMAN-140 where the Transformer
-# injection through interfaces was failing to traverse the interface extends hierarchy.
+# Test for BYTEMAN-219 to ensure that it is possible to call an interface method
+# inherited by an abstract class even if the abstract class does not iself
+# implement the method. the interface method will always be defined by any
+# instantiable subclass so a call to the method should typecheck ands execute
+# correctly.
+#
+# in this example C3 is an abstract class which implements interface I4
+# but leaves it to its subclass C4 to provide the actual implementation of
+# method interfaceMethod. The type checker should still detect that this
+# method can safely be called on any instance of C3.
 
-RULE test interface injection without overriding
-INTERFACE I3
+RULE test abstract interface method call
+CLASS C3
 METHOD testMethod(Test)
 HELPER org.jboss.byteman.tests.helpers.Default
-BIND test : TestInterfaceHierarchy = $1
+BIND test : TestAbstractInterfaceCall = $1
 IF TRUE
-DO test.log("I3.testMethod() AT ENTRY");
-ENDRULE
-
-RULE test interface injection with overriding
-INTERFACE ^I3
-METHOD testMethod(Test)
-HELPER org.jboss.byteman.tests.helpers.Default
-BIND test : TestInterfaceHierarchy = $1
-IF TRUE
-DO test.log("^I3.testMethod() AT ENTRY");
+DO $0.interfaceMethod(test)
 ENDRULE

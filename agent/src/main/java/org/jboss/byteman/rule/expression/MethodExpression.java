@@ -413,7 +413,7 @@ public class MethodExpression extends Expression
 
             if (recipient == null) {
                 mv.visitMethodInsn(Opcodes.INVOKESTATIC, ownerName, method.getName(), getDescriptor());
-            } else if (recipient.getClass().isInterface()) {
+            } else if (method.getDeclaringClass().isInterface()) {
                 mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, ownerName, method.getName(), getDescriptor());
             } else {
                 mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, ownerName, method.getName(), getDescriptor());
