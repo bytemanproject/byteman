@@ -27,6 +27,7 @@ package org.jboss.byteman.agent.submit;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -548,6 +549,29 @@ public class Submit
     }
 
     /**
+     * Deploys rules into Byteman, where the rule definitions are found in the
+     * given streams. The rule definitions found in the
+     * streams are actually passed down directly to Byteman, not the streams
+     * themselves. Therefore, these streams must be accessible from the machine where this
+     * client is running (i.e. the streams are not loaded directly by the Byteman
+     * agent).
+     *
+     * This method is useful for using rules files from the classpath.
+     *
+     * @param streams
+     *            the streams containing the rule definitions to be deployed
+     *            to Byteman
+     *
+     * @return the results of the deployment
+     *
+     * @throws Exception
+     *             if the request failed
+     */
+    public String addRulesFromStreams(List<InputStream> streams) throws Exception {
+        List<ScriptText> scripts = getRulesFromRuleStreams(streams);
+        return addScripts(scripts);
+    }
+    /**
      * Deploys rule scripts into Byteman
      *
      * @param scripts
@@ -616,6 +640,31 @@ public class Submit
      */
     public String deleteRulesFromFiles(List<String> filePaths) throws Exception {
         List<ScriptText> scripts = getRulesFromRuleFiles(filePaths);
+        return deleteScripts(scripts);
+    }
+
+    /**
+     * Deletes rules from Byteman, where the rule definitions are found in the
+     * given streams. After this method is done, the
+     * given rules will no longer be processed by Byteman. The rule definitions
+     * found in the streams are actually passed down directly to Byteman, not the
+     * streams themselves. Therefore, these streams must be accessible on the machine
+     * where this client is running (i.e. the streams are not read directly by the
+     * Byteman agent).
+     *
+     * This method is useful for using rules files from the classpath.
+     *
+     * @param streams
+     *            the streams containing the rule definitions to be deleted
+     *            from Byteman
+     *
+     * @return the results of the deletion
+     *
+     * @throws Exception
+     *             if the request failed
+     */
+    public String deleteRulesFromStreams(List<InputStream> streams) throws Exception {
+        List<ScriptText> scripts = getRulesFromRuleStreams(streams);
         return deleteScripts(scripts);
     }
 
@@ -742,12 +791,57 @@ public class Submit
         }
     }
 
+    private List<ScriptText> getRulesFromRuleStreams(List<InputStream> streams) throws Exception {
+        if (streams == null || streams.size() == 0) {
+            return new ArrayList<ScriptText>(0);
+        }
+        List<ScriptText> scripts = new ArrayList<ScriptText>(streams.size());
+
+        for (InputStream is : streams) {
+
+            // read in the current rule file
+            try {
+                InputStreamReader reader = new InputStreamReader(is);
+                ScriptText scriptText = readScriptText("What here?", reader);
+
+                // put the current rule definition in our list of rules to add
+                scripts.add(scriptText);
+            } catch (IOException e) {
+                throw new Exception("Error reading from rule file: " + is, e);
+            }
+        }
+
+        return scripts;
+    }
+
+    private List<ScriptText> getRulesFromRuleResources2(List<URL> resourcePaths) throws Exception {
+        if (resourcePaths == null || resourcePaths.size() == 0) {
+            return new ArrayList<ScriptText>(0);
+        }
+        List<ScriptText> scripts = new ArrayList<ScriptText>(resourcePaths.size());
+
+        for (URL resourcePath : resourcePaths) {
+            
+            // read in the current rule file
+            try {
+                InputStream is = resourcePath.openStream();
+                InputStreamReader reader = new InputStreamReader(is);
+                ScriptText scriptText = readScriptText(resourcePath.getPath(), reader);
+
+                // put the current rule definition in our list of rules to add
+                scripts.add(scriptText);
+            } catch (IOException e) {
+                throw new Exception("Error reading from rule file: " + resourcePath, e);
+            }
+        }
+
+        return scripts;
+    }
+
     private List<ScriptText> getRulesFromRuleFiles(List<String> filePaths) throws Exception {
         if (filePaths == null || filePaths.size() == 0) {
             return new ArrayList<ScriptText>(0);
         }
-
-        final char[] readBuffer = new char[4096];
         List<ScriptText> scripts = new ArrayList<ScriptText>(filePaths.size());
 
         for (String filePath : filePaths) {
@@ -757,10 +851,26 @@ public class Submit
             }
 
             // read in the current rule file
-            StringBuilder scriptText = new StringBuilder();
             try {
+                
                 FileInputStream fis = new FileInputStream(filePath);
                 InputStreamReader reader = new InputStreamReader(fis);
+                ScriptText scriptText = readScriptText(filePath, reader);
+
+                // put the current rule definition in our list of rules to add
+                scripts.add(scriptText);
+            } catch (IOException e) {
+                throw new Exception("Error reading from rule file: " + filePath, e);
+            }
+        }
+
+        return scripts;
+    }
+
+    private ScriptText readScriptText(String filePath, InputStreamReader reader) throws Exception {
+        final char[] readBuffer = new char[4096];
+        StringBuilder scriptText = new StringBuilder();
+            try {
                 int read = reader.read(readBuffer);
                 while (read > 0) {
                     scriptText.append(readBuffer, 0, read);
@@ -768,14 +878,10 @@ public class Submit
                 }
                 reader.close();
 
-                // put the current rule definition in our list of rules to add
-                scripts.add(new ScriptText(filePath, scriptText.toString()));
+                return new ScriptText(filePath, scriptText.toString());
             } catch (IOException e) {
                 throw new Exception("Error reading from rule file: " + filePath, e);
             }
-        }
-
-        return scripts;
     }
 
     private boolean confirmRuleFileValidity(String path) {
