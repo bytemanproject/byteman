@@ -27,7 +27,6 @@ package org.jboss.byteman.agent.submit;
 
 import java.io.*;
 import java.net.Socket;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -550,17 +549,17 @@ public class Submit
     }
 
     /**
-     * Deploys rules into Byteman, where the rule definitions are found at the
-     * URLs at the given paths. The rule definitions found at the
-     * URLs are actually passed down directly to Byteman, not the URLs
-     * themselves. Therefore, these URLs must be accessible from the machine where this
-     * client is running (i.e. the URLs are not loaded directly by the Byteman
+     * Deploys rules into Byteman, where the rule definitions are found in the
+     * given streams. The rule definitions found in the
+     * streams are actually passed down directly to Byteman, not the streams
+     * themselves. Therefore, these streams must be accessible from the machine where this
+     * client is running (i.e. the streams are not loaded directly by the Byteman
      * agent).
      *
      * This method is useful for using rules files from the classpath.
      *
-     * @param resourcePaths
-     *            the URLs containing the rule definitions to be deployed
+     * @param streams
+     *            the streams containing the rule definitions to be deployed
      *            to Byteman
      *
      * @return the results of the deployment
@@ -568,11 +567,10 @@ public class Submit
      * @throws Exception
      *             if the request failed
      */
-    public String addRulesFromResources(List<URL> resourcePaths) throws Exception {
-        List<ScriptText> scripts = getRulesFromRuleResources(resourcePaths);
+    public String addRulesFromStreams(List<InputStream> streams) throws Exception {
+        List<ScriptText> scripts = getRulesFromRuleStreams(streams);
         return addScripts(scripts);
     }
-
     /**
      * Deploys rule scripts into Byteman
      *
@@ -647,17 +645,17 @@ public class Submit
 
     /**
      * Deletes rules from Byteman, where the rule definitions are found in the
-     * resources found at the given URLs. After this method is done, the
+     * given streams. After this method is done, the
      * given rules will no longer be processed by Byteman. The rule definitions
-     * found at the URLs are actually passed down directly to Byteman, not the
-     * URLs themselves. Therefore, these URLs must be accessible on the machine
-     * where this client is running (i.e. the URLs are not read directly by the
+     * found in the streams are actually passed down directly to Byteman, not the
+     * streams themselves. Therefore, these streams must be accessible on the machine
+     * where this client is running (i.e. the streams are not read directly by the
      * Byteman agent).
      *
      * This method is useful for using rules files from the classpath.
      *
-     * @param resourcePaths
-     *            the URLS to files containing the rule definitions to be deleted
+     * @param streams
+     *            the streams containing the rule definitions to be deleted
      *            from Byteman
      *
      * @return the results of the deletion
@@ -665,8 +663,8 @@ public class Submit
      * @throws Exception
      *             if the request failed
      */
-    public String deleteRulesFromResources(List<URL> resourcePaths) throws Exception {
-        List<ScriptText> scripts = getRulesFromRuleResources(resourcePaths);
+    public String deleteRulesFromStreams(List<InputStream> streams) throws Exception {
+        List<ScriptText> scripts = getRulesFromRuleStreams(streams);
         return deleteScripts(scripts);
     }
 
@@ -793,7 +791,30 @@ public class Submit
         }
     }
 
-    private List<ScriptText> getRulesFromRuleResources(List<URL> resourcePaths) throws Exception {
+    private List<ScriptText> getRulesFromRuleStreams(List<InputStream> streams) throws Exception {
+        if (streams == null || streams.size() == 0) {
+            return new ArrayList<ScriptText>(0);
+        }
+        List<ScriptText> scripts = new ArrayList<ScriptText>(streams.size());
+
+        for (InputStream is : streams) {
+
+            // read in the current rule file
+            try {
+                InputStreamReader reader = new InputStreamReader(is);
+                ScriptText scriptText = readScriptText("What here?", reader);
+
+                // put the current rule definition in our list of rules to add
+                scripts.add(scriptText);
+            } catch (IOException e) {
+                throw new Exception("Error reading from rule file: " + is, e);
+            }
+        }
+
+        return scripts;
+    }
+
+    private List<ScriptText> getRulesFromRuleResources2(List<URL> resourcePaths) throws Exception {
         if (resourcePaths == null || resourcePaths.size() == 0) {
             return new ArrayList<ScriptText>(0);
         }
