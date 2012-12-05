@@ -538,6 +538,23 @@
                          <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestThrowBinding.btm</argLine>
                       </configuration>
                     </execution>
+                    <!--
+                    <execution>
+                      <id>misc.TestDowncast</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                         <forkMode>once</forkMode>
+                         <includes>
+                           <include>org/jboss/byteman/tests/misc/TestDowncast.class</include>
+                         </includes>
+                         <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestDowncast.btm</argLine>
+                      </configuration>
+                    </execution>
+                    -->
                     <!-- bugfixes -->
                     <execution>
                       <id>bugfixes.TestEmptySignature</id>
@@ -1237,6 +1254,21 @@
                             </includes>
                             <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestThrowBinding.btm</argLine>
                         </configuration>
+                    </execution>
+                    <execution>
+                      <id>misc.TestDowncast.compiled</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                         <forkMode>once</forkMode>
+                         <includes>
+                           <include>org/jboss/byteman/tests/misc/TestDowncast.class</include>
+                         </includes>
+                         <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestDowncast.btm</argLine>
+                      </configuration>
                     </execution>
                     <!-- bugfixes compiled -->
                     <execution>

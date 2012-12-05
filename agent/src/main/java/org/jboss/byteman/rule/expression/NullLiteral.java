@@ -60,13 +60,13 @@ public class NullLiteral extends Expression
     }
 
     public Type typeCheck(Type expected) throws TypeException {
-        if (expected.isPrimitive()) {
+
+        if (expected == Type.VOID || expected.isUndefined()) {
+            type = Type.OBJECT;
+        } else if (expected.isPrimitive()) {
             type = Type.boxType(expected);
         } else {
             type = expected;
-            if (type.isUndefined()) {
-                throw new TypeException("NullLiteral.typeCheck : unable to derive type for null from context");
-            }
         }
         return type;
     }

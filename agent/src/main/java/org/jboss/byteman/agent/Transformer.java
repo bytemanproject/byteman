@@ -477,6 +477,11 @@ public class Transformer implements ClassFileTransformer {
     public static final String ALLOW_CONFIG_UPDATE = BYTEMAN_PACKAGE_PREFIX + "allow.config.update";
 
     /**
+     * system property which disables downcasts in bindings
+     */
+    public static final String DISALLOW_DOWNCAST = BYTEMAN_PACKAGE_PREFIX + "disallow.downcast";
+
+    /**
      * disable triggering of rules inside the current thread
      * @return true if triggering was previously enabled and false if it was already disabled
      */
@@ -590,6 +595,20 @@ public class Transformer implements ClassFileTransformer {
             }
         }
         return compileToBytecode;
+    }
+
+    /**
+     * check whether downcasts in bindings are disallowed.
+     * @return true if downcasts in bindings are disallowed otherwise false
+     */
+    public static boolean disallowDowncast()
+    {
+        if (allowConfigUpdate()) {
+            synchronized (configLock) {
+                return disallowDowncast;
+            }
+        }
+        return disallowDowncast;
     }
 
     /**
@@ -1046,6 +1065,11 @@ public class Transformer implements ClassFileTransformer {
     private static boolean verifyTransformedBytes = computeVerifyTransformedBytes();
 
     /**
+     * switch which determines whether downcasts in binding initialisations are disallowed
+     */
+    private static boolean disallowDowncast = computeDisallowDowncast();
+
+    /**
      * master switch which determines whether or not config values can be updated
      */
     private static boolean allowConfigUpdate = (System.getProperty(ALLOW_CONFIG_UPDATE) != null);
@@ -1122,6 +1146,10 @@ public class Transformer implements ClassFileTransformer {
     private static boolean computeVerifyTransformedBytes()
     {
         return System.getProperty(VERIFY_TRANSFORMED_BYTES) != null;
+    }
+
+    private static boolean computeDisallowDowncast() {
+        return (System.getProperty(DISALLOW_DOWNCAST) != null);
     }
 
     private void checkConfiguration(String property)
@@ -1205,6 +1233,13 @@ public class Transformer implements ClassFileTransformer {
             boolean value = computeTransformAll();
             synchronized (configLock) {
                 transformAll = value;
+            }
+        }
+
+        if (DISALLOW_DOWNCAST.equals(property)) {
+            boolean value = computeDisallowDowncast();
+            synchronized (configLock) {
+                disallowDowncast = value;
             }
         }
     }
