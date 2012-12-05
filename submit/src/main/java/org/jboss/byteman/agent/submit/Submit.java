@@ -369,7 +369,7 @@ public class Submit
             matcher = ruleNamePattern.matcher(line);
             if (matcher.matches()) {
                 // found a new rule; definition that follows belong to this new rule
-                currentRuleName  = matcher.group(1);
+                currentRuleName = matcher.group(1);
                 currentRuleText = new StringBuilder();
                 currentRuleText.append(line).append('\n');
             } else {
@@ -548,6 +548,27 @@ public class Submit
     }
 
     /**
+     * Deploys rules into Byteman, where the rule definitions are found in the
+     * given streams. Rule definitions are read from the streams and the rule
+     * text uploaded directly to the Byteman agent.
+     *
+     * This method is useful for using rules files from the classpath.
+     *
+     * @param resourcePaths
+     * input streams containing the rule definitions to be deployed
+     * to Byteman
+     *
+     * @return the results of the deployment
+     *
+     * @throws Exception
+     *           if the request failed
+     */
+    public String addRulesFromResources(List<InputStream> resourceStreams) throws Exception {
+        List<ScriptText> scripts = getRulesFromRuleStreams(resourceStreams);
+        return addScripts(scripts);
+    }
+
+    /**
      * Deploys rule scripts into Byteman
      *
      * @param scripts
@@ -620,6 +641,27 @@ public class Submit
     }
 
     /**
+     * Deletes rules from Byteman, where the rule definitions are found in the
+     * given streams. Rule definitions are read from the streams so that details
+     * of which rules to unload can be uploaded directly to the Byteman agent.
+     *
+     * This method is useful for using rules files from the classpath.
+     *
+     * @param resourcePaths
+     * the URLS to files containing the rule definitions to be deleted
+     * from Byteman
+     *
+     * @return the results of the deletion
+     *
+     * @throws Exception
+     * if the request failed
+     */
+    public String deleteRulesFromResources(List<InputStream> resourceStreams) throws Exception {
+        List<ScriptText> scripts = getRulesFromRuleStreams(resourceStreams);
+        return deleteScripts(scripts);
+    }
+
+    /**
      * Deletes rules from Byteman.
      *
      * @param scripts
@@ -671,7 +713,7 @@ public class Submit
      * Sets system properties in the Byteman agent VM.
      * If Byteman was configured for strict mode, only Byteman related
      * system properties will be allowed to be set.
-     * 
+     *
      * @param propsToSet
      *            system properties to set in the Byteman agent VM
      *
@@ -742,12 +784,33 @@ public class Submit
         }
     }
 
+    private List<ScriptText> getRulesFromRuleStreams(List<InputStream> streams) throws Exception {
+        if (streams == null || streams.size() == 0) {
+            return new ArrayList<ScriptText>(0);
+        }
+        List<ScriptText> scripts = new ArrayList<ScriptText>(streams.size());
+
+        for (InputStream is : streams) {
+            
+            // read in the current rule file
+            try {
+                InputStreamReader reader = new InputStreamReader(is);
+                ScriptText scriptText = readScriptText(is.toString(), reader);
+
+                // put the current rule definition in our list of rules to add
+                scripts.add(scriptText);
+            } catch (IOException e) {
+                throw new Exception("Error reading from rule input stream: " + is, e);
+            }
+        }
+
+        return scripts;
+    }
+
     private List<ScriptText> getRulesFromRuleFiles(List<String> filePaths) throws Exception {
         if (filePaths == null || filePaths.size() == 0) {
             return new ArrayList<ScriptText>(0);
         }
-
-        final char[] readBuffer = new char[4096];
         List<ScriptText> scripts = new ArrayList<ScriptText>(filePaths.size());
 
         for (String filePath : filePaths) {
@@ -757,25 +820,36 @@ public class Submit
             }
 
             // read in the current rule file
-            StringBuilder scriptText = new StringBuilder();
             try {
                 FileInputStream fis = new FileInputStream(filePath);
                 InputStreamReader reader = new InputStreamReader(fis);
-                int read = reader.read(readBuffer);
-                while (read > 0) {
-                    scriptText.append(readBuffer, 0, read);
-                    read = reader.read(readBuffer);
-                }
-                reader.close();
+                ScriptText scriptText = readScriptText(filePath, reader);
 
                 // put the current rule definition in our list of rules to add
-                scripts.add(new ScriptText(filePath, scriptText.toString()));
+                scripts.add(scriptText);
             } catch (IOException e) {
                 throw new Exception("Error reading from rule file: " + filePath, e);
             }
         }
 
         return scripts;
+    }
+
+    private ScriptText readScriptText(String filePath, InputStreamReader reader) throws Exception {
+        final char[] readBuffer = new char[4096];
+        StringBuilder scriptText = new StringBuilder();
+        try {
+            int read = reader.read(readBuffer);
+            while (read > 0) {
+                scriptText.append(readBuffer, 0, read);
+                read = reader.read(readBuffer);
+            }
+            reader.close();
+
+            return new ScriptText(filePath, scriptText.toString());
+        } catch (IOException e) {
+            throw new Exception("Error reading from rule file: " + filePath, e);
+        }
     }
 
     private boolean confirmRuleFileValidity(String path) {
@@ -888,7 +962,7 @@ public class Submit
 
     /**
      * A main routine which submits requests to the Byteman agent utilizing the Java API.
-     * @param args see {@link #usage(int)} for a description of the allowed arguments
+     * @param args see {@link #usage(PrintStream, int)} for a description of the allowed arguments
      */
     public static void main(String[] args)
     {
