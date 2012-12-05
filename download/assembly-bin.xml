@@ -58,8 +58,19 @@
         <fileSet>
             <directory>../bin</directory>
             <includes>
+                <include>*.bat</include>
+            </includes>
+            <fileMode>0444</fileMode>
+            <lineEnding>dos</lineEnding>
+        </fileSet>
+        <fileSet>
+            <directory>../bin</directory>
+            <includes>
                 <include>**</include>
             </includes>
+	    <excludes>
+	      <exclude>*.bat</exclude>
+	    </excludes>
             <fileMode>0755</fileMode>
             <lineEnding>unix</lineEnding>
         </fileSet>
