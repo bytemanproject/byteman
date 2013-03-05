@@ -422,12 +422,15 @@ public class MethodExpression extends Expression
             compileContext.addStackCount(expected - extraParams);
 
             // now disable triggering again
-            // this temporarily adds an extra value to the stack -- no need to increment and
-            // then decrement the stack height as we will already have bumped the max last time
+            // this temporarily adds an extra value to the stack -- n.b. we *must* increment and
+            // then decrement the stack height even though we bumped the max before the call. in
+            // some cases the stack may be larger after the method call than before e.g. calling
+            // a static which returns a value or calling a non-static which returns a long/double
 
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "org/jboss/byteman/rule/Rule", "disableTriggersInternal", "()Z");
+            compileContext.addStackCount(1);
             mv.visitInsn(Opcodes.POP);
-
+            compileContext.addStackCount(-1);
         } else {
             // if we are calling a method by reflection then we need to stack the current helper then
             // the recipient or null if there is none and then build an object array on the stack
@@ -493,11 +496,15 @@ public class MethodExpression extends Expression
             }
 
             // now disable triggering again
-            // this temporarily adds an extra value to the stack -- no need to increment and
-            // then decrement the stack height as we will already have bumped the max last time
+            // this temporarily adds an extra value to the stack -- n.b. no need to increment and
+            // then decrement the stack height here because the previous enable call will already have
+            // bumped the max when we had 4 slots on the stack and any return value on the stack will
+            // occupy at most 2 slots
 
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, "org/jboss/byteman/rule/Rule", "disableTriggersInternal", "()Z");
+            compileContext.addStackCount(1);
             mv.visitInsn(Opcodes.POP);
+            compileContext.addStackCount(-1);
         }
 
         // ensure we have only increased the stack by the return value size

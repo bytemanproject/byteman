@@ -208,7 +208,10 @@ public abstract class RuleElement {
             Label endLabel = new Label();
             // if (object == null)
             mv.visitInsn(Opcodes.DUP);
+            // the above dup bumps the stack height
+            compileContext.addStackCount(1);
             mv.visitJumpInsn(Opcodes.IFNONNULL, elseLabel);
+            compileContext.addStackCount(-1);
             // then string = "null"
             mv.visitInsn(Opcodes.POP);
             mv.visitInsn(Opcodes.ACONST_NULL);
