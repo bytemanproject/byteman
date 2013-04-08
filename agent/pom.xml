@@ -1575,6 +1575,23 @@
                             <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=listener:true</argLine>
                         </configuration>
                     </execution>
+					<!-- check rules -->
+					<execution>
+						<id>api.TestRuleCheck.compiled</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+						<configuration>
+                            <forkMode>once</forkMode>
+							<test>TestRuleCheck</test>
+                            <includes>
+                                <include>org/jboss/byteman/tests/api/TestRuleCheck.class</include>
+                            </includes>
+							<argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=listener:true</argLine>
+                        </configuration>
+					</execution>
                 </executions>
             </plugin>
             <!--

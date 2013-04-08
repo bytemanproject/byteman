@@ -353,6 +353,7 @@
         <module>install</module>
         <module>contrib/bmunit</module>
         <module>contrib/dtest</module>
+        <module>contrib/rulecheck-maven-plugin</module>
         <module>sample</module>
         <module>download</module>
     </modules>
