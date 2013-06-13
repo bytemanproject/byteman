@@ -103,4 +103,4 @@ fi
 
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 
-java ${BYTEMAN_JAVA_OPTS} -classpath ${CP} $DEFINES org.jboss.byteman.test.TestScript $PACKAGES $VERBOSE $FILES
+java ${BYTEMAN_JAVA_OPTS} -classpath ${CP} $DEFINES org.jboss.byteman.check.TestScript $PACKAGES $VERBOSE $FILES

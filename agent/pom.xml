@@ -1577,7 +1577,7 @@
                     </execution>
 					<!-- check rules -->
 					<execution>
-						<id>api.TestRuleCheck.compiled</id>
+						<id>check.TestRuleCheck</id>
                         <phase>integration-test</phase>
                         <goals>
                             <goal>integration-test</goal>
@@ -1587,7 +1587,7 @@
                             <forkMode>once</forkMode>
 							<test>TestRuleCheck</test>
                             <includes>
-                                <include>org/jboss/byteman/tests/api/TestRuleCheck.class</include>
+                                <include>org/jboss/byteman/tests/check/TestRuleCheck.class</include>
                             </includes>
 							<argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=listener:true</argLine>
                         </configuration>

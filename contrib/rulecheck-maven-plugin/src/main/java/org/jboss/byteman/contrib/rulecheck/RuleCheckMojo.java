@@ -1,4 +1,4 @@
-package org.jboss.byteman;
+package java.org.jboss.byteman.contrib.rulecheck;
 
 /*
  * JBoss, Home of Professional Open Source
@@ -36,8 +36,8 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugin.descriptor.PluginDescriptor;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
-import org.jboss.byteman.api.RuleCheck;
-import org.jboss.byteman.api.RuleCheckResult;
+import org.jboss.byteman.check.RuleCheck;
+import org.jboss.byteman.check.RuleCheckResult;
 
 import java.io.File;
 import java.net.MalformedURLException;

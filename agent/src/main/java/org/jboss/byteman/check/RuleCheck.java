@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.jboss.byteman.api;
+package org.jboss.byteman.check;
 
 import java.io.File;
 import java.io.FileInputStream;

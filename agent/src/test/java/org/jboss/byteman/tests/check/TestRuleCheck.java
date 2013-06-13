@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2010, Red Hat and individual contributors
+ * Copyright 2011, Red Hat and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,15 +19,15 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  *
- * @authors Amos Feng
+ * @authors Andrew Dinn
  */
-package org.jboss.byteman.tests.api;
+package org.jboss.byteman.tests.check;
 
 import java.io.File;
 import java.util.List;
 
-import org.jboss.byteman.api.RuleCheck;
-import org.jboss.byteman.api.RuleCheckResult;
+import org.jboss.byteman.check.RuleCheck;
+import org.jboss.byteman.check.RuleCheckResult;
 import org.jboss.byteman.tests.Test;
 
 public class TestRuleCheck extends Test
@@ -41,7 +41,7 @@ public class TestRuleCheck extends Test
     public void test()
     {
         RuleCheck checker = new RuleCheck();
-        addBtmScript(checker, new File("target/test-classes/scripts"));
+        addBtmScript(checker, new File("src/test/resources/scripts"));
         checker.addPackage("org.jboss.byteman.tests.auxiliary");
         checker.addPackage("org.jboss.byteman.tests.bugfixes");
         checker.addPackage("org.jboss.byteman.tests.javaops");

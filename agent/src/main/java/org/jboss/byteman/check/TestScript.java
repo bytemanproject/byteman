@@ -21,7 +21,7 @@
 *
 * @authors Andrew Dinn
 */
-package org.jboss.byteman.test;
+package org.jboss.byteman.check;
 
 import org.jboss.byteman.rule.exception.TypeWarningException;
 import org.jboss.byteman.rule.type.TypeHelper;

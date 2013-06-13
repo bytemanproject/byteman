@@ -121,7 +121,7 @@ if %error% == 1 goto exitBatch
 
 
 @rem Execute java program.
-java %BYTEMAN_JAVA_OPTS% -classpath "%CP%" %DEFINES% org.jboss.byteman.test.TestScript %PACKAGES% %VERBOSE% %FILES%
+java %BYTEMAN_JAVA_OPTS% -classpath "%CP%" %DEFINES% org.jboss.byteman.check.TestScript %PACKAGES% %VERBOSE% %FILES%
 
 
 :exitBatch
