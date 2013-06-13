@@ -201,11 +201,11 @@ public class FieldExpression extends AssignableExpression
             try {
                 field  = lookupField(ownerClazz);
             } catch (NoSuchFieldException e) {
-                throw new TypeException("FieldExpresssion.typeCheck : invalid field reference " + fieldName + getPos());
+                throw new TypeException("FieldExpresssion.typeCheck : invalid field reference " + ownerType.getName() + " ." + fieldName + getPos());
             }
 
             if ((field.getModifiers() & Modifier.STATIC) != 0) {
-                throw new TypeException("FieldExpresssion.typeCheck : field is static " + fieldName + getPos());
+                throw new TypeException("FieldExpresssion.typeCheck : field is static " + ownerType.getName() + " ." + fieldName + getPos());
             }
 
             valueClass = field.getType();
