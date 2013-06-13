@@ -1,6 +1,9 @@
 release.properties
 *.releaseBackup
 .idea
+.classpath
+.project
+.settings
 target
 *.iml
 *.ipr
