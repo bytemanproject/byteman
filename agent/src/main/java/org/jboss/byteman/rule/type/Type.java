@@ -125,7 +125,12 @@ public class Type {
         } else if (isVoid()) {
             return internalNames.get(typeName);
         } else {
-            String name = aliasFor.getTargetClass().getCanonicalName();
+            Class targetClass = aliasFor.getTargetClass();
+            String name = targetClass.getCanonicalName();
+            if (name == null) {
+                // local or anonymous class
+                name = targetClass.getName();
+            }
             if (slashSeparate) {
                 name = name.replace('.', '/');
             }
