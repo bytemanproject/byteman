@@ -63,16 +63,28 @@ public class RuleCheckMojo extends AbstractMojo
     private File scriptDir;
 
     /**
-     * Package to lookup non-package qualified class names
+     * Packages to lookup non-package qualified class names
      */
     @Parameter( property = "packages")
     private String[] packages;
 
     /**
-     * Fail build when rule check return error
+     * Fail build when rule check returns error
      */
     @Parameter(defaultValue = "true", property = "failOnError")
     private boolean failOnError;
+    
+    /**
+     * Fail build when rule check has warnings
+     */
+    @Parameter(defaultValue = "true", property = "failOnWarning")
+    private boolean failOnWarning;
+    
+    /**
+     * Expect count of warning messages
+     */
+    @Parameter(defaultValue = "0", property = "expectWarnings")
+    private int expectWarnings;
 
     /*
      * Skip the checking
@@ -205,10 +217,15 @@ public class RuleCheckMojo extends AbstractMojo
             for(String warn : warns) {
                 getLog().warn(warn);
             }
+            int totalWarnCount = warns.size();
+            if(failOnWarning && expectWarnings != totalWarnCount) {
+                throw new MojoExecutionException("check byteman script rules failed with " + totalWarnCount + 
+                        " warnings. You may config failOnWarning with false or expectWarnings with " + totalWarnCount);
+            }
         }
         if(result.hasError()) {
             int totalErrorCount = result.getErrorCount() + result.getParseErrorCount() + result.getTypeErrorCount();
-            getLog().error("Checking byteman script rules fail with " + totalErrorCount + " errors");
+            getLog().error("Checking byteman script rules failed with " + totalErrorCount + " errors");
             List<String> errors = result.getErrorMessages();
             errors.addAll(result.getParseErrorMessages());
             errors.addAll(result.getTypeErrorMessages());
@@ -216,7 +233,7 @@ public class RuleCheckMojo extends AbstractMojo
                 getLog().error(error);
             }
             if(failOnError) {
-                throw new MojoExecutionException("check byteman script rules fail");
+                throw new MojoExecutionException("check byteman script rules failed with " + totalErrorCount + " errors");
             } 
         }
     }
