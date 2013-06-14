@@ -1,0 +1,26 @@
+A simple example showing how to use the Byteman rule check maven plugin.
+
+The plugin is configured in the pom in this directory. It will check
+the Byteman script found under the resources directory below
+src/test.
+
+The script being tested is taken from the agent integration tests so
+the plugin configuration includes an additionalClasspath entry
+pointing to the location of the test classes (you will need to have
+built the project in order for those classes to be present).
+
+The plugin configuration also specifies package names for the classes
+mentioned in the CLASS clause of the test rules. These rules omit the
+package qualifier.
+
+The plugin is configured in verbose mode so you will see trace output
+showing it searching for rule scripts and checking the rules.
+
+The plugin also specifies failOnError to be true. So, if you edit the
+rule and introduce a syntax or type error you should see a maven
+failure with a corresponding error message in the output.
+
+To exercise the plugin run
+
+  mvn test
+
