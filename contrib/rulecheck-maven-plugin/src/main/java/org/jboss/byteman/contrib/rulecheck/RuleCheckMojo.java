@@ -1,4 +1,4 @@
-package java.org.jboss.byteman.contrib.rulecheck;
+package org.jboss.byteman.contrib.rulecheck;
 
 /*
  * JBoss, Home of Professional Open Source
@@ -206,7 +206,7 @@ public class RuleCheckMojo extends AbstractMojo
                 getLog().warn(warn);
             }
         }
-        if(result.hasError() == false) {
+        if(result.hasError()) {
             int totalErrorCount = result.getErrorCount() + result.getParseErrorCount() + result.getTypeErrorCount();
             getLog().error("Checking byteman script rules fail with " + totalErrorCount + " errors");
             List<String> errors = result.getErrorMessages();
