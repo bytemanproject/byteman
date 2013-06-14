@@ -394,11 +394,15 @@ public class BMUnit
      */
     protected static String findScript(String dir, String name) {
         String filename=name;
+	String resourceName = name;
         if(filename == null) return null;
-        if(dir != null && dir.length() > 0)
+        if(dir != null && dir.length() > 0) {
             filename=dir + File.separator + filename;
+            resourceName=dir + "/" + resourceName;
+	}
 
         final String[] filenames={filename, filename + ".btm", filename + ".txt"};
+        final String[] resourceNames={resourceName, resourceName + ".btm", resourceName + ".txt"};
 
         for(String fname: filenames) {
             File file=new File(fname);
@@ -406,12 +410,12 @@ public class BMUnit
                 return fname;
         }
 
-        for(String fname: filenames) {
+        for(String rname: resourceNames) {
 	    ClassLoader loader = Thread.currentThread().getContextClassLoader();
 	    if (loader == null) {
                 loader = ClassLoader.getSystemClassLoader();
             }
-            URL resource=loader.getResource(fname);
+            URL resource=loader.getResource(rname);
             if(resource != null) {
                 File file=new File(resource.getFile());
                 if(file.exists() && file.isFile())
