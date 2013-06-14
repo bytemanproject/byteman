@@ -407,7 +407,11 @@ public class BMUnit
         }
 
         for(String fname: filenames) {
-            URL resource=Thread.currentThread().getContextClassLoader().getResource(fname);
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            if (loader == null) {
+                loader = ClassLoader.getSystemClassLoader();
+            }
+            URL resource=loader.getResource(fname);
             if(resource != null) {
                 File file=new File(resource.getFile());
                 if(file.exists() && file.isFile())
