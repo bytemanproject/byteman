@@ -40,6 +40,7 @@ public class RuleCheckResult {
     private List<String> parseErrorMessages;
     private List<String> typeWarningMessages;
     private List<String> typeErrorMessages;
+    private List<String> infoMessages;
     
     public RuleCheckResult () {
         errorMessages = new ArrayList<String>();
@@ -47,6 +48,7 @@ public class RuleCheckResult {
         parseErrorMessages = new ArrayList<String>();
         typeWarningMessages = new ArrayList<String>();
         typeErrorMessages = new ArrayList<String>();
+        infoMessages = new ArrayList<String>();
     }
     
     public void addError(String msg) {
@@ -58,22 +60,24 @@ public class RuleCheckResult {
         warningCount++;
         warningMessages.add(msg);
     }
-    
+
     public void addParseError(String msg) {
         parseErrorCount ++;
         parseErrorMessages.add(msg);
     }
-    
     public void addTypeWarning(String msg) {
         typeWarningCount ++;
         typeWarningMessages.add(msg);
     }
-    
     public void addTypeError(String msg) {
         typeErrorCount ++;
         typeErrorMessages.add(msg);
     }
     
+    public void addInfo(String msg) {
+        infoMessages.add(msg);
+    }
+
     public int getErrorCount() {
         return errorCount;
     }
@@ -94,14 +98,18 @@ public class RuleCheckResult {
         return typeErrorCount;
     }
     
-    public boolean isOK() {
-        return errorCount == 0 && parseErrorCount ==  0 && typeErrorCount == 0;
+    public boolean hasError() {
+        return errorCount != 0 || parseErrorCount !=  0 || typeErrorCount != 0;
     }
     
     public boolean hasWarning() {
         return !(warningCount == 0 && typeWarningCount == 0); 
     }
     
+    public boolean hasInfo() {
+        return !infoMessages.isEmpty();
+    }
+
     public List<String> getErrorMessages() {
         return errorMessages;
     }
@@ -122,4 +130,7 @@ public class RuleCheckResult {
         return typeWarningMessages;
     }
     
+    public List<String> getInfoMessages() {
+        return infoMessages;
+    }
 }

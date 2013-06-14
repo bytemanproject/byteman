@@ -48,14 +48,29 @@ public class TestRuleCheck extends Test
         checker.addPackage("org.jboss.byteman.tests.helpertests");
         checker.checkRules();
         RuleCheckResult result= checker.getResult();
-        if(result.isOK() == false) {
-            System.out.println(result.getErrorCount());
+        if(result.hasError() || result.hasWarning()) {
             List<String> errors = result.getErrorMessages();
             for(String error : errors) {
                 System.out.println(error);
             }
+            errors = result.getParseErrorMessages();
+            for(String error : errors) {
+                System.out.println(error);
+            }
+            errors = result.getTypeErrorMessages();
+            for(String error : errors) {
+                System.out.println(error);
+            }
+            errors = result.getWarningMessages();
+            for(String error : errors) {
+                System.out.println(error);
+            }
+            errors = result.getTypeWarningMessages();
+            for(String error : errors) {
+                System.out.println(error);
+            }
         }
-        assertTrue(result.isOK());
+        assertTrue(!result.hasError());
     }
     
     private void addBtmScript(RuleCheck checker, File dir) {
