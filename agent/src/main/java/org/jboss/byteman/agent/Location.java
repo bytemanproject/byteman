@@ -586,7 +586,7 @@ public abstract class Location
                 } else {
                     count = 1;
                 }
-                text = text.substring(0, tailIdx).trim();
+                text = text.substring(0, tailIdx + 1).trim();
             } else if (text.contains(" ")) {
                 int tailIdx = text.lastIndexOf(" ");
                 String countText = text.substring(tailIdx + 1).trim();
@@ -610,8 +610,8 @@ public abstract class Location
             }
             // check for argument list
             if (text.contains("(")) {
-                text=TypeHelper.parseMethodName(text);
                 signature = TypeHelper.parseMethodDescriptor(text);
+                text=TypeHelper.parseMethodName(text);
             } else {
                 signature = "";
             }
