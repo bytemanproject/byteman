@@ -133,6 +133,11 @@ public class RuleCheckMojo extends AbstractMojo
                 includebuf.append(includes[i]);
                 if(i != includes.length - 1) includebuf.append(",");
             }
+
+            // set default includes "**/*.btm"
+            if(includes.length == 0) {
+                includebuf.append("**/*.btm");
+            }
             
             StringBuffer excludebuf = new StringBuffer();
             for(int i = 0; i < excludes.length; i++) {
