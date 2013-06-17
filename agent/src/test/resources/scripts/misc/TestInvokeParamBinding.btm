@@ -30,7 +30,7 @@ RULE test invoke param count array bindings
 CLASS org.jboss.byteman.tests.misc.TestInvokeParamBinding
 METHOD triggerMethod()
 HELPER org.jboss.byteman.tests.helpers.Default
-AT CALL subMethod(int long, String)
+AT CALL subMethod(int, long, String)
 BIND test = $0
 IF TRUE
 DO test.log("triggerMethod : $@[0] = " + $@[0]);
@@ -43,7 +43,7 @@ RULE test invoke param count array bindings 2
 CLASS org.jboss.byteman.tests.misc.TestInvokeParamBinding
 METHOD triggerMethod()
 HELPER org.jboss.byteman.tests.helpers.Default
-AT CALL subMethod(int long, String) 2
+AT CALL subMethod(int, long, String) 2
 BIND test = $0
 IF TRUE
 DO test.log("triggerMethod : $@[0] = " + $@[0]);
