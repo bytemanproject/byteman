@@ -74,6 +74,10 @@ public class DollarExpression extends AssignableExpression
             name = "$*";
         } else if (index == INVOKE_PARAM_ARRAY_IDX){
             name = "$@";
+        } else if (index == TRIGGER_CLASS_IDX){
+            name = "$CLASS";
+        } else if (index == TRIGGER_METHOD_IDX){
+            name = "$METHOD";
         } else {
             name = "$" + Integer.toString(index);
         }
@@ -205,6 +209,9 @@ public class DollarExpression extends AssignableExpression
         int currentStack = compileContext.getStackCount();
         int expected = (type.getNBytes() > 4 ? 2 : 1);
 
+        // TODO
+        // optimise compile of trigger class and trigger method just to push the required String literal
+        // ditto for $# or any other binding which is known in advance
         if (index == HELPER_IDX) {
             // reference to the current helper so just stack this
             mv.visitVarInsn(Opcodes.ALOAD, 0);
@@ -354,4 +361,12 @@ public class DollarExpression extends AssignableExpression
      * index of $@ variable which is bound to an array of the invoked method params in an AT INVOKE rule
      */
     public final static int INVOKE_PARAM_ARRAY_IDX = -8;
+    /**
+     * index of $CLASS variable which is bound to a String identifying the package-qualified trigger class
+     */
+    public final static int TRIGGER_CLASS_IDX = -9;
+    /**
+     * index of $METHOD variable which is bound to a String identifying the trigger method and signature
+     */
+    public final static int TRIGGER_METHOD_IDX = -10;
 }

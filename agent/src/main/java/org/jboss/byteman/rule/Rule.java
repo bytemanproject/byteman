@@ -610,6 +610,8 @@ public class Rule
                 binding.setType(Type.I);
             } else if (binding.isParamArray() || binding.isInvokeParamArray()) {
                 binding.setType(Type.OBJECT.arrayType());
+            } else if (binding.isTriggerClass() || binding.isTriggerMethod()) {
+                binding.setType(Type.STRING);
             }
         }
     }

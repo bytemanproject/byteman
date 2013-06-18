@@ -143,6 +143,8 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                     }
                     transformContext.warn(name, descriptor, "found throwable value binding " + binding + " in rule which is not AT THROW");
                 }
+            } else if (binding.isTriggerClass() || binding.isTriggerMethod()) {
+                // this is ok
             } else if (binding.isLocalVar()){
                 // make sure we have a local variable with the correct name
                 String localVarName = binding.getName().substring(1);

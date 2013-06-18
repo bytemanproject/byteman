@@ -538,6 +538,21 @@
                          <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestThrowBinding.btm</argLine>
                       </configuration>
                     </execution>
+                    <execution>
+                      <id>misc.TestTriggerClassMethodBinding</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                         <forkMode>once</forkMode>
+                         <includes>
+                           <include>org/jboss/byteman/tests/misc/TestTriggerClassMethodBinding.class</include>
+                         </includes>
+                         <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestTriggerClassMethodBinding.btm</argLine>
+                      </configuration>
+                    </execution>
                     <!--
                     <execution>
                       <id>misc.TestDowncast</id>
@@ -1269,6 +1284,21 @@
                             </includes>
                             <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestThrowBinding.btm</argLine>
                         </configuration>
+                    </execution>
+                    <execution>
+                      <id>misc.TestTriggerClassMethodBinding.compiled</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                         <forkMode>once</forkMode>
+                         <includes>
+                           <include>org/jboss/byteman/tests/misc/TestTriggerClassMethodBinding.class</include>
+                         </includes>
+                         <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestTriggerClassMethodBinding.btm</argLine>
+                      </configuration>
                     </execution>
                     <execution>
                       <id>misc.TestDowncast.compiled</id>
