@@ -1,5 +1,6 @@
 package org.jboss.byteman.contrib.bmunit;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.sun.tools.attach.AgentInitializationException;
 import org.jboss.byteman.agent.install.Install;
 import org.jboss.byteman.agent.install.VMInfo;
@@ -38,6 +39,10 @@ public class BMUnit
      */
     public final static String AGENT_HOST = "org.jboss.byteman.contrib.bmunit.agent.host";
 
+    /**
+     * System property specifying whether to set a security policy when loading the agent.
+     */
+    public final static String AGENT_POLICY = "org.jboss.byteman.contrib.bmunit.agent.policy";
     /**
      * System property which inhibits automatic loading of the agent. If you set this then you have to load
      * the agent yourself using the Install API or ensure JUnit loads by forking a JVM and passing
@@ -78,6 +83,11 @@ public class BMUnit
     private static int port = initPort();
 
     /**
+     * flag determining whether to set a security policy at agent load
+     */
+    private static boolean policy = initPolicy();
+
+    /**
      * return the String configured for the agent host or null if it
      * was not configured
      */
@@ -96,7 +106,16 @@ public class BMUnit
 	return (portString == null ? 0 : Integer.valueOf(portString));
     }
 
-    /**
+     /**
+     * test whether a security policy should be set for agent codewhen the agent is installed
+     */
+    private static boolean initPolicy()
+    {
+	String policyString= System.getProperty(AGENT_PORT);
+	return (policyString == null ? false : Boolean.valueOf(policyString));
+    }
+
+   /**
      * getter for the host name used to communicate with the agent
      */
     public static String getHost()
@@ -112,6 +131,13 @@ public class BMUnit
 	return port;
     }
 
+    /**
+     * getter for the security policy setting
+     */
+    public static boolean getPolicy()
+    {
+	return policy;
+    }
     /**
      * computes the default load directory from system property org.jboss.byteman.contrib.bmunit.load.directory
      * or defaults  it to "."
@@ -187,7 +213,7 @@ public class BMUnit
             if (verbose) {
                 System.out.println("BMUNit : loading agent id = " + id);
             }
-            Install.install(id, true, getHost(), getPort(), properties);
+            Install.install(id, true, getPolicy(), getHost(), getPort(), properties);
         } catch (AgentInitializationException e) {
             // this probably indicates that the agent is already installed
         }

@@ -42,7 +42,7 @@ public class Install
     /**
      * main routine for use from command line
      * <p/>
-     * Install [-h host] [-p port] [-b] pid
+     * Install [-h host] [-p port] [-b] [-s] [-Dorg.jboss.Byteman.xxx]* pid
      * <p/>
      * see method {@link #usage} for details of the command syntax
      * @param args the command options
@@ -62,23 +62,35 @@ public class Install
     }
 
     /**
-     * @param pid the process id of the JVM into which the agent should be installed or 0 for this JVM
-     * @param addToBoot true if the agent jar should be installed into the bootstrap classpath
-     * @param host the hostname to be used by the agent listener or null for localhost
-     * @param port the port to be used by the agent listener or 0 for the default port
-     * @param properties an array of System properties to be installed by the agent with optional values e.g.
-     * values such as "org.jboss.byteman.verbose" or "org.jboss.byteman.dump.generated.classes.directory=./dump"
-     * @throws IllegalArgumentException if any of the arguments  is invalid
-     * @throws FileNotFoundException if the agent jar cannot be found using the environment variable BYTEMAN_HOME
-     * or the System property org.jboss.byteman.home and cannot be located in the current classpath
-     * @throws IOException if the byteman jar cannot be opened or uploaded to the requested JVM
-     * @throws AttachNotSupportedException if the requested JVM cannot be attached to
-     * @throws AgentLoadException if an error occurs during upload of the agent into the JVM
-     * @throws AgentInitializationException if the agent fails to initialize after loading. this almost always
-     * indicates that the agent is already loaded into the JVM
+     * compatability mode
      */
     public static void install(String pid, boolean addToBoot, String host, int  port, String[] properties)
             throws IllegalArgumentException, FileNotFoundException,
+            IOException, AttachNotSupportedException,
+            AgentLoadException, AgentInitializationException
+    {
+         install(pid, addToBoot, false, host, port, properties);
+    }
+
+   /**
+    * @param pid the process id of the JVM into which the agent should be installed or 0 for this JVM
+    * @param addToBoot true if the agent jar should be installed into the bootstrap classpath
+    * @param setPolicy true if the agent jar should set an access-all-areas securityPolicy
+    * @param host the hostname to be used by the agent listener or null for localhost
+    * @param port the port to be used by the agent listener or 0 for the default port
+    * @param properties an array of System properties to be installed by the agent with optional values e.g.
+    * values such as "org.jboss.byteman.verbose" or "org.jboss.byteman.dump.generated.classes.directory=./dump"
+    * @throws IllegalArgumentException if any of the arguments  is invalid
+    * @throws FileNotFoundException if the agent jar cannot be found using the environment variable BYTEMAN_HOME
+    * or the System property org.jboss.byteman.home and cannot be located in the current classpath
+    * @throws IOException if the byteman jar cannot be opened or uploaded to the requested JVM
+    * @throws AttachNotSupportedException if the requested JVM cannot be attached to
+    * @throws AgentLoadException if an error occurs during upload of the agent into the JVM
+    * @throws AgentInitializationException if the agent fails to initialize after loading. this almost always
+    * indicates that the agent is already loaded into the JVM
+    */
+   public static void install(String pid, boolean addToBoot, boolean setPolicy, String host, int  port, String[] properties)
+           throws IllegalArgumentException, FileNotFoundException,
             IOException, AttachNotSupportedException,
             AgentLoadException, AgentInitializationException
     {
@@ -96,7 +108,7 @@ public class Install
             }
         }
         
-        Install install = new Install(pid, addToBoot, host, port, properties);
+        Install install = new Install(pid, addToBoot, setPolicy, host, port, properties);
         install.locateAgent();
         install.attach();
         install.injectAgent();
@@ -157,14 +169,23 @@ public class Install
     }
 
     /**
-     *  only this class creates instances
+     * compatibility mode
      */
     private Install(String pid, boolean addToBoot, String host, int port, String[] properties)
+    {
+        this(pid, addToBoot, false, host, port, properties);
+    }
+
+    /**
+     *  only this class creates instances
+     */
+    private Install(String pid, boolean addToBoot, boolean setPolicy, String host, int port, String[] properties)
     {
         agentJar = null;
         this.id = pid;
         this.port = port;
         this.addToBoot = addToBoot;
+        this.setPolicy = setPolicy;
         this.host = host;
         if (properties != null) {
             StringBuilder builder = new StringBuilder();
@@ -219,6 +240,9 @@ public class Install
             } else if (nextArg.equals("-b")) {
                 idx++;
                 addToBoot = true;
+            } else if (nextArg.equals("-s")) {
+                idx++;
+                setPolicy = true;
             } else if (nextArg.startsWith("-D")) {
                 idx++;
                 String prop=nextArg.substring(2);
@@ -422,6 +446,9 @@ public class Install
             if (addToBoot) {
                 agentOptions += ",boot:" + agentJar;
             }
+            if (setPolicy) {
+                agentOptions += ",policy:true";
+            }
             if (props != null) {
                 agentOptions += props;
             }
@@ -444,7 +471,8 @@ public class Install
         System.out.println("    -h host selects the host name or address the agent listener binds to");
         System.out.println("    -p port selects the port the agent listener binds to");
         System.out.println("    -b adds the byteman jar to the bootstrap classpath");
-        System.out.println("    -Dname=value can be used to set system properties whose name starts with \"org.jboss.byteman.\"");        
+        System.out.println("    -s sets an access-all-areas security policy for the Byteman agent code");
+        System.out.println("    -Dname=value can be used to set system properties whose name starts with \"org.jboss.byteman.\"");
         System.out.println("    expects to find a byteman agent jar in ${" + BYTEMAN_HOME_ENV_VAR + "}/lib/byteman.jar");
         System.out.println("    (alternatively set System property " + BYTEMAN_HOME_SYSTEM_PROP + " to overide ${" + BYTEMAN_HOME_ENV_VAR + "})");
         System.exit(exitValue);
@@ -455,6 +483,7 @@ public class Install
     private int port;
     private String host;
     private boolean addToBoot;
+    private boolean setPolicy;
     private String props;
     private VirtualMachine vm;
 

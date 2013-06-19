@@ -55,6 +55,7 @@ public class Main {
             }
         }
         boolean allowRedefine = false;
+        boolean installPolicy = false;
 
         if (args != null) {
             // args are supplied eparated by ',' characters
@@ -123,6 +124,9 @@ public class Main {
                     } else {
                         System.err.println("Invalid property : " +  prop);
                     }
+                } else if (arg.startsWith(POLICY_PREFIX)) {
+                    String value = arg.substring(POLICY_PREFIX.length(), arg.length());
+                    installPolicy = Boolean.parseBoolean(value);
                 } else {
                     System.err.println("org.jboss.byteman.agent.Main:\n" +
                             "  illegal agent argument : " + arg + "\n" +
@@ -216,6 +220,11 @@ public class Main {
             method.invoke(transformer, hostname, port);
         }
 
+        if (installPolicy) {
+            Method method = transformerClazz.getMethod("installPolicy");
+            method.invoke(transformer);
+        }
+
         if (isRedefine) {
             Method method;
 
@@ -249,6 +258,11 @@ public class Main {
      */
     private static final String SYS_PREFIX = "sys:";
 
+    /**
+     * prefix used to request installation of an access-all-areas security
+     * policy at install time for agent code
+     */
+    private static final String POLICY_PREFIX = "policy:";
     /**
      * prefix used to specify script argument for agent
      */

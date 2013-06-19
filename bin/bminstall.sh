@@ -30,6 +30,7 @@
 #   -h host selects the host name or address the agent listener binds to
 #   -p port selects the port the agent listener binds to
 #   -b adds the byteman jar to the bootstrap classpath
+#   -s sets an access-all-areas security policy for the Byteman agent code
 #   -Dname=value can be used to set system properties whose name starts with "org.jboss.byteman."
 #   expects to find a byteman agent jar in BYTEMAN_HOME
 #

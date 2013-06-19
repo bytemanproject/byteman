@@ -26,11 +26,12 @@
 @rem a JVM which was started without the agent. This provides an
 @rem alternative to using the -javaagent java command line flag
 @rem
-@rem usage: bminstall [-p port] [-h host] [-b] [-Dname[=value]]* pid
+@rem usage: bminstall [-p port] [-h host] [-b] [-s] [-Dname[=value]]* pid
 @rem   pid is the process id of the target JVM
 @rem   -h host selects the host name or address the agent listener binds to
 @rem   -p port selects the port the agent listener binds to
 @rem   -b adds the byteman jar to the bootstrap classpath
+@rem   -s sets an access-all-areas security policy for the Byteman agent code
 @rem   -Dname=value can be used to set system properties whose name starts with "org.jboss.byteman."
 @rem   expects to find a byteman agent jar in BYTEMAN_HOME
 @rem
@@ -77,11 +78,12 @@ if "%OS%" == "Windows_NT" endlocal
 exit /b
 
 :showUsage
-echo usage: bminstall [-p port] [-h host] [-b] [-Dname[=value]]* pid
+echo usage: bminstall [-p port] [-h host] [-b] [-s] [-Dname[=value]]* pid
 echo   pid is the process id of the target JVM
 echo   -h host selects the host name or address the agent listener binds to
 echo   -p port selects the port the agent listener binds to
 echo   -b adds the byteman jar to the bootstrap classpath
+echo   -s sets an access-all-areas security policy for the Byteman agent code
 echo   -Dname=value can be used to set system properties whose name starts with "org.jboss.byteman."
 echo   expects to find a byteman agent jar in BYTEMAN_HOME
 goto exitBatch

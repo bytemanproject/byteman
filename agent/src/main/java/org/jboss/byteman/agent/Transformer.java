@@ -36,6 +36,7 @@ import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
+import java.security.Policy;
 import java.security.ProtectionDomain;
 import java.util.*;
 import java.io.FileOutputStream;
@@ -128,6 +129,12 @@ public class Transformer implements ClassFileTransformer {
             }
             inst.retransformClasses(transformedArray);
         }
+    }
+
+    public void installPolicy()
+    {
+        BytemanPolicy policy = new BytemanPolicy(Policy.getPolicy());
+        Policy.setPolicy(policy);
     }
 
     /**
