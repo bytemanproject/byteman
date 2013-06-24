@@ -3,11 +3,11 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.jboss.byteman.it</groupId>
-  <artifactId>simple-it</artifactId>
+  <groupId>org.jboss.byteman.contrib.rulecheck-maven-plugin</groupId>
+  <artifactId>example</artifactId>
   <version>1.0</version>
 
-  <description>A simple IT verifying the basic use case.</description>
+  <description>A simple example showing the basic use case.</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -33,7 +33,7 @@
 				<includes>
                     <include>**/*.btm</include>
                 </includes>
-                <additionalClassPath>../../../../../agent/target/test-classes</additionalClassPath>
+                <additionalClassPath>../../../agent/target/test-classes</additionalClassPath>
 				<failOnError>true</failOnError>
                 <verbose>true</verbose>
 			</configuration>
