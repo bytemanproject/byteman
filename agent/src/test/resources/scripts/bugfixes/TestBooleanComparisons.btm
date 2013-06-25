@@ -1,0 +1,57 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2009, Red Hat and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+# Test for BYTEMAN-246 to ensure that boolena comparisons give the expected results
+
+RULE check boolean comparisons
+CLASS TestBooleanComparisons
+METHOD triggerMethod
+BIND test : Test = $0;
+IF TRUE
+DO test.log("b1 == b1 ==> " + ($1 == $1));
+   test.log("b1 == b2 ==> " + ($1 == $2));
+   test.log("b1 != b1 ==> " + ($1 != $1));
+   test.log("b1 != b2 ==> " + ($1 != $2));
+   test.log("b2 == b2 ==> " + ($2 == $2));
+   test.log("b2 == b1 ==> " + ($2 == $1));
+   test.log("b2 != b2 ==> " + ($2 != $2));
+   test.log("b2 != b1 ==> " + ($2 != $1));
+
+   test.log("B1 == B1 ==> " + ($3 == $3));
+   test.log("B1 == B2 ==> " + ($3 == $4));
+   test.log("B1 != B1 ==> " + ($3 != $3));
+   test.log("B1 != B2 ==> " + ($3 != $4));
+   test.log("B2 == B2 ==> " + ($4 == $4));
+   test.log("B2 == B1 ==> " + ($4 == $3));
+   test.log("B2 != B2 ==> " + ($4 != $4));
+   test.log("B2 != B1 ==> " + ($4 != $3));
+
+   test.log("b1 == B1 ==> " + ($1 == $3));
+   test.log("b1 == B2 ==> " + ($1 == $4));
+   test.log("b1 != B1 ==> " + ($1 != $3));
+   test.log("b1 != B2 ==> " + ($1 != $4));
+   test.log("B2 == b2 ==> " + ($4 == $2));
+   test.log("B2 == b1 ==> " + ($4 == $1));
+   test.log("B2 != b2 ==> " + ($4 != $2));
+   test.log("B2 != b1 ==> " + ($4 != $1));
+ENDRULE

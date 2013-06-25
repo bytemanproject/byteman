@@ -280,6 +280,17 @@ public class ComparisonExpression extends BooleanExpression
                     }
                     return result;
                 }
+            } else if (comparisonType == Type.Z || comparisonType == Type.BOOLEAN) {
+                // boxed booleans need special treatment
+                Boolean value1 = (Boolean)getOperand(0).interpret(helper);
+                Boolean value2 = (Boolean)getOperand(1).interpret(helper);
+                boolean result;
+                if (oper == EQ) {
+                    result = value1.equals(value2);
+                } else {
+                    result = !value1.equals(value2);
+                }
+                return result;
             } else  {
                 Object value1 = getOperand(0).interpret(helper);
                 Object value2 = getOperand(1).interpret(helper);
@@ -546,6 +557,52 @@ public class ComparisonExpression extends BooleanExpression
             }
             // label the join point
             mv.visitLabel(jointarget);
+        } else if (comparisonType == Type.Z) {
+            // unboxed booleans need special treatment
+            // we remove two words replacing them with a single word
+            removed = 2;
+            Label elsetarget = new Label();
+            Label endtarget = new Label();
+            mv.visitJumpInsn(Opcodes.IFEQ, elsetarget);
+            // on this branch for EQ the stacked value is what we need and for NE
+            // the stacked value needs flipping
+            if (oper == NE) {
+                Label elsetarget2 = new Label();
+                mv.visitJumpInsn(Opcodes.IFEQ, elsetarget2);
+                mv.visitLdcInsn(false);
+                mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                mv.visitLabel(elsetarget2);
+                mv.visitLdcInsn(true);
+            }
+            mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+            mv.visitLabel(elsetarget);
+            // on this branch for NE the stacked value is what we need and for EQ
+            // the stacked value needs flipping
+            if (oper == EQ) {
+                Label elsetarget2 = new Label();
+                mv.visitJumpInsn(Opcodes.IFEQ, elsetarget2);
+                mv.visitLdcInsn(false);
+                mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                mv.visitLabel(elsetarget2);
+                mv.visitLdcInsn(true);
+            }
+            mv.visitLabel(endtarget);
+
+        } else if (comparisonType == Type.BOOLEAN) {
+            // boxed booleans need special treatment
+            // we remove two words replacing them with a single word
+            removed = 2;
+            Label elsetarget = new Label();
+            Label endtarget = new Label();
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java.lang.Boolean", "equals", "(Ljava/lang/Boolean;)Z");
+            if (oper == NE) {
+                mv.visitJumpInsn(Opcodes.IFEQ, elsetarget);
+                mv.visitLdcInsn(true);
+                mv.visitJumpInsn(Opcodes.GOTO, endtarget);
+                mv.visitLabel(elsetarget);
+                mv.visitLdcInsn(false);
+                mv.visitLabel(endtarget);
+            }
         } else {
             // we remove two words replacing them with a single word
             removed = 2;
