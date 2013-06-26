@@ -33,7 +33,7 @@
         into Java application and JVM runtime methods. Its primary purpose is to support execution tracing and fault
         injection testing.
     </description>
-    <version>2.1.3-SNAPSHOT</version>
+    <version>2.1.3</version>
     <name>byteman-root</name>
     <url>http://www.jboss.org/byteman</url>
 
