@@ -392,12 +392,17 @@ ca_error
 ca_error_in_condition
     ::= IF:i error {: error("invalid condition", ileft, iright); :}
         DO actions:a {: RESULT = node(ParseNode.BIND, ileft, iright, null, null, a); :}
+    |   DO actions:a {: error("missing IF clause", aleft, aright);
+                        RESULT = node(ParseNode.BIND, aleft, aright, null, null, a); :}
     ;
 
 ca_error_in_action
     ::= IF condition:c
         DO:d error {: error("invalid action", dleft, dright);
                       RESULT = node(ParseNode.BIND, cleft, cright, null, c, null); :}
+    |   DO:d error {: error("invalid action", dleft, dright);
+                      error("missing IF clause", dleft, dright);
+                      RESULT = node(ParseNode.BIND, dleft, dright, null, null, null); :}
     ;
 
 // event specifications -- for now events are just a list of bindings
