@@ -111,7 +111,7 @@ public class BMUnit
      */
     private static boolean initPolicy()
     {
-	String policyString= System.getProperty(AGENT_PORT);
+	String policyString= System.getProperty(AGENT_POLICY);
 	return (policyString == null ? false : Boolean.valueOf(policyString));
     }
 
