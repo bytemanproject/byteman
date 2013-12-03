@@ -259,11 +259,15 @@ public class RuleCheck {
 
                     try {
                         rule.typeCheck();
+                        rule.compile();
                     } catch (TypeWarningException te) {
                         typeWarning("WARNING : Unable to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine() + (methodName == null ? "" : " against method " + methodName), te);
                         continue;
                     } catch (TypeException te) {
                         typeError("ERROR : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine() + (methodName == null ? "" : " against method " + methodName), te);
+                        continue;
+                    } catch (CompileException ce) {
+                        typeError("ERROR : Failed to compile rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine() + (methodName == null ? "" : " against method " + methodName), ce);
                         continue;
                     }
 
@@ -377,6 +381,7 @@ public class RuleCheck {
                     if (paramErrorCount == 0) {
                         try {
                             rule.typeCheck();
+                            rule.compile();
                         } catch (TypeWarningException te) {
                             typeWarning("WARNING : Unable to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine(), te);
                             System.out.println(te);
@@ -385,6 +390,11 @@ public class RuleCheck {
                         } catch (TypeException te) {
                             typeError("ERROR : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine(), te);
                             System.out.println(te);
+                            System.out.println();
+                            return;
+                        } catch (CompileException ce) {
+                            typeError("ERROR : Failed to compile rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine(), ce);
+                            System.out.println(ce);
                             System.out.println();
                             return;
                         }
