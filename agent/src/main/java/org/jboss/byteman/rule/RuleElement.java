@@ -361,6 +361,10 @@ public abstract class RuleElement {
             throws CompileException
     {
         if (toType == Type.Z) {
+            if (fromType == Type.OBJECT) {
+                fromType = Type.BOOLEAN;
+                mv.visitTypeInsn(Opcodes.CHECKCAST, fromType.getInternalName(false, true));
+            }
             assert fromType == Type.BOOLEAN;
             compileUnbox(fromType, toType, mv, compileContext);
         } else {
