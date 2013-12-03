@@ -441,6 +441,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
             } else if (binding.isLocalVar()){
                 int idx = binding.getLocalIndex();
                 loadLocal(idx);
+                // local type may be Object when actual type is more specific but we don't care here
                 box(getLocalType(idx));
             } else if (binding.isParamCount()){
                 int count = argumentTypes.length;
@@ -532,7 +533,16 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
                     storeArg(idx);
                 } else if (binding.isLocalVar()) {
                     int idx = binding.getLocalIndex();
-                    unbox(getLocalType(idx));
+                    Type t = getLocalType(idx);
+                    // cannot always trust locals flagged as Object type because we sometimes
+                    // insert that when we see an ALOAD for a local var we do not know about.
+                    // but we can rely on the descriptor in the binding which we derived during
+                    // rule check processing
+                    if (t.getClassName().equals("java.lang.Object")) {
+                        String descriptor = binding.getDescriptor();
+                        t = Type.getType("L" + descriptor.replace('.', '/') + ";");
+                    }
+                    unbox(t);
                     storeLocal(idx);
                 }
             }
