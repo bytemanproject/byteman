@@ -144,7 +144,7 @@ that @BMScript rules are always loaded before rules specified via @BMRule.
 File lookup employs the computed test name and/or the test class name to locate
 the rule script, trying various alternative combinations of these two values. If you
 have configured a lookup directory then files are searched for below that directory.
-Otherwise, System property org.jboss.byteman.contrib.bmunit.script.directory will be
+Otherwise, System property org.jboss.byteman.contrib.bmunit.load.directory will be
 checked and, if set, used as the search directory. Failing that the search will proceed
 using the working directory of the test.
 
@@ -166,6 +166,17 @@ Look for
 6) <dir>/org/my/TestCaseClass.txt
 7) <dir>/TestCaseClass.btm
 8) <dir>/TestCaseClass.txt
+
+Files are also searched for as classloader resources. If you have configured
+a lookup directory then that directory is used as a prefix for the resource name.
+Otherwise, System property org.jboss.byteman.contrib.bmunit.load.directory will be
+checked and, if set, used as the resource name prefix. If this property is unset
+then the value of org.jboss.byteman.contrib.bmunit.load.directory will be used
+instead. If neither is set then no resource prefix will be used.
+
+Note that when running on Windows any '/' separator occurring in a file name
+will be substituted with a'\' character. If you wnat your tests to run on both
+Windows and Linux/Unix then you should specify dir paths usng '/' as a separator.
 
 JUnit 3 Style Tests
 -------------------

@@ -1,6 +1,5 @@
 package org.jboss.byteman.contrib.bmunit;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.sun.tools.attach.AgentInitializationException;
 import org.jboss.byteman.agent.install.Install;
 import org.jboss.byteman.agent.install.VMInfo;
@@ -22,10 +21,17 @@ import java.util.List;
 public class BMUnit
 {
     /**
-     * System property which identifies the directory from which to start searching
-     * for rule script. If unset the current working directory of the test is used.
+     * System property which identifies the directory from which to
+     * start searching for rule script. If unset the current working
+     * directory of the test is used.
      */
-    public final static String LOAD_DIRECTORY = "org.jboss.byteman.contrib.bmunit.script.directory";
+    public final static String LOAD_DIRECTORY = "org.jboss.byteman.contrib.bmunit.load.directory";
+
+    /**
+     * System property which identifies the resource load directory
+     * from which to start searching for rule script.
+     */
+    public final static String RESOURCE_LOAD_DIRECTORY = "org.jboss.byteman.contrib.bmunit.resource.load.directory";
 
     /**
      * System property specifying the port to be used when starting the agent and when submitting
@@ -62,10 +68,26 @@ public class BMUnit
     private final static boolean verbose = (System.getProperty(VERBOSE) != null);
 
     /**
-     * the directory in which to look for rule scripts. this can be configured by setting system property
+     * the file separator character used by the native file system
+     */
+    private static char fs = File.separatorChar;
+
+    /**
+     * the directory in which to look for rule scripts. this can be
+     * configured by setting system property
      * org.jboss.byteman.contrib.bmunit.load.directory
      */
     private static String defaultLoadDirectory = initDefaultLoadDirectory();
+
+    /**
+     * the resource path used to look for rule scripts. this can be
+     * configured by setting system property
+     * org.jboss.byteman.contrib.bmunit.resource.load.directory
+     *
+     * if that property is unset then it will be set from property
+     * org.jboss.byteman.contrib.bmunit.load.directory
+     */
+    private static String defaultResourceLoadDirectory = initDefaultResourceLoadDirectory();
 
     /**
      * hash table used to maintain association between test cases and rule files
@@ -139,15 +161,76 @@ public class BMUnit
 	return policy;
     }
     /**
-     * computes the default load directory from system property org.jboss.byteman.contrib.bmunit.load.directory
-     * or defaults  it to "."
+     * computes the default load directory from system property
+     * org.jboss.byteman.contrib.bmunit.load.directory or defaults it
+     * to ""
      * @return the load directory
      */
     private static String initDefaultLoadDirectory()
     {
         String dir = System.getProperty(LOAD_DIRECTORY);
-        if (dir == null || dir.length() == 0) {
-            dir = ".";
+        if (dir == null) {
+            return "";
+        }
+        return normalize(dir, true);
+    }
+
+    /**
+     * computes the default resource load directory from system
+     * property
+     * org.jboss.byteman.contrib.bmunit.resource.load.directory or
+     * defaults it to the load directory
+     * @return the resource load directory
+     */
+    private static String initDefaultResourceLoadDirectory()
+    {
+        String dir = System.getProperty(RESOURCE_LOAD_DIRECTORY);
+        if (dir == null) {
+            dir = System.getProperty(LOAD_DIRECTORY);
+            if (dir == null) {
+                dir = "";
+            }
+        }
+        int l = dir.length();
+        if (l > 0 && dir.charAt(l) != '/') {
+            dir = dir + "/";
+        }
+        return dir;
+    }
+
+    /**
+     * transform the supplied directory string if necessary to employ
+     * the file separator appropriate to the current file system,
+     * including a separator at the end if requested and not present.
+     *
+     * BMUnit assumes that all supplied paths are specified in Unix
+     * format i.e. with a '/' separator. So, transformation of '/' to
+     * '\' is only performed on Windows systems.
+     * 
+     * @dir the directory string to be checked
+     * @endWithSeparator true if the returned directory must terminate
+     * wiht a file separator
+     */
+    private static String normalize(String dir, boolean endWithSeparator)
+    {
+        int l = dir.length();
+        if (l == 0) {
+            // don't worry about appending a separator to an empty
+            // string as endWithSeparator is only used for the
+            // relative load path and "" is used to specify a relative
+            // path
+            return dir;
+        }
+
+        if (fs == '\\' && dir.indexOf('/', 0) >= 0) {
+            dir = dir.replace('/', '\\');
+        }
+
+        if (endWithSeparator && dir.charAt(l - 1) != fs) {
+            StringBuilder sb = new StringBuilder(l+1);
+            sb.append(dir);
+            sb.append(fs);
+            return sb.toString();
         }
 
         return dir;
@@ -291,28 +374,25 @@ public class BMUnit
      */
     public static void loadScriptFile(Class<?> clazz, String testName, String dir) throws Exception
     {
-        String loadDirectory = dir;
-        if (loadDirectory == null) {
-            loadDirectory = defaultLoadDirectory;
-        }
         // turn '.' characters into file separator characters
         String className = clazz.getName();
         if (testName ==  null) {
             testName = "";
         }
         String key = className + "#"  + testName;
-        className = className.replace('.', File.separatorChar);
-        int index = className.lastIndexOf(File.separatorChar);
+        className = className.replace('.', '/');
+        int index = className.lastIndexOf('/');
         // we can also use the class name without package qualifier
         String bareClassName = (index < 0 ? null : className.substring(index  + 1));
 
         String filename = null;
         File file = null;
         // first try for rule file based on test name or class name  plus test name
-        filename=findScript(loadDirectory,
+        filename=findScript(dir,
                             testName,
                             className + "-" + testName,
-                            className, bareClassName);
+                            className, bareClassName,
+                            bareClassName + "-" + testName);
         if(filename != null)
             file=new File(filename);
 
@@ -362,7 +442,7 @@ public class BMUnit
     /**
      * loads a script supplied as a text String rather than via a file on disk
      * @param clazz the test class
-     * @param testName the test name
+     * @param testname the test name
      * @param scriptText the text of the rule or rules contained in the script
      */
     public static void loadScriptText(Class<?> clazz, String testname, String scriptText) throws Exception
@@ -388,7 +468,6 @@ public class BMUnit
      * unloads a script previously supplied as a text String
      * @param clazz the test class
      * @param testName the test name
-     * @param scriptText the text of the rule or rules contained in the script
      */
     public static void unloadScriptText(Class<?> clazz, String testName) throws Exception
     {
@@ -419,13 +498,17 @@ public class BMUnit
      * @return The fully qualified name of the file, or null if not found
      */
     protected static String findScript(String dir, String name) {
-        String filename=name;
+        if(name == null) return null;
+        String filename=normalize(name, false);
 	String resourceName = name;
-        if(filename == null) return null;
         if(dir != null && dir.length() > 0) {
-            filename=dir + File.separator + filename;
+            filename=normalize(dir, true) + filename;
             resourceName=dir + "/" + resourceName;
-	}
+	} else {
+            // n.b. defaults either are "" or end with correct separator
+            filename = defaultLoadDirectory + filename;
+            resourceName = defaultResourceLoadDirectory + filename;
+        }
 
         final String[] filenames={filename, filename + ".btm", filename + ".txt"};
         final String[] resourceNames={resourceName, resourceName + ".btm", resourceName + ".txt"};
