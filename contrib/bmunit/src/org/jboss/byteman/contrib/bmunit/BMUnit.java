@@ -7,6 +7,7 @@ import org.jboss.byteman.agent.submit.ScriptText;
 import org.jboss.byteman.agent.submit.Submit;
 
 import java.io.*;
+import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -284,6 +285,26 @@ public class BMUnit
                 if (unique.equals(value)) {
                     id = nextId;
                     break;
+                }
+            }
+            // last ditch effort to obtain pid on Windows where the availableVMs list may be empty
+            if (id == null) {
+                String processName = ManagementFactory.getRuntimeMXBean().getName();
+                if (processName != null && processName.contains("@")) {
+                    id = processName.substring(0, processName.indexOf("@"));
+                    // check we actually have an integer
+                    try {
+                        Integer.parseInt(id);
+                        // well, it's a number so now check it identifies the current VM
+                        String value = Install.getSystemProperty(id, prop);
+                        if (!unique.equals(value)) {
+                            // nope, not the right process
+                            id = null;
+                        }
+                    } catch (NumberFormatException e) {
+                        // nope, not a number
+                        id = null;
+                    }
                 }
             }
             // make sure we found a process
