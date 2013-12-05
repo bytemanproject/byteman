@@ -8,6 +8,7 @@ import org.jboss.byteman.agent.submit.ScriptText;
 import org.jboss.byteman.agent.submit.Submit;
 
 import java.io.*;
+import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -203,6 +204,18 @@ public class BMUnit
                     break;
                 }
             }
+			
+			// for case we don't get any availableVMs
+			// try to get the current process ID
+			if (id == null) {
+                String processName = ManagementFactory.getRuntimeMXBean().getName();
+				if (processName != null && processName.contains("@")) {
+					try {
+						id = Integer.valueOf(processName.substring(0, processName.indexOf("@"))).toString();
+					} catch (Exception e) {}
+				}
+            }
+			
             // make sure we found a process
             if (id == null) {
                 throw new Exception("BMUnit : Unable to identify test JVM process during agent load");
