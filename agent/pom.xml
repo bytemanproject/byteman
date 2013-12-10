@@ -235,6 +235,21 @@
                          <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/javaops/TestNew.btm</argLine>
                       </configuration>
                     </execution>
+                    <execution>
+                      <id>javaops.TestClassLiteral</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                         <forkMode>once</forkMode>
+                         <includes>
+                           <include>org/jboss/byteman/tests/javaops/TestClassLiteral.class</include>
+                         </includes>
+                         <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/javaops/TestClassLiteral.btm</argLine>
+                      </configuration>
+                    </execution>
                     <!-- location clauses -->
                     <execution>
                       <id>location.TestAll</id>
@@ -1025,6 +1040,21 @@
                                 <include>org/jboss/byteman/tests/javaops/TestNew.class</include>
                             </includes>
                             <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/javaops/TestNew.btm</argLine>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>javaops.TestClassLiteral.compiled</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkMode>once</forkMode>
+                            <includes>
+                                <include>org/jboss/byteman/tests/javaops/TestClassLiteral.class</include>
+                            </includes>
+                            <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/javaops/TestClassLiteral.btm</argLine>
                         </configuration>
                     </execution>
                     <!-- location clauses compiled -->

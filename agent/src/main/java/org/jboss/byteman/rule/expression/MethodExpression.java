@@ -118,7 +118,7 @@ public class MethodExpression extends Expression
             // factor off a typename from the path
             Type rootType = typeGroup.match(pathList);
             if (rootType == null) {
-                throw new TypeException("FieldExpression.typeCheck : invalid path " + getPath(pathList.length) + " to static method " + name + getPos());
+                throw new TypeException("MethodExpression.typeCheck : invalid path " + getPath(pathList.length) + " to static method " + name + getPos());
             }
 
             // find out how many of the path elements are included in the type name

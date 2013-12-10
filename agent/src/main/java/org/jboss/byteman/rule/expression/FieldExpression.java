@@ -356,6 +356,7 @@ public class FieldExpression extends AssignableExpression
     private Field field;
     private AssignableExpression indirectStatic;
     private boolean isArrayLength;
+    private boolean isClassAccess;
 
     /**
      * true if this is a public field otherwise false

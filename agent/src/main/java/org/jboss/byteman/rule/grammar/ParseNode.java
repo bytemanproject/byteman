@@ -53,6 +53,7 @@ public abstract class ParseNode
     public final static int UNOP = 19;
     public final static int NEW = 20;
     public final static int NULL_LITERAL = 21;
+    public final static int CLASS = 22;
     /* tags for operators */
     public final static int AND = 30;
     public final static int BAND = 31;
@@ -358,6 +359,8 @@ public abstract class ParseNode
                 case STRING_LITERAL:
                     return "\"" + ((String)child0) + "\"";
                 case DOLLAR:
+                    return ((String)child0);
+                case CLASS:
                     return ((String)child0);
                 default:
                     System.out.println("UnaryNode.getText() : Unexpected tag " + tag);

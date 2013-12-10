@@ -108,7 +108,9 @@ Float = {Sign}? {PosFloat}
 "RULE"		{ return symbol(sym.RULE); }
 
 "CLASS"		{ return symbol(sym.CLASS); }
-	
+
+"class"		{ return symbol(sym.CLASS); }
+
 "METHOD"	{ return symbol(sym.METHOD); }
 	
 "LINE"		{ return symbol(sym.LINE); }
@@ -130,6 +132,8 @@ Float = {Sign}? {PosFloat}
 "THROW"|"throw"	{ return symbol(sym.THROW); }
 
 "NEW"|"new"	{ return symbol(sym.NEW); }
+
+"class"		{ return symbol(sym.CLASS); }
 
 /* various bracket pairs */
 	

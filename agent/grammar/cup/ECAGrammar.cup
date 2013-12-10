@@ -198,10 +198,11 @@ scan with {: Symbol token = getScanner().next_token();
 /* rule definition keywords */
 /* first the redundant ones */
 /*
-terminal	RULE, CLASS, METHOD, LINE, ENDRULE;
+terminal	RULE, METHOD, LINE, ENDRULE;
 */
 /* now the required ones */
 
+terminal CLASS;
 terminal	BIND, IF, DO;
 
 /* keywords ocurring in bindings, conditions and actions */
@@ -601,6 +602,8 @@ array_idx
 field_expr
 	::=	path:p DOT simple_name:f
 		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, p); :}
+	|	path:p DOT CLASS
+		{: RESULT = node(ParseNode.CLASS, pleft, pright, p); :}
 	|	expr_field_expr:efe {: RESULT = efe; :}
 	;
 
