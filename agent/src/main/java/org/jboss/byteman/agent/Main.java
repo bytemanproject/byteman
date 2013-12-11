@@ -24,6 +24,7 @@
 package org.jboss.byteman.agent;
 
 
+import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.reflect.Constructor;
@@ -87,6 +88,8 @@ public class Main {
                     }
                 } else if (arg.startsWith(SCRIPT_PREFIX)) {
                     scriptPaths.add(arg.substring(SCRIPT_PREFIX.length(), arg.length()));
+                } else if (arg.startsWith(RESOURCE_SCRIPT_PREFIX)) {
+                    resourcescriptPaths.add(arg.substring(RESOURCE_SCRIPT_PREFIX.length(), arg.length()));
                 } else if (arg.startsWith(LISTENER_PREFIX)) {
                     String value = arg.substring(LISTENER_PREFIX.length(), arg.length());
                     allowRedefine = Boolean.parseBoolean(value);
@@ -178,6 +181,24 @@ public class Main {
             }
         }
 
+        // look up rules in any resource script files
+
+        for (String scriptPath : resourcescriptPaths) {
+            try {
+                InputStream is = ClassLoader.getSystemResourceAsStream(scriptPath);
+                if (is == null) {
+                    throw new Exception("org.jboss.byteman.agent.Main: could not read rule script resource file : " + scriptPath);
+                }
+                byte[] bytes = new byte[is.available()];
+                is.read(bytes);
+                String ruleScript = new String(bytes);
+                scripts.add(ruleScript);
+            } catch (IOException ioe) {
+                System.err.println("org.jboss.byteman.agent.Main: error reading rule script resource file : " + scriptPath);
+                throw ioe;
+            }
+        }
+
         // install an instance of Transformer to instrument the bytecode
         // n.b. this is done with boxing gloves on using explicit class loading and method invocation
         // via reflection for a GOOD reason. This class (Main) gets laoded by the System class loader.
@@ -264,10 +285,16 @@ public class Main {
      */
     private static final String POLICY_PREFIX = "policy:";
     /**
-     * prefix used to specify script argument for agent
+     * prefix used to specify file script argument for agent
      */
 
     private static final String SCRIPT_PREFIX = "script:";
+
+    /**
+     * prefix used to specify resource script argument for agent
+     */
+
+    private static final String RESOURCE_SCRIPT_PREFIX = "resourcescript:";
 
     /**
      * prefix used to specify transformer type argument for agent
@@ -301,6 +328,11 @@ public class Main {
      * list of paths to script files supplied on command line
      */
     private static List<String> scriptPaths = new ArrayList<String>();
+
+    /**
+     * list of paths to resource script files supplied on command line
+     */
+    private static List<String> resourcescriptPaths = new ArrayList<String>();
 
     /**
      * list of scripts read from script files
