@@ -193,6 +193,8 @@ public class Main {
                 is.read(bytes);
                 String ruleScript = new String(bytes);
                 scripts.add(ruleScript);
+                // merge the resource and file script paths into one list
+                scriptPaths.add(scriptPath);
             } catch (IOException ioe) {
                 System.err.println("org.jboss.byteman.agent.Main: error reading rule script resource file : " + scriptPath);
                 throw ioe;
