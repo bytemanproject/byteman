@@ -656,11 +656,22 @@ public class Helper
      */
     public int rendezvous(Object identifier)
     {
+        return rendezvous(identifier, 0);
+    }
+
+    /**
+     *
+     * @param identifier
+     * @param millis
+     * @return
+     */
+    public int rendezvous(Object identifier, long millis)
+    {
         Rendezvous rendezvous = rendezvousMap.get(identifier);
 
         if (rendezvous !=  null) {
             synchronized(rendezvous) {
-                int result = rendezvous.rendezvous();
+                int result = rendezvous.rendezvous(millis);
                 // make sure the rendezvous is removed from the map if required
                 // n.b. this implementation makes sure the remove happens before any thread
                 // successfully passes the rendezvous call

@@ -23,6 +23,8 @@
 */
 package org.jboss.byteman.synchronization;
 
+import org.jboss.byteman.rule.exception.ExecuteException;
+
 /**
  * class used to manage rule rendezvous operations
  */
@@ -48,12 +50,12 @@ public class Rendezvous
      * @return the index in arrival order from 0 to expected of the calling thread or -1 if
      * either the rendezvous has completed and is not restartable or the rendezvous has been deleted
      */
-    public int rendezvous()
+    public int rendezvous(long millis)
     {
         Counter currentCounter = counter;
 
         // too late the rendezvous has expired
-        
+
         if (isDeleted || (currentCounter.arrived == expected)) {
             return -1;
         }
@@ -63,13 +65,25 @@ public class Rendezvous
         int index = currentCounter.arrived++;
 
         if (currentCounter.arrived < expected) {
+            long target_time=System.currentTimeMillis() + millis;
+            boolean expired=false;
             // make sure we don't return before the rendezvous has actually happened
             while (currentCounter.arrived < expected) {
                 try {
-                    this.wait();
+                    if(millis <= 0)
+                        this.wait();
+                    else {
+                        long wait_time=target_time - System.currentTimeMillis();
+                        if(wait_time > 0)
+                            this.wait(wait_time);
+                        else
+                            expired=true;
+                    }
                 } catch (InterruptedException e) {
                     // do nothing
                 }
+                if(millis > 0 && currentCounter.arrived < expected && expired)
+                    throw new ExecuteException("timeout occurred in rendezvous");
 
                 // isPoisoned may have changed because a delete happened while we were waiting
 
@@ -94,6 +108,8 @@ public class Rendezvous
 
         return index;
     }
+
+
 
     /**
      * delete this rendezvous causing any waiting threads to return -1 form the rendezvous call. n.b. this
