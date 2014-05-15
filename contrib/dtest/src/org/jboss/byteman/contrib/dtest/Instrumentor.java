@@ -111,11 +111,17 @@ public class Instrumentor
     public InstrumentedClass instrumentClass(Class clazz, Set<String> methodNames) throws Exception
     {
         String className = clazz.getCanonicalName();
+        Set<String> instrumentedMethods = new HashSet<String>();
 
         StringBuilder ruleScriptBuilder = new StringBuilder();
         for(Method method : clazz.getDeclaredMethods()) {
-
             String methodName = method.getName();
+            
+            if(instrumentedMethods.contains(methodName)) {
+              // do not add two identical rules for methods which differ by parameters
+              continue;
+            }
+            
             if(methodNames == null || methodNames.contains(methodName)) {
 
                 String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_remotetrace_entry";
@@ -125,6 +131,8 @@ public class Instrumentor
                 ruleBuilder.usingHelper(BytemanTestHelper.class);
                 ruleBuilder.doAction("setTriggering(false), debug(\"firing "+ruleName+"\", $0), remoteTrace(\""+className+"\", \""+methodName+"\", $*)");
                 ruleScriptBuilder.append(ruleBuilder.toString());
+                
+                instrumentedMethods.add(methodName);
             }
         }
 
