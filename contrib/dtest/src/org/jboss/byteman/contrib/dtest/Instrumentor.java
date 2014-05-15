@@ -203,7 +203,13 @@ public class Instrumentor
         String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_injectionat"+where;
 
         RuleBuilder ruleBuilder = new RuleBuilder(ruleName);
-        ruleBuilder.onClass(className).inMethod(methodName).at(where);
+        if(clazz.isInterface()) 
+        {
+            ruleBuilder.onInterface(className);
+        } else {
+            ruleBuilder.onClass(className);
+        }
+        ruleBuilder.inMethod(methodName).at(where);
         ruleBuilder.usingHelper(BytemanTestHelper.class);
         ruleBuilder.when(condition).doAction(action);
 
