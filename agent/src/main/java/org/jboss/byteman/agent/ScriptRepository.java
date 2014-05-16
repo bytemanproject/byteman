@@ -473,6 +473,14 @@ public class ScriptRepository
                     if (signaturePos > 0) {
                         methodName = methodName.substring(0, signaturePos).trim();
                     }
+                    int wsPos = methodName.indexOf(' ');
+                    if (wsPos < 0) {
+                       wsPos = methodName.indexOf('\t');
+                    }
+                    if (wsPos > 0) {
+                        // ok, so METHOD spec must be in format "type methodname"
+                        methodName = methodName.substring(wsPos).trim();
+                    }
                     if ("<init>".equals(methodName) || "<clinit>".equals(methodName)) {
                         // every class has some sort of constructor so accept it
                         return true;
