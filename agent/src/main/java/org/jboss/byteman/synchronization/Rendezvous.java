@@ -66,24 +66,22 @@ public class Rendezvous
 
         if (currentCounter.arrived < expected) {
             long target_time=System.currentTimeMillis() + millis;
-            boolean expired=false;
             // make sure we don't return before the rendezvous has actually happened
             while (currentCounter.arrived < expected) {
                 try {
-                    if(millis <= 0)
+                    if(millis <= 0) {
                         this.wait();
-                    else {
+                    } else {
                         long wait_time=target_time - System.currentTimeMillis();
-                        if(wait_time > 0)
+                        if(wait_time > 0) {
                             this.wait(wait_time);
-                        else
-                            expired=true;
+                        } else {
+                            throw new ExecuteException("timeout occurred in rendezvous");
+                        }
                     }
                 } catch (InterruptedException e) {
                     // do nothing
                 }
-                if(millis > 0 && currentCounter.arrived < expected && expired)
-                    throw new ExecuteException("timeout occurred in rendezvous");
 
                 // isPoisoned may have changed because a delete happened while we were waiting
 
