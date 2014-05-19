@@ -781,7 +781,7 @@ public class Helper
 
     public boolean joinWait(Object key, int count)
     {
-        joinWait(key, count, 0)
+        return joinWait(key, count, 0);
     }
     public boolean joinWait(Object key, int count, long millis)
     {
