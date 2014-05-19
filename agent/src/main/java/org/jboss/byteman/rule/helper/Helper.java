@@ -781,6 +781,10 @@ public class Helper
 
     public boolean joinWait(Object key, int count)
     {
+        joinWait(key, count, 0)
+    }
+    public boolean joinWait(Object key, int count, long millis)
+    {
         Joiner joiner;
         synchronized (joinerMap)
         {
@@ -793,7 +797,7 @@ public class Helper
 
         Thread current = Thread.currentThread();
 
-        if (joiner.joinChildren(current)) {
+        if (joiner.joinChildren(current, millis)) {
             // successfully joined all child threads so remove joiner form map
             synchronized (joinerMap) {
                 joinerMap.remove(key);

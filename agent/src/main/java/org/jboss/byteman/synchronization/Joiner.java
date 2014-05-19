@@ -23,6 +23,8 @@
 */
 package org.jboss.byteman.synchronization;
 
+import org.jboss.byteman.rule.exception.ExecuteException;
+
 import java.util.List;
 import java.util.LinkedList;
 
@@ -104,8 +106,9 @@ public class Joiner
         return Status.ADDED;
     }
 
-    public boolean joinChildren(Thread thread)
+    public boolean joinChildren(Thread thread, long millis)
     {
+        long target_time=System.currentTimeMillis() + millis;
         synchronized (this) {
             if (parent != null) {
                 return false;
@@ -113,17 +116,36 @@ public class Joiner
             parent = thread;
             while (children.size() < max) {
                 try {
-                    wait();
+                    if (millis <= 0) {
+                        this.wait();
+                    } else {
+                        long wait_time=target_time - System.currentTimeMillis();
+                        if(wait_time > 0) {
+                            this.wait(wait_time);
+                        } else {
+                            throw new ExecuteException("timeout occurred in joinWait");
+                        }
+                    }
                 } catch (InterruptedException e) {
                     // do nothing
                 }
             }
         }
+
         // since we are the parent and the waiting is over we don't need to stay synchronized
         for (int i = 0; i < max;) {
             Thread child = children.get(i);
             try {
-                child.join();
+                if (millis <= 0) {
+                    child.join();
+                } else {
+                    long wait_time=target_time - System.currentTimeMillis();
+                    if(wait_time > 0) {
+                        child.join(wait_time);
+                    } else {
+                        throw new ExecuteException("timeout occurred in joinWait");
+                    }
+                }
             } catch (InterruptedException e) {
                 // try again
                 break;
@@ -133,4 +155,3 @@ public class Joiner
         return true;
     }
 }
-
