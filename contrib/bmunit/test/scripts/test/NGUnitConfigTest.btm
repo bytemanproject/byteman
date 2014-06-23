@@ -1,6 +1,6 @@
 # Test script to check load and unload at class level
 RULE NG test autoload class rule
-CLASS NGUnitTest
+CLASS NGUnitConfigTest
 METHOD tryAlways()
 AT ENTRY
 IF TRUE

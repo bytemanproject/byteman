@@ -143,18 +143,27 @@ that @BMScript rules are always loaded before rules specified via @BMRule.
 ---------------------
 File lookup employs the computed test name and/or the test class name to locate
 the rule script, trying various alternative combinations of these two values. If you
-have configured a lookup directory then files are searched for below that directory.
-Otherwise, System property org.jboss.byteman.contrib.bmunit.load.directory will be
-checked and, if set, used as the search directory. Failing that the search will proceed
-using the working directory of the test.
+have configured a lookup directory then files are searched for below that directory
+as a path to the file. Files will also be looked up as resources on the class path
+using the same directory setting as a resource path.
 
-Files are searched for as follows:
+If the BMScript dir attribute is omitted the then any currently configured load
+directory setting is used as the file lookup path and any currently configured
+resource load directory is used the resource lookup path. See below for how to
+configure these paths either via @BMUNitConfig annotations or using system
+properties.
+
+If the BMScript dir attribute is omitted and no load directory or resource directory
+is specified then file lookups use the current working directory and resource lookups
+use an empty resource path.
+
+Files (or resources) are searched for as follows:
 
 Let
 
   testName be the test name ("" or null means cases with * are ignored)
   org.my.TestCaseClass be the name of the test class
-  <dir> be the configured script lookup directory
+  <dir> be the configured script lookup directory (or resource lookup path)
 
 Look for
 
@@ -167,16 +176,205 @@ Look for
 7) <dir>/TestCaseClass.btm
 8) <dir>/TestCaseClass.txt
 
-Files are also searched for as classloader resources. If you have configured
-a lookup directory then that directory is used as a prefix for the resource name.
-Otherwise, System property org.jboss.byteman.contrib.bmunit.load.directory will be
-checked and, if set, used as the resource name prefix. If this property is unset
-then the value of org.jboss.byteman.contrib.bmunit.load.directory will be used
-instead. If neither is set then no resource prefix will be used.
-
 Note that when running on Windows any '/' separator occurring in a file name
-will be substituted with a'\' character. If you wnat your tests to run on both
-Windows and Linux/Unix then you should specify dir paths usng '/' as a separator.
+will be substituted with a'\' character (of course, '/' separators in resource
+paths will be used unmodified). If you want your tests to run on both
+Windows and Linux/Unix then you should specify dir paths using '/' as a
+separator.
+
+BMUnit Configuration and the @BMUnitConfig Annotation
+-----------------------------------------------------
+
+You can configure the behaviour of the BMUnit package (and also the
+behaviour of the Byteman agent) using the BMUnitConfig annotation.
+This annotation can be attached to your test classes to define a
+configuration for all tests in the class. It can also be attached to a
+test method to override the class-specific configuration for the
+duration of that test method run.
+
+The configuration associated with the first test class in a test run
+is referred to as the default configuration. Subsequent class-level
+configurations are interpreted as specifying configuration changes
+relative to this default configuration. Method-level configurations
+are interpreted relative to their class configuration. If a test
+class (other than the first test class) omits a BMUnitConfig annotation
+then the default configuration is used as its class configuration.
+
+This is significant because the default configuration defines certain
+settings which are used when auto-loading the Byteman agent into the
+current JVM (specifically, these settings are configured from annotation
+attributes inhibitAgentLoad, agentHost, agentPort, verbose, debug,
+allowConfigUpdate and policy). This means that subsequently encountered
+class or method configurations may not be able to reconfigure some of these
+values.
+
+If the first test class in a test run does not have a BMUnitConfig
+annotation then a default configuration is generated using standard
+values and these standard values will be used when auto-loading the
+Byteman agent. As with earlier versions of BMUnit these standard values
+may be configured using system property settings. Note these standard
+values are not exactly the ame as the values used to fill in omitted
+annotation fields. This disparity is needed to retain consistent
+operation for older tests while ensuring that annotation-based configurations
+can support overriding of the configuration from one class or test method
+to the next.
+
+The following table lists the attributes provided in a BMUnitConfig
+annotation. The table displays the annotation default, the value used to
+populate the default configuration if no annotation is present on the
+first test class encountered and, where appropriate, the system property
+which can be set to provide an alternative configuration.
+
+    enforce                 false        false
+    agentHost               ""           ""           org.jboss.byteman.contrib.bmunit.agent.host
+    agentPort               ""           ""           org.jboss.byteman.contrib.bmunit.agent.port
+    inhibitAgentLoad        false        false        org.jboss.byteman.contrib.bmunit.agent.inhibit
+    loadDirectory           ""           ""           org.jboss.byteman.contrib.bmunit.load.directory
+    resourceLoadDirectory   ""           ""           org.jboss.byteman.contrib.bmunit.resource.load.directory
+    allowAgentConfigUpdate  true         false
+    verbose                 false        false        org.jboss.byteman.verbose
+    debug                   false        false        org.jboss.byteman.debug
+    bmunitVerbose           false        false        org.jboss.byteman.contrib.bmunit.verbose
+    policy                  false        false        org.jboss.byteman.contrib.bmunit.agent.policy
+
+The meaning of each annotation is as follows:
+
+enforce
+-------
+if true then /any/ incompatibilities between the current configuration
+and the configuration specified in this annotation will lead to an
+exception. if false incompatibilities will be ignored by using
+the current config setting (as described below). enforce only applies
+to certain of the attributes used to configure agent autoload i.e.
+inhibitAgentLoad, verbose, debug, allowConfigUpdate and policy
+
+agentHost
+---------
+this is the host name to be used when uploading rules found in BMScript
+or BMRule annotations. if it is an empty string then the value active
+in the current configuration is used. if the default configuration
+value is provided as an empty string then the standard value
+"localhost" will be used unless it is redefined by setting system
+property org.jboss.byteman.contrib.bmunit.agent.host
+
+n.b. if BMUnit autoloads the agent into the current JVM it will use this
+hostname when opening its socket listener. you can use a different name
+in other annotations but, at best, your rules will be uploaded to some
+other Byteman agent and, at worst, rule upload will fail. This option
+is most useful if you want to load the agent into a separate test JVM which
+your test will drive via a network interface (e.g. as an HTTP client).
+
+agentPort
+---------
+this is the port number to be used when uploading rules found in BMScript
+or BMRule annotations. if it is an empty string then the value active
+in the current configuration is used. if the default configuration
+value is provided as an empty string then the standard value "9090"
+will be used unless it is redefined by setting system property
+org.jboss.byteman.contrib.bmunit.agent.port Note that any supplied
+value must parse to a positive integer.
+
+n.b. if BMUnit autoloads the agent into the current JVM it will use this
+port when opening its socket listener. you can use a different port
+in other annotations but, at best, your rules will be uploaded to some
+other Byteman agent and, at worst, rule upload will fail. This option
+is most useful if you want to load the agent into a separate test JVM which
+your test will drive via a network interface (e.g. as an HTTP client).
+
+inhibitAgentLoad
+----------------
+if true then BMUnit will not attempt to autoload the Byteman agent into the
+current JVM. if false then BMUnit will autoload the agent before running
+any tests. note that this attribute is only effective in the default
+configuration which is used when BMUnit decides whether or not to load
+the agent. So, if you don't autoload the agent before the first test it will
+not be autoloaded for subsequent tests.
+
+This option is most useful if you want to load the agent into a separate
+test JVM which your test will drive via a network interface (e.g. as an
+HTTP client). You can also use it if you want to perform loading of the
+agent from the java command line or have your test manage loading of the
+agent using the Byteman Install class..
+
+loadDirectory
+-------------
+if this is a non-empty string then it will be used as the root path when
+looking up scripts specified in BMScript annotations. (n.b. the BMScript
+annotation can bypass this value by setting the its dir attribute to a
+non-empty string). if loadDirectory is provided as an empty string then
+the value from the current configuration is used instead. if the default
+configuration specifies an empty string then the standard value
+"" is used (i.e. no prefix) unless it is redefined by setting system
+property org.jboss.byteman.contrib.bmunit.load.directory
+
+resourceLoadDirectory
+---------------------
+if this is a non-empty string then it will be used as the root path when
+looking up scripts specified in BMScript annotations as resources located
+in the classpath. (n.b. the BMScript annotation can bypass this value by
+setting the its dir attribute to a non-empty string). if resourceLoadDirectory
+is provided as an empty string then the value from the current configuration
+is used instead. if the default configuration specifies an empty
+string then the standard value "" is used (i.e. no prefix) unless it is
+redefined either by setting one or other of the two system propertes
+org.jboss.byteman.contrib.bmunit.resource.load.directory or (failing that)
+org.jboss.byteman.contrib.bmunit.load.directory.
+
+allowAgentConfigUpdate
+----------------------
+this option is only effective in the default configuration as it
+controls the behaviour of the autoloaded Byteman agent. if it is
+true then the agent will respond to configuration changes e.g. you
+will be able to switch on or off Byteman verbose trace per test
+or test class. if it is false then any agent settings defined in
+the default configuration will not be modifiable from subsequent
+configurations.
+
+n.b. the annotation default sets this to true. However, when generating
+a default configuration this value is set to false, mimicking the
+old behaviour. This is because enabling configuration means that
+the agent must take a lock whenever it reads a configuration setting.
+Although this is not very costly it may affect performance, causing
+some older tests to give invalid results.
+
+verbose
+-------
+if set to true this option enables the Byteman agent's verbose
+tracing mode. if set to false it disables verbose tracing. n.b. this
+setting is only effective when the default configuration set
+allowAgentConfigUpdate to true. The standard value used when generating
+a default configuration is false unless it is overridden by setting
+system property org.jboss.byteman.verbose to any non-null value (yes,
+that includes "true", "", "false" and "bazinga!")
+
+debug
+-----
+if set to true this option enables the Byteman agent's debug
+tracing mode. if set to false it disables debug tracing. n.b. this
+setting is only effective when the default configuration set
+allowAgentConfigUpdate to true. The standard value used when generating
+a default configuration is false unless it is overridden by setting
+system property org.jboss.byteman.debug to any non-null value (yes,
+once again that includes "true", "", "false" and "bazinga!")
+
+bmunitVerbose
+-------------
+if set to true this option enables BMUnit's verbose tracing mode.
+if set to false it disables verbose tracing. The standard value used
+when generating a default configuration is false unless it is overridden
+by setting system property org.jboss.byteman.contrib.bmunit.verbose to
+any non-null value (yes, you guessed it, that includes "true", "",
+"false", "bazinga!" and "any non-zero-length string")
+
+policy
+------
+this option is only effective in the default configuration as it
+controls the behaviour of the autoloaded Byteman agent. if set to
+true it requests that the agent install a security policy. if false
+the agent will nto install a security policy. The standard value used
+when generating a default configuration is false unless it is overridden
+by setting system property org.jboss.byteman.contrib.bmunit.agent.policy
+to "true" (no, this time "bazinga!" is not going to work).
 
 JUnit 3 Style Tests
 -------------------
@@ -250,10 +448,3 @@ Note that you must ensure that your test does not directly reference classes fro
 agent jar. When the agent is autoloaded this jar is automatically installed into the
 bootstrap classpath. If you load agent classes from your application (i.e. via the
 system classpath) then all sorts of weird $#!+ will happen.
-
-BMUnit Configuration
---------------------
-You can configure some of the behaviour of the BMUnit package by setting various System
-properties in the test JVM. See the BMUnit javadoc for full details.
-
-Annotation based configuration of BMUnit is planned for the next release.

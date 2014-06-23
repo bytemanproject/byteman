@@ -46,15 +46,41 @@
                     <includes>
                         <include>test/NGUnitTest.class</include>
                     </includes>
-                    <forkMode>always</forkMode>
-                    <!-- ensure we don't inherit a byteman jar form any 3env settings -->
+                    <forkMode>once</forkMode>
                     <argLine>-Dorg.jboss.byteman.home=""</argLine>
                     <environmentVariables>
                         <BYTEMAN_HOME></BYTEMAN_HOME>
                     </environmentVariables>
-                    <!-- make sure maven puts the byteman jar in the classpath rather than in a manifest jar -->
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>ngunit.config</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>test/NGUnitConfigTest.class</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>junit</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <testNGArtifactName>none:none</testNGArtifactName>
+                            <includes>
+                                <include>test/UnitTest.class</include>
+                                <include>test/UnitConfigTest.class</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

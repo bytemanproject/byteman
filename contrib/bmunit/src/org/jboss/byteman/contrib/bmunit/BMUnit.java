@@ -1,17 +1,13 @@
 package org.jboss.byteman.contrib.bmunit;
 
-import com.sun.tools.attach.AgentInitializationException;
-import org.jboss.byteman.agent.install.Install;
-import org.jboss.byteman.agent.install.VMInfo;
 import org.jboss.byteman.agent.submit.ScriptText;
 import org.jboss.byteman.agent.submit.Submit;
 
 import java.io.*;
-import java.lang.management.ManagementFactory;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Byteman Unit test manager class which provides support for loading and  unloading scripts.
@@ -22,73 +18,9 @@ import java.util.List;
 public class BMUnit
 {
     /**
-     * System property which identifies the directory from which to
-     * start searching for rule script. If unset the current working
-     * directory of the test is used.
-     */
-    public final static String LOAD_DIRECTORY = "org.jboss.byteman.contrib.bmunit.load.directory";
-
-    /**
-     * System property which identifies the resource load directory
-     * from which to start searching for rule script.
-     */
-    public final static String RESOURCE_LOAD_DIRECTORY = "org.jboss.byteman.contrib.bmunit.resource.load.directory";
-
-    /**
-     * System property specifying the port to be used when starting the agent and when submitting
-     * rules to it. You can normally just use the default port.
-     */
-    public final static String AGENT_PORT = "org.jboss.byteman.contrib.bmunit.agent.port";
-
-    /**
-     * System property specifying the host to be used when starting the agent and when submitting
-     * rules to it. You can normally just use the default host.
-     */
-    public final static String AGENT_HOST = "org.jboss.byteman.contrib.bmunit.agent.host";
-
-    /**
-     * System property specifying whether to set a security policy when loading the agent.
-     */
-    public final static String AGENT_POLICY = "org.jboss.byteman.contrib.bmunit.agent.policy";
-    /**
-     * System property which inhibits automatic loading of the agent. If you set this then you have to load
-     * the agent yourself using the Install API or ensure JUnit loads by forking a JVM and passing
-     * the necessary -javaagent options on the command line. You may also want to set this if you you have
-     * loaded the agent into a remote service in another JVM driven by your unit test.
-     */
-    public final static String AGENT_INHIBIT = "org.jboss.byteman.contrib.bmunit.agent.inhibit";
-
-    /**
-     * System property which enables tracing of bmunit activity
-     */
-    public final static String VERBOSE = "org.jboss.byteman.contrib.bmunit.verbose";
-
-    /**
-     * flag which controls whether or not verbose trace output is enabled
-     */
-    private final static boolean verbose = (System.getProperty(VERBOSE) != null);
-
-    /**
      * the file separator character used by the native file system
      */
     private static char fs = File.separatorChar;
-
-    /**
-     * the directory in which to look for rule scripts. this can be
-     * configured by setting system property
-     * org.jboss.byteman.contrib.bmunit.load.directory
-     */
-    private static String defaultLoadDirectory = initDefaultLoadDirectory();
-
-    /**
-     * the resource path used to look for rule scripts. this can be
-     * configured by setting system property
-     * org.jboss.byteman.contrib.bmunit.resource.load.directory
-     *
-     * if that property is unset then it will be set from property
-     * org.jboss.byteman.contrib.bmunit.load.directory
-     */
-    private static String defaultResourceLoadDirectory = initDefaultResourceLoadDirectory();
 
     /**
      * hash table used to maintain association between test cases and rule files
@@ -96,109 +28,47 @@ public class BMUnit
     private static HashMap<String, String> fileTable = new HashMap<String, String>();
 
     /**
-     * Host used to connect to the agent.
+     * getter for the allowAgentConfigUpdate setting
      */
-    private static String host = initHost();
-
-    /**
-     * Port used to connect to the agent.
-     */
-    private static int port = initPort();
-
-    /**
-     * flag determining whether to set a security policy at agent load
-     */
-    private static boolean policy = initPolicy();
-
-    /**
-     * return the String configured for the agent host or null if it
-     * was not configured
-     */
-    private static String initHost()
+    public static boolean isAllowConfigUpdate()
     {
-	return System.getProperty(AGENT_HOST);
-    }
-
-    /**
-     * return the integer port configured for the agent port or 0 if
-     * it was not configured or was misconfigured
-     */
-    private static int initPort()
-    {
-	String portString = System.getProperty(AGENT_PORT);
-	return (portString == null ? 0 : Integer.valueOf(portString));
-    }
-
-     /**
-     * test whether a security policy should be set for agent codewhen the agent is installed
-     */
-    private static boolean initPolicy()
-    {
-	String policyString= System.getProperty(AGENT_POLICY);
-	return (policyString == null ? false : Boolean.valueOf(policyString));
-    }
-
-   /**
-     * getter for the host name used to communicate with the agent
-     */
-    public static String getHost()
-    {
-	return host;
-    }
-
-    /**
-     * getter for the port used to communicate with the agent
-     */
-    public static int getPort()
-    {
-	return port;
-    }
-
-    /**
-     * getter for the security policy setting
-     */
-    public static boolean getPolicy()
-    {
-	return policy;
+        return BMUnitConfigState.getCurrentConfigState().isAllowConfigUpdate();
     }
     /**
-     * computes the default load directory from system property
-     * org.jboss.byteman.contrib.bmunit.load.directory or defaults it
-     * to ""
-     * @return the load directory
+     * getter for the Byteman verbose setting
      */
-    private static String initDefaultLoadDirectory()
+    public static boolean isVerbose()
     {
-        String dir = System.getProperty(LOAD_DIRECTORY);
-        if (dir == null) {
-            return "";
-        }
-        return normalize(dir, true);
+        return BMUnitConfigState.getCurrentConfigState().isVerbose();
     }
-
     /**
-     * computes the default resource load directory from system
-     * property
-     * org.jboss.byteman.contrib.bmunit.resource.load.directory or
-     * defaults it to the load directory
-     * @return the resource load directory
+     * getter for the Byteman debug setting
      */
-    private static String initDefaultResourceLoadDirectory()
+    public static boolean isDebug()
     {
-        String dir = System.getProperty(RESOURCE_LOAD_DIRECTORY);
-        if (dir == null) {
-            dir = System.getProperty(LOAD_DIRECTORY);
-            if (dir == null) {
-                dir = "";
-            }
-        }
-        int l = dir.length();
-        if (l > 0 && dir.charAt(l) != '/') {
-            dir = dir + "/";
-        }
-        return dir;
+        return BMUnitConfigState.getCurrentConfigState().isDebug();
     }
-
+    /**
+     * getter for the BMUnit verbose setting
+     */
+    public static boolean isBMUnitVerbose()
+    {
+        return BMUnitConfigState.getCurrentConfigState().isBMUnitVerbose();
+    }
+    /**
+     * getter for the load directory
+     */
+    public static String getLoadDirectory()
+    {
+        return BMUnitConfigState.getCurrentConfigState().getLoadDirectory();
+    }
+    /**
+     * getter for the resource load directory
+     */
+    public static String getResourceLoadDirectory()
+    {
+        return BMUnitConfigState.getCurrentConfigState().getResourceLoadDirectory();
+    }
     /**
      * transform the supplied directory string if necessary to employ
      * the file separator appropriate to the current file system,
@@ -238,141 +108,27 @@ public class BMUnit
     }
 
     /**
-     * load the agent into this JVM if not already loaded. unfortunately this can only be done if we have
-     * the pid of the current process and we cannot get that in a portable way
+     * getter for the host name used to communicate with the agent
      */
-    private static synchronized void loadAgent() throws Exception
+    public static String getHost()
     {
-        String[] properties = new String[0];
-        String id = null;
-
-        // if we can get a proper pid on Linux  we use it
-        int pid = getPid();
-        // uncomment to force lookup by name even on Linux
-        // pid = 0;
-
-        if (pid > 0) {
-            id = Integer.toString(pid);
-        } else {
-            /*
-            VMInfo[] vmInfo = Install.availableVMs();
-            // search for a JVM which looks like it is running a JUnit test
-            // and install the agent into that JVM
-            // it could be run from ant or maven or some other process!!
-            for (int i = 0; i < vmInfo.length; i++) {
-                String displayName = vmInfo[i].getDisplayName();
-                if (displayName.startsWith("org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner ")) {
-                    // a JUnit test forked by ant
-                    id = vmInfo[i].getId();
-                    break;
-                } else if (displayName.startsWith("org.apache.tools.ant.launch.Launcher ")) {
-                    // a JUnit test run directly by ant
-                    id = vmInfo[i].getId();
-                    break;
-                } else {
-                    // TODO -- identify a forked maven test and then a test run directly or any other mode of running
-                }
-                */
-            // alternative strategy which will  work everywhere
-            // set a unique system property and then check each available VM until we find it
-            String prop = "org.jboss.byteman.contrib.bmunit.agent.unique";
-            String unique = Long.toHexString(System.currentTimeMillis());
-            System.setProperty(prop, unique);
-            VMInfo[] vmInfo = Install.availableVMs();
-            for (int i = 0; i < vmInfo.length; i++) {
-                String nextId = vmInfo[i].getId();
-                String value = Install.getSystemProperty(nextId, prop);
-                if (unique.equals(value)) {
-                    id = nextId;
-                    break;
-                }
-            }
-            // last ditch effort to obtain pid on Windows where the availableVMs list may be empty
-            if (id == null) {
-                String processName = ManagementFactory.getRuntimeMXBean().getName();
-                if (processName != null && processName.contains("@")) {
-                    id = processName.substring(0, processName.indexOf("@"));
-                    // check we actually have an integer
-                    try {
-                        Integer.parseInt(id);
-                        // well, it's a number so now check it identifies the current VM
-                        String value = Install.getSystemProperty(id, prop);
-                        if (!unique.equals(value)) {
-                            // nope, not the right process
-                            id = null;
-                        }
-                    } catch (NumberFormatException e) {
-                        // nope, not a number
-                        id = null;
-                    }
-                }
-            }
-            // make sure we found a process
-            if (id == null) {
-                throw new Exception("BMUnit : Unable to identify test JVM process during agent load");
-            }
-        }
-
-        try {
-            if (verbose) {
-                System.out.println("BMUNit : loading agent id = " + id);
-            }
-            Install.install(id, true, getPolicy(), getHost(), getPort(), properties);
-        } catch (AgentInitializationException e) {
-            // this probably indicates that the agent is already installed
-        }
+        return BMUnitConfigState.getCurrentConfigState().getHost();
     }
 
     /**
-     * return the integer process id of the current  process. n.b. only works on Linux.
-     * @return
+     * getter for the port used to communicate with the agent
      */
-    private static int getPid()
+    public static int getPort()
     {
-        File file = new File("/proc/self/stat");
-        if (!file.exists()  || !file.canRead()) {
-            return 0;
-        }
-
-        FileInputStream fis = null;
-        int  pid = 0;
-
-        try {
-            fis = new FileInputStream(file);
-            byte[] bytes = new byte[10];
-            StringBuilder builder = new StringBuilder();
-            fis.read(bytes);
-            for (int i = 0; i < 10; i++) {
-                char c = (char)bytes[i];
-                if (Character.isDigit(c)) {
-                    builder.append(c);
-                } else {
-                    break;
-                }
-            }
-            pid = Integer.valueOf(builder.toString());            
-        } catch (Exception e) {
-            // ignore
-        } finally {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (IOException e1) {
-                    // ignore
-                }
-            }
-        }
-        return pid;
+        return BMUnitConfigState.getCurrentConfigState().getPort();
     }
 
-    static {
-        if (System.getProperty(AGENT_INHIBIT) == null) {
-            try {
-                loadAgent();
-            } catch(Exception e) {
-                System.out.println(e);
-            }
-        }
+    /**
+     * getter for the security policy setting
+     */
+    public static boolean getPolicy()
+    {
+        return BMUnitConfigState.getCurrentConfigState().isPolicy();
     }
 
     /**
@@ -395,6 +151,12 @@ public class BMUnit
      */
     public static void loadScriptFile(Class<?> clazz, String testName, String dir) throws Exception
     {
+        if (BMUnitConfigState.getCurrentConfigState() == null) {
+            throw new Exception("BMUnit : load script file requested with no current configuration " +
+                    clazz.getName() +
+                    (testName != null ? " " + testName : "") +
+                    (dir != null ? " " + dir : ""));
+        }
         // turn '.' characters into file separator characters
         String className = clazz.getName();
         if (testName ==  null) {
@@ -418,16 +180,22 @@ public class BMUnit
             file=new File(filename);
 
         if (file == null || !file.exists()) {
+            if (isBMUnitVerbose()) {
+                System.out.println("BMUnit : failed to find file = " + filename);
+            }
             throw new FileNotFoundException("Rule file not found for Byteman test case " + key);
         }
         if (!file.canRead()) {
+            if (isBMUnitVerbose()) {
+                System.out.println("BMUnit : cannot read file = " + filename);
+            }
             throw new IOException("Cannot read Byteman rule file " + filename);
         }
         Submit submit = new Submit(getHost(), getPort());
         List<String> files =  new ArrayList<String>();
         files.add(filename);
-        if (verbose) {
-            System.out.println("BMUNit : loading file script = " + filename);
+        if (isBMUnitVerbose()) {
+            System.out.println("BMUnit : loading file script = " + filename);
         }
         submit.addRulesFromFiles(files);
         fileTable.put(key, filename);
@@ -454,8 +222,8 @@ public class BMUnit
         Submit submit = new Submit(getHost(), getPort());
         List<String> files =  new ArrayList<String>();
         files.add(filename);
-        if (verbose) {
-            System.out.println("BMUNit : unloading file script = " + filename);
+        if (isBMUnitVerbose()) {
+            System.out.println("BMUnit : unloading file script = " + filename);
         }
         submit.deleteRulesFromFiles(files);
     }
@@ -468,6 +236,11 @@ public class BMUnit
      */
     public static void loadScriptText(Class<?> clazz, String testname, String scriptText) throws Exception
     {
+        if (BMUnitConfigState.getCurrentConfigState() == null) {
+            throw new Exception("BMUnit : load script file requested with no current configuration " +
+                    clazz.getName() +
+                    (testname != null ? " " + testname : ""));
+        }
         String className = clazz.getName();
         if (testname ==  null) {
             testname = "";
@@ -475,8 +248,8 @@ public class BMUnit
         String key = className + "+"  + testname;
         fileTable.put(key, scriptText);
         Submit submit = new Submit(getHost(), getPort());
-        if (verbose) {
-            System.out.println("BMUNit : loading text script = " + key);
+        if (isBMUnitVerbose()) {
+            System.out.println("BMUnit : loading text script = " + key);
             // System.out.println(scriptText);
         }
         List<ScriptText> scripts = new ArrayList<ScriptText>();
@@ -502,8 +275,8 @@ public class BMUnit
             throw new Exception("Rule script not found " + key);
         }
         Submit submit = new Submit(getHost(), getPort());
-        if (verbose) {
-            System.out.println("BMUNit : unloading text script = " + key);
+        if (isBMUnitVerbose()) {
+            System.out.println("BMUnit : unloading text script = " + key);
         }
         List<ScriptText> scripts = new ArrayList<ScriptText>();
         ScriptText script = new ScriptText(key, scriptText);
@@ -521,14 +294,14 @@ public class BMUnit
     protected static String findScript(String dir, String name) {
         if(name == null) return null;
         String filename=normalize(name, false);
-	String resourceName = name;
+        String resourceName = name;
         if(dir != null && dir.length() > 0) {
             filename=normalize(dir, true) + filename;
             resourceName=dir + "/" + resourceName;
-	} else {
+        } else {
             // n.b. defaults either are "" or end with correct separator
-            filename = defaultLoadDirectory + filename;
-            resourceName = defaultResourceLoadDirectory + filename;
+            filename = normalize(getLoadDirectory(), true) + filename;
+            resourceName = normalize(getResourceLoadDirectory(), true) + filename;
         }
 
         final String[] filenames={filename, filename + ".btm", filename + ".txt"};

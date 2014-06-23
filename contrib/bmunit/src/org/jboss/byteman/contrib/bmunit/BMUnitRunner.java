@@ -8,6 +8,8 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
+import java.lang.reflect.Method;
+
 /**
  * Specialisation of the BlockJUnit4ClassRunner Runner class which can be attached to a text class
  * using the @RunWith annotation. It ensures that Byteman rules are loaded and unloaded for tests
@@ -15,6 +17,7 @@ import org.junit.runners.model.Statement;
  */
 public class BMUnitRunner extends BlockJUnit4ClassRunner
 {
+    private BMUnitConfig classConfigAnnotation;
     BMScript classSingleScriptAnnotation;
     BMScripts classMultiScriptAnnotation;
     BMRules classMultiRuleAnnotation;
@@ -31,6 +34,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     public BMUnitRunner(Class<?> klass) throws InitializationError {
         super(klass);
         testKlazz = getTestClass().getJavaClass();
+        classConfigAnnotation =  testKlazz.getAnnotation(BMUnitConfig.class);
         classSingleScriptAnnotation = testKlazz.getAnnotation(BMScript.class);
         classMultiScriptAnnotation = testKlazz.getAnnotation(BMScripts.class);
         classMultiRuleAnnotation = testKlazz.getAnnotation(BMRules.class);
@@ -80,7 +84,32 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         statement = addClassMultiRuleLoader(statement, notifier);
         statement = addClassSingleScriptLoader(statement, notifier);
         statement = addClassMultiScriptLoader(statement, notifier);
+        statement = addClassConfigLoader(statement, notifier);
         return statement;
+    }
+
+    protected Statement addClassConfigLoader(final Statement statement, RunNotifier notifier)
+    {
+        final RunNotifier fnotifier = notifier;
+        final Description description = Description.createTestDescription(testKlazz, getName(), classConfigAnnotation);
+        return new Statement() {
+            public void evaluate() throws Throwable {
+                try {
+                    BMUnitConfigState.pushConfigurationState(classConfigAnnotation, testKlazz);
+                    try {
+                        statement.evaluate();
+                    } finally {
+                        try {
+                            BMUnitConfigState.popConfigurationState(testKlazz);
+                        } catch (Exception e) {
+                            fnotifier.fireTestFailure(new Failure(description, e));
+                        }
+                    }
+                } catch (Exception e) {
+                    fnotifier.fireTestFailure(new Failure(description, e));
+                }
+            }
+        };
     }
 
     protected Statement addClassSingleScriptLoader(final Statement statement, RunNotifier notifier)
@@ -222,10 +251,27 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
         statement = addMethodMultiRuleLoader(statement, method);
         statement = addMethodSingleScriptLoader(statement, method);
         statement = addMethodMultiScriptLoader(statement, method);
+        statement = addMethodConfigLoader(statement, method);
         return statement;
     }
 
-    /**
+     protected Statement addMethodConfigLoader(final Statement statement, FrameworkMethod method)
+     {
+         final BMUnitConfig annotation = method.getAnnotation(BMUnitConfig.class);
+         final Method testMethod = method.getMethod();
+         return new Statement() {
+             public void evaluate() throws Throwable {
+                 BMUnitConfigState.pushConfigurationState(annotation, testMethod);
+                 try {
+                     statement.evaluate();
+                 } finally {
+                     BMUnitConfigState.popConfigurationState(testMethod);
+                 }
+             }
+         };
+    }
+
+   /**
      * wrap the test method execution statement with the necessary load and unload calls if it has
      * a BMScript annotation
      * @param statement

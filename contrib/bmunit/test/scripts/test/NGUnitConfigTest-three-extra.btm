@@ -1,6 +1,6 @@
 # Test script to check load and unload at method level
 RULE NG test autoload method rule 3 extra
-CLASS NGUnitTest
+CLASS NGUnitConfigTest
 METHOD testThree
 AT CALL tryTwo
 IF TRUE

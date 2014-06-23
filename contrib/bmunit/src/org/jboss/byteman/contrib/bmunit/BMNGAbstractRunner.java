@@ -42,6 +42,7 @@ import java.lang.reflect.Method;
  */
 public abstract class BMNGAbstractRunner implements IHookable
 {
+    BMUnitConfig classConfigAnnotation;
     BMScript classSingleScriptAnnotation;
     BMScripts classMultiScriptAnnotation;
     BMRules classMultiRuleAnnotation;
@@ -69,6 +70,7 @@ public abstract class BMNGAbstractRunner implements IHookable
     public void bmngBeforeClass(Class<?> testKlazz) throws Exception
     {
         // load rules associated with class annotations
+        classConfigAnnotation = testKlazz.getAnnotation(BMUnitConfig.class);
         classSingleScriptAnnotation = testKlazz.getAnnotation(BMScript.class);
         classMultiScriptAnnotation = testKlazz.getAnnotation(BMScripts.class);
         classSingleRuleAnnotation = testKlazz.getAnnotation(BMRule.class);
@@ -79,6 +81,8 @@ public abstract class BMNGAbstractRunner implements IHookable
         if (classMultiScriptAnnotation != null && classSingleScriptAnnotation != null) {
             throw new TestNGException("Use either BMScript or BMScripts annotation but not both");
         }
+        // install the config before doing anything else
+        BMUnitConfigState.pushConfigurationState(classConfigAnnotation, testKlazz);
         // we load scripts before inline rules
         if (classSingleScriptAnnotation != null) {
             String name = BMRunnerUtil.computeBMScriptName(classSingleScriptAnnotation.value());
@@ -127,6 +131,9 @@ public abstract class BMNGAbstractRunner implements IHookable
             BMRule[] rules = classMultiRuleAnnotation.rules();
             BMUnit.unloadScriptText(testKlazz, null);
         }
+        // uninstall the config before doing anything else
+        BMUnitConfigState.popConfigurationState(testKlazz);
+
     }
 
     /**
@@ -137,6 +144,7 @@ public abstract class BMNGAbstractRunner implements IHookable
      */
     public void bmngBeforeTest(Method method) throws Exception
     {
+        BMUnitConfig methodConfigAnnotation = method.getAnnotation(BMUnitConfig.class);
         BMScript methodSingleScriptAnnotation = method.getAnnotation(BMScript.class);
         BMScripts methodMultiScriptAnnotation = method.getAnnotation(BMScripts.class);
         BMRule methodSingleRuleAnnotation = method.getAnnotation(BMRule.class);
@@ -148,6 +156,8 @@ public abstract class BMNGAbstractRunner implements IHookable
             throw new TestNGException("Use either BMScript or BMScripts annotation but not both");
         }
         Class<?> testKlazz = method.getDeclaringClass();
+        // load the config before doing anything else
+        BMUnitConfigState.pushConfigurationState(methodConfigAnnotation, method);
         // we load scripts before inline rules
         if (methodSingleScriptAnnotation != null) {
             String name = BMRunnerUtil.computeBMScriptName(methodSingleScriptAnnotation.value(), method);
@@ -181,6 +191,7 @@ public abstract class BMNGAbstractRunner implements IHookable
      */
     public void bmngAfterTest(Method method) throws Exception
     {
+        BMUnitConfig methodConfigAnnotation = method.getAnnotation(BMUnitConfig.class);
         BMScript methodSingleScriptAnnotation = method.getAnnotation(BMScript.class);
         BMScripts methodMultiScriptAnnotation = method.getAnnotation(BMScripts.class);
         BMRule methodSingleRuleAnnotation = method.getAnnotation(BMRule.class);
@@ -209,5 +220,7 @@ public abstract class BMNGAbstractRunner implements IHookable
             final String name = method.getName();
             BMUnit.unloadScriptText(testKlazz, name);
         }
+        // unload the config
+        BMUnitConfigState.popConfigurationState(method);
     }
 }

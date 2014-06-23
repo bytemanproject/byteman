@@ -50,6 +50,10 @@ public class BMNGListener extends BMNGAbstractRunner implements IInvokedMethodLi
         try {
             bmngBeforeTest(javaMethod);
         } catch (Exception e) {
+            try {
+                BMUnitConfigState.resetConfigurationState(javaMethod);
+            } catch(Exception e1) {
+            }
             throw new TestNGException(e);
         }
     }
@@ -58,6 +62,10 @@ public class BMNGListener extends BMNGAbstractRunner implements IInvokedMethodLi
         Method javaMethod = method.getTestMethod().getMethod();
         try {
             bmngAfterTest(javaMethod);
+            try {
+                BMUnitConfigState.resetConfigurationState(javaMethod);
+            } catch(Exception e1) {
+            }
         } catch (Exception e) {
             throw new TestNGException(e);
         }
@@ -83,6 +91,10 @@ public class BMNGListener extends BMNGAbstractRunner implements IInvokedMethodLi
         try {
             bmngBeforeClass(testClass);
         } catch (Exception e) {
+            try {
+                BMUnitConfigState.resetConfigurationState(testClass);
+            } catch(Exception e1) {
+            }
             throw new TestNGException(e);
         }
     }
@@ -92,6 +104,10 @@ public class BMNGListener extends BMNGAbstractRunner implements IInvokedMethodLi
         try {
             bmngAfterClass(testClass);
         } catch (Exception e) {
+            try {
+                BMUnitConfigState.resetConfigurationState(testClass);
+            } catch(Exception e1) {
+            }
             throw new TestNGException(e);
         }
     }
