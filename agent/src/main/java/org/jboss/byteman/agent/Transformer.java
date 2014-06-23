@@ -1196,7 +1196,7 @@ public class Transformer implements ClassFileTransformer {
          */
 
         if (DEBUG.equals(property)) {
-            boolean value = computeDumpCFG();
+            boolean value = computeDebug();
             synchronized (configLock) {
                 debug = value;
             }
