@@ -43,10 +43,42 @@ import java.lang.reflect.Method;
 public class BMNGListener extends BMNGAbstractRunner implements IInvokedMethodListener, ITestListener
 {
 
+    Class currentClazz = null;
     // TODO work out what to do if tests are run in parallel and their rule sets overlap or have ocnflicting behaviour
+
+    public void switchClass(Class newClazz)
+    {
+        if (currentClazz != null) {
+            try {
+                bmngAfterClass(currentClazz);
+            } catch (Exception e) {
+                try {
+                    BMUnitConfigState.resetConfigurationState(currentClazz);
+                } catch (Exception e1) {
+                }
+                throw new TestNGException(e);
+            }
+        }
+        if (newClazz != null) {
+            currentClazz = newClazz;
+            try {
+                bmngBeforeClass(newClazz);
+            } catch (Exception e) {
+                try {
+                    BMUnitConfigState.resetConfigurationState(newClazz);
+                } catch (Exception e1) {
+                }
+                throw new TestNGException(e);
+            }
+        }
+    }
 
     public void beforeInvocation(IInvokedMethod method, ITestResult testResult) {
         Method javaMethod = method.getTestMethod().getMethod();
+        Class clazz = javaMethod.getDeclaringClass();
+        if (clazz != currentClazz) {
+            switchClass(clazz);
+        }
         try {
             bmngBeforeTest(javaMethod);
         } catch (Exception e) {
@@ -87,6 +119,13 @@ public class BMNGListener extends BMNGAbstractRunner implements IInvokedMethodLi
     }
 
     public void onStart(ITestContext context) {
+        /*
+         * TestNG calls onStart for all classes in a suite before running any
+         * of their test methods which is basically a complete pile of pooh.
+         *
+         * so we don't do class specific before processing at this level.
+         * instead we do it lazily when methods are notified by detecting
+         * changes in the current class at that point
         Class<?> testClass = context.getCurrentXmlTest().getXmlClasses().get(0).getSupportClass();
         try {
             bmngBeforeClass(testClass);
@@ -97,9 +136,17 @@ public class BMNGListener extends BMNGAbstractRunner implements IInvokedMethodLi
             }
             throw new TestNGException(e);
         }
+        */
     }
 
     public void onFinish(ITestContext context) {
+        /*
+         * TestNG calls onFinish for all classes in a suite after running all
+         * of their test methods which is basically a complete pile of pooh.
+         *
+         * so we don't do after class specific processing at this level.
+         * instead we do it pre-emptively when methods are notified by
+         * detecting changes in the current class at that point
         Class<?> testClass = context.getCurrentXmlTest().getXmlClasses().get(0).getSupportClass();
         try {
             bmngAfterClass(testClass);
@@ -110,5 +157,8 @@ public class BMNGListener extends BMNGAbstractRunner implements IInvokedMethodLi
             }
             throw new TestNGException(e);
         }
+        */
+        // run any left over after class processing
+        switchClass(null);
     }
 }
