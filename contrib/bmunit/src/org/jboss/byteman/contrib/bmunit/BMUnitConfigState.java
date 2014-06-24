@@ -202,6 +202,7 @@ public class BMUnitConfigState
             verbose = initVerbose();
             debug = initDebug();
             bmunitVerbose = initBMUnitVerbose();
+            inhibitAgentLoad = System.getProperty(AGENT_INHIBIT) != null;
             policy = initPolicy();
      }
     }
