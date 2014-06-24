@@ -401,8 +401,9 @@ byteman-submit.jar  -- the jar which contains the class needed to upload and unl
 byteman.jar         -- the jar which contains agent itself
 tools.jar           -- the JVM tools API jar which is normally found in $JAVA_HOME/lib.
 junit.jar/          -- one or both depending on which test model you are using.
-testng.jar             BMUnit has been tested with JUnit 4.8 or TestNG 5.14.6. Earlier
-                       versions may also work, later ones should be fine
+testng.jar             BMUnit has been tested with JUnit 4.8 or TestNG 6.3.1
+                       and 6.8.5. Earlier wil not work, later ones should be
+                       fine
 
 Note also that JAVA_HOME is the location where you installed a Java _JDK_ (not just a Java
 _JRE_). The tools jar is not normally added to the Java runtime path. That normally only
