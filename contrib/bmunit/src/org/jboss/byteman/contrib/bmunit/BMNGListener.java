@@ -24,20 +24,20 @@
 
 package org.jboss.byteman.contrib.bmunit;
 
-import org.testng.IHookCallBack;
-import org.testng.IHookable;
 import org.testng.IInvokedMethod;
 import org.testng.IInvokedMethodListener;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
+import org.testng.ITestNGListener;
 import org.testng.ITestResult;
 import org.testng.TestNGException;
+import org.testng.annotations.Listeners;
 
 import java.lang.reflect.Method;
 
 /**
- * Class which provides the ability to run laod Byteman rules into TestNG style tests.
- * A class which inherits from this class will inherit theability to have BMScript and BMRule
+ * Class which provides the ability to load Byteman rules into TestNG style tests.
+ * A class which inherits from this class will inherit the ability to have BMScript and BMRule
  * annotations processed during testing.
  */
 public class BMNGListener extends BMNGAbstractRunner implements IInvokedMethodListener, ITestListener
@@ -73,9 +73,27 @@ public class BMNGListener extends BMNGAbstractRunner implements IInvokedMethodLi
         }
     }
 
+    private boolean checkBMNGListener(Class<?> clazz)
+    {
+        Listeners listeners = clazz.getAnnotation(Listeners.class);
+        if (listeners == null) {
+            return false;
+        }
+        Class<? extends ITestNGListener>[] clazzarray = listeners.value();
+        for (int i = 0; i < clazzarray.length; i++) {
+            if (clazzarray[i] == BMNGListener.class) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void beforeInvocation(IInvokedMethod method, ITestResult testResult) {
         Method javaMethod = method.getTestMethod().getMethod();
         Class clazz = javaMethod.getDeclaringClass();
+        if (!checkBMNGListener(clazz)) {
+            return;
+        }
         if (clazz != currentClazz) {
             switchClass(clazz);
         }
@@ -92,6 +110,10 @@ public class BMNGListener extends BMNGAbstractRunner implements IInvokedMethodLi
 
     public void afterInvocation(IInvokedMethod method, ITestResult testResult) {
         Method javaMethod = method.getTestMethod().getMethod();
+        Class clazz = javaMethod.getDeclaringClass();
+        if (!checkBMNGListener(clazz)) {
+            return;
+        }
         try {
             bmngAfterTest(javaMethod);
             try {
