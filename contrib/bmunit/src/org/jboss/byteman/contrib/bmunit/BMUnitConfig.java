@@ -155,4 +155,37 @@ public @interface BMUnitConfig
      * @return
      */
     boolean policy() default false;
+
+    /**
+     * dumpGeneratedClasses configures whether or not the Byteman agent
+     * dumps transformed bytecode to a class file.
+     * @return
+     */
+    boolean dumpGeneratedClasses() default false;
+    /**
+     * dumpGeneratedClassesDirectory identifies a directory path
+     * to locate the root directory for class files created when the
+     * Byteman agent dumps transformed bytecode to a class file.
+     * Each class file sits below this root directory in a
+     * subdirectory tree corresponding to the class's package.
+     * This attribute is only taken into account when attribute
+     * dumpGeneratedClasses has value true. An empty String means
+     * use the current working directory.
+     * @return
+     */
+    String dumpGeneratedClassesDirectory() default "";
+
+    /**
+     * dumpGeneratedClassesIntermediate configures whether or not
+     * the Byteman agent dumps intermediate versions of transformed
+     * bytecode to a class file. It is only of relevance where
+     * multiple rules target the same class. In such cases Byteman
+     * will inject rules one after the other. This attribute is only
+     * taken into account when attribute dumpGeneratedClasses has
+     * value true. Successive intermediate class files are written
+     * with the same name as the final transformed file except that
+     * the base name is modified by adding suffixes _1, _2, ..., etc.
+     * @return
+     */
+    boolean dumpGeneratedClassesIntermediate() default false;
 }

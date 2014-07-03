@@ -70,6 +70,9 @@ public class BMUnitConfigState
     private boolean bmunitVerbose;
     private boolean inhibitAgentLoad;
     private boolean policy;
+    private boolean dumpGeneratedClasses;
+    private String dumpGeneratedClassesDirectory;
+    private boolean dumpGeneratedClassesIntermediate;
     private BMUnitConfigState previous;
 
     private BMUnitConfigState(BMUnitConfig config, BMUnitConfigState previous) throws Exception
@@ -177,6 +180,34 @@ public class BMUnitConfigState
                 throw new Exception(message);
             }
         }
+        // if the dumpGeneratedClasses setting differs from the previous and we cannot
+        // update the config then we need to check for enforcing
+        dumpGeneratedClasses = config.dumpGeneratedClasses();
+        if (previous != null && dumpGeneratedClasses != previous.dumpGeneratedClasses && !allowConfigUpdate) {
+            if (enforce) {
+                String message = "BMUnit configuration specifies incompatible settings for dumpGeneratedClasses";
+                throw new Exception(message);
+            }
+        }
+        // if we have no previous config allow the env setting to override
+        if (previous == null && !dumpGeneratedClasses) {
+            dumpGeneratedClasses = initDumpGeneratedClasses();
+        }
+        // the dump directory can be reset but if it is empty and we have
+        // no previous setting then check for an env setting
+        dumpGeneratedClassesDirectory = config.dumpGeneratedClassesDirectory();
+        if (previous == null && (dumpGeneratedClassesDirectory == null || dumpGeneratedClassesDirectory.length() > 0)) {
+             dumpGeneratedClassesDirectory = initDumpGeneratedClassesDirectory();
+        }
+        // if the dumpGeneratedClasses setting differs from the previous and we cannot
+        // update the config then we need to check for enforcing
+        dumpGeneratedClassesIntermediate = config.dumpGeneratedClassesIntermediate();
+        if (previous != null && dumpGeneratedClassesIntermediate != previous.dumpGeneratedClassesIntermediate && !allowConfigUpdate) {
+            if (enforce) {
+                String message = "BMUnit configuration specifies incompatible settings for dumpGeneratedClassesIntermediate";
+                throw new Exception(message);
+            }
+        }
     }
 
     private BMUnitConfigState(BMUnitConfigState previous) throws Exception
@@ -192,6 +223,9 @@ public class BMUnitConfigState
             bmunitVerbose = previous.bmunitVerbose;
             inhibitAgentLoad = previous.inhibitAgentLoad;
             policy = previous.policy;
+            dumpGeneratedClasses = previous.dumpGeneratedClasses;
+            dumpGeneratedClassesDirectory = previous.dumpGeneratedClassesDirectory;
+            dumpGeneratedClassesIntermediate = previous.dumpGeneratedClassesIntermediate;
         } else {
             agentHost = initHost();
             agentPort = initPort();
@@ -204,44 +238,187 @@ public class BMUnitConfigState
             bmunitVerbose = initBMUnitVerbose();
             inhibitAgentLoad = System.getProperty(AGENT_INHIBIT) != null;
             policy = initPolicy();
+            dumpGeneratedClasses = initDumpGeneratedClasses();
+            dumpGeneratedClassesDirectory = initDumpGeneratedClassesDirectory();
+            dumpGeneratedClassesIntermediate = initDumpGeneratedClassesIntermediate();
      }
+    }
+
+    /**
+     * helper method to check whether we need to update agent properties
+     * when we switch config
+     * @param newConfigState
+     * @param oldConfigState
+     * @return
+     */
+    private static boolean needPropertyReset(BMUnitConfigState newConfigState, BMUnitConfigState oldConfigState)
+    {
+        if (oldConfigState == null) {
+            // we are installing the default config
+            // we always install properties for this config
+            return true;
+        } else if (newConfigState == null) {
+            // we are de-installing the default config properties
+            // we always leave its properties in place
+            return false;
+        } else {
+            // we are switching from one config to another
+            // we need an update if the verbose, debug or
+            // dumpGeneratedClasses settings differ
+            if (newConfigState.verbose != oldConfigState.verbose) {
+                return true;
+            }
+            if (newConfigState.debug != oldConfigState.debug) {
+                return true;
+            }
+            if (newConfigState.dumpGeneratedClasses != oldConfigState.dumpGeneratedClasses) {
+                return true;
+            }
+            // if we get here and class dumping is enabled in either
+            // config (and hence both) then we need an update if the
+            // dump directory has changed or if we have enabled
+            // intermediate dumping.
+            if (newConfigState.dumpGeneratedClasses) {
+                String newDir = newConfigState.getDumpGeneratedClassesDirectory();
+                String oldDir = oldConfigState.getDumpGeneratedClassesDirectory();
+                if (!newDir.equals(oldDir)) {
+                    return true;
+                }
+                if (newConfigState.dumpGeneratedClassesIntermediate != oldConfigState.dumpGeneratedClassesIntermediate) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    /**
+     * helper method to configure the properties to be reset
+     * when a config change occurs
+     * @param newConfigState
+     * @param oldConfigState
+     * @param props
+     * @return
+     */
+    private static boolean configurePropertyReset(BMUnitConfigState newConfigState, BMUnitConfigState oldConfigState, Properties props)
+    {
+        boolean modified = false;
+        if (oldConfigState == null) {
+            // we are installing the default config
+            // we always install properties for this config
+            if (newConfigState.allowConfigUpdate) {
+               props.setProperty(BYTEMAN_ALLOW_CONFIG_UPDATE, "true");
+            }
+            if (newConfigState.verbose) {
+                props.setProperty(BYTEMAN_VERBOSE, "true");
+            }
+            if (newConfigState.debug) {
+                props.setProperty(BYTEMAN_DEBUG, "true");
+            }
+            if (newConfigState.dumpGeneratedClasses) {
+                props.setProperty(BYTEMAN_DUMP_GENERATED_CLASSES, "true");
+                if (newConfigState.dumpGeneratedClassesDirectory.length() > 0) {
+                    props.setProperty(BYTEMAN_DUMP_GENERATED_CLASSES_DIRECTORY, newConfigState.dumpGeneratedClassesDirectory);
+                }
+                if (newConfigState.dumpGeneratedClassesIntermediate) {
+                    props.setProperty(BYTEMAN_DUMP_GENERATED_CLASSES_INTERMEDIATE, "true");
+                }
+            }
+            return true;
+        } else if (newConfigState == null) {
+            // we are de-installing the default config properties
+            // we always leave its properties in place
+            return false;
+        } else {
+            // we are switching from one config to another
+            // we need to reset the verbose, debug or
+            // dumpGeneratedClasses settings if they differ
+            if (newConfigState.verbose != oldConfigState.verbose) {
+                props.setProperty(BYTEMAN_VERBOSE, (newConfigState.verbose ? "true" : ""));
+                modified = true;
+            }
+            if (newConfigState.debug != oldConfigState.debug) {
+                props.setProperty(BYTEMAN_DEBUG, (newConfigState.debug ? "true" : ""));
+                modified = true;
+            }
+            // if we are enabling dumping we may also need to set a dump directory
+            // and/or enable intermediate dumping
+            // if we are disabling dumping we may also need to clear the dump directory
+            // and/or disable intermediate dumping
+            // if dumping is enabled in both configs we still may need to reset
+            // the dump directory and/or reset intermediate dumping
+            boolean resetDump = false;
+            boolean resetDumpDir = false;
+            boolean resetIntermediateDump = false;
+            if (newConfigState.dumpGeneratedClasses) {
+                if (oldConfigState.dumpGeneratedClasses) {
+                    // dump is still enabled so no need to reset dump
+                    // but check for change to dump dir and intermediate dumps
+                    String newDir = newConfigState.getDumpGeneratedClassesDirectory();
+                    String oldDir = oldConfigState.getDumpGeneratedClassesDirectory();
+                    resetDump = (!newDir.equals(oldDir));
+                } else {
+                    // dump has just been enabled
+                    resetDump = true;
+                    // also check if we now have a dump dir or intermediate dumps
+                    String dumpDir = newConfigState.getDumpGeneratedClassesDirectory();
+                    resetDump = dumpDir.length() > 0;
+                    resetIntermediateDump = newConfigState.isDumpGeneratedClassesIntermediate();
+                }
+            } else {
+                if (oldConfigState.dumpGeneratedClasses) {
+                    // dump is still disabled so no need to reset dump
+                    // or the other properties
+                } else {
+                    // dump has just been disabled
+                    resetDump = true;
+                    // check if we need to unset a dump dir or intermediate dumps
+                    String dumpDir = oldConfigState.getDumpGeneratedClassesDirectory();
+                    resetDumpDir = dumpDir.length() > 0;
+                    resetIntermediateDump = oldConfigState.isDumpGeneratedClassesIntermediate();
+                }
+            }
+            if (resetDump) {
+                props.setProperty(BYTEMAN_DUMP_GENERATED_CLASSES, (newConfigState.dumpGeneratedClasses? "true" : ""));
+                modified = true;
+            }
+            if (resetDumpDir) {
+                props.setProperty(BYTEMAN_DUMP_GENERATED_CLASSES_DIRECTORY, newConfigState.getDumpGeneratedClassesDirectory());
+                modified = true;
+            }
+            if (resetIntermediateDump) {
+                props.setProperty(BYTEMAN_DUMP_GENERATED_CLASSES_INTERMEDIATE, (newConfigState.dumpGeneratedClassesIntermediate? "true" : ""));
+                modified = true;
+            }
+        }
+        return modified;
     }
 
     private static void uploadAgentProperties() throws Exception {
         // if any Byteman config changes have been requested and
         // are allowed upload all reconfigured system property
         // settings to the agent.
-        //
-        // for the moment that means just the Byteman verbose
-        // and debug properties
         BMUnitConfigState previousConfigState = currentConfigState.previous;
-        if (previousConfigState != null && previousConfigState.isAllowConfigUpdate()) {
-            if (currentConfigState.verbose != previousConfigState.verbose ||
-                    currentConfigState.debug != previousConfigState.debug) {
-                Submit submit = new Submit(currentConfigState.getHost(), currentConfigState.getPort());
-                Properties properties = new Properties();
-                properties.setProperty("org.jboss.byteman.verbose", (currentConfigState.verbose ? "true" : ""));
-                properties.setProperty("org.jboss.byteman.debug", (currentConfigState.debug? "true" : ""));
+        if (needPropertyReset(currentConfigState, previousConfigState)) {
+            Submit submit = new Submit(currentConfigState.getHost(), currentConfigState.getPort());
+            Properties properties = new Properties();
+            if (configurePropertyReset(currentConfigState, previousConfigState, properties)) {
                 submit.setSystemProperties(properties);
             }
         }
     }
 
     private static void resetAgentProperties() throws Exception {
-        // if we upoaded any reconfigured system property settings
+        // if we uploaded any reconfigured system property settings
         // to the agent then revert them
-        //
-        // for the moment that means just the Byteman verbose
-        // property
         BMUnitConfigState previousConfigState = currentConfigState.previous;
         if (previousConfigState != null && previousConfigState.isAllowConfigUpdate()) {
-            if (currentConfigState.verbose != previousConfigState.verbose ||
-                    currentConfigState.debug != previousConfigState.debug) {
+            if (needPropertyReset(previousConfigState, currentConfigState)) {
                 Submit submit = new Submit(currentConfigState.getHost(), currentConfigState.getPort());
                 Properties properties = new Properties();
-                properties.setProperty("org.jboss.byteman.verbose", (previousConfigState.verbose ? "true" : ""));
-                properties.setProperty("org.jboss.byteman.debug", (previousConfigState.debug? "true" : ""));
-                submit.setSystemProperties(properties);
+                if (configurePropertyReset(previousConfigState, currentConfigState, properties)) {
+                    submit.setSystemProperties(properties);
+                }
             }
         }
     }
@@ -252,7 +429,6 @@ public class BMUnitConfigState
      */
     private void loadAgent() throws Exception
     {
-        LinkedList<String> propList = new LinkedList<String>();
         String id = null;
 
         // if we can get a proper pid on Linux  we use it
@@ -326,18 +502,15 @@ public class BMUnitConfigState
             if (isBMUnitVerbose()) {
                 System.out.println("BMUnit : loading agent id = " + id);
             }
-            // if we have any system properties to configure then do so now
-            if (isAllowConfigUpdate()) {
-                propList.add("org.jboss.byteman.allow.config.update=true");
+            Properties properties = new Properties();
+            configurePropertyReset(currentConfigState, null, properties);
+            int size = properties.size();
+            String[] proparray = new String[size];
+            int i = 0;
+            for (String key : properties.stringPropertyNames()) {
+                proparray[i++] = key + "=" + properties.getProperty(key);
             }
-            if (isVerbose()) {
-                propList.add("org.jboss.byteman.verbose=true");
-            }
-            if (isDebug()) {
-                propList.add("org.jboss.byteman.debug=true");
-            }
-            String[] properties = new String[propList.size()];
-            Install.install(id, true, isPolicy(), getHost(), getPort(), propList.toArray(properties));
+            Install.install(id, true, isPolicy(), getHost(), getPort(), proparray);
         } catch (AgentInitializationException e) {
             // this probably indicates that the agent is already installed
         }
@@ -421,6 +594,10 @@ public class BMUnitConfigState
      * loaded the agent into a remote service in another JVM driven by your unit test.
      */
     public final static String AGENT_INHIBIT = "org.jboss.byteman.contrib.bmunit.agent.inhibit";
+    /**
+     * System property which enables tracing of Byteman activity
+     */
+    public final static String BYTEMAN_ALLOW_CONFIG_UPDATE = "org.jboss.byteman.allow.config.update";
 
     /**
      * System property which enables tracing of Byteman activity
@@ -438,8 +615,23 @@ public class BMUnitConfigState
     public final static String BMUNIT_VERBOSE = "org.jboss.byteman.contrib.bmunit.verbose";
 
     /**
+     * System property which enables dumping of generated classes
+     */
+    public final static String BYTEMAN_DUMP_GENERATED_CLASSES = "org.jboss.byteman.dump.generated.classes";
+
+    /**
+     * System property which configures directory path for files used for dumping of generated classes
+     */
+    public final static String BYTEMAN_DUMP_GENERATED_CLASSES_DIRECTORY = "org.jboss.byteman.dump.generated.classes.directory";
+
+    /**
+     * System property which configures dumping of intermediate versions of generated classes
+     */
+    public final static String BYTEMAN_DUMP_GENERATED_CLASSES_INTERMEDIATE = "org.jboss.byteman.dump.generated.classes.intermediate";
+
+    /**
      * this is only provided for backward compatibility in case some app was
-     * using this constant string to confiure the required property.
+     * using this constant string to configure the required property.
      */
     public final static String VERBOSE = BMUNIT_VERBOSE;
 
@@ -695,6 +887,50 @@ public class BMUnitConfigState
     }
 
     /**
+     * getter for current dumpGeneratedClasses setting
+     * @return
+     */
+    public boolean isDumpGeneratedClasses()
+    {
+        return dumpGeneratedClasses;
+    }
+
+    /**
+     * smart getter for current dumpGeneratedClassesDirectory setting
+     * which only returns a directory when dumpGeneratedClasses is set
+     * in which case it uses any current setting but delegates to previous
+     * if no value has been set.
+     * @return
+     */
+    public String getDumpGeneratedClassesDirectory()
+    {
+        if (!dumpGeneratedClasses) {
+            return "";
+        }
+        if (dumpGeneratedClassesDirectory != null && dumpGeneratedClassesDirectory.length() != 0) {
+            return dumpGeneratedClassesDirectory;
+        }
+        if (previous != null) {
+            return previous.getDumpGeneratedClassesDirectory();
+        }
+        return "";
+    }
+
+    /**
+     * smart getter for current dumpGeneratedClassesIntermediate setting
+     * which only returns the attribute setting if dumpGeneratedClasses
+     * has also been set.
+     * @return
+     */
+    public boolean isDumpGeneratedClassesIntermediate()
+    {
+        if (!dumpGeneratedClasses) {
+            return false;
+        }
+        return dumpGeneratedClassesIntermediate;
+    }
+
+    /**
      * return the String configured for the agent host or null if it
      * was not configured
      */
@@ -768,11 +1004,30 @@ public class BMUnitConfigState
     }
 
     /**
-     * test whether a security policy should be set for agent codewhen the agent is installed
+     * test whether a security policy should be set for agent code when the agent is installed
      */
     private static boolean initPolicy()
     {
         String policyString= System.getProperty(AGENT_POLICY);
         return (policyString == null ? false : Boolean.valueOf(policyString));
+    }
+
+    private static boolean initDumpGeneratedClasses()
+    {
+        return System.getProperty(BYTEMAN_DUMP_GENERATED_CLASSES) != null;
+    }
+
+    private static String initDumpGeneratedClassesDirectory()
+    {
+        String dir = System.getProperty(BYTEMAN_DUMP_GENERATED_CLASSES_DIRECTORY);
+        if (dir == null) {
+            dir = "";
+        }
+        return dir;
+    }
+
+    private static boolean initDumpGeneratedClassesIntermediate()
+    {
+        return System.getProperty(BYTEMAN_DUMP_GENERATED_CLASSES_INTERMEDIATE) != null;
     }
 }

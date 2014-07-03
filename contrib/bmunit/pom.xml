@@ -44,7 +44,9 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <includes>
+                        <include>test/ATest.class</include>
                         <include>test/NGUnitTest.class</include>
+                        <include>test/NGUnitConfigTest.class</include>
                     </includes>
                     <forkMode>once</forkMode>
                     <argLine>-Dorg.jboss.byteman.home=""</argLine>
@@ -54,18 +56,6 @@
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                 </configuration>
                 <executions>
-                    <execution>
-                        <id>ngunit.config</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                        <configuration>
-                            <includes>
-                                <include>test/NGUnitConfigTest.class</include>
-                            </includes>
-                        </configuration>
-                    </execution>
                     <execution>
                         <id>junit</id>
                         <phase>test</phase>
