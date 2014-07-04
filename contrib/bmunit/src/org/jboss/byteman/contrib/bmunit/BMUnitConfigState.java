@@ -356,13 +356,16 @@ public class BMUnitConfigState
                     // but check for change to dump dir and intermediate dumps
                     String newDir = newConfigState.getDumpGeneratedClassesDirectory();
                     String oldDir = oldConfigState.getDumpGeneratedClassesDirectory();
-                    resetDump = (!newDir.equals(oldDir));
+                    resetDumpDir = (!newDir.equals(oldDir));
+                    boolean isDumpIntermediate = newConfigState.isDumpGeneratedClassesIntermediate();
+                    boolean wasDumpIntermediate = newConfigState.isDumpGeneratedClassesIntermediate();
+                    resetIntermediateDump = isDumpIntermediate != wasDumpIntermediate;
                 } else {
                     // dump has just been enabled
                     resetDump = true;
                     // also check if we now have a dump dir or intermediate dumps
                     String dumpDir = newConfigState.getDumpGeneratedClassesDirectory();
-                    resetDump = dumpDir.length() > 0;
+                    resetDumpDir = dumpDir.length() > 0;
                     resetIntermediateDump = newConfigState.isDumpGeneratedClassesIntermediate();
                 }
             } else {

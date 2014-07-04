@@ -83,7 +83,7 @@ public class NGUnitConfigTest
     // If you supply a value then this is used when looking for the script otherwise the method name is used
     @BMScript(value="two", dir="test/scripts")
     // another method config annotation overrides the script
-    // lookup directory -- it should not change anythgin because
+    // lookup directory -- it should not change anything because
     // the script annotation specifies a dir
     @BMUnitConfig(loadDirectory="test", debug=true)
     public void testTwo()

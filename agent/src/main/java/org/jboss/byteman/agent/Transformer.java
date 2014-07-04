@@ -576,6 +576,36 @@ public class Transformer implements ClassFileTransformer {
         return dumpCFGPartial;
     }
 
+    protected static boolean isDumpGeneratedClasses()
+    {
+        if (allowConfigUpdate()) {
+            synchronized (configLock) {
+                return dumpGeneratedClasses;
+            }
+        }
+        return dumpGeneratedClasses;
+    }
+
+    protected static String getDumpGeneratedClassesDir()
+    {
+        if (allowConfigUpdate()) {
+            synchronized (configLock) {
+                return dumpGeneratedClassesDir;
+            }
+        }
+        return dumpGeneratedClassesDir;
+    }
+
+    protected static boolean isDumpGeneratedClassesIntermediate()
+    {
+        if (allowConfigUpdate()) {
+            synchronized (configLock) {
+                return dumpGeneratedClassesIntermediate;
+            }
+        }
+        return dumpGeneratedClassesIntermediate;
+    }
+
     /**
      * check whether debug mode for rule processing is enabled or disabled
      * @return true if debug mode is enabled or verbose mode is enabled otherwise false
@@ -666,17 +696,17 @@ public class Transformer implements ClassFileTransformer {
 
         return true;
     }
-    
+
     public static void maybeDumpClassIntermediate(String fullName, byte[] bytes)
     {
-        if (dumpGeneratedClassesIntermediate) {
+        if (isDumpGeneratedClassesIntermediate()) {
             dumpClass(fullName, bytes, true);
         }
     }
 
     public static void maybeDumpClass(String fullName, byte[] bytes)
     {
-        if (dumpGeneratedClasses) {
+        if (isDumpGeneratedClasses()) {
             dumpClass(fullName, bytes);
         }
     }
@@ -1236,6 +1266,13 @@ public class Transformer implements ClassFileTransformer {
             }
         }
 
+        if (DUMP_GENERATED_CLASSES_INTERMEDIATE.equals(property)) {
+            boolean value = computeDumpGeneratedClassesIntermediate();
+            synchronized (configLock) {
+                dumpGeneratedClassesIntermediate = value;
+            }
+        }
+
         if (TRANSFORM_ALL.equals(property)) {
             boolean value = computeTransformAll();
             synchronized (configLock) {
@@ -1267,7 +1304,7 @@ public class Transformer implements ClassFileTransformer {
 
             String name = (dotIdx < 0 ? fullName : fullName.substring(dotIdx + 1));
             String prefix = (dotIdx > 0 ? File.separator + fullName.substring(0, dotIdx) : "");
-            String dir = dumpGeneratedClassesDir + prefix.replace('.', File.separatorChar);
+            String dir = getDumpGeneratedClassesDir() + prefix.replace('.', File.separatorChar);
             if (!ensureDumpDirectory(dir)) {
                 System.out.println("org.jboss.byteman.agent.Transformer : Cannot dump transformed bytes to directory " + dir + File.separator + prefix);
                 return;
