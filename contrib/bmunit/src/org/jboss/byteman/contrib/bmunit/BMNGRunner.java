@@ -26,7 +26,8 @@ public class BMNGRunner extends BMNGAbstractRunner
     @BeforeClass(alwaysRun = true)
     public void bmngBeforeClass() throws Exception
     {
-        super.bmngBeforeClass(getClass());
+        Class<?> clazz = getClass();
+        switchClass(clazz);
     }
 
     /**
@@ -38,7 +39,8 @@ public class BMNGRunner extends BMNGAbstractRunner
     @AfterClass(alwaysRun = true)
     public void bmngAfterClass() throws Exception
     {
-        super.bmngAfterClass(getClass());
+        Class<?> clazz = getClass();
+        switchClass(null);
     }
 
     /**

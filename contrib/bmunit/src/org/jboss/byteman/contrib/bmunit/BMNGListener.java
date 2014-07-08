@@ -43,35 +43,7 @@ import java.lang.reflect.Method;
 public class BMNGListener extends BMNGAbstractRunner implements IInvokedMethodListener, ITestListener
 {
 
-    Class currentClazz = null;
     // TODO work out what to do if tests are run in parallel and their rule sets overlap or have ocnflicting behaviour
-
-    public void switchClass(Class newClazz)
-    {
-        if (currentClazz != null) {
-            try {
-                bmngAfterClass(currentClazz);
-            } catch (Exception e) {
-                try {
-                    BMUnitConfigState.resetConfigurationState(currentClazz);
-                } catch (Exception e1) {
-                }
-                throw new TestNGException(e);
-            }
-        }
-        if (newClazz != null) {
-            currentClazz = newClazz;
-            try {
-                bmngBeforeClass(newClazz);
-            } catch (Exception e) {
-                try {
-                    BMUnitConfigState.resetConfigurationState(newClazz);
-                } catch (Exception e1) {
-                }
-                throw new TestNGException(e);
-            }
-        }
-    }
 
     private boolean checkBMNGListener(Class<?> clazz)
     {

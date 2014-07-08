@@ -28,10 +28,6 @@ import org.testng.IHookCallBack;
 import org.testng.IHookable;
 import org.testng.ITestResult;
 import org.testng.TestNGException;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 
 import java.lang.reflect.Method;
 
@@ -47,6 +43,7 @@ public abstract class BMNGAbstractRunner implements IHookable
     BMScripts classMultiScriptAnnotation;
     BMRules classMultiRuleAnnotation;
     BMRule classSingleRuleAnnotation;
+    static Class currentClazz = null;
 
     /**
      * implement standard run behaviour by devolving control back to the original runner
@@ -222,5 +219,32 @@ public abstract class BMNGAbstractRunner implements IHookable
         }
         // unload the config
         BMUnitConfigState.popConfigurationState(method);
+    }
+
+    public void switchClass(Class newClazz)
+    {
+        if (currentClazz != null) {
+            try {
+                bmngAfterClass(currentClazz);
+            } catch (Exception e) {
+                try {
+                    BMUnitConfigState.resetConfigurationState(currentClazz);
+                } catch (Exception e1) {
+                }
+                throw new TestNGException(e);
+            }
+        }
+        currentClazz = newClazz;
+        if (newClazz != null) {
+            try {
+                bmngBeforeClass(newClazz);
+            } catch (Exception e) {
+                try {
+                    BMUnitConfigState.resetConfigurationState(newClazz);
+                } catch (Exception e1) {
+                }
+                throw new TestNGException(e);
+            }
+        }
     }
 }
