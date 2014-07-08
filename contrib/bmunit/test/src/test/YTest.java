@@ -24,22 +24,21 @@
 
 package test;
 
-import org.jboss.byteman.contrib.bmunit.BMNGListener;
 import org.jboss.byteman.contrib.bmunit.BMNGRunner;
 import org.jboss.byteman.contrib.bmunit.BMRule;
-import org.jboss.byteman.contrib.bmunit.BMUnitConfig;
-import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 /**
- * non Byteman test class to ensure we can cope with
- * TestNG's moronic listener handling
+ * Created by adinn on 04/07/14.
  */
-public class ATest
+@BMRule(name="YTest", targetClass = "YTest", targetMethod = "bar",action = "traceln(\"YTest!\"")
+public class YTest extends BMNGRunner
 {
-    @Test()
-    public void foo()
+    @Test
+    @BMRule(name="YTest::bar", targetClass = "YTest", targetMethod = "bar", action = "traceln(\"YTest::bar!\"")
+    public void bar()
     {
-        System.out.println("ATest::foo()");
+        System.out.println("YTest::bar()");
     }
+
 }

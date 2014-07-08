@@ -43,10 +43,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <!-- test combination of no BMUnit, BMNGListener and BMNGRunner integration -->
+                    <!-- also NGUnitConfigTest sets the BMUnitConfig used as the default -->
                     <includes>
                         <include>test/ATest.class</include>
-                        <include>test/NGUnitTest.class</include>
                         <include>test/NGUnitConfigTest.class</include>
+                        <include>test/YTest.class</include>
                     </includes>
                     <forkMode>once</forkMode>
                     <argLine>-Dorg.jboss.byteman.home=""</argLine>
@@ -57,12 +59,32 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>testng.runner</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <!-- test second combination of no BMNGListener and BMNGRunner integration -->
+                            <!-- BMUnitConfig default is not defined by any of these classes -->
+                            <includes>
+                                <include>test/NGUnitTest.class</include>
+                                <include>test/ZTest.class</include>
+                            </includes>
+                            <debugForkedProcess>true</debugForkedProcess>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>junit</id>
                         <phase>test</phase>
                         <goals>
                             <goal>test</goal>
                         </goals>
                         <configuration>
+                            <!-- test JUnit integration - this requires switching off the TestNG
+                            processing mode enabled by the presence of TestNG tests in other
+                            executions by overriding the testNGArtifactName -->
+                            <!-- BMUnitConfig default is not defined by UnitConfigTest-->
                             <testNGArtifactName>none:none</testNGArtifactName>
                             <includes>
                                 <include>test/UnitTest.class</include>
