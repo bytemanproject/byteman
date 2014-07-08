@@ -71,7 +71,6 @@
                                 <include>test/NGUnitTest.class</include>
                                 <include>test/ZTest.class</include>
                             </includes>
-                            <debugForkedProcess>true</debugForkedProcess>
                         </configuration>
                     </execution>
                     <execution>
