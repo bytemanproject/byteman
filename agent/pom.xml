@@ -1851,6 +1851,65 @@
     </build>
     <profiles>
         <profile>
+            <!--
+              during development we want asm classes to appear in
+              their correct package so we can step through the asm
+              code in the debugger
+            -->
+            <id>asmdebug</id>
+            <build>
+                <plugins>
+                    <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-shade-plugin</artifactId>
+                      <executions>
+                        <execution>
+                          <phase>package</phase>
+                          <goals>
+                            <goal>shade</goal>
+                          </goals>
+                          <configuration>
+                            <artifactSet>
+                              <includes>
+                                <include>asm:asm-debug-all</include>
+                                <include>net.sf.squirrel-sql.thirdparty-non-maven:java-cup</include>
+                              </includes>
+                            </artifactSet>
+                            <filters>
+                              <filter>
+                                <artifact>net.sf.squirrel-sql.thirdparty-non-maven:java-cup</artifact>
+                                <includes>
+                                  <include>java_cup/runtime/**</include>
+                                </includes>
+                              </filter>
+                              <filter>
+                                <artifact>asm:asm-debug-all</artifact>
+                                <includes>
+                                  <include>org/objectweb/asm/**</include>
+                                </includes>
+                              </filter>
+                            </filters>
+                            <relocations>
+                              <relocation>
+                                <pattern>java_cup.runtime</pattern>
+                                <shadedPattern>org.jboss.byteman.java_cup.runtime</shadedPattern>
+                              </relocation>
+                            </relocations>
+                          </configuration>
+                        </execution>
+                      </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+              <dependency>
+                <groupId>asm</groupId>
+                <artifactId>asm-debug-all</artifactId>
+                <version>3.3.1</version>
+              </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>parser</id>
             <build>
                 <plugins>
@@ -1898,6 +1957,8 @@
                 </dependency>
             </dependencies>
 
+        </profile>
+        <profile>
         </profile>
     </profiles>
     <dependencies>
