@@ -493,7 +493,7 @@ public class TransformContext
                 LinkedList<String> interfaces1 = listInterfaces(checker1);
                 if (interfaces1.contains(type2)) {
                     // type2 is an interface of type1
-                    return t1;
+                    return t2;
                 } else {
                     LinkedList<String> interfaces2 = listInterfaces(checker2);
                     while (!interfaces2.isEmpty()) {
@@ -508,7 +508,7 @@ public class TransformContext
                 // see if the classes have a common super class before Object
                 LinkedList<String> supers2 = listSupers(checker2);
                 if (supers2.contains(type1)) {
-                    // type2 implements interface type1
+                    // type2 is a subclass of type1
                     return t1;
                 } else {
                     LinkedList<String> supers1 = listSupers(checker1);
