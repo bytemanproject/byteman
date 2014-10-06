@@ -444,7 +444,16 @@ public class TransformContext
         String type1 = t1.replaceAll("/", ".");
         String type2 = t2.replaceAll("/", ".");
         ClassChecker checker1 = transformer.getClassChecker(type1, loader);
+
+        if (checker1 == null) {
+            return TOFU;
+        }
+
         ClassChecker checker2 = transformer.getClassChecker(type2, loader);
+
+        if (checker2 == null) {
+            return TOFU;
+        }
 
         if (checker1.isInterface()) {
             if (checker2.isInterface()) {
@@ -545,9 +554,11 @@ public class TransformContext
                 if (!interfaces.contains(next)) {
                     interfaces.add(next);
                     ClassChecker newChecker = transformer.getClassChecker(next, loader);
-                    count = newChecker.getInterfaceCount();
-                    for (int i = 0; i < count; i++) {
-                        toCheck.add(newChecker.getInterface(i));
+                    if (newChecker != null) {
+                        count = newChecker.getInterfaceCount();
+                        for (int i = 0; i < count; i++) {
+                            toCheck.add(newChecker.getInterface(i));
+                        }
                     }
                 }
             }

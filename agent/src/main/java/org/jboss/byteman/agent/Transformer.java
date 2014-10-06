@@ -218,7 +218,7 @@ public class Transformer implements ClassFileTransformer {
 
             ClassChecker checker = getClassChecker(newBuffer);// new ClassChecker(newBuffer);
 
-            if (checker.isInterface()) {
+            if (checker == null || checker.isInterface()) {
                 return null;
             }
 
@@ -292,10 +292,12 @@ public class Transformer implements ClassFileTransformer {
                         }
                         // check the extends list of this interface for new interfaces to consider
                         ClassChecker newChecker = getClassChecker(interfaceName, originalLoader);
-                        interfaceCount = newChecker.getInterfaceCount();
-                        for (int i = 0; i < interfaceCount; i++) {
-                            interfaceName = newChecker.getInterface(i);
-                            toVisit.add(interfaceName);
+                        if (newChecker != null) {
+                            interfaceCount = newChecker.getInterfaceCount();
+                            for (int i = 0; i < interfaceCount; i++) {
+                                interfaceName = newChecker.getInterface(i);
+                                toVisit.add(interfaceName);
+                            }
                         }
                     }
                 }
@@ -317,6 +319,7 @@ public class Transformer implements ClassFileTransformer {
                     if (checker == null || checker.hasOuterClass()) {
                         // we don't transform inner classes for now
                         // TODO -- see if we can match and transform inner classes via the outer class
+                        break;
                     }
 
                     newBuffer = tryTransform(newBuffer, internalName, loader, superName, false, true);
@@ -351,10 +354,12 @@ public class Transformer implements ClassFileTransformer {
                                 }
                                 // check the extends list of this interface for new interfaces to consider
                                 ClassChecker newChecker = getClassChecker(interfaceName, originalLoader);
-                                interfaceCount = newChecker.getInterfaceCount();
-                                for (int i = 0; i < interfaceCount; i++) {
-                                    interfaceName = newChecker.getInterface(i);
-                                    toVisit.add(interfaceName);
+                                if (newChecker != null) {
+                                    interfaceCount = newChecker.getInterfaceCount();
+                                    for (int i = 0; i < interfaceCount; i++) {
+                                        interfaceName = newChecker.getInterface(i);
+                                        toVisit.add(interfaceName);
+                                    }
                                 }
                             }
                         }
