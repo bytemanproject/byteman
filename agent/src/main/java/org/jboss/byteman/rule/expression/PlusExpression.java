@@ -71,8 +71,12 @@ public class PlusExpression extends BinaryOperExpression
         Object value1 = getOperand(0).interpret(helper);
         Object value2 = getOperand(1).interpret(helper);
         if (type == Type.STRING) {
-            String s1 = (String)value1;
-            String s2 = (String)value2;
+            // we will have requested type String at type check but that
+            // does not guarantee that the returned objects are Stings, merely
+            // that they can be promoted to Strings. so we must be willing
+            // to convert non-String objects to Strings and also to handle null
+            String s1 = (value1 != null ? value1.toString() : "null");
+            String s2 = (value2 != null ? value2.toString() : "null");
             return s1 + s2;
         } else {
             if (value1 instanceof Character) {
