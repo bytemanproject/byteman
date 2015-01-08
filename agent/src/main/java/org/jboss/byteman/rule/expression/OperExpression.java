@@ -45,7 +45,7 @@ public abstract class OperExpression extends Expression
 
     /**
      * return the operand with the given index or null if the index is out of range
-     * @param index
+     * @param index the index
      * @return the operand with the given index
      */
     public abstract Expression getOperand(int index);

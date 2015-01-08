@@ -42,70 +42,70 @@ public enum LocationType
     /**
      * specifies a location for trigger insertion via a line number.
      *
-     * script syntax : 'AT' 'LINE' <linenumber>
+     * script syntax : 'AT' 'LINE' {linenumber}
      */
     LINE,
     /**
      * specifies a location for trigger insertion by identifying a field read operation or the nth such field
      * read if a count is supplied or all field reads if ALL is specified.
      *
-     * script syntax : 'AT' 'READ' [<typename> '.' ] <fieldname> [ <count> | 'ALL' ]
+     * script syntax : 'AT' 'READ' [{typename} '.' ] {fieldname} [ {count} | 'ALL' ]
      */
     READ,
     /**
      * specifies a location for trigger insertion by identifying a field read operation or the nth such field
      * read if a count is supplied or all field reads if ALL is specified.
      *
-     * script syntax : 'AFTER' 'READ' [<typename> '.' ] <fieldname> [ <count> | 'ALL' ]
+     * script syntax : 'AFTER' 'READ' [{typename} '.' ] {fieldname} [ {count} | 'ALL' ]
      */
     READ_COMPLETED,
     /**
      * specifies a location for trigger insertion by identifying a field write operation or the nth such field
      * write if a count is supplied or all field writes if ALL is specified.
      *
-     * script syntax : 'AT' 'WRITE' [<typename> '.' ] <fieldname> [ <count> | 'ALL' ]
+     * script syntax : 'AT' 'WRITE' [{typename} '.' ] {fieldname} [ {count} | 'ALL' ]
      */
     WRITE,
     /**
      * specifies a location for trigger insertion by identifying a field write operation or the nth such field
      * write if a count is supplied or all field writes if ALL is specified.
      *
-     * script syntax : 'AFTER' 'WRITE' [<typename> '.' ] <fieldname> [ <count> | 'ALL' ]
+     * script syntax : 'AFTER' 'WRITE' [{typename} '.' ] {fieldname} [ {count} | 'ALL' ]
      */
     WRITE_COMPLETED,
     /**
      * specifies a location for trigger insertion by identifying a method invoke operation or the nth such
      * method invoke if a count is supplied or all method invocations if ALL is specified.
      *
-     * script syntax : 'AT' 'INVOKE' [<typename> '.' ] <methodname> ['(' <argtypes> ')' [ <count> | 'ALL' ]
+     * script syntax : 'AT' 'INVOKE' [{typename} '.' ] {methodname} ['(' {argtypes} ')' [ {count} | 'ALL' ]
      */
     INVOKE,
     /**
      * specifies a location for trigger insertion by identifying return from a method invoke operation or the
      * nth such return if a count is supplied or all method invocations if ALL is specified.
      *
-     * script syntax : 'AFTER' 'INVOKE' [<typename> '.' ] <methodname> ['(' <argtypes> ')' [ <count> | 'ALL' ]
+     * script syntax : 'AFTER' 'INVOKE' [{typename} '.' ] {methodname} ['(' {argtypes} ')' [ {count} | 'ALL' ]
      */
     INVOKE_COMPLETED,
     /**
      * specifies a location for trigger insertion by identifying a synchronize operation or the nth such
      * operation if a count is supplied or all synchronize operations if ALL is specified.
      *
-     * script syntax : 'AT' 'SYNCHRONIZE' [ <count> | 'ALL' ]
+     * script syntax : 'AT' 'SYNCHRONIZE' [ {count} | 'ALL' ]
      */
     SYNCHRONIZE,
     /**
      * specifies a location for trigger insertion by identifying completion of a synchronize operation or the
      * nth such operation if a count is supplied or all synchronize operations if ALL is specified.
      *
-     * script syntax : 'AFTER' 'SYNCHRONIZE' [ <count> | 'ALL' ]
+     * script syntax : 'AFTER' 'SYNCHRONIZE' [ {count} | 'ALL' ]
      */
     SYNCHRONIZE_COMPLETED,
 
     /**
      * specifies a location for trigger insertion by identifying throw of an exception of the nth such throw
      * if a count is supplied or all throws if ALL is specified
-     * script syntax : 'AT' 'THROW' [<typename>] [ <count> | 'ALL' ]
+     * script syntax : 'AT' 'THROW' [{typename}] [ {count} | 'ALL' ]
      * n.b. exception typename parsed but not yet implemented
      */
     THROW,

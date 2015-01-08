@@ -41,9 +41,11 @@ public class Install
 {
     /**
      * main routine for use from command line
-     * <p/>
+     *
+     *
      * Install [-h host] [-p port] [-b] [-s] [-Dorg.jboss.Byteman.xxx]* pid
-     * <p/>
+     *
+     *
      * see method {@link #usage} for details of the command syntax
      * @param args the command options
      */
@@ -63,6 +65,20 @@ public class Install
 
     /**
      * compatability mode
+    * @param pid the process id of the JVM into which the agent should be installed or 0 for this JVM
+    * @param addToBoot true if the agent jar should be installed into the bootstrap classpath
+    * @param host the hostname to be used by the agent listener or null for localhost
+    * @param port the port to be used by the agent listener or 0 for the default port
+    * @param properties an array of System properties to be installed by the agent with optional values e.g.
+    * values such as "org.jboss.byteman.verbose" or "org.jboss.byteman.dump.generated.classes.directory=./dump"
+    * @throws IllegalArgumentException if any of the arguments  is invalid
+    * @throws FileNotFoundException if the agent jar cannot be found using the environment variable BYTEMAN_HOME
+    * or the System property org.jboss.byteman.home and cannot be located in the current classpath
+    * @throws IOException if the byteman jar cannot be opened or uploaded to the requested JVM
+    * @throws AttachNotSupportedException if the requested JVM cannot be attached to
+    * @throws AgentLoadException if an error occurs during upload of the agent into the JVM
+    * @throws AgentInitializationException if the agent fails to initialize after loading. this almost always
+    * indicates that the agent is already loaded into the JVM
      */
     public static void install(String pid, boolean addToBoot, String host, int  port, String[] properties)
             throws IllegalArgumentException, FileNotFoundException,

@@ -19,8 +19,8 @@ public class BMRunnerUtil {
     /**
      * construct the text of a rule script from a set of BMRule annotations
      *
-     * @param bmRules
-     * @return
+     * @param bmRules annotations describing the rules to be installed
+     * @return the equivalent rule text
      */
     public static String constructScriptText(BMRule[] bmRules) {
         StringBuilder builder = new StringBuilder();
@@ -91,7 +91,6 @@ public class BMRunnerUtil {
      * class annotation
      *
      * @param name      the value supplied in the annotation or "" if it has been defaulted
-     * @param testClass the test class annotated with an @BMRules annotation
      * @return by default this returns the annotation value or null if the annotation value is null or empty.
      */
     public static String computeBMScriptName(String name) {

@@ -115,8 +115,8 @@ public class TypeHelper {
      * convert a classname from canonical form to the form used to represent it externally i.e. replace
      * all dots with slashes
      *
-     * @param className
-     * @return
+     * @param className the canonical name
+     * @return the external name
      */
     public static String externalizeClass(String className)
     {
@@ -127,8 +127,8 @@ public class TypeHelper {
      * convert a classname from external form to canonical form i.e. replace
      * all slashes with dots
      *
-     * @param className
-     * @return
+     * @param className the external name
+     * @return the canonical name
      */
     public static String internalizeClass(String className)
     {
@@ -147,8 +147,8 @@ public class TypeHelper {
      * by the externalized class name bracketed by 'L' and ';' and array names by the
      * base type name preceded by '['.
      *
-     * @param typeName
-     * @return
+     * @param typeName the type name
+     * @return the external name
      */
     public static String externalizeType(String typeName)
     {
@@ -403,7 +403,7 @@ public class TypeHelper {
     /**
      * split off the method name preceding the signature and return it
      * @param targetMethod - the unqualified method name, possibly including signature
-     * @return
+     * @return the method name
      */
     public static String parseMethodName(String targetMethod) {
         int sigIdx = targetMethod.indexOf("(");
@@ -417,7 +417,7 @@ public class TypeHelper {
     /**
      * split off the signature following the method name and return it
      * @param targetMethod - the unqualified method name, possibly including signature
-     * @return
+     * @return the signature
      */
     public static String parseMethodDescriptor(String targetMethod) {
         int descIdx = targetMethod.indexOf("(");

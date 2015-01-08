@@ -36,14 +36,25 @@
         <version>2.2.1-SNAPSHOT</version>
     </parent>
 
-    <dependencies>
+    <profiles>
         <!-- the install code uses the VM_Attach API which is available in the JDK tools jar
-             in Hotspot and OpenJDK
+             in JDK6/7/8. In JDK9 it is always available via the system loader.
         -->
-        <dependency>
-            <groupId>com.sun</groupId>
-            <artifactId>tools</artifactId>
-        </dependency>
-    </dependencies>
+        <profile>
+          <id>use-toolsjar-profile</id>
+          <activation>
+            <jdk>[1.6,1.8]</jdk>
+          </activation>
+          <dependencies>
+            <dependency>
+              <groupId>com.sun</groupId>
+              <artifactId>tools</artifactId>
+              <version>1.6</version>
+              <scope>system</scope>
+              <systemPath>${tools.jar}</systemPath>
+            </dependency>
+          </dependencies>
+        </profile>
+    </profiles>
 
 </project>

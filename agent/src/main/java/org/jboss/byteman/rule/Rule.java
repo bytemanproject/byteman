@@ -304,7 +304,7 @@ public class Rule
 
     /**
      * get the class loader of the target class for the rule
-     * @return
+     * @return the class loader
      */
     public ClassLoader getLoader()
     {
@@ -739,7 +739,7 @@ public class Rule
 
     /**
      * return the key under which this rule has been indexed in the rule key map
-     * @return
+     * @return the key
      */
     public String lookupKey()
     {
@@ -847,7 +847,7 @@ public class Rule
     /**
      * a getter allowing the helper class for the rule to be identified
      * 
-     * @return
+     * @return the helper
      */
     public Class getHelperClass()
     {

@@ -67,8 +67,7 @@ public class MethodExpression extends Expression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @return true if all variables in this expression are bound and no type mismatches have
-     *         been detected during inference/validation.
+     * @throws TypeException if any variable is missing or has the wrong type
      */
     public void bind() throws TypeException
     {
@@ -548,10 +547,10 @@ public class MethodExpression extends Expression
     /**
      * prune the candidates list removing all methods whose parameter at index argIdx cannto be assigned to
      * class argClazz
-     * @param candidates
-     * @param argIdx
-     * @param argClazz
-     * @return
+     * @param candidates candidate matching methods
+     * @param argIdx index of arg curently being checked
+     * @param argClazz class of arg curently being checked
+     * @return the pruned method list
      */
     public List<Method> pruneCandidates(List<Method> candidates, int argIdx, Class argClazz)
     {
@@ -574,7 +573,7 @@ public class MethodExpression extends Expression
      * the need for type coersion (i.e. the parameter tyoe is a supertype of the argument type)
      * @param candidates a list of methods all of whose signatures are assignable from the
      *
-     * @return
+     * @return the best match if there is a unique one otherwise NULL
      */
     public Method bestMatchCandidate(List<Method> candidates)
     {

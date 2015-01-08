@@ -50,9 +50,6 @@ public class NullLiteral extends Expression
      * verify that variables mentioned in this expression are actually available in the supplied
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
-     *
-     * @return true if all variables in this expression are bound and no type mismatches have
-     *         been detected during inference/validation.
      */
     public void bind()
     {

@@ -32,13 +32,16 @@ import org.objectweb.asm.Type;
 import java.util.*;
 
 /**
- * A control flow graph (cfg) for use by trigger method adapters.<p/>
+ * A control flow graph (cfg) for use by trigger method adapters.
+ *
+ *
  * A trigger method adapter is required to notify the CFG each time an instruction or label is visited and
  * each time a try catch block is notified. It is also required to notify the CFG when trigger coe generartion
  * begins and ends. The cfg allows the trigger method adapter to identify whether or not trigger code is
  * within the scope of one or more synchronized blocks, allowing it to protect the trigger call with try catch
  * handlers which ensure that any open monitor enters are rounded off with a corresponding monitor exit.
- * <p/>
+ *
+ *
  * A cfg is constructed dynamically as the code is visited in order to enable trigger insertion to be performed
  * during a single pass of the bytecode. See {@link org.jboss.byteman.agent.adapter.RuleTriggerMethodAdapter}
  * for an example of how the methods provided by this class are invoked during visiting of the method byte code.
@@ -61,7 +64,8 @@ import java.util.*;
  * <li> code visit end demarcation:
  * {@link org.jboss.byteman.agent.adapter.cfg.CFG#visitMaxs()}, {@link org.jboss.byteman.agent.adapter.cfg.CFG#visitEnd()},
  * </ul>
- * <p/>
+ *
+ *
  * The cfg maintains the current instruction sequence for the method in encoded form as it is being generated.
  * The cfg models both the linear instruction sequence and the directed graph of control flow through that sequence.
  * It splits the instruction stream at control flow branch points, grouping instructions into basic blocks. A
@@ -69,13 +73,15 @@ import java.util.*;
  * basic blocks define the graph structure. The cfg correlates labels with i) blocks and ii) instruction offsets
  * within those blocks as the labels are visited during bytecode visiting. It also tracks the locations within
  * blocks of try catch regions and their handlers and of monitor enter and exit instructions.
- * <p/>
+ *
+ *
  * The lock propagation algorithm employed to track the extent of monitor enter/exit pairs and try/catch blocks is
  * the most complex aspect of this implementation, mainly because it has to be done in a single pass. This means
  * that the end location of a try catch block or the location of the (one or more) monitor exit(s) associated with
  * a monitor enter may not be known when a trigger point is reached. This algorithm is described below in detail.
  * First an explanation of the CFG organization is provided.
- * </p>
+ *
+ *
  * <h3>Control flow graph model</h3>
  * The bytecode sequence is segmented into basic blocks at control flow branches ensuring there is no <em>explicit</em>
  * control flow internal to a block. The only way <em>normal</em> control can flow from one block to another is via a
@@ -94,21 +100,25 @@ import java.util.*;
  * a label has been visited it can be resolved to a {@link CodeLocation} by calling method
  * {@link CFG#getLocation(org.objectweb.asm.Label)}. The returned value identifies both a block and an instruction
  * offset in the block.
- * <p/>
+ *
+ *
  * Several caveats apply to this simple picture. Firstly, blocks ending in return or throw have no control flow -- they
  * pass control back to the caller rather than to another basic block. So, the count returned by {@link BBlock#nOuts()}
  * will be 0 for such blocks.
- * <p/>
+ *
+ *
  * Secondly, all blocks except the last have a distinguished link which identifies the block successor link
  * relationship. The successor block can be obtained by supplying value 0 as argument to method
  * {@link BBlock#nthOut(int)}. This link is <em>additional</em> to any control flow links and it is <em>not</em>
  * included in the count returned by {@link BBlock#nOuts()}. Note that where there is a control flow link to the
  * next block in line (e.g. where the block ends in an ifXX instruction) the label employed for the distinguished 0
  * link will also appear in the set of control flow links (as link 1 in the case of an ifXX instruction).
- * <p/>
+ *
+ *
  * The final caveat is that this graph model does not identify control flow which occurs as a consequence of
  * generated exceptions.
- * </p>
+ *
+ *
  * <h3>Exceptional Control Flow</h3>
  * Exception control flow is modelled independently from normal flow because it relates to a segment of the
  * instruction sequence rather than individual instructions. A specific exception flow is associated with a each
@@ -116,18 +126,21 @@ import java.util.*;
  * {@link TryCatchDetails} which identify the location of the try/catch start, its end and the associated handler
  * start location. Once again labels are used so as to allow modelling of forward references to code locations
  * which have not yet been generated.
- * <p/>
+ *
+ *
  * Note that handler start labels always refer to a code location which is at the start of a basic block. Start
  * and end labels for a given try/catch block may refer to code locations offset into their containing basic block
  * and possibly in distinct blocks.
- * <p/>
+ *
+ *
  * Methods {@link #tryCatchStart(org.objectweb.asm.Label)}, {@link #tryCatchEnd(org.objectweb.asm.Label)}
  * and {@link #tryCatchHandlerStart(org.objectweb.asm.Label)} can be called to determine whether a given label
  * identifies, respectively, the start of a try catch block, the end of a try catch block or the start of a handler
  * block. Methods {@link #tryCatchStartDetails(org.objectweb.asm.Label)} {@link #tryCatchEndDetails(org.objectweb.asm.Label)},
  * and {@link #tryCatchHandlerStartDetails(org.objectweb.asm.Label)} can be used to retrieve the associated
  * {@link TryCatchDetails} information.
- * </p>
+ *
+ *
  * <h3>Label Resolution</h3>
  * The cfg relies upon its adapter client to notify it whenever a label is visited during a walk of the bytecode.
  * This allows it to associate labels with the basic blocks and instruction offsets within those blocks. The cfg
@@ -135,7 +148,8 @@ import java.util.*;
  * one supplied as argument to a split call) to the associated block. It also provides method
  * {@link CFG#getBlockInstructionIdx(org.objectweb.asm.Label)} to resolve a label to a {@link CodeLocation} i.e.
  * block and instruction index within a block. Both methods return null if the label has not yet been visited.
- * <p/>
+ *
+ *
  * Method {@link CFG#getContains(BBlock)} is also provided to obtain a list of all labels contained within a
  * specific block. There may be more than one label which resolves to a location within a specific block. For
  * example, the handler start label associated with a try/catch handler is contained in the handler block at
@@ -149,23 +163,25 @@ import java.util.*;
  * entry and monitor exit instructions is made available via methods {@link CFG#getPairedEnter(CodeLocation)},
  * and {@link CFG#getPairedExit(CodeLocation, BBlock)} 9note that a given enter will never have more than one
  * exit in any given block).
- * <p/>
+ *
+ *
  * The cfg associates monitor enters and exits with their enclosing block, allowing it to identify the start and/or
  * end of synchronized regions within a specific block. This information can be propagated along control flow links
  * to identify outstanding monitor enters at any point in a given control flow path. Whenever a block is created
  * it is associated with a set of open enter instructions i.e. enter instructions occurring along all control flow
  * paths to the block for which no corresponding exit has been executed.
- * <p/>
+ *
  * <ul>
  * <li>For the initial block the open enters list is empty.
- * <p/>
+ *
  * <li>For a block reached by normal control flow the open enters list can be derived from any of the feed blocks
  * which transfer control to it. It is computed by adding and removing entries to/from the feed block's open
  * enters list according to the order the enters or exits appear in the block. Any feed block is valid because
  * every enter must have a single corresponding exit on each valid path through the bytecode. Two paths to the
  * same block cannot introduce different enters and exits without breaking this invariant. Also, enters and exits
  * must be strictly nested so the set of open monitors can be tracked using a simple stack model.
- * <p/>
+ *
+ *
  * The algorithm propagates open enters along normal control flow paths whenever a split instruction is invoked
  * (splitting the instruction stream into a new block). The work is done in method {@link CFG#carryForward()}. This
  * method identifies the current block's open enters list (how will emerge below), updates it with any enters and
@@ -341,7 +357,7 @@ public class CFG
 
     /**
      * aopend an instruction to the current block
-     * @param instruction
+     * @param instruction the instruction to be appended
      */
     public void add(int instruction)
     {
@@ -350,8 +366,8 @@ public class CFG
 
     /**
      * append an instruction with one operand to the current block
-     * @param instruction
-     * @param operand
+     * @param instruction the instruction to be appended
+     * @param operand the instruction's operand
      */
     public void add(int instruction, int operand)
     {
@@ -360,9 +376,9 @@ public class CFG
 
     /**
      * append an instruction with two operands to the current block
-     * @param instruction
-     * @param operand1
-     * @param operand2
+     * @param instruction the instruction to be appended
+     * @param operand1 the instruction's first operand 
+     * @param operand2 the instruction's second operand
      */
     public void add(int instruction, int operand1, int operand2)
     {
@@ -371,8 +387,8 @@ public class CFG
 
     /**
      * append an operand with more than two operands ot the current block
-     * @param instruction
-     * @param operands
+     * @param instruction the instruction to be appended
+     * @param operands the instruction's operands
      */
     public void add(int instruction, int[] operands)
     {
@@ -381,8 +397,8 @@ public class CFG
 
     /**
      * append an instruction with a String operand to the current block
-     * @param instruction
-     * @param name
+     * @param instruction the instruction to be appended
+     * @param name the String operand
      */
     public void add(int instruction, String name)
     {
@@ -396,7 +412,7 @@ public class CFG
 
     /**
      * append a multiarray create instruction to the current block
-     * @param instruction
+     * @param instruction the instruction to be appended
      * @param name the name of the array base type
      * @param dims the number of array dimensions
      */
@@ -412,8 +428,10 @@ public class CFG
 
     /**
      * append a field or method instruction with 3 String operands to the current block
-     * @param instruction
-     * @param name
+     * @param instruction the instruction to be appended
+     * @param owner the first String operand
+     * @param name the second String operand
+     * @param desc the third String operand
      */
     public void add(int instruction, String owner, String name, String desc)
     {
@@ -438,6 +456,7 @@ public class CFG
     /**
      * set the location of a label to the next instruction offset in the current block
      * @param label the label whose location is to be set
+     * @return the resulting CodeLocation
      */
     public CodeLocation setLocation(Label label)
     {
@@ -602,8 +621,8 @@ public class CFG
 
     /**
      * pair a monitor enter instruction with an associated monitor exit instructions
-     * @param enter
-     * @param exit
+     * @param enter the lcoation of the enter
+     * @param exit the lcoation of the exit
      */
     void addMonitorPair(CodeLocation enter, CodeLocation exit)
     {
@@ -641,7 +660,8 @@ public class CFG
 
     /**
      * locate the monitor enter instruction associated with a given monitor exit
-     * @param exit
+     * @param exit the location of the monitor exit
+     * @return the paired enter
      */
     public CodeLocation getPairedEnter(CodeLocation exit)
     {
@@ -650,6 +670,8 @@ public class CFG
 
     /**
      * return the index of the local var at which this monitorenter saved its lock object
+     * @param open the location of th emonitor enter
+     * @return the var index
      */
     public int getSavedMonitorIdx(CodeLocation open)
     {
@@ -1319,8 +1341,8 @@ public class CFG
 
     /**
      * return the list of details of try catch blocks which start at this label
-     * @param label
-     * @return
+     * @param label the start label
+     * @return list of try catch block details
      */
     public List<TryCatchDetails> tryCatchStartDetails(Label label)
     {
@@ -1329,8 +1351,8 @@ public class CFG
 
     /**
      * return the list of details of try catch blocks which end at this label
-     * @param label
-     * @return
+     * @param label the end label
+     * @return list of try catch block details
      */
     public List<TryCatchDetails> tryCatchEndDetails(Label label)
     {
@@ -1338,9 +1360,9 @@ public class CFG
     }
 
     /**
-     * return the list of details of try catch blocks whose handler startsend at this label
-     * @param label
-     * @return
+     * return the list of details of try catch blocks whose handler starts at this label
+     * @param label the handler start label
+     * @return list of try catch block details
      */
     public List<TryCatchDetails> tryCatchHandlerStartDetails(Label label)
     {
@@ -1369,8 +1391,8 @@ public class CFG
 
     /**
      * return details of any trigger block which starts at this label
-     * @param label
-     * @return
+     * @param label the label
+     * @return trigger start details
      */
     public TriggerDetails triggerStartDetails(Label label)
     {
@@ -1379,8 +1401,8 @@ public class CFG
 
     /**
      * return the list of details of try catch blocks which end at this label
-     * @param label
-     * @return
+     * @param label the label
+     * @return trigger end details
      */
     public TriggerDetails triggerEndDetails(Label label)
     {
@@ -1388,8 +1410,8 @@ public class CFG
     }
 
     /**
-     * return an iterator ovver all known trigger detailsd
-     * @return
+     * return an iterator ovver all known trigger details
+     * @return the iterator
      */
     public Iterator<TriggerDetails> triggerDetails()
     {
@@ -1399,7 +1421,7 @@ public class CFG
     /**
      * notify the CFG that a label has been visited by the method visitor and hence its position will now
      * be resolved
-     * @param label
+     * @param label the label being visited
      */
     public void visitLabel(Label label)
     {
@@ -1467,7 +1489,7 @@ public class CFG
     /**
      * notify the CFG that a label which represents the start of a trigger injection sequence has just been visited
      * by the method visitor.
-     * @param label
+     * @param label the label being visited
      */
     public void visitTriggerStart(Label label)
     {
@@ -1481,7 +1503,7 @@ public class CFG
     /**
      * notify the CFG that a label which represents the end of a trigger injection sequence has just been visited
      * by the method visitor.
-     * @param label
+     * @param label the label being visited
      */
     public void visitTriggerEnd(Label label)
     {
@@ -1501,10 +1523,10 @@ public class CFG
      * method visitor calls this routine up front but only notifies the try catch block to its super when
      * the end label for the try catch block is reached.
      *
-     * @param start
-     * @param end
-     * @param handler
-     * @param type
+     * @param start the block start label
+     * @param end the block end label
+     * @param handler the block handler label
+     * @param type handled exception type name
      */
     public void visitTryCatchBlock(Label start, Label end, Label handler, String type)
     {
@@ -1656,7 +1678,7 @@ public class CFG
 
     /**
      * generate a string representation of the CFG
-     * @return
+     * @return a string representation
      */
     public String toString()
     {
@@ -1674,11 +1696,11 @@ public class CFG
     }
 
     /**
-     * return the index of the label in its enclosing block's instruction sequence of -1 if the
+     * return the index of the label in its enclosing block's instruction sequence or -1 if the
      * label has not yet been visited. the index can be used to lookup the insruction following
      * the label.
-     * @param label
-     * @return
+     * @param label the label whose index is sought
+     * @return  the known label index or -1 if unknown
      */
     public int getBlockInstructionIdx(Label label)
     {

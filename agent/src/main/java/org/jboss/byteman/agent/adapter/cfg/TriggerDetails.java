@@ -62,8 +62,8 @@ public class TriggerDetails
 
     /**
      * construct a new trigger details instance
-     * @param cfg
-     * @param start
+     * @param cfg the flow graph
+     * @param start the start label for the trigger point
      */
     public TriggerDetails(CFG cfg, Label start)
     {

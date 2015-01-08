@@ -59,7 +59,7 @@ public @interface BMUnitConfig
      * and if it cannot be so configured (or reconfigured) then an
      * exception will be thrown by the test runner. By default
      * unavailable configuration settings are ignored.
-     * @return
+     * @return enforce
      */
     boolean enforce() default false;
 
@@ -71,7 +71,7 @@ public @interface BMUnitConfig
      * when opening the agent listener server socket. An empty
      * String  (the default) means use the Byteman default (i.e.
      * "localhost").
-     * @return
+     * @return agentHost
      */
     String agentHost() default "";
     /**
@@ -82,14 +82,14 @@ public @interface BMUnitConfig
      * when opening the agent listener server socket. An empty
      * String (the default) means use the Byteman default (i.e.
      * 9999).
-     * @return
+     * @return agentPort
      */
     String agentPort() default "";
 
     /**
      * inhibitAgentLoad requests that the Byteman agent not be
      * auto-loaded into the current JVM on behalf of this test.
-     * @return
+     * @return inhibitAgentLoad
      */
     boolean inhibitAgentLoad() default false;
 
@@ -98,7 +98,7 @@ public @interface BMUnitConfig
      * rule script files should be loaded. it is only effective when a
      * BMScript annotation fails to specify a dir="..." value. An empty
      * String (the default) means use the current working directory.
-     * @return
+     * @return loadDirectory
      */
     String loadDirectory() default "";
     /**
@@ -107,7 +107,7 @@ public @interface BMUnitConfig
      * a BMScript annotation fails to specify a dir="..." value. An empty
      * String (the default) means use the value of loadDirectory or, if
      * that is not set, no resource path
-     * @return
+     * @return resourceLoadDirectory
      */
     String resourceLoadDirectory() default "";
 
@@ -126,40 +126,40 @@ public @interface BMUnitConfig
      * needs to run as close as possible to normal conditions then you should
      * specify this attribute as false and set attribute enforce to true.
      *
-     * @return
+     * @return allowAgentConfigUpdate
      */
     boolean allowAgentConfigUpdate() default true;
 
     /**
      * verbose configures the Byteman verbose setting which controls
      * printing of trace related to the operation of Byteman
-     * @return
+     * @return verbose
      */
     boolean verbose() default false;
     /**
      * debug configures the Byteman debug setting which controls
      * printing of debug trace statements embedded in Byteman rules
-     * @return
+     * @return debug
      */
     boolean debug() default false;
     /**
      * bmunitVerbose configures the BMUnit verbose setting which controls
      * printing of trace related to the operation of the BMUnit package
-     * @return
+     * @return bmunitVerbose
      */
     boolean bmunitVerbose() default false;
 
     /**
      * policy configures whether or not to set a security policy
      * when loading the agent.
-     * @return
+     * @return policy
      */
     boolean policy() default false;
 
     /**
      * dumpGeneratedClasses configures whether or not the Byteman agent
      * dumps transformed bytecode to a class file.
-     * @return
+     * @return dumpGeneratedClasses
      */
     boolean dumpGeneratedClasses() default false;
     /**
@@ -171,7 +171,7 @@ public @interface BMUnitConfig
      * This attribute is only taken into account when attribute
      * dumpGeneratedClasses has value true. An empty String means
      * use the current working directory.
-     * @return
+     * @return dumpGeneratedClassesDirectory
      */
     String dumpGeneratedClassesDirectory() default "";
 
@@ -185,7 +185,7 @@ public @interface BMUnitConfig
      * value true. Successive intermediate class files are written
      * with the same name as the final transformed file except that
      * the base name is modified by adding suffixes _1, _2, ..., etc.
-     * @return
+     * @return dumpGeneratedClassesIntermediate
      */
     boolean dumpGeneratedClassesIntermediate() default false;
 }

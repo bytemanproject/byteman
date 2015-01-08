@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
  * InstrumentedInstance instances serve two purposes:
  *
  * Internally to the framework they provide storage of traced method invocation information
- *  received from the remote execution via BytemanTestHelper->InstrumentedClass->this.
+ *  received from the remote execution via BytemanTestHelper-&gt;InstrumentedClass-&gt;this.
  *
  * To the framework user, they provide utility methods for verifying expectations relating
  * to that remote execution e.g. the number of method calls made.

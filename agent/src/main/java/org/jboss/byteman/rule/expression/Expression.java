@@ -43,7 +43,9 @@ public abstract class Expression extends RuleElement
 {
     /**
      * Create a new expression.
-     * @param type the current type for this expression.
+     * @param rule the rule for this expression
+     * @param type the type for this expression
+     * @param token the token for this expression
      */
     protected Expression(Rule rule, Type type, ParseNode token)
     {
@@ -63,8 +65,7 @@ public abstract class Expression extends RuleElement
     /**
      * verify that variables mentioned in this expression are actually available in the rule
      * bindings list
-     * @return true if all variables in this expression are bound and no type mismatches have
-     * been detected during validation.
+     * @throws TypeException if any variable is missing or has the wrong type
      */
     public abstract void bind() throws TypeException;
 
@@ -84,8 +85,8 @@ public abstract class Expression extends RuleElement
      * compatible with the type expected in the context in which it occurs.
      * @param expected the type expected for the expression in the contxet in which it occurs. this
      * may be void but should not be undefined at the point where type checking is performed.
-     * @return
-     * @throws TypeException
+     * @return the type of the expression
+     * @throws TypeException if a type check failure occurs
      */
     public abstract Type typeCheck(Type expected)
             throws TypeException;
@@ -98,7 +99,7 @@ public abstract class Expression extends RuleElement
      * recipient if the trigger method is not static (name "0") and the trigger method arguments
      * (names "1", ...)
      * @return  the result of evaluation as an Object
-     * @throws org.jboss.byteman.rule.exception.ExecuteException
+     * @throws org.jboss.byteman.rule.exception.ExecuteException if an error occurs during execution
      */
     public abstract Object interpret(HelperAdapter helper) throws ExecuteException;
 

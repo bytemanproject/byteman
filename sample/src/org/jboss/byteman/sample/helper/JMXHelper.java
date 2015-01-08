@@ -92,7 +92,7 @@ public class JMXHelper extends Helper implements DynamicMBean
 
     /**
      * constructor allowing this helper to be used as a helper
-     * @param rule
+     * @param rule the rule this helper is attached to
      */
     public JMXHelper(Rule rule) {
         super(rule);
@@ -753,6 +753,8 @@ public class JMXHelper extends Helper implements DynamicMBean
 
     /**
      * getter for counter values used by MBean code
+     * @param idx the index into the key list
+     * @return  the associated counter value as an Object
      */
 
     public synchronized Object getValue(int idx)

@@ -88,6 +88,8 @@ public class Submit
      * @param port
      *            the port that the Byteman agent is listening to.
      *            If 0 or less, the default port is used.
+     * @param out
+     *            the print stream used for writing output
      */
     public Submit(String address, int port, PrintStream out) {
         if (address == null) {
@@ -266,8 +268,9 @@ public class Submit
 
     /**
      * old version which returns a map rather than a list of scripts
-     * @return
+     * @return as above but as a map
      * @throws Exception
+     *             if the request failed
      */
     @Deprecated
     public Map<String,String> getAllRules() throws Exception {
@@ -348,6 +351,8 @@ public class Submit
      *            the actual content of a script (i.e. the rule definitions)
      *
      * @return all the rule definitions found in the given script
+     * @throws Exception
+     *         if an string processing error occurs
      */
     public List<String> splitAllRulesFromScript(String scriptContent) throws Exception {
         List<String> rules = new ArrayList<String>();
@@ -412,6 +417,9 @@ public class Submit
      *            the actual content of an individual rule
      *
      * @return the name of the given rule, or <code>null</code> if it could not be determined
+     *
+     * @throws Exception
+     *             if the name cannot be determined
      */
     public String determineRuleName(String ruleDefinition) throws Exception {
         Pattern ruleNamePattern = Pattern.compile("\\s*RULE\\s+(.+)\\s*");
@@ -554,7 +562,7 @@ public class Submit
      *
      * This method is useful for using rules files from the classpath.
      *
-     * @param resourcePaths
+     * @param resourceStreams
      * input streams containing the rule definitions to be deployed
      * to Byteman
      *
@@ -597,9 +605,10 @@ public class Submit
 
     /**
      * old version which uses a Map
-     * @param rules
-     * @return
+     * @param rules the rules to be added
+     * @return the results of the deployment
      * @throws Exception
+     *             if the request failed
      */
     @Deprecated
     public String addRules(Map<String,String> rules) throws Exception {
@@ -647,7 +656,7 @@ public class Submit
      *
      * This method is useful for using rules files from the classpath.
      *
-     * @param resourcePaths
+     * @param resourceStreams
      * the URLS to files containing the rule definitions to be deleted
      * from Byteman
      *
@@ -690,9 +699,10 @@ public class Submit
 
     /**
      * old version which uses a Map
-     * @param rules
-     * @return
+     * @param rules the rules to be deleted
+     * @return the results of the deletion
      * @throws Exception
+     *             if the request failed
      */
     @Deprecated
     public String deleteRules(Map<String,String> rules) throws Exception {

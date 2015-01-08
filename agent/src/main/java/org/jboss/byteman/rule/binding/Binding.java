@@ -334,6 +334,7 @@ public class Binding extends RuleElement
 
     /**
      * record that this binding occurs on the LHS of an assignment
+     * @return true if this binding occurs on the LHS
      */
     public boolean isUpdated()
     {

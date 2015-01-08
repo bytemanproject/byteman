@@ -36,7 +36,8 @@ import java.util.Iterator;
  * code at control flow branch points and hence there is no normal control flow internal to a block. Normal
  * control flow will only transfer control from the end of one basic block to the start of another
  * basic block or to the caller (via a return or throw).
- * <p/>
+ *
+ *
  * If the block overlaps a try/catch region then exception control flow may transfer control
  * from any instruction lying within the try/catch region to the the start of another basic
  * block which handles the instruction. So, exception control flow may exit a block at a location
@@ -125,7 +126,7 @@ public class BBlock
 
     /**
      * obtain the control flow graph to which this block belongs
-     * @return
+     * @return the control flow graph
      */
     public CFG getCFG()
     {
@@ -133,8 +134,8 @@ public class BBlock
     }
 
     /**
-     * get the primary label which idenitfies tis block. It will be located in the block at offset 0.
-     * @return
+     * get the primary label which idenitfies this block. It will be located in the block at offset 0.
+     * @return the primary label
      */
     public Label getLabel()
     {
@@ -143,7 +144,7 @@ public class BBlock
 
     /**
      * retrieve the index of this block in the block sequence.
-     * @return
+     * @return the block index
      */
     public int getBlockIdx()
     {
@@ -229,7 +230,7 @@ public class BBlock
 
     /**
      * record details of a try catch block which starts in this block
-     * @param details
+     * @param details list of try catch block details
      */
     public void addTryStarts(List<TryCatchDetails> details)
     {
@@ -238,7 +239,7 @@ public class BBlock
 
     /**
      * record details of a try catch block which ends in this block
-     * @param details
+     * @param details list of try catch block details
      */
     public void addTryEnds(List<TryCatchDetails> details)
     {
@@ -247,7 +248,7 @@ public class BBlock
 
     /**
      * record details of a try catch block handler which starts in this block
-     * @param details
+     * @param details list of try catch block details
      */
     public void addHandlerStarts(List<TryCatchDetails> details)
     {
@@ -256,7 +257,7 @@ public class BBlock
 
     /**
      * set the list of try starts which are active somewhere in this block.
-     * @param active
+     * @param active list of active try catch block details
      */
     public void setActiveTryStarts(List<TryCatchDetails> active)
     {
@@ -265,7 +266,7 @@ public class BBlock
 
     /**
      * retrieve details of all try catch blocks which end in this block
-     * @return
+     * @return list of try catch block details
      */
     public Iterator<TryCatchDetails> getTryEnds()
     {
@@ -274,7 +275,7 @@ public class BBlock
 
     /**
      * retrieve details of all try catch block handlers whcih start in this block
-     * @return
+     * @return list of try catch block details
      */
     public Iterator<TryCatchDetails> getHandlerStarts()
     {
@@ -283,7 +284,7 @@ public class BBlock
 
     /**
      * retrieve details of all try catch blocks which are capable of generating an exception in this block
-     * @return
+     * @return list of active try catch block details
      */
     public List<TryCatchDetails> getActiveTryStarts()
     {
@@ -292,7 +293,7 @@ public class BBlock
 
     /**
      * retrieve a list of all monitor enter instruction locations occurring in this block
-     * @return
+     * @return list of monitor enter locations
      */
     public Iterator<CodeLocation> getMonitorEnters()
     {
@@ -301,7 +302,7 @@ public class BBlock
 
     /**
      * retrieve a list of all monitor exit instruction locations occurring in this block
-     * @return
+     * @return list of monitor exit locations
      */
     public Iterator<CodeLocation> getMonitorExits()
     {
@@ -310,7 +311,7 @@ public class BBlock
 
     /**
      * retrieve a count of all monitor enter instruction locations occurring in this block
-     * @return
+     * @return count of monitor enter locations
      */
     public int getMonitorEnterCount()
     {
@@ -319,7 +320,7 @@ public class BBlock
 
     /**
      * retrieve a count of all monitor exit instruction locations occuring in this block
-     * @return
+     * @return count of monitor exit locations
      */
     public int getMonitorExitCount()
     {
@@ -329,7 +330,7 @@ public class BBlock
     /**
      * return the number of instructions in the blocks instructuion sequence equivalent to the
      * index of the next instruction added to the block.
-     * @return
+     * @return the next instruction count
      */
     public int getInstructionCount()
     {
@@ -337,9 +338,9 @@ public class BBlock
     }
 
     /**
-     * retirn the instruction at a given index.
-     * @param index
-     * @return
+     * return the instruction at a given index.
+     * @param index the index for the instruction
+     * @return the instruction at index
      */
     public int getInstruction(int index)
     {
@@ -350,8 +351,8 @@ public class BBlock
      * retrieve the integer operand or encoded name associated with a particular instruction
      * @param index the index  of the instruction in the block
      * @param argIndex the index of the argument in the sequence of arguments presented when the instruction
-     * was inserted intot he block.
-     * @return
+     * was inserted into the block.
+     * @return the arg
      */
     public int getInstructionArg(int index, int argIndex)
     {
@@ -360,7 +361,7 @@ public class BBlock
 
     /**
      * install an outgoing normal control flow link
-     * @param label
+     * @param label the control flow destination
      */
     public void append(Label label)
     {
@@ -369,7 +370,7 @@ public class BBlock
 
     /**
      * return the label of the next block in line in the block sequence in bytecode order.
-     * @return
+     * @return the label of the next block
      */
     public Label next()
     {
@@ -378,7 +379,7 @@ public class BBlock
 
     /**
      * return the label of the first normal control flow link
-     * @return
+     * @return the label
      */
     public Label firstOut()
     {
@@ -387,7 +388,7 @@ public class BBlock
 
     /**
      * return the label of the second normal control flow link
-     * @return
+     * @return the label
      */
     public Label secondOut()
     {
@@ -397,7 +398,8 @@ public class BBlock
     // n.b. index for out link is 1-based rather than 0-based as entry 0 is the next link
     /**
      * return the label of the nth normal control flow link
-     * @return
+     * @param n the index of the link
+     * @return the label
      */
     public Label nthOut(int n)
     {
@@ -416,8 +418,8 @@ public class BBlock
     }
 
     /**
-     * return a string represenattion of this block
-     * @return
+     * return a string representation of this block
+     * @return a string representation
      */
     public String toString()
     {

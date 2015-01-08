@@ -37,12 +37,12 @@ public class BMLocalScopeMethodAdapter extends MethodNode
     /**
      * creates a method node with an instruction list which notifies local var scope start and end
      * events. should only be called with a method visitor which is an instance of LocalScopeMethodVisitor
-     * @param mv
-     * @param access
-     * @param name
-     * @param desc
-     * @param signature
-     * @param exceptions
+     * @param mv the current method visitor
+     * @param access bitmask of method access permissions
+     * @param name the method name
+     * @param desc the method descriptor
+     * @param signature the unerased method type signature
+     * @param exceptions names of exceptions thrown by the method
      */
     public BMLocalScopeMethodAdapter(MethodVisitor mv, int access, String name, String desc, String signature, String[] exceptions) {
         super(access, name, desc, signature, exceptions);

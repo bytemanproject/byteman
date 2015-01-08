@@ -186,9 +186,9 @@ public class TransformContext
      * called by a trigger adapter to find a rule specific to a given trigger method,
      * expects to find a rule created by the corresponding check adapter. if no rule is
      * found then injection must be bypassed for this method
-     * @param triggerMethodName
-     * @param triggerMethodDescriptor
-     * @return
+     * @param triggerMethodName the name of a candidate method for injection
+     * @param triggerMethodDescriptor the descriptor of a candidate method for injection
+     * @return the rule if it exists or NULL if not
      */
     public Rule lookupRule(String triggerMethodName, String triggerMethodDescriptor)
     {
@@ -200,9 +200,9 @@ public class TransformContext
      * called by a check adapter to create a rule specific to a given trigger method.
      * the first such call reuses the rule created by the intiial parse. subsequent calls
      * create a new rule.
-     * @param triggerMethodName
-     * @param triggerMethodDescriptor
-     * @return
+     * @param triggerMethodName the name of a candidate method for injection
+     * @param triggerMethodDescriptor the descriptor of a candidate method for injection
+     * @return the new rule
      */
     public Rule createRule(String triggerMethodName, String triggerMethodDescriptor)
     {
@@ -229,7 +229,9 @@ public class TransformContext
      * called by a check adapter to warn that a transform was not possible for a potential match
      * target. this inhibits injection into the method being warned about allowing other injection
      * operations to continue.
-     * @param warningMessage
+     * @param triggerMethodName the name of a candidate method for injection
+     * @param triggerMethodDescriptor the descriptor of a candidate method for injection
+     * @param warningMessage details of the warning
      */
     public void warn(String triggerMethodName, String triggerMethodDescriptor, String warningMessage)
     {
@@ -245,9 +247,9 @@ public class TransformContext
     /**
      * called by a check or trigger  adapter to fail a transform because of a type issue. this aborts all
      * injection into the current class not just injection into the current method.
-     * @param failMessage
-     * @param triggerMethodName
-     * @param triggerMethodDescriptor
+     * @param failMessage details of the failure
+     * @param triggerMethodName the name of a candidate method for injection
+     * @param triggerMethodDescriptor the descriptor of a candidate method for injection
      */
     public void fail(String failMessage, String triggerMethodName, String triggerMethodDescriptor)
     {

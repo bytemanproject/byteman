@@ -35,7 +35,7 @@ public class Bindings {
     /**
      * lookup a binding in the list by name
      *
-     * @param name
+     * @param name the name of the bound variable
      * @return the binding or null if no bidngin exists with the supplied name
      */
     public Binding lookup(String name)
@@ -57,7 +57,7 @@ public class Bindings {
      *
      * n.b. the caller must ensure that the bindings are only for the rule's
      * positional parameters and have names constructed from successive non-negative integers
-     * @param bindings
+     * @param bindings the bindings to add
      */
     public void addBindings(List<Binding> bindings)
     {
@@ -66,8 +66,7 @@ public class Bindings {
 
     /**
      * append a binding to the end of the currrent bindings list
-     * @param binding
-     * @return
+     * @param binding the binding
      */
     public void append(Binding binding)
     {

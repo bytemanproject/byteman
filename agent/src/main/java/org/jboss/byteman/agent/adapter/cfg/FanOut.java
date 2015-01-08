@@ -50,7 +50,7 @@ public class FanOut
 
     /**
      * construct a new empty link
-     * @param from
+     * @param from the start point for all links in the set
      */
     public FanOut(Label from)
     {
@@ -60,8 +60,8 @@ public class FanOut
 
     /**
      * construct a new link with one element in the target set
-     * @param from
-     * @param to
+     * @param from the start point for all links in the set
+     * @param to the first link target
      */
     public FanOut(Label from, Label to)
     {
@@ -71,9 +71,9 @@ public class FanOut
 
     /**
      * construct a new link with two elements in the target set
-     * @param from
-     * @param to1
-     * @param to2
+     * @param from the start point for all links in the set
+     * @param to1 the first link target
+     * @param to2 the second link target
      */
     public FanOut(Label from, Label to1, Label to2)
     {
@@ -89,7 +89,7 @@ public class FanOut
 
     /**
      * add a new link to the target set
-     * @param to
+     * @param to the target of the link
      */
     public void append(Label to)
     {
@@ -97,9 +97,9 @@ public class FanOut
     }
 
     /**
-     * retrieve alink from the target set by index
-     * @param i
-     * @return
+     * retrieve a link from the target set by index
+     * @param i the target link index
+     * @return a label for the target
      */
     public Label getTo(int i)
     {
@@ -112,7 +112,7 @@ public class FanOut
 
     /**
      * retrieve the size of the target set
-     * @return
+     * @return the size
      */
     public int getToCount()
     {
@@ -121,7 +121,7 @@ public class FanOut
 
     /**
      * obtain an iterator over the target set
-     * @return
+     * @return an iterator
      */
     public Iterator<Label> iterator()
     {

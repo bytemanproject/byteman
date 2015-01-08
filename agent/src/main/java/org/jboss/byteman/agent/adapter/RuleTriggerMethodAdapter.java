@@ -571,7 +571,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
     }
     /**
      * return true if the current block is a handler which catches a byteman exception thrown by the byteman runtime
-     * @return
+     * @return true if the current block is a handler false if not
      */
     protected boolean inBytemanHandler()
     {
@@ -580,7 +580,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
 
     /**
      * return true if the current block is in a trigger block injected by Byteman
-     * @return
+     * @return true if the current block is in a trigger block false if not
      */
     protected boolean inBytemanTrigger()
     {
@@ -589,7 +589,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
     /**
      * return true if the current block is handler which catches a thrown exception within the scope
      * of a monitor enter in order to be able exit the monitor and rethrow the exception
-     * @return
+     * @return true if the current block is in a rethrow handler false if not
      */
     protected boolean inRethrowHandler()
     {

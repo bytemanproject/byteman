@@ -244,6 +244,8 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
      * @param access the method's access flags (see {@link org.objectweb.asm.Opcodes}).
      * @param name the method's name.
      * @param desc the method's descriptor (see {@link org.objectweb.asm.Type Type}).
+     * @param transformContext the current transform context
+     * @param rule the rule currently being injected
      */
     public RuleGeneratorAdapter(
         final MethodVisitor mv,
@@ -1368,8 +1370,8 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
 
     /**
      * override this so we can see track which local var slots are in use and avoid overwriting them
-     * @param opcode
-     * @param var
+     * @param opcode the bytecode operation
+     * @param var local variable index
      */
     public void visitVarInsn(final int opcode, final int var)
     {
@@ -1500,8 +1502,8 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
     /**
      * ensure we allow enough room for any extra locals on the stack
      * 
-     * @param maxStack
-     * @param maxLocals
+     * @param maxStack the maximum stack depth
+     * @param maxLocals the maximum local count
      */
     public void visitMaxs(final int maxStack, final int maxLocals) {
         if (localHighWater < maxLocals) {

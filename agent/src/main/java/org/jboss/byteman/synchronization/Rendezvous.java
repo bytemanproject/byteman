@@ -47,6 +47,7 @@ public class Rendezvous
     /**
      * enter this rendezvous. n.b. this must be called synchronized on the rendezvous object
      * in question
+     * @param millis how long to wait (wait forever if 0)
      * @return the index in arrival order from 0 to expected of the calling thread or -1 if
      * either the rendezvous has completed and is not restartable or the rendezvous has been deleted
      */
@@ -112,7 +113,7 @@ public class Rendezvous
     /**
      * delete this rendezvous causing any waiting threads to return -1 form the rendezvous call. n.b. this
      * must be called synchronized on the rendezvous object in question
-     * @return
+     * @return false if a delete has already been requested otherwise true
      */
     public boolean delete()
     {
@@ -162,7 +163,7 @@ public class Rendezvous
     /**
      * retrieve the number of threads waiting at the rendezvous or -1 if the rendezvous has
      * been deleted
-     * @return
+     * @return  number of threads waiting or -1
      */
     public int getArrived() {
         if (isDeleted) {
@@ -172,8 +173,8 @@ public class Rendezvous
     }
 
     /**
-     * check if the rendezvous has completed but has not yet been rtemoved
-     * @return
+     * check if the rendezvous has completed but has not yet been removed
+     * @return the above
      */
     public boolean needsRemove() {
         return needsRemove;
@@ -181,7 +182,6 @@ public class Rendezvous
 
     /**
      * mark a completed rendezvous to indicate that it has been removed
-     * @return
      */
     public void setRemoved() {
         needsRemove = false;

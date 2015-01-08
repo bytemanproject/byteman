@@ -48,8 +48,8 @@ public class StackHeights
     }
 
     /**
-     * create a copy with the same coutns as the original
-     * @param toCopy
+     * create a copy with the same counts as the original
+     * @param toCopy the StackHeights instance to copy
      */
     public StackHeights(StackHeights toCopy)
     {

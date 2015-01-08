@@ -111,8 +111,13 @@ public class Type {
     }
 
     /**
-     * get the internal name for this type used by the class loader. this is only valid for
-     * defined types, defined array types or primitive types
+     * get the internal name for this type used by the class
+     * loader. this is only valid for defined types, defined array
+     * types or primitive types
+     * @param forDescriptor true if we need the name to appear in a
+     * decriptor false if not
+     * @param slashSeparate true if the package separator should be
+     * slash false if it should be dot
      * @return the type name
      */
     public String getInternalName(boolean forDescriptor, boolean slashSeparate)
@@ -461,6 +466,7 @@ public class Type {
 
     /**
      * return the builtin type associated with a given class
+     * @param clazz the class for the builtin type
      * @return the corresponding builtin type
      */
     public static Type builtinType(Class clazz)
@@ -470,6 +476,7 @@ public class Type {
 
     /**
      * return the primitive type whose boxed equivalent is associated with a given class
+     * @param clazz the class for the primitivebuiltin type
      * @return the corresponding primitive type
      */
     public static Type boxType(Class clazz)
@@ -481,6 +488,7 @@ public class Type {
 
     /**
      * return the primitive type for a boxed type or vice versa
+     * @param type the boxed type
      * @return the corresponding primitive type
      */
     public static Type boxType(Type type)
@@ -538,6 +546,7 @@ public class Type {
      * @param type1 the type of the left operand  which must be numeric but may be undefined
      * @param type2 the type of the right operand which must be numeric but may be undefined
      * @return the corresponding promotion/result type which may be undefined numeric
+     * @throws TypeException if types are undefined or promotion is invalid
      */
     public static Type promote(Type type1, Type type2) throws TypeException {
         if (type1.isUndefined() || type2.isUndefined()) {

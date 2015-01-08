@@ -38,6 +38,7 @@ public class TypeGroup {
 
     /**
      * create a type group for a rule containing all the basic types
+     * @param loader the class loader to use for type resolution
      */
 
     public TypeGroup(ClassLoader loader)
@@ -91,8 +92,8 @@ public class TypeGroup {
 
     /**
      * lookup a type by name dereferencing it to its fully qualified type if that exists
-     * @param name
-     * @return
+     * @param name the type name
+     * @return the type
      */
     public Type lookup(String name)
     {
@@ -104,7 +105,7 @@ public class TypeGroup {
      * name can be matched. if the type name is qualified ensure that any existing
      * type with an unqualified name matching this entry is not already aliased to
      * another type.
-     * @param name
+     * @param name the type name
      * @return the type if created or matched or null if there is an alias mismatch
      */
     public Type create(String name)
@@ -124,8 +125,8 @@ public class TypeGroup {
      * name and  class can be matched. if the type name is qualified ensure that any existing
      * type with an unqualified name matching this entry is not already aliased to another
      * type.
-     * @param name
-     * @param clazz
+     * @param name the type name
+     * @param clazz the associated class
      * @return the type if created or matched or null if there is a class or alias mismatch
      */
     public Type create(String name, Class clazz)

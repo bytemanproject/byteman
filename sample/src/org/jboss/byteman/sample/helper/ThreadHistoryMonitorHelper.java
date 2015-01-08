@@ -156,8 +156,8 @@ public class ThreadHistoryMonitorHelper extends Helper
     /**
      * Write all events to the file given by path
      *
-     * @param path
-     * @throws IOException
+     * @param path path to file
+     * @throws IOException if an io error occurs
      */
     public void writeAllEventsToFile(String path) throws IOException {
         System.err.println("writeAllEventsToFile: "+path);
@@ -251,6 +251,7 @@ public class ThreadHistoryMonitorHelper extends Helper
      * this should only be triggered from the constructor for class java.lang.Thread"
      *
      * @param thread the newly created thread
+     * @param depth unused
      */
     public void traceCreate(Thread thread, int depth)
     {

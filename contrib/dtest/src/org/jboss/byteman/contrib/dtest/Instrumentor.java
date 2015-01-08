@@ -195,6 +195,7 @@ public class Instrumentor
      * @param methodName The method which should be intercepted.
      * @param action The action that should take place upon invocation of the method.
      * @param where the injection point e.g. "ENTRY".
+     * @param condition the rule condition
      * @throws Exception in case of failure.
      */
     public void injectOnMethod(Class clazz, String methodName, String condition, String action, String where) throws Exception

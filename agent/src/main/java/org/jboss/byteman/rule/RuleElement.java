@@ -122,11 +122,11 @@ public abstract class RuleElement {
      * compile code to convert a value of a boxed type to a primitive type, possibly not the immediately
      * related primitive type
      *
-     * @param fromType
-     * @param toType
-     * @param mv
-     * @param compileContext
-     * @throws CompileException
+     * @param fromType the type of the value to be unboxed
+     * @param toType he type required after unboxing
+     * @param mv the current method visitor
+     * @param compileContext the current compile context
+     * @throws CompileException if a compile error occurs
      */
    protected void compileUnbox(Type fromType, Type toType, MethodVisitor mv, CompileContext compileContext)
             throws CompileException
@@ -167,10 +167,10 @@ public abstract class RuleElement {
 
     /**
      * box a value belonging to a primitive type
-     * @param toType
-     * @param mv
-     * @param compileContext
-     * @throws CompileException
+     * @param toType the type required after boxing
+     * @param mv the current method visitor
+     * @param compileContext the current compile context
+     * @throws CompileException if a compile error occurs
      */
     protected void compileBox(Type toType, MethodVisitor mv, CompileContext compileContext)
             throws CompileException
@@ -251,11 +251,11 @@ public abstract class RuleElement {
 
     /**
      * compile code to convert a numeric or character primitive to a numeric or character primitive
-     * @param fromType
-     * @param toType
-     * @param mv
-     * @param compileContext
-     * @throws CompileException
+     * @param fromType the type of the value to be converted
+     * @param toType the type required after conversion
+     * @param mv the current method visitor
+     * @param compileContext the current compile context
+     * @throws CompileException if a compile error occurs
      */
     protected void compilePrimitiveConversion(Type fromType, Type toType, MethodVisitor mv, CompileContext compileContext)
             throws CompileException

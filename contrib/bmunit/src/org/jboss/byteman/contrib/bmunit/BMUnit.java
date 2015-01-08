@@ -29,6 +29,7 @@ public class BMUnit
 
     /**
      * getter for the allowAgentConfigUpdate setting
+     * @return the allowAgentConfigUpdate setting
      */
     public static boolean isAllowConfigUpdate()
     {
@@ -36,6 +37,7 @@ public class BMUnit
     }
     /**
      * getter for the Byteman verbose setting
+     * @return the Byteman verbose setting
      */
     public static boolean isVerbose()
     {
@@ -43,6 +45,7 @@ public class BMUnit
     }
     /**
      * getter for the Byteman debug setting
+     * @return the Byteman debug setting
      */
     public static boolean isDebug()
     {
@@ -50,6 +53,7 @@ public class BMUnit
     }
     /**
      * getter for the BMUnit verbose setting
+     * @return the BMUnit verbose setting
      */
     public static boolean isBMUnitVerbose()
     {
@@ -57,6 +61,7 @@ public class BMUnit
     }
     /**
      * getter for the load directory
+     * @return the load directory
      */
     public static String getLoadDirectory()
     {
@@ -64,6 +69,7 @@ public class BMUnit
     }
     /**
      * getter for the resource load directory
+     * @return the resource load directory
      */
     public static String getResourceLoadDirectory()
     {
@@ -109,6 +115,7 @@ public class BMUnit
 
     /**
      * getter for the host name used to communicate with the agent
+     * @return the host name
      */
     public static String getHost()
     {
@@ -117,6 +124,7 @@ public class BMUnit
 
     /**
      * getter for the port used to communicate with the agent
+     * @return the port
      */
     public static int getPort()
     {
@@ -125,6 +133,7 @@ public class BMUnit
 
     /**
      * getter for the security policy setting
+     * @return the security policy setting
      */
     public static boolean getPolicy()
     {
@@ -135,7 +144,7 @@ public class BMUnit
      * loads a script by calling loadScriptFile(clazz, null, dir)
      * @param clazz the test class
      * @param dir the directory to load the script from
-     * @throws Exception
+     * @throws Exception if the script cannot be loaded
      */
     public static void loadScriptFile(Class<?> clazz, String dir) throws Exception
     {
@@ -147,7 +156,7 @@ public class BMUnit
      * @param clazz the classname of the unit test
      * @param testName the name of the unit test method
      * @param dir the directory in which the scripts are located
-     * @throws Exception
+     * @throws Exception if the script cannot be loaded
      */
     public static void loadScriptFile(Class<?> clazz, String testName, String dir) throws Exception
     {
@@ -206,7 +215,7 @@ public class BMUnit
      * file and ".btm" or, failing that, ".txt" for the file extension
      * @param clazz the test class
      * @param testName the test name
-     * @throws Exception
+     * @throws Exception if the script cannot be unloaded
      */
     public static void unloadScriptFile(Class<?> clazz, String testName) throws Exception
     {
@@ -233,6 +242,7 @@ public class BMUnit
      * @param clazz the test class
      * @param testname the test name
      * @param scriptText the text of the rule or rules contained in the script
+     * @throws Exception if the script text cannot be loaded
      */
     public static void loadScriptText(Class<?> clazz, String testname, String scriptText) throws Exception
     {
@@ -262,6 +272,7 @@ public class BMUnit
      * unloads a script previously supplied as a text String
      * @param clazz the test class
      * @param testName the test name
+     * @throws Exception if the script text cannot be unloaded
      */
     public static void unloadScriptText(Class<?> clazz, String testName) throws Exception
     {

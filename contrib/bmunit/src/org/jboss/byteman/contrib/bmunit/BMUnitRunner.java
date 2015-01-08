@@ -28,6 +28,7 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     /**
      * Creates a BMUnitRunner to run test in {@code klass}
      *
+     * @param klass idenitifies the Java class containing the tests
      * @throws org.junit.runners.model.InitializationError
      *          if the test class is malformed.
      */
@@ -46,32 +47,6 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
             throw new InitializationError("Use either BMScript or BMScripts annotation but not both");
         }
     }
-
-    /*
-     * this loads and unloads the class rules around each test. if we override childrenInvoker then
-     * we can load and unload the class rules once only around all tests
-    @Override
-    protected Statement methodBlock(FrameworkMethod method) {
-        // if we have a BMRules annotation on the test class then surround the method block
-        // with calls to load and unload the per class rules
-        final Statement original =  super.methodBlock(method);
-        if (classSingleScriptAnnotation !=null) {
-            final String name = computeBMScriptName(classSingleScriptAnnotation.value());
-            return new Statement() {
-                public void evaluate() throws Throwable {
-                    BMUnit.loadScriptFile(testKlazz, name, loadDirectory);
-                    try {
-                        original.evaluate();
-                    } finally {
-                        BMUnit.unloadScriptFile(testKlazz, name);
-                    }
-                }
-            };
-        } else {
-            return original;
-        }
-    }
-    */
 
     @Override
     protected Statement childrenInvoker(RunNotifier notifier) {
@@ -272,11 +247,12 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     }
 
    /**
-     * wrap the test method execution statement with the necessary load and unload calls if it has
-     * a BMScript annotation
-     * @param statement
-     * @param method
-     * @return
+     * wrap the test method execution statement with the necessary
+     * load and unload calls if it has a BMScript annotation
+     * @param statement the statement to be evaluated
+     * @param method the method being tested
+     * @return the statement possibly wrapped with load and unload
+     * calls
      */
     protected Statement addMethodSingleScriptLoader(final Statement statement, FrameworkMethod method)
     {
@@ -303,11 +279,12 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     }
 
     /**
-     * wrap the test method execution statement with the necessary load and unload calls if it has
-     * a BMScripts annotation
-     * @param statement
-     * @param method
-     * @return
+     * wrap the test method execution statement with the necessary
+     * load and unload calls if it has a BMScripts annotation
+     * @param statement the statement to be evaluated
+     * @param method the method being tested
+     * @return the statement possibly wrapped with load and unload
+     * calls
      */
     protected Statement addMethodMultiScriptLoader(final Statement statement, FrameworkMethod method)
     {
@@ -343,11 +320,12 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     }
 
     /**
-     * wrap the test method execution statement with the necessary load and unload calls if it has
-     * a BMRules annotation
-     * @param statement
-     * @param method
-     * @return
+     * wrap the test method execution statement with the necessary
+     * load and unload calls if it has a BMRules annotation
+     * @param statement the statement to be evaluated
+     * @param method the method being tested
+     * @return the statement possibly wrapped with load and unload
+     * calls
      */
     protected Statement addMethodMultiRuleLoader(final Statement statement, FrameworkMethod method)
     {
@@ -371,11 +349,12 @@ public class BMUnitRunner extends BlockJUnit4ClassRunner
     }
 
     /**
-     * wrap the test method execution statement with the necessary load and unload calls if it has
-     * a BMRule annotation
-     * @param statement
-     * @param method
-     * @return
+     * wrap the test method execution statement with the necessary
+     * load and unload calls if it has a BMRule annotation
+     * @param statement the statement to be evaluated
+     * @param method the method being tested
+     * @return the statement possibly wrapped with load and unload
+     * calls
      */
     protected Statement addMethodSingleRuleLoader(final Statement statement, FrameworkMethod method)
     {

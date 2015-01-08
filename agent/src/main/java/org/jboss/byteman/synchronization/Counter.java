@@ -39,9 +39,8 @@ public class Counter
         this.count = count;
     }
 
-    /**
+    /*
      * for backwards compatibility
-     * @return
      */
     public int count()
     {

@@ -53,6 +53,10 @@ public class Transformer implements ClassFileTransformer {
      * implementation
      *
      * @param inst the instrumentation object used to interface to the JVM
+     * @param scriptPaths list of file paths for each input script
+     * @param scriptTexts the text of each input script
+     * @param isRedefine true if class redefinition is allowed false if not
+     * @throws Exception if a script is in error
      */
     public Transformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts, boolean isRedefine)
             throws Exception
@@ -94,14 +98,17 @@ public class Transformer implements ClassFileTransformer {
     }
 
     /**
-     * ensure that scripts which apply to classes loaded before registering the transformer get
-     * are installed by retransforming the relevant classes
+     * ensure that scripts which apply to classes loaded before
+     * registering the transformer are installed by retransforming the
+     * relevant classes
+     * @throws Exception if the retransform fails
      */
 
     public void installBootScripts() throws Exception
     {
-        // check for scripts which apply to classes already loaded during bootstrap and retransform those classes
-        // so that rule triggers are injected
+        // check for scripts which apply to classes already loaded
+        // during bootstrap and retransform those classes so that rule
+        // triggers are injected
 
         List<Class<?>> transformed = new LinkedList<Class<?>>();
 
@@ -140,8 +147,8 @@ public class Transformer implements ClassFileTransformer {
     /**
      * The implementation of this method may transform the supplied class file and
      * return a new replacement class file.
-     * <p/>
-     * <p/>
+     *
+     *
      * Once a transformer has been registered with
      * {@link java.lang.instrument.Instrumentation#addTransformer Instrumentation.addTransformer},
      * the transformer will be called for every new class definition and every class redefinition.
@@ -152,22 +159,22 @@ public class Transformer implements ClassFileTransformer {
      * or its native equivalents.
      * The transformer is called during the processing of the request, before the class file bytes
      * have been verified or applied.
-     * <p/>
-     * <p/>
+     *
+     *
      * If the implementing method determines that no transformations are needed,
      * it should return <code>null</code>.
      * Otherwise, it should create a new <code>byte[]</code> array,
      * copy the input <code>classfileBuffer</code> into it,
      * along with all desired transformations, and return the new array.
      * The input <code>classfileBuffer</code> must not be modified.
-     * <p/>
-     * <p/>
+     *
+     *
      * In the redefine case, the transformer must support the redefinition semantics.
      * If a class that the transformer changed during initial definition is later redefined, the
      * transformer must insure that the second class output class file is a legal
      * redefinition of the first output class file.
-     * <p/>
-     * <p/>
+     *
+     *
      * If the transformer believes the <code>classFileBuffer</code> does not
      * represent a validly formatted class file, it should throw
      * an <code>IllegalClassFormatException</code>.  Subsequent transformers
@@ -495,6 +502,7 @@ public class Transformer implements ClassFileTransformer {
 
     /**
      * disable triggering of rules inside the current thread
+     * @param isUser true if this was called by rule code false if called internally by Byteman
      * @return true if triggering was previously enabled and false if it was already disabled
      */
     public static boolean disableTriggers(boolean isUser)
@@ -514,6 +522,9 @@ public class Transformer implements ClassFileTransformer {
 
     /**
      * enable triggering of rules inside the current thread
+     * @param isReset true if this was called by rule code and hence should reset a setting
+     *                enabled by rule code false if called internally by Byteman and hence
+     *                should nto reset a setting enabled by rule code
      * @return true if triggering was previously enabled and false if it was already disabled
      */
     public static boolean enableTriggers(boolean isReset)
@@ -687,7 +698,7 @@ public class Transformer implements ClassFileTransformer {
 
     /**
      * test whether a class with a given name is a potential candidate for insertion of event notifications
-     * @param className
+     * @param className name of the class to test
      * @return true if a class is a potential candidate for insertion of event notifications otherwise return false
      */
     protected boolean isTransformable(String className)
@@ -720,13 +731,13 @@ public class Transformer implements ClassFileTransformer {
 
     /**
      * The routine which actually does the real bytecode transformation. this is public because it needs to be
-     * callable form the type checker script. In normal running the javaagent is the only class which has a handle
+     * callable from the type checker script. In normal running the javaagent is the only class which has a handle
      * on the registered transformer so it is the only one which can reach this point.
-     * @param ruleScript
-     * @param loader
-     * @param className
-     * @param targetClassBytes
-     * @return
+     * @param ruleScript the script
+     * @param loader the loader of the class being injected into
+     * @param className the name of the class being injected into
+     * @param targetClassBytes the current class bytecode
+     * @return the transformed bytecode or NULL if no transform was applied
      */
     public byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, byte[] targetClassBytes)
     {
@@ -1009,7 +1020,7 @@ public class Transformer implements ClassFileTransformer {
 
     /**
      * test whether a class with a given name is located in the byteman package
-     * @param className
+     * @param className the name to be checked
      * @return true if a class is located in the byteman package otherwise return false
      */
     protected boolean isBytemanClass(String className)

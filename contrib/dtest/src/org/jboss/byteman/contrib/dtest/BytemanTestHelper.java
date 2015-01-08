@@ -72,9 +72,9 @@ public class BytemanTestHelper extends Helper
      *
      * @param className the name of the instrumented, i.e. traced, class
      * @param methodName the name of the traced method.
-     * @param dollarStar
-     * @throws Exception
-     * @see Instrumentor#instrumentClass, InstrumentedClass#trace
+     * @param dollarStar the method args starting with this
+     * @throws Exception if the info cannto be sent
+     * @see Instrumentor#instrumentClass InstrumentedClass#trace
      */
     public void remoteTrace(String className, String methodName, Object[] dollarStar) throws Exception
     {

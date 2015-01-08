@@ -48,8 +48,8 @@ public abstract class BMNGAbstractRunner implements IHookable
     /**
      * implement standard run behaviour by devolving control back to the original runner
      * using the hook callback
-     * @param callBack
-     * @param testResult
+     * @param callBack not used
+     * @param testResult used to post results
      */
     public void run(IHookCallBack callBack, ITestResult testResult)
     {
@@ -61,8 +61,8 @@ public abstract class BMNGAbstractRunner implements IHookable
      * attached to the supplied test class. the class is cached and used to resolve
      * subsequent requests to load and unload method level rules and to unload the
      * class level rules.
-     * @param testKlazz
-     * @throws Exception
+     * @param testKlazz the class whose tests are being run
+     * @throws Exception if the test cannot be run
      */
     public void bmngBeforeClass(Class<?> testKlazz) throws Exception
     {
@@ -106,7 +106,8 @@ public abstract class BMNGAbstractRunner implements IHookable
     /**
      * provides behaviour to unload rules specified via BMScript or BMRule annotations
      * attached to the supplied test class.
-     * @throws Exception
+     * @param testKlazz the class whose tests are being run
+     * @throws Exception if cleanup fails
      */
     public void bmngAfterClass(Class<?> testKlazz) throws Exception
     {
@@ -137,7 +138,7 @@ public abstract class BMNGAbstractRunner implements IHookable
      * provides behaviour to load rules specified via annotations associated with a specific
      * method of a test class.
      * @param method the test method about to be run
-     * @throws Exception
+     * @throws Exception if the test cannot be run
      */
     public void bmngBeforeTest(Method method) throws Exception
     {
@@ -184,7 +185,7 @@ public abstract class BMNGAbstractRunner implements IHookable
      * provides behaviour to unload rules specified via annotations associated with a specific
      * method of a test class.
      * @param method the test method about to be run
-     * @throws Exception
+     * @throws Exception if the test cannot be run
      */
     public void bmngAfterTest(Method method) throws Exception
     {

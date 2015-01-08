@@ -59,8 +59,7 @@ public class Variable extends AssignableExpression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @return true if all variables in this expression are bound and no type mismatches have
-     *         been detected during inference/validation.
+     * @throws TypeException if any variable is missing or has the wrong type
      */
     public void bind() throws TypeException
     {
@@ -71,9 +70,8 @@ public class Variable extends AssignableExpression
      * verify that variables mentioned in this expression are actually available in the supplied
      * bindings list. infer/validate the type of this expression or its subexpressions
      * where possible
-
-     * @return true if all variables in this expression are bound and non-final and no type mismatches have
-     * been detected during inference/validation.
+     *
+     * @throws TypeException if any variable is missing or has the wrong type
      */
 
     public void bindAssign() throws TypeException

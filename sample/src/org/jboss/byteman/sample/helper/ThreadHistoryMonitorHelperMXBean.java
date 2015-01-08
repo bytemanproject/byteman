@@ -54,17 +54,20 @@ public interface ThreadHistoryMonitorHelperMXBean {
      * Get a string description of all thread events. This is the same event
      * information written by {@link #writeAllEventsToFile(String)}.
      * @return a formatted text description of all thread events.
+     * @throws IOException if an io error occurs
      */
     public String getEventReport() throws IOException;
     /**
      * Write a report of all events of the indicated type to the given path.
      * @param type - one of create, start, exit, run; case insensitive
      * @param path - the pathname of the file to write the event report to.
+     * @throws IOException if an io error occurs
      */
     public void writeEventsToFile(String type, String path) throws IOException;
     /**
      * Write a report of all events to the given path.
      * @param path - the pathname of the file to write the event report to.
+     * @throws IOException if an io error occurs
      */
     public void writeAllEventsToFile(String path) throws IOException;
 }

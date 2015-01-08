@@ -40,7 +40,7 @@ import java.util.Iterator;
  * standard helper type checks built in method calls against class Helper. However, the interpreter
  * assumes that the helper object implements InterpretedHelper.
  *
- * When a rule is compiled class Helper is extended with a generated class CompiledHelper<NNN>
+ * When a rule is compiled class Helper is extended with a generated class CompiledHelper&lt;NNN&gt;
  * which also implements interface RuleHelper. The implementation of the execute method is generated
  * by translating the parse tree to bytecode. Builtin calls are translated to calls of methods
  * defined by class Helper.
@@ -65,8 +65,9 @@ public class InterpretedHelper extends Helper implements HelperAdapter
     /**
      * install values into the bindings map and then call the execute0 method
      * to actually execute the rule
-     * @param recipient
-     * @param args
+     * @param recipient target of trigger method or null if it is static
+     * @param args array to pass current values and return new values
+     * for data local to the trigger method
      */
     public void execute(Object recipient, Object[] args)
             throws ExecuteException
@@ -125,7 +126,8 @@ public class InterpretedHelper extends Helper implements HelperAdapter
     /**
      * basic implementation of rule execution
      *
-     * @throws ExecuteException
+     * @throws ExecuteException if an exception occurs during
+     * execution of the rule
      */
         
     protected void execute0()

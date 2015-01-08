@@ -71,8 +71,7 @@ public class ThrowExpression extends Expression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @return true if all variables in this expression are bound and no type mismatches have
-     *         been detected during inference/validation.
+     * @throws TypeException if any variable is missing or has the wrong type
      */
     public void bind() throws TypeException
     {
@@ -92,8 +91,8 @@ public class ThrowExpression extends Expression
      *
      * @param expected  the type expected for the expression in the contxt in which it occurs. this
      *                  may be void but shoudl not be undefined at the point where type checking is performed.
-     * @return
-     * @throws org.jboss.byteman.rule.exception.TypeException
+     * @return the expression type
+     * @throws org.jboss.byteman.rule.exception.TypeException if type checking fails
      *
      */
     public Type typeCheck(Type expected) throws TypeException {
@@ -217,7 +216,7 @@ public class ThrowExpression extends Expression
      *               recipient if the trigger method is not static (name "0") and the trigger method arguments
      *               (names "1", ...)
      * @return the result of evaluation as an Object
-     * @throws org.jboss.byteman.rule.exception.ExecuteException
+     * @throws org.jboss.byteman.rule.exception.ExecuteException if an error occurs during execution
      *
      */
     public Object interpret(HelperAdapter helper) throws ExecuteException {

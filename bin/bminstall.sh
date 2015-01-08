@@ -34,6 +34,13 @@
 #   -Dname=value can be used to set system properties whose name starts with "org.jboss.byteman."
 #   expects to find a byteman agent jar in BYTEMAN_HOME
 #
+
+# helper function to obtain java version
+function print_java_version()
+{
+  java -version 2>&1 |  grep "version" | cut -d'"' -f2 | cut -b3
+}
+
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then
 # use the root of the path to this file to locate the byteman jar
@@ -64,23 +71,30 @@ else
     echo "Cannot locate byteman install jar"
     exit
 fi
-# we also need a tools jar from JAVA_HOME
-if [ -z "$JAVA_HOME" ]; then
+# for jdk6/7/8 we also need a tools jar from JAVA_HOME
+JAVA_VERSION=$(print_java_version)
+if [ $JAVA_VERSION -lt 8 ]; then
+  if [ -z "$JAVA_HOME" ]; then
      echo "please set JAVA_HOME"
      exit
-fi
+  fi
 # on Linux we need to add the tools jar to the path
 # this is not currently needed on a Mac
-OS=`uname`
-if [ ${OS} != "Darwin" ]; then
-  if [ -r ${JAVA_HOME}/lib/tools.jar ]; then
+  OS=`uname`
+  if [ ${OS} != "Darwin" ]; then
+    if [ -r ${JAVA_HOME}/lib/tools.jar ]; then
       TOOLS_JAR=${JAVA_HOME}/lib/tools.jar
-  else
+    else
       echo "Cannot locate tools jar"
       exit
+    fi
   fi
+  CP=${BYTEMAN_INSTALL_JAR}:${TOOLS_JAR}
+else
+  CP=${BYTEMAN_INSTALL_JAR}
 fi
+
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 # attach class will validate arguments
 
-java ${BYTEMAN_JAVA_OPTS} -classpath ${BYTEMAN_INSTALL_JAR}:${TOOLS_JAR} org.jboss.byteman.agent.install.Install $*
+java ${BYTEMAN_JAVA_OPTS} -classpath $CP org.jboss.byteman.agent.install.Install $*

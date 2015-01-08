@@ -323,8 +323,8 @@ public class ScriptRepository
      * whereas if name is not package qualified then only scripts with the unqualified name
      * will be returned. Note that the returned list can be iterated safely but will not reflect
      * later additions to or deletions from the list.
-     * @param name
-     * @return
+     * @param name the name of the class for which scripts should be listed
+     * @return the list of scripts for that name
      */
 
     public List<RuleScript> scriptsForClassName(String name)
@@ -340,8 +340,8 @@ public class ScriptRepository
      * whereas if name is not package qualified then only scripts with the unqualified name
      * will be returned. Note that the returned list can be iterated safely but will not reflect
      * later additions to or deletions from the list.
-     * @param name
-     * @return
+     * @param name the name of the interface for which scripts should be listed
+     * @return the list of scripts for that name
      */
 
     public List<RuleScript> scriptsForInterfaceName(String name)
@@ -353,9 +353,9 @@ public class ScriptRepository
 
     /**
      * return true if there is a rule which applies to the supplied class otherwise false
-     * @param clazz
-     * @return
-     * @throws Exception
+     * @param clazz the name of the class for which rules are being sought
+     * @return true if there is a rule which applies
+     * @throws Exception if an error occurs during class lookup
      */
 
     public boolean matchClass(Class<?> clazz) throws Exception
@@ -442,7 +442,7 @@ public class ScriptRepository
 
     /**
      * return a list containing all the currently installed rule scripts.
-     * @return
+     * @return the list of all installed scripts
      */
     public List<RuleScript> currentRules()
     {
@@ -678,7 +678,7 @@ public class ScriptRepository
 
     /**
      * see if we need to do any transformation of interfaces
-     * @return
+     * @return true if there are any interface rules false if there are none
      */
     public boolean checkInterfaces()
     {
@@ -695,6 +695,10 @@ public class ScriptRepository
         }
     }
 
+    /**
+     * check whether any overriding rules are currently loaded
+     * @return true if there are no overriding rules false if there are any
+     */
     public boolean skipOverrideRules() {
         if (skipOverrideRules) {
             return true;

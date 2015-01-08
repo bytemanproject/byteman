@@ -63,8 +63,7 @@ public class FieldExpression extends AssignableExpression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @return true if all variables in this expression are bound and no type mismatches have
-     *         been detected during inference/validation.
+     * @throws TypeException if any variable is missing or has the wrong type
      */
     public void bind() throws TypeException
     {
@@ -96,7 +95,7 @@ public class FieldExpression extends AssignableExpression
 
     /**
      * treat this as a normal bind because an update to a field reference does not update any bindings
-     * @return whatever a normal bind call returns
+     * @throws TypeException if any variable is missing or has the wrong type
      */
     public void bindAssign() throws TypeException
     {

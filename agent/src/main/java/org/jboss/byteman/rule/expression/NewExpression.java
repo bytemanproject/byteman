@@ -74,8 +74,7 @@ public class NewExpression extends Expression
      * verify that variables mentioned in this expression are actually available in the supplied
      * bindings list
      *
-     * @return true if all variables in this expression are bound and no type mismatches have
-     *         been detected during inference/validation.
+     * @throws TypeException if any variable is missing or has the wrong type
      */
     public void bind() throws TypeException
     {
@@ -107,8 +106,8 @@ public class NewExpression extends Expression
      *
      * @param expected  the type expected for the expression in the contxt in which it occurs. this
      *                  may be void but shoudl not be undefined at the point where type checking is performed.
-     * @return
-     * @throws org.jboss.byteman.rule.exception.TypeException
+     * @return the expression type
+     * @throws org.jboss.byteman.rule.exception.TypeException if type checking fails
      *
      */
     public Type typeCheck(Type expected) throws TypeException {
@@ -258,7 +257,7 @@ public class NewExpression extends Expression
      *               recipient if the trigger method is not static (name "0") and the trigger method arguments
      *               (names "1", ...)
      * @return the result of evaluation as an Object
-     * @throws org.jboss.byteman.rule.exception.ExecuteException
+     * @throws org.jboss.byteman.rule.exception.ExecuteException if an error occurs during execution
      *
      */
     public Object interpret(HelperAdapter helper) throws ExecuteException {

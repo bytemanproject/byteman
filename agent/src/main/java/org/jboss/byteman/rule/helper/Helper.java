@@ -81,6 +81,7 @@ public class Helper
      * open a trace output stream identified by identifier to a file located in the current working
      * directory using the given file name or a generated name if the supplied name is null
      * @param identifier an identifier used subsequently to identify the trace output stream
+     * @param fileName the name of the trace file or null if a name should be generated
      * @return true if new file and stream was created, false if a stream identified by identifier
      * already existed or if a file of the same name already exists or the identifer is null, "out"
      * or "err"
@@ -166,7 +167,7 @@ public class Helper
 
     /**
      * call trace("out, message").
-     * @param message
+     * @param message the message to be printed
      * @return true
      */
     public boolean trace(String message)
@@ -178,9 +179,10 @@ public class Helper
      * write the supplied message to the trace stream identified by identifier, creating a new stream
      * if none exists
      * @param identifier an identifier used subsequently to identify the trace output stream
-     * @param message
+     * @param message the message to be traced
      * @return true
-     * @caveat if identifier is the string "out" or null the message will be written to System.out.
+     *
+     * caveat: if identifier is the string "out" or null the message will be written to System.out.
      * if identifier is the string "err" the message will be written to System.err.
      */
     public boolean trace(Object identifier, String message)
@@ -202,7 +204,7 @@ public class Helper
 
     /**
      * call traceln("out", message).
-     * @param message
+     * @param message the message to be traced
      * @return true
      */
     public boolean traceln(String message)
@@ -214,9 +216,10 @@ public class Helper
      * write the supplied message to the trace stream identified by identifier, creating a new stream
      * if none exists, and append a new line
      * @param identifier an identifier used subsequently to identify the trace output stream
-     * @param message
+     * @param message the message to be traced
      * @return true
-     * @caveat if identifier is the string "out" or null the message will be written to System.out.
+     *
+     * caveat: if identifier is the string "out" or null the message will be written to System.out.
      * if identifier is the string "err" the message will be written to System.err.
      */
     public boolean traceln(Object identifier, String message)
@@ -238,6 +241,8 @@ public class Helper
 
     /**
      * version for backwards compatibility -- docs and original code were mismatched
+     * @param identifier an identifier used subsequently to identify the trace output stream
+     * @return true if the open succeeds false if it fails
      */
     public boolean openTrace(Object identifier)
     {
@@ -245,6 +250,9 @@ public class Helper
     }
     /**
      * version for backwards compatibility -- docs and original code were mismatched
+     * @param identifier an identifier used subsequently to identify the trace output stream
+     * @param fileName the name of the trace file or null if a name should be generated
+     * @return true if the open succeeds false if it fails
      */
     public boolean openTrace(Object identifier, String fileName)
     {
@@ -252,6 +260,8 @@ public class Helper
     }
     /**
      * version for backwards compatibility -- docs and original code were mismatched
+     * @param identifier an identifier used subsequently to identify the trace output stream
+     * @return true if the close succeeds false if it fails
      */
     public boolean closeTrace(Object identifier)
     {
@@ -298,6 +308,8 @@ public class Helper
     // countdown support
     /**
      * for backwards compatibility
+     * @param identifier an object which uniquely identifies the countdown in question
+     * @return true if the countdown is currently installed
      */
     public boolean getCountDown(Object identifier)
     {
@@ -318,6 +330,11 @@ public class Helper
 
     /**
      * alias for createCountDown provided for backwards compatibility
+     * @param identifier an object which uniquely identifies the countdown in question
+     * @param count the number of times the countdown needs to be counted down before the
+     * countdown operation returns true. e.g. if count is supplied as 2 then the first two
+     * calls to {@link #countDown(Object)} will return false and the third call will return true.
+     * @return true if a new countdown is installed, false if one already exists.
      */
     public boolean addCountDown(Object identifier, int count)
     {
@@ -395,20 +412,27 @@ public class Helper
     }
 
     /**
-     * wait for another thread to signal an event with a specific timeout or no timeout if zero
-     * is supplied as the second argument. this may be called in a rule event, condition or action.
-     * it will suspend the current thread pending signalling of the event at which point rule
-     * processing will either continue or abort depending upon the type of signal. if an exception
-     * is thrown it will be an instance of runtime exception which, in normal circumstances, will
-     * cause the thread to exit. The exception may not kill the thread f the trigger method or
-     * calling code contains a catch-all handler so care must be used to ensure that an abort of
-     * waiting threads has the desired effect. n.b. care must also be employed if the current
-     * thread is inside a synchronized block since there is a potential for the waitFor call to
-     * cause deadlock.
-     * @param identifier an object used to identify the signal that is to be waited on. n.b. the
-     * wait operation is not performed using synchronization on the supplied object as the rule
-     * system cannot safely release and reobtain locks on application data. this argument is used
-     * as a key to identify a synchronization object private to the rule system.
+     * wait for another thread to signal an event with a specific
+     * timeout or no timeout if zero is supplied as the second
+     * argument. this may be called in a rule event, condition or
+     * action.  it will suspend the current thread pending signalling
+     * of the event at which point rule processing will either
+     * continue or abort depending upon the type of signal. if an
+     * exception is thrown it will be an instance of runtime exception
+     * which, in normal circumstances, will cause the thread to
+     * exit. The exception may not kill the thread f the trigger
+     * method or calling code contains a catch-all handler so care
+     * must be used to ensure that an abort of waiting threads has the
+     * desired effect. n.b. care must also be employed if the current
+     * thread is inside a synchronized block since there is a
+     * potential for the waitFor call to cause deadlock.
+     * @param identifier an object used to identify the signal that is
+     * to be waited on. n.b. the wait operation is not performed using
+     * synchronization on the supplied object as the rule system
+     * cannot safely release and reobtain locks on application
+     * data. this argument is used as a key to identify a
+     * synchronization object private to the rule system.
+     * @param millisecs hwo long to wait
      */
     public void waitFor(Object identifier, long millisecs)
     {
@@ -420,6 +444,13 @@ public class Helper
     /**
      * call signalWake(Object, boolean) defaulting the second argument to
      * false
+     * @param identifier an object used to identify the signal that is
+     * to be waited on. n.b. the wait operation is not performed using
+     * synchronization on the supplied object as the rule system
+     * cannot safely release and reobtain locks on application
+     * data. this argument is used
+     * @return true if a waiting thread was woken false if no thread
+     * was waiting
      */
     public boolean signalWake(Object identifier)
     {
@@ -427,18 +458,24 @@ public class Helper
     }
 
     /**
-     * signal an event identified by the supplied object, causing all waiting threads to resume
-     * rule processing and clearing the event. if there are no threads waiting either because
-     * there has been no call to {@link #waitFor} or because some other thread has sent the signal
-     * then this call returns false, otherwise it returns true. This operation is atomic,
-     * allowing the builtin to be used in rule conditions.
-     * @param identifier an object used to identify the which waiting threads the signal should
-     * be delivered to. n.b. the operation is not performed using a notify on the supplied object.
-     * this argument is used as a key to identify a synchronization object private to the rule
-     * system.
-     * @param mustMeet if true then the signal operation must not be delivered until some other
-     * thread is actually waiting on a waiter identified by identifier. if there is no such waiter
-     * when this method is called then the calling thread will suspend until one arrives.
+     * signal an event identified by the supplied object, causing all
+     * waiting threads to resume rule processing and clearing the
+     * event. if there are no threads waiting either because there has
+     * been no call to {@link #waitFor} or because some other thread
+     * has sent the signal then this call returns false, otherwise it
+     * returns true. This operation is atomic, allowing the builtin to
+     * be used in rule conditions.
+     * @param identifier an object used to identify the which waiting
+     * threads the signal should be delivered to. n.b. the operation
+     * is not performed using a notify on the supplied object.  this
+     * argument is used as a key to identify a synchronization object
+     * private to the rule system.
+     * @param mustMeet if true then the signal operation must not be
+     * delivered until some other thread is actually waiting on a
+     * waiter identified by identifier. if there is no such waiter
+     * when this method is called then the calling thread will suspend
+     * until one arrives.
+     * @return true if a waiting thread was woken false if no thread was waiting
      */
     public boolean signalWake(Object identifier, boolean mustMeet)
     {
@@ -488,6 +525,13 @@ public class Helper
 
     /**
      * for backwards compatibility
+     * @param identifier an object used to identify the which waiting
+     * threads the signal should be delivered to. n.b. the operation
+     * is not performed using a notify on the supplied object.  this
+     * argument is used as a key to identify a synchronization object
+     * private to the rule system.
+     * @return true if a waiting thread was killed false if no thread
+     * was waiting
      */
     public boolean signalKill(Object identifier)
     {
@@ -496,6 +540,18 @@ public class Helper
 
     /**
      * for backwards compatibility
+     * @param identifier an object used to identify the which waiting
+     * threads the signal should be delivered to. n.b. the operation
+     * is not performed using a notify on the supplied object.  this
+     * argument is used as a key to identify a synchronization object
+     * private to the rule system.
+     * @param mustMeet if true then the signal operation must not be
+     * delivered until some other thread is actually waiting on a
+     * waiter identified by identifier. if there is no such waiter
+     * when this method is called then the calling thread will suspend
+     * until one arrives.
+     * @return true if a waiting thread was killed false if no thread
+     * was waiting
      */
     public boolean signalKill(Object identifier, boolean mustMeet)
     {
@@ -505,6 +561,13 @@ public class Helper
     /**
      * call signalThrow(Object, boolean) defaulting the second argument to
      * false
+     * @param identifier an object used to identify the which waiting
+     * threads the signal should be delivered to. n.b. the operation
+     * is not performed using a notify on the supplied object.  this
+     * argument is used as a key to identify a synchronization object
+     * private to the rule system.
+     * @return true if a throw occured in a waiting thread false if no
+     * thread was waiting
      */
     public boolean signalThrow(Object identifier)
     {
@@ -512,18 +575,25 @@ public class Helper
     }
 
     /**
-     * signal an event identified by the suppied object, causing all waiting threads to throw an
-     * exception and clearing the event. if there are no objects waiting, either because there has been
-     * no call to {@link #waitFor} or because some other thread has already sent the signal, then this
-     * call returns false, otherwise it returns true. This operation is atomic, allowing the builtin
-     * to be used safely in rule conditions.
-     * @param identifier an object used to identify the which waiting threads the signal should
-     * be delivered to. n.b. the operation is not performed using a notify on the supplied object.
-     * this argument is used as a key to identify a synchronization object private to the rule
-     * system.
-     * @param mustMeet if true then the signal operation must not be delivered until some other
-     * thread is actually waiting on a waiter identified by identifier. if there is no such waiter
-     * when this method is called then the calling thread will suspend until one arrives.
+     * signal an event identified by the suppied object, causing all
+     * waiting threads to throw an exception and clearing the
+     * event. if there are no objects waiting, either because there
+     * has been no call to {@link #waitFor} or because some other
+     * thread has already sent the signal, then this call returns
+     * false, otherwise it returns true. This operation is atomic,
+     * allowing the builtin to be used safely in rule conditions.
+     * @param identifier an object used to identify the which waiting
+     * threads the signal should be delivered to. n.b. the operation
+     * is not performed using a notify on the supplied object.  this
+     * argument is used as a key to identify a synchronization object
+     * private to the rule system.
+     * @param mustMeet if true then the signal operation must not be
+     * delivered until some other thread is actually waiting on a
+     * waiter identified by identifier. if there is no such waiter
+     * when this method is called then the calling thread will suspend
+     * until one arrives.
+     * @return true if a throw occured in a waiting thread false if no
+     * thread was waiting
      */
     public boolean signalThrow(Object identifier, boolean mustMeet)
     {
@@ -571,7 +641,8 @@ public class Helper
     }
 
     /**
-     * delay execution of the current thread for a specified number of milliseconds
+     * delay execution of the current thread for a specified number of
+     * milliseconds
      * @param millisecs how many milliseconds to delay for
      */
 
@@ -598,10 +669,15 @@ public class Helper
 
     /**
      * create a rendezvous for a given number of threads to join
-     * @param identifier an identifier for the rendezvious in subsequent rendezvous operations
-     * @param expected
-     * @param restartable
-     * @return
+     * @param identifier an identifier for the rendezvious in
+     * subsequent rendezvous operations
+     * @param expected the number of threads expected to meet at the
+     * rendezvous
+     * @param restartable true if the rendezvous is can be repeatedly
+     * entered false if it is deleted after the first time all
+     * expected threads arrive
+     * @return true if the rendezvous is created or false if a
+     * rendezvous identified by identifier already exists
      */
     public boolean createRendezvous(Object identifier, int expected, boolean restartable)
     {
@@ -632,7 +708,8 @@ public class Helper
     }
 
     /**
-     * test whether a rendezvous with a specific expected count is associated with identifier
+     * test whether a rendezvous with a specific expected count is
+     * associated with identifier
      * @param identifier the identifier for the rendezvous
      * @param expected the number of threads expected to meet at the rendezvous
      * @return the numer of threads currently arrived at the rendezvous
@@ -649,10 +726,12 @@ public class Helper
     }
 
     /**
-     * meet other threads at a given rendezvous returning only when the expected number have arrived
+     * meet other threads at a given rendezvous returning only when
+     * the expected number have arrived
      * @param identifier the identifier for the rendezvous
-     * @return an ordinal which sorts all parties to the rendezvous in order of arrival from 0 to
-     * (expected-1) or -1 if the rendezvous does not exist
+     * @return an ordinal which sorts all parties to the rendezvous in
+     * order of arrival from 0 to (expected-1) or -1 if the rendezvous
+     * does not exist
      */
     public int rendezvous(Object identifier)
     {
@@ -660,10 +739,13 @@ public class Helper
     }
 
     /**
-     *
-     * @param identifier
-     * @param millis
-     * @return
+     * meet other threads at a given rendezvous returning either when
+     * the expected number have arrived or if a timeout is exceeded
+     * @param identifier the identifier for the rendezvous
+     * @param millis the timeout after which the caller may return
+     * @return an ordinal which sorts all parties to the rendezvous in
+     * order of arrival from 0 to (expected-1) or -1 if the rendezvous
+     * does not exist or the wait times out
      */
     public int rendezvous(Object identifier, long millis)
     {
@@ -687,10 +769,11 @@ public class Helper
         return -1;
     }
 
-    /*
+    /**
      * delete a rendezvous. All threads waiting inside a call to rendezvous return result -1;
-     * @param identifier
-     * @param expected
+     * @param identifier the identifier for the rendezvous
+     * @param expected the number of threads expected to meet at the
+     * rendezvous
      * @return true if the rendezvous was active and deleted and false if it had already been deleted
     */
     public boolean deleteRendezvous(Object identifier, int expected)
@@ -1025,13 +1108,14 @@ public class Helper
     }
 
     /**
-     * cause the current JVM to halt immediately, simulating a crash as near as possible. exit code -1
-     * is returned
+     * cause the current JVM to halt immediately, simulating a crash
+     * as near as possible.
+     * @param exitCode the code to be passed to the runtime halt call
      */
 
     public void killJVM(int exitCode)
     {
-        java.lang.Runtime.getRuntime().halt(-1);
+        java.lang.Runtime.getRuntime().halt(exitCode);
     }
 
     // call stack management support
@@ -1041,6 +1125,7 @@ public class Helper
     /**
      * test whether the name of the method which called the the trigger method matches the supplied name
      * by calling callerEquals(name, false)
+     * @param name the name to match
      * @return true if the name of the method which called the the trigger method matches the supplied name
      * otherwise false
      */
@@ -1052,6 +1137,8 @@ public class Helper
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied name by calling callerEquals(name, 1, frameCount)
+     * @param name the name to match
+     * @param frameCount the number of frames to check
      * @return true if the name of the method which called the the trigger method matches the supplied name
      * otherwise false
      */
@@ -1063,6 +1150,10 @@ public class Helper
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied name by calling callerEquals(name, false, startFrame, frameCount)
+     * @param name the name to match
+     * @param startFrame the frame index to start checking from with 0
+     * identifing the trigger method frame
+     * @param frameCount the number of frames to check
      * @return true if the name of the method which called the the trigger method matches the supplied name
      * otherwise false
      */
@@ -1074,6 +1165,8 @@ public class Helper
     /**
      * test whether the name of method which called the the trigger method matches the supplied name
      * by calling callerEquals(name, includeClass, false)
+     * @param name the name to match
+     * @param includeClass true if the check shoudl include class name false if not
      * @return true if the name of the method which called the the trigger method matches the supplied name
      * otherwise false
      */
@@ -1085,6 +1178,10 @@ public class Helper
     /**
      * test whether the name of method which called the the trigger method matches the supplied name
      * by calling callerEquals(name, includeClass, false, frameCount)
+     * @param name the name to match
+     * @param includeClass true if the check should include the class
+     * name false if not
+     * @param frameCount the number of frames to check
      * @return true if the name of the method which called the the trigger method matches the supplied name
      * otherwise false
      */
@@ -1096,6 +1193,12 @@ public class Helper
     /**
      * test whether the name of method which called the the trigger method matches the supplied name
      * by calling callerEquals(name, includeClass, false, startFrame, frameCount)
+     * @param name the name to match
+     * @param includeClass true if the check should include the
+       class name false if not
+     * @param startFrame the frame index to start checking from with 0
+     * identifing the trigger method frame
+     * @param frameCount the number of frames to check
      * @return true if the name of the method which called the the trigger method matches the supplied name
      * otherwise false
      */
@@ -1107,6 +1210,11 @@ public class Helper
     /**
      * test whether the name of method which called the the trigger method matches the supplied name
      * by calling callerEquals(name, includeClass, includePackage, 1)
+     * @param name the name to match
+     * @param includeClass true if the check should include the
+       class name false if not
+     * @param includePackage true if the check should include the
+       package name false if not
      * @return true if the name of the method which called the the trigger method matches the supplied name
      * otherwise false
      */
@@ -1119,6 +1227,12 @@ public class Helper
      * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied name by calling
      * callerCheck(name, false, includeClass, includePackage, 1, frameCount)
+     * @param name the name to match
+     * @param includeClass true if the check should include the
+       class name false if not
+     * @param includePackage true if the check should include the
+       package name false if not
+     * @param frameCount the number of frames to check
      * @return true if the name of the method which called the the trigger method matches the supplied name
      * otherwise false
      */
@@ -1131,6 +1245,14 @@ public class Helper
      * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied name by calling
      * callerCheck(name, false, includeClass, false, startFrame, frameCount)
+     * @param name the name to match
+     * @param includeClass true if the check should include the
+       class name false if not
+     * @param includePackage true if the check should include the
+       package name false if not
+     * @param startFrame the frame index to start checking from with 0
+     * identifing the trigger method frame
+     * @param frameCount the number of frames to check
      * @return true if the name of the method which called the the trigger method matches the supplied name
      * otherwise false
      */
@@ -1145,6 +1267,7 @@ public class Helper
     /**
      * test whether the name of the method which called the the trigger method matches the supplied regular
      * by calling callerMatches(regExp, false)
+     * @param regExp the pattern to match
      * @return true if the name of the method which called the the trigger method matches the supplied
      * regular expression otherwise false
      */
@@ -1156,6 +1279,8 @@ public class Helper
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied regular expression by calling callerMatches(regExp, 1, frameCount)
+     * @param regExp the pattern to match
+     * @param frameCount the number of frames to check
      * @return true if the name of the method which called the the trigger method matches the supplied
      * regular expression otherwise false
      */
@@ -1167,6 +1292,10 @@ public class Helper
     /**
      * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied regular expression by calling callerMatches(regExp, false, startFrame, frameCount)
+     * @param regExp the pattern to match
+     * @param startFrame the frame index to start checking from with 0
+     * identifing the trigger method frame
+     * @param frameCount the number of frames to check
      * @return true if the name of the method which called the the trigger method matches the supplied
      * regular expression otherwise false
      */
@@ -1178,6 +1307,9 @@ public class Helper
     /**
      * test whether the name of method which called the the trigger method matches the supplied regular
      * expression by calling callerMatches(regExp, includeClass, false)
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     *  class name false if not
      * @return true if the name of the method which called the the trigger method matches the supplied regular
      * expression otherwise false
      */
@@ -1189,6 +1321,10 @@ public class Helper
     /**
      * test whether the name of method which called the the trigger method matches the supplied regular
      * expression by calling callerMatches(regExp, includeClass, false, frameCount)
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param frameCount the number of frames to check
      * @return true if the name of the method which called the the trigger method matches the supplied regular
      * expression otherwise false
      */
@@ -1200,6 +1336,12 @@ public class Helper
     /**
      * test whether the name of method which called the the trigger method matches the supplied regular
      * expression by calling callerMatches(regExp, includeClass, false, startFrame, frameCount)
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param startFrame the frame index to start checking from with 0
+     * identifing the trigger method frame
+     * @param frameCount the number of frames to check
      * @return true if the name of the method which called the the trigger method matches the supplied regular
      * expression otherwise false
      */
@@ -1211,6 +1353,11 @@ public class Helper
     /**
      * test whether the name of method which called the the trigger method matches the supplied regular
      * expression by calling callerMatches(regExp, includeClass, includePackage, 1)
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
      * @return true if the name of the method which called the the trigger method matches the supplied regular
      * expression otherwise false
      */
@@ -1222,6 +1369,12 @@ public class Helper
     /**
      * test whether the name of method which called the the trigger method matches the supplied regular
      * expression by calling callerMatches(regExp, includeClass, includePackage, 1, frameCount)
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
+     * @param frameCount the number of frames to check
      * @return true if the name of the method which called the the trigger method matches the supplied regular
      * expression otherwise false
      */
@@ -1234,6 +1387,14 @@ public class Helper
      * test whether the name of any of the selected methods in the stack which called the trigger method
      * matches the supplied regular expression by calling
      * callerCheck(regExp, true, includeClass, includePackage, 1, frameCount)
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
+     * @param startFrame the frame index to start checking from with 0
+     * identifing the trigger method frame
+     * @param frameCount the number of frames to check
      * @return true if the name of the method which called the the trigger method matches the supplied
      * regular expression otherwise false
      */
@@ -1296,6 +1457,10 @@ public class Helper
 
     /**
      * print a stack trace to System.out by calling traceStack(prefix, "out")
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
      */
     public void traceStack(String prefix)
     {
@@ -1304,6 +1469,12 @@ public class Helper
 
     /**
      * print a stack trace to the trace stream identified by key by calling traceStack(prefix, key, 0)
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
      */
     public void traceStack(String prefix, Object key)
     {
@@ -1312,6 +1483,8 @@ public class Helper
 
     /**
      * print a stack trace to System.out by calling traceStack(null, maxFrames)
+     * @param maxFrames the maximum number of frames to print or 0 if
+     * no limit should apply
      */
     public void traceStack(int maxFrames)
     {
@@ -1320,6 +1493,12 @@ public class Helper
 
     /**
      * print a stack trace to System.out by calling traceStack(prefix, "out", maxFrames)
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param maxFrames the maximum number of frames to print or 0 if
+     * no limit should apply
      */
     public void traceStack(String prefix, int maxFrames)
     {
@@ -1329,10 +1508,14 @@ public class Helper
     /**
      * print a stack trace to the trace stream identified by key
      *
-     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
-     * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + "\n" is used
-     * @param key an object identifying the trace stream to which output should be generated
-     * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
+     * @param maxFrames the maximum number of frames to print or 0 if
+     * no limit should apply
      */
     public void traceStack(String prefix, Object key, int maxFrames)
     {
@@ -1352,6 +1535,10 @@ public class Helper
 
     /**
      * print trace of all threads' stacks to System.out by calling traceAllStacks(prefix, "out")
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
      */
     public void traceAllStacks(String prefix)
     {
@@ -1360,6 +1547,12 @@ public class Helper
 
     /**
      * print trace of all threads' stacks to the trace stream identified by key by calling traceAllStacks(prefix, key, 0)
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
      */
     public void traceAllStacks(String prefix, Object key)
     {
@@ -1368,6 +1561,8 @@ public class Helper
 
     /**
      * print trace of all threads' stacks to System.out by calling traceAllStacks(null, maxFrames)
+     * @param maxFrames the maximum number of frames to print or 0 if
+     * no limit should apply
      */
     public void traceAllStacks(int maxFrames)
     {
@@ -1376,6 +1571,12 @@ public class Helper
 
     /**
      * print trace of all threads' stacks to System.out by calling traceAllStacks(prefix, "out", maxFrames)
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param maxFrames the maximum number of frames to print or 0 if
+     * no limit should apply
      */
     public void traceAllStacks(String prefix, int maxFrames)
     {
@@ -1385,10 +1586,14 @@ public class Helper
     /**
      * print trace of all threads' stacks to the trace stream identified by key
      *
-     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
-     * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + "\n" is used
-     * @param key an object identifying the trace stream to which output should be generated
-     * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
+     * @param maxFrames the maximum number of frames to print or 0 if
+     * no limit should apply
      */
     public void traceAllStacks(String prefix, Object key, int maxFrames)
     {
@@ -1400,6 +1605,7 @@ public class Helper
 
     /**
      * print a stack trace of a specific thread to System.out by calling traceThreadStack(threadName, null)
+     * @param threadName a string identifying the thread
      */
     public void traceThreadStack(String threadName)
     {
@@ -1408,6 +1614,10 @@ public class Helper
 
     /**
      * print a stack trace of a specific thread to System.out by calling traceThreadStack(threadName, prefix, "out")
+     * @param threadName a string identifying the thread
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + threadName + "\n" is used
      */
     public void traceThreadStack(String threadName, String prefix)
     {
@@ -1416,6 +1626,12 @@ public class Helper
 
     /**
      * print a stack trace of a specific thread to the trace stream identified by key by calling traceThreadStack(threadName, prefix, key, 0)
+     * @param threadName a string identifying the thread
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + threadName + "\n" is used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
      */
     public void traceThreadStack(String threadName, String prefix, Object key)
     {
@@ -1424,6 +1640,9 @@ public class Helper
 
     /**
      * print a stack trace of a specific thread to System.out by calling traceThreadStack(threadName, null, maxFrames)
+     * @param threadName a string identifying the thread
+     * @param maxFrames the maximum number of frames to print or 0 if
+     * no limit should apply
      */
     public void traceThreadStack(String threadName, int maxFrames)
     {
@@ -1432,6 +1651,12 @@ public class Helper
 
     /**
      * print a stack trace of a specific thread of a specific thread to System.out by calling traceThreadStack(threadName, prefix, "out", maxFrames)
+     * @param threadName a string identifying the thread
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + threadName + "\n" is used
+     * @param maxFrames the maximum number of frames to print or 0 if
+     * no limit should apply
      */
     public void traceThreadStack(String threadName, String prefix, int maxFrames)
     {
@@ -1441,10 +1666,14 @@ public class Helper
     /**
      * print a stack trace to the trace stream identified by key
      *
-     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
-     * then the prefix "Stack trace for thread " + threadName + "\n" is used
-     * @param key an object identifying the trace stream to which output should be generated
-     * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
+     * @param threadName a string identifying the thread
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + threadName + "\n" is used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
+     * @param maxFrames the maximum number of frames to print or 0 if
+     * no limit should apply
      */
     public void traceThreadStack(String threadName, String prefix, Object key, int maxFrames)
     {
@@ -1455,6 +1684,7 @@ public class Helper
 
     /**
      * print all stack frames which match pattern to System.out by calling traceStackMatching(pattern, null)
+     * @param regExp the pattern to match
      */
 
     public void traceStackMatching(String regExp)
@@ -1465,6 +1695,11 @@ public class Helper
     /**
      * print all stack frames which match pattern to System.out preceded by prefix by calling
      * traceStackMatching(pattern, prefix, "out")
+     * @param regExp the pattern to match
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
      */
 
     public void traceStackMatching(String regExp, String prefix)
@@ -1474,6 +1709,13 @@ public class Helper
 
     /**
      * print all stack frames which match pattern to System.out preceded by prefix by calling
+     * @param regExp the pattern to match
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
      * traceStackMatching(pattern, false, prefix, key)
      */
 
@@ -1485,6 +1727,9 @@ public class Helper
     /**
      * print all stack frames which match pattern to System.out by calling
      * traceStackMatching(pattern, includeClass, false)
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     * class name false if not
      */
 
     public void traceStackMatching(String regExp, boolean includeClass)
@@ -1495,6 +1740,13 @@ public class Helper
     /**
      * print all stack frames which match pattern to System.out preceded by prefix by calling
      * traceStackMatching(pattern, includeClass, false, prefix)
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
      */
 
     public void traceStackMatching(String regExp, boolean includeClass, String prefix)
@@ -1505,6 +1757,15 @@ public class Helper
     /**
      * print all stack frames which match pattern to System.out preceded by prefix by calling
      * traceStackMatching(pattern, includeClass, false, prefix, key)
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
      */
 
     public void traceStackMatching(String regExp, boolean includeClass, String prefix, Object key)
@@ -1515,6 +1776,11 @@ public class Helper
     /**
      * print all stack frames which match pattern to System.out by calling
      * traceStackMatching(pattern, includeClass, includePackage, null)
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
      */
 
     public void traceStackMatching(String regExp, boolean includeClass, boolean includePackage)
@@ -1525,6 +1791,15 @@ public class Helper
     /**
      * print all stack frames which match pattern to System.out preceded by prefix by calling
      * traceStackMatching(pattern, includeClass, , includePackage, prefix, "out")
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
      */
 
     public void traceStackMatching(String regExp, boolean includeClass, boolean includePackage, String prefix)
@@ -1556,6 +1831,19 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end to System.out by calling
      * traceStackBetween(from, to, null)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
      */
 
     public void traceStackBetween(String from, String to)
@@ -1566,6 +1854,23 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end to System.out preceded by prefix
      * by calling traceStackBetween(from, to, prefix, "out")
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
      */
 
     public void traceStackBetween(String from, String to, String prefix)
@@ -1576,6 +1881,25 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end preceded by prefix
      * by calling traceStackBetween(from, to, false, prefix, key)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
      */
 
     public void traceStackBetween(String from, String to, String prefix, Object key)
@@ -1586,6 +1910,21 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end to System.out by calling
      * traceStackBetween(from, to, includeClass, false)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
      */
 
     public void traceStackBetween(String from, String to, boolean includeClass)
@@ -1596,6 +1935,25 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end to System.out by calling
      * traceStackBetween(from, to, includeClass, false, prefix)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
      */
 
     public void traceStackBetween(String from, String to, boolean includeClass, String prefix)
@@ -1606,6 +1964,27 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end preceded by prefix
      * by calling traceStackBetween(from, to, includeClass, false, prefix, key)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
      */
 
     public void traceStackBetween(String from, String to, boolean includeClass, String prefix, Object key)
@@ -1616,6 +1995,23 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end to System.out by calling
      * traceStackBetween(from, to, includeClass, includePackage, null)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
      */
 
     public void traceStackBetween(String from, String to, boolean includeClass, boolean includePackage)
@@ -1626,6 +2022,33 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end to System.out preceded by prefix
      * by calling traceStackBetween(from, to, includeClass, includePackage, prefix, "out")
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
      */
 
     public void traceStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix)
@@ -1636,6 +2059,29 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end preceded by prefix
      * by calling traceStackBetween(from, to, false, includeClass, includePackage, prefix, key)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
      */
 
     public void traceStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix, Object key)
@@ -1648,6 +2094,19 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end to System.out by calling
      * traceStackBetweenMatches(from, to, null)
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
      */
 
     public void traceStackBetweenMatches(String from, String to)
@@ -1658,6 +2117,22 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end to System.out preceded by prefix
      * by calling traceStackBetweenMatches(from, to, prefix, "out")
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
      */
 
     public void traceStackBetweenMatches(String from, String to, String prefix)
@@ -1668,6 +2143,25 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end to System.out preceded by prefix
      * by calling traceStackBetweenMatches(from, to, false, prefix, key)
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
      */
 
     public void traceStackBetweenMatches(String from, String to, String prefix, Object key)
@@ -1678,6 +2172,21 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end to System.out by calling
      * traceStackBetweenMatches(from, to, includeClass, false)
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
      */
 
     public void traceStackBetweenMatches(String from, String to, boolean includeClass)
@@ -1688,6 +2197,25 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end to System.out by calling
      * traceStackBetweenMatches(from, to, includeClass, false, prefix)
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
      */
 
     public void traceStackBetweenMatches(String from, String to, boolean includeClass, String prefix)
@@ -1698,6 +2226,27 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end preceded by prefix
      * by calling traceStackBetween(from, to, includeClass, false, prefix, key)
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
      */
 
     public void traceStackBetweenMatches(String from, String to, boolean includeClass, String prefix, Object key)
@@ -1708,6 +2257,23 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end to System.out by calling
      * traceStackBetweenMatches(from, to, includeClass, includePackage, null)
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
      */
 
     public void traceStackBetweenMatches(String from, String to, boolean includeClass, boolean includePackage)
@@ -1718,6 +2284,27 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end to System.out preceded by prefix
      * by calling traceStackBetweenMatches(from, to, true, includeClass, includePackage, prefix, "out");
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
      */
 
     public void traceStackBetweenMatches(String from, String to, boolean includeClass, boolean includePackage, String prefix)
@@ -1728,6 +2315,29 @@ public class Helper
     /**
      * print all stack frames between the frames which match start and end preceded by prefix
      * by calling traceStackRange(from, to, true, includeClass, includePackage, prefix, key)
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
      */
 
     public void traceStackBetweenMatches(String from, String to, boolean includeClass, boolean includePackage, String prefix, Object key)
@@ -1738,21 +2348,33 @@ public class Helper
      * print all stack frames between the frames which match start and end to the trace stream identified by key
      * preceded by prefix.
      *
-     * @param from a pattern which identifies the first frame which should be printed. from will be matched against
-     * the name of each successive stack frame from the trigger methdo frame until a matching frame is found. If null
-     * is supplied then the trigger frame will be used as the first frame to print. If a non-null value is supplied
-     * and no match is found then no frames will be printed.
-     * @param to a pattern which identifies the last frame which should be printed. to will be matched against
-     * the name of each successive stack frame following the first matched frame until a matching frame is found.
-     * If null is supplied or no match is found then the bottom frame will be used as the last frame to print.
-     * @param isRegExp true if from and true should be matched as regular expressions or false if they should be
-     * matched using a String equals comparison.
-     * @param includeClass true if the match should be against the package and class qualified method name
-     * @param includePackage true if the match should be against the package and class qualified method name.
-     * ignored if includeClass is  not also true.
-     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
-     * then the prefix "Stack trace (restricted) for " + Thread.currentThread().getName() + "\n" is used
-     * @param key an object identifying the trace stream to which output should be generated
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param isRegExp true if from and true should be matched as
+     * regular expressions or false if they should be matched using a
+     * String equals comparison.
+     * @param includeClass true if the match should be against the
+     * package and class qualified method name
+     * @param includePackage true if the match should be against the
+     * package and class qualified method name.  ignored if
+     * includeClass is not also true.
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace (restricted) for " + Thread.currentThread().getName() +
+     * "\n" is used
+     * @param key an object identifying the trace stream to which
+     * output should be generated
      */
 
     public void traceStackRange(String from, String to, boolean isRegExp, boolean includeClass, boolean includePackage, String prefix, Object key)
@@ -1767,6 +2389,7 @@ public class Helper
 
     /**
      * return a stack trace by calling formatStack(null)
+     * @return a stack trace formatted as a String
      */
     public String formatStack()
     {
@@ -1775,6 +2398,11 @@ public class Helper
 
     /**
      * return a stack trace by calling formatStack(prefix, 0)
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @return a stack trace formatted as a String
      */
     public String formatStack(String prefix)
     {
@@ -1783,6 +2411,9 @@ public class Helper
 
     /**
      * return a stack trace by calling formatStack(null, maxFrames)
+     * @param maxFrames the maximum number of frames to print or 0 if
+     * no limit should apply
+     * @return a stack trace formatted as a String
      */
     public String formatStack(int maxFrames)
     {
@@ -1795,6 +2426,7 @@ public class Helper
      * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
      * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + "\n" is used
      * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
+     * @return a stack trace formatted as a String
      */
     public String formatStack(String prefix, int maxFrames)
     {
@@ -1809,6 +2441,7 @@ public class Helper
 
     /**
      * return all stack traces by calling formatAllStacks(null)
+     * @return all thread stack traces formatted as a String
      */
     public String formatAllStacks()
     {
@@ -1817,6 +2450,9 @@ public class Helper
 
     /**
      * return all stack traces by calling formatAllStacks(prefix, 0)
+     * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
+     * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + "\n" is used
+     * @return all thread stack traces formatted as a String
      */
     public String formatAllStacks(String prefix)
     {
@@ -1825,6 +2461,9 @@ public class Helper
 
     /**
      * return all stack traces by calling formatAllStacks(null, maxFrames)
+     * @param maxFrames the maximum number of frames to print or 0 if
+     * no limit should apply
+     * @return all thread stack traces formatted as a String
      */
     public String formatAllStacks(int maxFrames)
     {
@@ -1837,6 +2476,7 @@ public class Helper
      * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
      * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + "\n" is used
      * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
+     * @return all thread stack traces formatted as a String
      */
 
     public String formatAllStacks(String prefix, int maxFrames)
@@ -1857,6 +2497,8 @@ public class Helper
 
     /**
      * return stack traces of a specific thread by calling formatThreadStack(threadName, null)
+     * @param threadName a string identifying the thread
+     * @return a stack trace formatted as a String
      */
     public String formatThreadStack(String threadName)
     {
@@ -1865,6 +2507,11 @@ public class Helper
 
     /**
      * return all stack traces by calling formatThreadStack(threadName, prefix, 0)
+     * @param threadName a string identifying the thread
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + threadName + "\n" is used
+     * @return a stack trace formatted as a String
      */
     public String formatThreadStack(String threadName, String prefix)
     {
@@ -1873,6 +2520,9 @@ public class Helper
 
     /**
      * return all stack traces by calling formatThreadStack(threadName, null, maxFrames)
+     * @param threadName a string identifying the thread
+     * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
+     * @return a stack trace formatted as a String
      */
     public String formatThreadStack(String threadName, int maxFrames)
     {
@@ -1882,9 +2532,11 @@ public class Helper
     /**
      * return all stack traces
      *
+     * @param threadName a string identifying the thread
      * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
      * then the prefix "Stack trace for thread " + threadName + "\n" is used
      * @param maxFrames the maximum number of frames to print or 0 if no limit should apply
+     * @return a stack trace formatted as a String
      */
 
     public String formatThreadStack(String threadName, String prefix, int maxFrames)
@@ -1951,6 +2603,8 @@ public class Helper
 
     /**
      * return a String tracing all stack frames which match pattern by calling formatStackMatching(pattern, null)
+     * @param regExp the pattern to match
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackMatching(String regExp)
@@ -1961,6 +2615,12 @@ public class Helper
     /**
      * return a String tracing all stack frames which match pattern by calling
      * formatStackMatching(pattern, false, prefix)
+     * @param regExp the pattern to match
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackMatching(String regExp, String prefix)
@@ -1971,6 +2631,10 @@ public class Helper
     /**
      * return a String tracing all stack frames which match pattern by calling
      * formatStackMatching(pattern, includeClass, false)
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackMatching(String regExp, boolean includeClass)
@@ -1981,6 +2645,14 @@ public class Helper
     /**
      * return a String tracing all stack frames which match pattern by calling
      * formatStackMatching(pattern, includeClass, false, prefix)
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackMatching(String regExp, boolean includeClass, String prefix)
@@ -1991,6 +2663,12 @@ public class Helper
     /**
      * return a String tracing all stack frames which match pattern by calling
      * formatStackMatching(pattern, includeClass, includePackage, null)
+     * @param regExp the pattern to match
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackMatching(String regExp, boolean includeClass, boolean includePackage)
@@ -2008,6 +2686,7 @@ public class Helper
      * ignored if includeClass is  not also true.
      * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
      * then the prefix "Stack trace for thread " + Thread.currentThread().getName() + " matching " + pattern + "\n" is used
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackMatching(String regExp, boolean includeClass, boolean includePackage, String prefix)
@@ -2058,6 +2737,20 @@ public class Helper
     /**
      * return a String tracing the stack between the frames which match start and end by calling
      * formatStackBetween(from, to, null)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackBetween(String from, String to)
@@ -2068,6 +2761,24 @@ public class Helper
     /**
      * return a String tracing the stack between the frames which match start and end
      * by calling formatStackBetween(from, to, false, false, false, prefix)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackBetween(String from, String to, String prefix)
@@ -2078,6 +2789,22 @@ public class Helper
     /**
      * return a String tracing the stack between the frames which match start and end by calling
      * formatStackBetween(from, to, includeClass, false)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackBetween(String from, String to, boolean includeClass)
@@ -2088,6 +2815,26 @@ public class Helper
     /**
      * return a String tracing the stack between the frames which match start and end by calling
      * formatStackBetween(from, to, includeClass, false, prefix)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackBetween(String from, String to, boolean includeClass, String prefix)
@@ -2098,6 +2845,24 @@ public class Helper
     /**
      * return a String tracing the stack between the frames which match start and end by calling
      * formatStackBetween(from, to, includeClass, includePackage, null)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackBetween(String from, String to, boolean includeClass, boolean includePackage)
@@ -2108,6 +2873,28 @@ public class Helper
     /**
      * return a String tracing the stack between the frames which match start and end by calling
      * formatStackRange(from, to, false, includeClass, includePackage, prefix)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackBetween(String from, String to, boolean includeClass, boolean includePackage, String prefix)
@@ -2120,6 +2907,20 @@ public class Helper
     /**
      * return a String tracing the stack between the frames which match start and end by calling
      * formatStackBetweenMatches(from, to, null)
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackBetweenMatches(String from, String to)
@@ -2130,6 +2931,24 @@ public class Helper
     /**
      * return a String tracing the stack between the frames which match start and end
      * by calling formatStackBetweenMatches(from, to, false, false, false, prefix)
+     * @param from a string which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a string which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackBetweenMatches(String from, String to, String prefix)
@@ -2140,6 +2959,22 @@ public class Helper
     /**
      * return a String tracing the stack between the frames which match start and end by calling
      * formatStackBetweenMatches(from, to, includeClass, false)
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackBetweenMatches(String from, String to, boolean includeClass)
@@ -2150,6 +2985,26 @@ public class Helper
     /**
      * return a String tracing the stack between the frames which match start and end by calling
      * formatStackBetweenMatches(from, to, includeClass, false, prefix)
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackBetweenMatches(String from, String to, boolean includeClass, String prefix)
@@ -2160,6 +3015,24 @@ public class Helper
     /**
      * return a String tracing the stack between the frames which match start and end by calling
      * formatStackBetweenMatches(from, to, includeClass, includePackage, null)
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackBetweenMatches(String from, String to, boolean includeClass, boolean includePackage)
@@ -2170,6 +3043,28 @@ public class Helper
     /**
      * return a String tracing the stack between the frames which match start and end by calling
      * formatStackRange(from, to, true, includeClass, includePackage, prefix)
+     * @param from a pattern which identifies the first frame which
+     * should be printed. from will be matched against the name of
+     * each successive stack frame from the trigger methdo frame until
+     * a matching frame is found. If null is supplied then the trigger
+     * frame will be used as the first frame to print. If a non-null
+     * value is supplied and no match is found then no frames will be
+     * printed.
+     * @param to a pattern which identifies the last frame which
+     * should be printed. to will be matched against the name of each
+     * successive stack frame following the first matched frame until
+     * a matching frame is found.  If null is supplied or no match is
+     * found then the bottom frame will be used as the last frame to
+     * print.
+     * @param includeClass true if the check should include the
+     * class name false if not
+     * @param includePackage true if the check should include the
+     * package name false if not
+     * @param prefix a String to be printed once before printing each
+     * line of stack trace. if supplied as null then the prefix "Stack
+     * trace for thread " + Thread.currentThread().getName() + "\n" is
+     * used
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackBetweenMatches(String from, String to, boolean includeClass, boolean includePackage, String prefix)
@@ -2194,6 +3089,7 @@ public class Helper
      * ignored if includeClass is  not also true.
      * @param prefix a String to be printed once before printing each line of stack trace. if supplied as null
      * then the prefix "Stack trace (restricted) for " + Thread.currentThread().getName() + "\n" is used
+     * @return a stack trace formatted as a String
      */
 
     public String formatStackRange(String from, String to, boolean isRegExp,
@@ -2265,6 +3161,8 @@ public class Helper
      * provide an estimate of an object's size
      *
      * return -1 if not running in a real agent
+     * @param o the object whose size is sought
+     * @return the size or -1
      */
     public long getObjectSize(Object o)
     {
@@ -2272,12 +3170,15 @@ public class Helper
     }
 
     /**
-     * return a unique name for the trigger point associated with this rule. n.b. a single rule may
-     * give rise to more than one trigger point if the rule applies to several methods with the same
-     * name or to several classes with the same (package unqualified) name, or even to several
-     * versions of the same compiled class loaded into distinct class loaders.
+     * return a unique name for the trigger point associated with this
+     * rule. n.b. a single rule may give rise to more than one trigger
+     * point if the rule applies to several methods with the same name
+     * or to several classes with the same (package unqualified) name,
+     * or even to several versions of the same compiled class loaded
+     * into distinct class loaders.
      *
-     * @return a unique name for the trigger point from which this rule was invoked
+     * @return a unique name for the trigger point from which this
+     * rule was invoked
      */
     public String toString()
     {
@@ -2321,7 +3222,7 @@ public class Helper
     /**
      * access to the current stack frames
      *
-     * @return
+     * @return an array of stack trace elements for the current stack
      */
     protected StackTraceElement[] getStack()
     {
@@ -2337,9 +3238,13 @@ public class Helper
     private static String RULE_EXECUTE_METHOD_NAME = "execute";
 
     /**
-     * return the index of the frame in stack for the trigger method below which the rule system
-     * was entered or -1 if it cannot be found
-     * @return the index of the frame for the trigger method or -1 if it cannot be found
+     * return the index of the frame in stack for the trigger method
+     * below which the rule system was entered or -1 if it cannot be
+     * found
+     * @param stack an array of stack trace elements for the current
+     * stack
+     * @return the index of the frame for the trigger method or -1 if
+     * it cannot be found
      */
     protected int triggerIndex(StackTraceElement[] stack)
     {
@@ -2366,16 +3271,26 @@ public class Helper
     }
 
     /**
-     * return the index of the first frame at or below index start which matches pattern
-     * @param pattern a pattern to be matched against the concatenated frame method name using String.matches()
-     * @param isRegExp true if the pattern should be matched as a regular expression or false if it should
-     * be matched using a String equals comparison
-     * @param includeClass true if the method name should be qualified with the package and class name
-     * @param start the index of the first frame which should be tested for a match. this must be greater than
-     * or equal to the trigger index.
-     * @param limit the index of the first frame which should not be tested for a match. this must be less than
-     * or equal to the stack length
-     * @return the index of the matching frame between start and limit - 1 or -1 if it no match found
+     * return the index of the first frame at or below index start
+     * which matches pattern
+     * @param stack array of stack trace elements
+     * @param pattern a pattern to be matched against the concatenated
+     * frame method name using String.matches()
+     * @param isRegExp true if the pattern should be matched as a
+     * regular expression or false if it should be matched using a
+     * String equals comparison
+     * @param includeClass true if the method name should be qualified
+     * with the package and class name
+     * @param includePackage true if the check should include the
+     * package name false if not
+     * @param start the index of the first frame which should be
+     * tested for a match. this must be greater than or equal to the
+     * trigger index.
+     * @param limit the index of the first frame which should not be
+     * tested for a match. this must be less than or equal to the
+     * stack length
+     * @return the index of the matching frame between start and limit
+     * - 1 or -1 if it no match found
      */
     protected int matchIndex(StackTraceElement[] stack, String pattern, boolean isRegExp,
                              boolean includeClass, boolean includePackage, int start, int limit)
@@ -2417,10 +3332,11 @@ public class Helper
     }
 
     /**
-     * print the details of stack frame followed by a newline to buffer by calling
-     * printlnFrame(buffer, frame) then buffer.append('\n')
-     * @param buffer
-     * @param frame
+     * print the details of stack frame followed by a newline to
+     * buffer by calling printlnFrame(buffer, frame) then
+     * buffer.append('\n')
+     * @param buffer the buffer to write to
+     * @param frame the stack frame to print
      */
     protected void printlnFrame(StringBuffer buffer, StackTraceElement frame)
     {
@@ -2430,8 +3346,8 @@ public class Helper
 
     /**
      * print the details of stack frame to buffer
-     * @param buffer
-     * @param frame
+     * @param buffer the buffer to write to
+     * @param frame the stack frame to print
      */
     protected void printFrame(StringBuffer buffer, StackTraceElement frame)
     {
@@ -2451,11 +3367,13 @@ public class Helper
     }
 
     /**
-     * lookup the waiter object used to target wait and signal requests associated with a
-     * specific identifying object
+     * lookup the waiter object used to target wait and signal
+     * requests associated with a specific identifying object
      * @param object the identifer for the waiter
-     * @param createIfAbsent true if the waiter should be (atomically) inserted if it is not present
-     * @return the waiter if it was found or inserted or null if it was not found and createIfAbsent was false
+     * @param createIfAbsent true if the waiter should be (atomically)
+     * inserted if it is not present
+     * @return the waiter if it was found or inserted or null if it
+     * was not found and createIfAbsent was false
      */
     private Waiter getWaiter(Object object, boolean createIfAbsent)
     {
@@ -2473,10 +3391,11 @@ public class Helper
     }
 
     /**
-     * remove the waiter object used to target wait and signal requests associated with a
-     * specific identifying object
+     * remove the waiter object used to target wait and signal
+     * requests associated with a specific identifying object
      * @param object the identifer for the waiter
-     * @return the waiter if it was found or inserted or null if it was not found and createIfAbsent was false
+     * @return the waiter if it was found or inserted or null if it
+     * was not found and createIfAbsent was false
      */
     private Waiter removeWaiter(Object object)
     {
@@ -2509,43 +3428,51 @@ public class Helper
         return writer.toString();
     }
     /**
-     * a hash map used to identify trace streams from their identifying objects
+     * a hash map used to identify trace streams from their
+     * identifying objects
      */
     private static HashMap<Object, PrintStream> traceMap = new HashMap<Object, PrintStream>();
 
     /**
-     * a set used to identify settings for boolean flags associated with arbitrary objects. if
-     * an object is in the set then the flag associated with the object is set (true) otherwise
-     * it is clear (false).
+     * a set used to identify settings for boolean flags associated
+     * with arbitrary objects. if an object is in the set then the
+     * flag associated with the object is set (true) otherwise it is
+     * clear (false).
      */
     private static Set<Object> flagSet = new HashSet<Object>();
 
     /**
-     * a hash map used to identify countdowns from their identifying objects
+     * a hash map used to identify countdowns from their identifying
+     * objects
      */
     private static HashMap<Object, CountDown> countDownMap = new HashMap<Object, CountDown>();
 
     /**
-     * a hash map used to identify counters from their identifying objects
+     * a hash map used to identify counters from their identifying
+     * objects
      */
     private static HashMap<Object, Counter> counterMap = new HashMap<Object, Counter>();
 
     /**
-     * a hash map used to identify waiters from their identifying objects
+     * a hash map used to identify waiters from their identifying
+     * objects
      */
     private static HashMap<Object, Waiter> waitMap = new HashMap<Object, Waiter>();
 
     /**
-     * a hash map used to identify rendezvous from their identifying objects
+     * a hash map used to identify rendezvous from their identifying
+     * objects
      */
     private static HashMap<Object, Rendezvous> rendezvousMap = new HashMap<Object, Rendezvous>();
 
     /**
-     * a hash map used to identify timer from their identifying objects
+     * a hash map used to identify timer from their identifying
+     * objects
      */
     private static HashMap<Object, Timer> timerMap = new HashMap<Object, Timer>();
     
-    // initialise the trace map so it contains the system  output and error keyed under "out" and "err"
+    // initialise the trace map so it contains the system output and
+    // error keyed under "out" and "err"
 
     static {
         traceMap.put("out", System.out);

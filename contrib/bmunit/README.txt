@@ -433,7 +433,8 @@ jars as test dependencies, for example:
         </dependency>
         . . .
 
-You can also add the tools jar as a system dependency:
+If you are running on jdk6/7/8 you *must* also add the tools jar as
+a system dependency:
 
         . . .
         <dependency>
@@ -444,6 +445,10 @@ You can also add the tools jar as a system dependency:
             <systemPath>${tools.jar}</systemPath>
         </dependency>
         . . .
+
+Full details of how to specify pom dependencies and configure the
+surefire plugin are provided in the byteman bmunit tutorial which
+is linked from the documentation page at http://byteman.jboss.org
 
 Note that you must ensure that your test does not directly reference classes from the
 agent jar. When the agent is autoloaded this jar is automatically installed into the

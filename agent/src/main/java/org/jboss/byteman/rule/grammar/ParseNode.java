@@ -105,6 +105,7 @@ public abstract class ParseNode
     /**
      * generic constructor
      * @param tag identifies the type of this node
+     * @param file identifies the file containing the node's text
      * @param line identifies the start line for this node's text
      * @param column identifies the start columen for this node's text
      */
@@ -149,6 +150,7 @@ public abstract class ParseNode
 
     /**
      * get the nth child for this node or null if the index exceeds the child count
+     * @param idx the child index
      * @return the nth child for this node
      */
     public abstract Object getChild(int idx);
@@ -170,6 +172,7 @@ public abstract class ParseNode
     /**
      * create a simple node for a builtin token
      * @param tag identifies the type of this node
+     * @param file identifies the file containing the node's text
      * @param line identifies the start line for this node's text
      * @param column identifies the start columen for this node's text
      * @return a simple node for a builtin token
@@ -182,8 +185,10 @@ public abstract class ParseNode
     /**
      * create a simple node for a builtin token
      * @param tag identifies the type of this node
+     * @param file identifies the file containing the node's text
      * @param line identifies the start line for this node's text
      * @param column identifies the start columen for this node's text
+     * @param child0 the first child for this node
      * @return a simple node for a builtin token
      */
     public static ParseNode node(int tag, String file, int line, int column, Object child0)
@@ -191,16 +196,49 @@ public abstract class ParseNode
         return new UnaryNode(tag, file, line, column, child0);
     }
 
+    /**
+     * create a simple node for a builtin token
+     * @param tag identifies the type of this node
+     * @param file identifies the file containing the node's text
+     * @param line identifies the start line for this node's text
+     * @param column identifies the start columen for this node's text
+     * @param child0 the first child for this node
+     * @param child1 the second child for this node
+     * @return a simple node for a builtin token
+     */
     public static ParseNode node(int tag, String file, int line, int column, Object child0, Object child1)
     {
         return new BinaryNode(tag, file, line, column, child0, child1);
     }
 
+    /**
+     * create a simple node for a builtin token
+     * @param tag identifies the type of this node
+     * @param file identifies the file containing the node's text
+     * @param line identifies the start line for this node's text
+     * @param column identifies the start columen for this node's text
+     * @param child0 the first child for this node
+     * @param child1 the second child for this node
+     * @param child2 the third child for this node
+     * @return a simple node for a builtin token
+     */
     public static ParseNode node(int tag, String file, int line, int column, Object child0, Object child1, Object child2)
     {
         return new TernaryNode(tag, file, line, column, child0, child1, child2);
     }
 
+    /**
+     * create a simple node for a builtin token
+     * @param tag identifies the type of this node
+     * @param file identifies the file containing the node's text
+     * @param line identifies the start line for this node's text
+     * @param column identifies the start columen for this node's text
+     * @param child0 the first child for this node
+     * @param child1 the second child for this node
+     * @param child2 the third child for this node
+     * @param child3 the fourth child for this node
+     * @return a simple node for a builtin token
+     */
     public static ParseNode node(int tag, String file, int line, int column, Object child0, Object child1, Object child2, Object child3)
     {
         return new QuaternaryNode(tag, file, line, column, child0, child1, child2, child3);

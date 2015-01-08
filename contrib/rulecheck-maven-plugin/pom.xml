@@ -110,6 +110,25 @@
 		</plugins>
 	</build>
 	<profiles>
+        <profile>
+            <id>fix javadoc for jdk9</id>
+            <activation>
+                <jdk>1.9</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- switch off errors for missing author and version fields -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <additionalparam>-Xdoclint:-missing</additionalparam>
+                        </configuration>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
 		<profile>
 			<id>run-its</id>
 			<build>

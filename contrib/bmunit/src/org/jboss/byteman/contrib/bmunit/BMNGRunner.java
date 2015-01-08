@@ -21,7 +21,7 @@ public class BMNGRunner extends BMNGAbstractRunner
      * method inherited by a subclass and recognized by TestNG which ensures that
      * Byteman rules specified using @BMRule or @BMScript annotations attached to
      * the subclass are loaded automatically before executing any of its test methods.
-     * @throws Exception
+     * @throws Exception if the test cannot be run
      */
     @BeforeClass(alwaysRun = true)
     public void bmngBeforeClass() throws Exception
@@ -34,7 +34,7 @@ public class BMNGRunner extends BMNGAbstractRunner
      * method inherited by a subclass and recognized by TestNG which ensures that
      * Byteman rules specified using @BMRule or @BMScript annotations attached to
      * the subclass are unloaded automatically after executing all of its test methods.
-     * @throws Exception
+     * @throws Exception if cleanup fails
      */
     @AfterClass(alwaysRun = true)
     public void bmngAfterClass() throws Exception
@@ -47,7 +47,7 @@ public class BMNGRunner extends BMNGAbstractRunner
      * method inherited by a subclass and recognized by TestNG which ensures that
      * Byteman rules specified using @BMRule or @BMScript annotations attached to
      * a test method are unloaded automatically before executing the method.
-     * @throws Exception
+     * @throws Exception if the test cannto be run
      */
     @BeforeMethod(alwaysRun = true)
     public void bmngBeforeTest(Method method) throws Exception
@@ -59,7 +59,7 @@ public class BMNGRunner extends BMNGAbstractRunner
      * method inherited by a subclass and recognized by TestNG which ensures that
      * Byteman rules specified using @BMRule or @BMScript annotations attached to
      * a test method are unloaded automatically before executing the method.
-     * @throws Exception
+     * @throws Exception if cleanup fails
      */
     @AfterMethod(alwaysRun = true)
     public void bmngAfterTest(Method method) throws Exception

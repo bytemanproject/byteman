@@ -1988,8 +1988,6 @@
             </dependencies>
 
         </profile>
-        <profile>
-        </profile>
     </profiles>
     <dependencies>
         <dependency>

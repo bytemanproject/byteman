@@ -140,9 +140,11 @@ public class HelperManager
 
     /**
      * This method exposes a capability of the Byteman agent's
-     * Instrumentation instance while avoding exposing the instance
+     * Instrumentation instance while avoiding exposing the instance
      * itself. It returns an estimate of the object size or -1 in case
      * an agent has not been installed.
+     * @param o the object to be sized
+     * @return an estimate of the size or -1
      */
     public long getObjectSize(Object o)
     {

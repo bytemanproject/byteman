@@ -74,6 +74,8 @@ public abstract class Location
     /**
      * return an adapter which can be used to check whether a method contains a trigger point whose position
      * matches this location
+     * @param cv the current class visitor
+     * @param transformContext the current transform context
      * @return the required adapter
      */
     public abstract RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext);
@@ -81,6 +83,8 @@ public abstract class Location
     /**
      * return an adapter which can be used to insert a trigger call in a method containing a trigger point whose
      * position matches this location
+     * @param cv the current class visitor
+     * @param transformContext the current transform context
      * @return the required adapter
      */
     public abstract RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext);
@@ -122,6 +126,8 @@ public abstract class Location
         /**
          * return an adapter which can be used to check whether a method contains a trigger point whose position
          * matches this location
+         * @param cv the current class visitor
+         * @param transformContext the current transform context
          * @return the required adapter
          */
         public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
@@ -131,6 +137,8 @@ public abstract class Location
         /**
          * return an adapter which can be used to insert a trigger call in a method containing a trigger point whose
          * position matches this location
+         * @param cv the current class visitor
+         * @param transformContext the current transform context
          * @return the required adapter
          */
         public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
@@ -183,6 +191,8 @@ public abstract class Location
         /**
          * return an adapter which can be used to check whether a method contains a trigger point whose position
          * matches this location
+         * @param cv the current class visitor
+         * @param transformContext the current transform context
          * @return the required adapter
          */
         public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
@@ -192,6 +202,8 @@ public abstract class Location
         /**
          * return an adapter which can be used to insert a trigger call in a method containing a trigger point whose
          * position matches this location
+         * @param cv the current class visitor
+         * @param transformContext the current transform context
          * @return the required adapter
          */
         public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
@@ -239,6 +251,8 @@ public abstract class Location
         /**
          * create a location identifying a method entry trigger point
          * @param parameters the text of the parameters appended to the location specifier
+         * @param flags bit field comprising one or other of flags ACCESS_READ and ACCESS_WRITE identifying
+         * whether this specifies field READ or WRITE operations
          * @param whenComplete false if the trigger should be inserted before the access is performed
          * and true if it should be inserted after
          * @return a method entry location or null if the parameters is not a blank String
@@ -409,7 +423,6 @@ public abstract class Location
 
         /**
          * construct a location identifying a variable read trigger point
-         * @param typeName the name of the class owning the field
          * @param variablename the name of the variable being read
          * @param count count identifying which access should be taken as the trigger point
          * @param flags bit field comprising one or other of flags ACCESS_READ and ACCESS_WRITE identifying

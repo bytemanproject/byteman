@@ -98,16 +98,16 @@ public class RuleScript
 
     /**
      * standard constructor for a rule
-     * @param name
-     * @param targetClass
-     * @param isInterface
-     * @param isOverride
-     * @param targetMethod
-     * @param targetHelper
-     * @param targetLocation
-     * @param ruleText
-     * @param line
-     * @param file
+     * @param name the name of the rule
+     * @param targetClass the name of the class or interface to which the rule applies
+     * @param isInterface true if the ruel applies to an interface false if it appies ot a class
+     * @param isOverride true if the rule should inject down class hierarchies false if it should inly inject into direct implementations
+     * @param targetMethod the name of the method to which the rule applies
+     * @param targetHelper the name of the helper class to be used
+     * @param targetLocation description of where the rule should be injected
+     * @param ruleText the body of the rule as text including the BIND, IF and DO clasue
+     * @param line the line at which the rule starts in it's rule script
+     * @param file the path to the file containing the rule
      */
     public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, Location targetLocation, String ruleText, int line, String file)
     {
@@ -210,9 +210,10 @@ public class RuleScript
 
     /**
      * record the fact that an error was thrown when attempting to transform a given class using this rule script
-     * @param loader
-     * @param internalClassName
-     * @return
+     * @param loader the loader of the class for which injection was attempted
+     * @param internalClassName the internal Java name of the class
+     * @param th the Throwable reocrding details of the failure
+     * @return true if the failure was recorded false if not
      */
     public synchronized boolean recordFailedTransform(ClassLoader loader, String internalClassName, Throwable th)
     {
@@ -222,9 +223,12 @@ public class RuleScript
     /**
      * record the fact that a trigger call has been successfully installed into bytecode associated with a specific
      * class and loader and a corresponding rule instance been installed
-     * @param loader
-     * @param internalClassName
-     * @return
+     * @param loader the loader of the class for which injection was attempted
+     * @param internalClassName the internal Java name of the class
+     * @param triggerMethodName the name of the method injected into
+     * @param desc the descriptor of the method injected into
+     * @param rule the rule which was injected
+     * @return true if the successful injection was recorded false if not
      */
     public synchronized boolean recordMethodTransform(ClassLoader loader, String internalClassName, String triggerMethodName, String desc, Rule  rule)
     {
@@ -234,10 +238,13 @@ public class RuleScript
     /**
      * record the fact that a trigger call has failed to install into bytecode associated with a specific
      * class and loader
-     * @param loader the loader of the class being transformed
-     * @param internalClassName the internal name of the class being transformed
+     * @param loader the loader of the class for which injection was attempted
+     * @param internalClassName the internal Java name of the class
+     * @param triggerMethodName the name of the method injected into
+     * @param desc the descriptor of the method injected into
+     * @param rule the rule which was injected
      * @param th throwable generated during the attempt to parse the rule text or inject code at the trigger point
-     * @return
+     * @return true if the successful injection was recorded false if not
      */
     public synchronized boolean recordTransform(ClassLoader loader, String internalClassName, String triggerMethodName, String desc, Rule rule, Throwable th)
     {
@@ -287,6 +294,7 @@ public class RuleScript
      * @param loader the classloader of the trigger class
      * @param successful true if the rule compiled successfully and false if it suffered from parse,
      * type or compile errors
+     * @param detail text decribing more details of the compilation outcome
      */
     public synchronized void recordCompile(String triggerClass, ClassLoader loader, boolean successful, String detail)
     {

@@ -644,9 +644,11 @@ public class BMUnitConfigState
      *
      * this method is not thread-safe. BMUnit assumes that only one
      * JUnit/TestNG test is run at a time.
-     * @param config
-     * @param testClass
-     * @throws Exception
+     * @param config the config to install or null if no config is available
+     * @param testClass the test class which may or may not have an
+     * associated config
+     * @throws Exception if the config cannot be installed or an agent
+     * load error occurs
      */
     public static void pushConfigurationState(BMUnitConfig config, Class<?> testClass) throws Exception
     {
@@ -748,6 +750,7 @@ public class BMUnitConfigState
      * temporarily by BMUnitRunner before executing a specific test
      * method but should then be set back to the previous
      * configuration.
+     * @return the current configuration
      */
     public static BMUnitConfigState getCurrentConfigState() {
         return currentConfigState;
@@ -760,7 +763,7 @@ public class BMUnitConfigState
 
     /**
      * getter for currently configured agent host setting
-     * @return
+     * @return the current host setting
      */
     public String getHost() {
         // agentHost can be overridden so don't look up previous
@@ -769,7 +772,7 @@ public class BMUnitConfigState
 
     /**
      * getter for currently configured agent port setting
-     * @return
+     * @return the current port setting
      */
     public int getPort() {
         // agentPort can be overridden so don't look up previous
@@ -782,7 +785,7 @@ public class BMUnitConfigState
 
     /**
      * getter for currently configured load directory setting
-     * @return
+     * @return the current load directory setting
      */
     public String getLoadDirectory() {
         // loadDirectory can be overridden so don't look up previous
@@ -795,7 +798,7 @@ public class BMUnitConfigState
 
     /**
      * getter for currently configured resource directory setting
-     * @return
+     * @return the current resource directory setting
      */
     public String getResourceLoadDirectory() {
         // loadDirectory can be overridden so don't look up previous
@@ -810,7 +813,7 @@ public class BMUnitConfigState
      * smart getter for currently configured allowAgentConfigUpdate setting
      * which redirects through to the previous config to ensure that
      * we employ the setting used for the initial agent load
-     * @return
+     * @return the current allowAgentConfigUpdate setting
      */
     public boolean isAllowConfigUpdate() {
         // allowAgentConfigUpdate cannot be overridden so check for previous setting
@@ -825,7 +828,7 @@ public class BMUnitConfigState
      * which redirects through to the previous config if config
      * updates are not allowed but otherwise returns the currently
      * configured Byteman verbose setting
-     * @return
+     * @return the current Byteman verbose setting
      */
     public boolean isVerbose() {
         // verbose can be overridden if allowAgentConfigUpdate is true
@@ -841,7 +844,7 @@ public class BMUnitConfigState
      * which redirects through to the previous config if config
      * updates are not allowed but otherwise returns the currently
      * configured Byteman debug setting
-     * @return
+     * @return the current Byteman debug setting
      */
     public boolean isDebug() {
         // debug can be overridden if allowAgentConfigUpdate is true
@@ -854,7 +857,7 @@ public class BMUnitConfigState
 
     /**
      * getter for currently configured BMUnit verbose setting
-     * @return
+     * @return the current BMUnit verbose setting
      */
     public boolean isBMUnitVerbose() {
         // bmunitVerbose can be overridden so don't look up previous
@@ -865,7 +868,7 @@ public class BMUnitConfigState
      * smart getter for currently configured inhibitAgentLoad setting
      * which redirects through to the previous config to ensure that
      * we employ the setting used for the initial agent load
-     * @return
+     * @return the current inhibitAgentLoad setting
      */
     public boolean isInhibitAgentLoad() {
         // inhibitAgentLoad cannot be overridden so check for previous setting
@@ -879,7 +882,7 @@ public class BMUnitConfigState
      * smart getter for currently configured policy setting
      * which redirects through to the previous config to ensure that
      * we employ the setting used for the initial agent load
-     * @return
+     * @return the current policy setting
      */
     public boolean isPolicy() {
         // isPolicy cannot be overridden so check for previous setting
@@ -891,7 +894,7 @@ public class BMUnitConfigState
 
     /**
      * getter for current dumpGeneratedClasses setting
-     * @return
+     * @return the current dumpGeneratedClasses setting
      */
     public boolean isDumpGeneratedClasses()
     {
@@ -903,7 +906,7 @@ public class BMUnitConfigState
      * which only returns a directory when dumpGeneratedClasses is set
      * in which case it uses any current setting but delegates to previous
      * if no value has been set.
-     * @return
+     * @return the current dumpGeneratedClasseDirectory setting
      */
     public String getDumpGeneratedClassesDirectory()
     {
@@ -923,7 +926,7 @@ public class BMUnitConfigState
      * smart getter for current dumpGeneratedClassesIntermediate setting
      * which only returns the attribute setting if dumpGeneratedClasses
      * has also been set.
-     * @return
+     * @return the current dumpGeneratedClassesIntermediate
      */
     public boolean isDumpGeneratedClassesIntermediate()
     {
@@ -936,6 +939,7 @@ public class BMUnitConfigState
     /**
      * return the String configured for the agent host or null if it
      * was not configured
+     * @return the iniital agent host
      */
     private static String initHost()
     {
@@ -946,6 +950,7 @@ public class BMUnitConfigState
     /**
      * return the integer port configured for the agent port or 0 if
      * it was not configured or was misconfigured
+     * @return the initial agent port
      */
     private static int initPort()
     {
@@ -957,7 +962,7 @@ public class BMUnitConfigState
      * computes the default load directory from system property
      * org.jboss.byteman.contrib.bmunit.load.directory or defaults it
      * to ""
-     * @return the load directory
+     * @return the initial load directory
      */
     private static String initDefaultLoadDirectory()
     {
@@ -973,7 +978,7 @@ public class BMUnitConfigState
      * property
      * org.jboss.byteman.contrib.bmunit.resource.load.directory or
      * defaults it to the load directory
-     * @return the resource load directory
+     * @return the initial resource load directory
      */
     private static String initDefaultResourceLoadDirectory()
     {
@@ -1007,7 +1012,9 @@ public class BMUnitConfigState
     }
 
     /**
-     * test whether a security policy should be set for agent code when the agent is installed
+     * test whether a security policy should be set for agent code
+     * when the agent is installed
+     * @return the initial policy setting
      */
     private static boolean initPolicy()
     {

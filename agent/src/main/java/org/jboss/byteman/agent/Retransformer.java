@@ -41,6 +41,10 @@ public class Retransformer extends Transformer {
      * implementation
      *
      * @param inst the instrumentation object used to interface to the JVM
+     * @param scriptPaths list of file paths for each input script
+     * @param scriptTexts the text of each input script
+     * @param isRedefine true if class redefinition is allowed false if not
+     * @throws Exception if a script is in error
      */
     public Retransformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts, boolean isRedefine)
             throws Exception

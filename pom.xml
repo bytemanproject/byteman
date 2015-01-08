@@ -238,13 +238,6 @@
                  <artifactId>testng</artifactId>
                  <version>6.8.5</version>
              </dependency>
-             <dependency>
-                 <groupId>com.sun</groupId>
-                 <artifactId>tools</artifactId>
-                 <version>1.6</version>
-                 <scope>system</scope>
-                 <systemPath>${tools.jar}</systemPath>
-             </dependency>
 
         </dependencies>
     </dependencyManagement>
@@ -359,7 +352,6 @@
     </modules>
 
     <profiles>
-      <!-- tools classes are needed by byteman -->
       <profile>
         <!-- normally tools jar is in ../lib/tools.jar -->
         <id>default-toolsjar-profile</id>
@@ -372,6 +364,7 @@
           <tools.jar>${java.home}/../lib/tools.jar</tools.jar>
         </properties>
       </profile>
+      <!-- We override the tools.jar property on mac osx -->
       <profile>
         <!-- on pre-jdk7 mac releases tools jar is in ../Classes/classes.jar -->
         <id>mac-toolsjar-profile</id>
@@ -383,7 +376,7 @@
         <properties>
           <tools.jar>${java.home}/../Classes/classes.jar</tools.jar>
         </properties>
-      </profile>      <!-- We override the tools.jar property on mac osx -->
+      </profile>
       <!--
 	  new profile for releasing to maven central
 	  to do a release update the version number from a SNAPSHOT

@@ -43,7 +43,9 @@ public abstract class AssignableExpression extends Expression
     /**
      * Create a new expression.
      *
+     * @param rule the rule this expression belongs to
      * @param type the current type for this expression.
+     * @param token the token for this expression.
      */
     protected AssignableExpression(Rule rule, Type type, ParseNode token) {
         super(rule, type, token);
@@ -51,7 +53,9 @@ public abstract class AssignableExpression extends Expression
 
     /**
      * typecheck the expression as an lvalue of an assignment operation
-     * @throws TypeException
+     * @param expected the expected type for the expression
+     * @return the expression type
+     * @throws TypeException if a type check error occurs
      */
     public abstract Type typeCheckAssign(Type expected)
             throws TypeException;
@@ -64,25 +68,25 @@ public abstract class AssignableExpression extends Expression
      * are indexed by variable name. This includes entries for the helper (name "-1"), the
      * recipient if the trigger method is not static (name "0") and the trigger method arguments
      * (names "1", ...)
+     * @param value the value to be assigned to this object
      * @return  the result of evaluation as an Object
-     * @throws org.jboss.byteman.rule.exception.ExecuteException
+     * @throws org.jboss.byteman.rule.exception.ExecuteException if an error occurs during execution
      */
     public abstract Object interpretAssign(HelperAdapter helperAdapter, Object value) throws ExecuteException;
 
     /**
      * compile an assignment to the referenced location using the value on the top of the
      * Java stack.
-
-     * @param mv
-     * @param compileContext
-     * @throws CompileException
+     * @param mv the current method visitor
+     * @param compileContext the current compile context
+     * @throws CompileException if a compile error occurs
      */
     public abstract void compileAssign(MethodVisitor mv, CompileContext compileContext) throws CompileException;
 
     /**
      * bind as an assignable expression. for variables and dollar expressions this will ensure that a binding exists
      * and that it is marked as potentially updateable.
-     * @return true if all bindings are valid and false if the expression contains an invalid or
+     * @throws TypeException if the expression contains an invalid or
      * unassignable reference
      */
     public abstract void bindAssign() throws TypeException;

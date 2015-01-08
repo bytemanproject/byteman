@@ -103,6 +103,7 @@ public class InstructionSequence
     /**
      * return the instruction at the supplied offset
      *
+     * @param i the offset
      * @return the ith instruction in the sequuence
      */
     public int get(int i)
@@ -114,6 +115,7 @@ public class InstructionSequence
     /**
      * return the type of a given instruction
      *
+     * @param i the instruction index
      * @return the ith instruction in the sequuence
      */
     public int getType(int i)
@@ -157,7 +159,7 @@ public class InstructionSequence
 
     /**
      * add an instruction to the sequence
-     * @param insn
+     * @param insn the instruction
      * @return the index of the newly added instruction
      */
     public int add(int insn)
@@ -171,7 +173,8 @@ public class InstructionSequence
 
     /**
      * add an instruction with one encoded argument to the sequence
-     * @param insn
+     * @param insn the instruction
+     * @param arg1 the argument index
      * @return the index of the newly added instruction
      */
     public int add(int insn, int arg1)
@@ -186,7 +189,9 @@ public class InstructionSequence
 
     /**
      * add an instruction with two encoded arguments to the sequence
-     * @param insn
+     * @param insn the instruction
+     * @param arg1 the first argument index
+     * @param arg2 the second argument index
      * @return the index of the newly added instruction
      */
     public int add(int insn, int arg1, int arg2)
@@ -202,7 +207,10 @@ public class InstructionSequence
 
     /**
      * add an instruction with three encoded arguments to the sequence
-     * @param insn
+     * @param insn the instruction
+     * @param arg1 the first argument index
+     * @param arg2 the second argument index
+     * @param arg3 the third argument index
      * @return the index of the newly added instruction
      */
     public int add(int insn, int arg1, int arg2, int arg3)
@@ -219,7 +227,8 @@ public class InstructionSequence
 
     /**
      * add an instruction with an arbitrary number of encoded arguments to the sequence
-     * @param insn
+     * @param insn the instruction
+     * @param args the arguments
      * @return the index of the newly added instruction
      */
     public int add(int insn, int[] args)

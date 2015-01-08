@@ -46,8 +46,7 @@ public abstract class UnaryOperExpression extends OperExpression
      * bindings list and infer/validate the type of this expression or its subexpressions
      * where possible
      *
-     * @return true if all variables in this expression are bound and no type mismatches have
-     *         been detected during inference/validation.
+     * @throws TypeException if any variable is missing or has the wrong type
      */
     public void bind() throws TypeException {
         // we just need to ensure that the operand can find its bindings
@@ -56,7 +55,7 @@ public abstract class UnaryOperExpression extends OperExpression
 
     /**
      * return the operand with the given index or null if the index is out of range
-     * @param index
+     * @param index the operand index
      * @return the operand with the given index
      */
     public Expression getOperand(int index)

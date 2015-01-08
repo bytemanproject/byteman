@@ -52,26 +52,32 @@ goto exitBatch
 :okInstallJar
 set BYTEMAN_INSTALL_JAR=%BYTEMAN_HOME%\lib\byteman-install.jar
 
+set CP=%BYTEMAN_INSTALL_JAR%
+
 @rem we also need a tools jar from JAVA_HOME
 if not "%JAVA_HOME%" == "" goto okJavaHome
 echo please set JAVA_HOME
-goto exitBatch
+@rem carry on anyway as this is legitimate for jdk9
+goto noTools
 
 :okJavaHome
 
 if exist "%JAVA_HOME%\lib\tools.jar" goto okTools
 echo Cannot locate tools jar
-goto exitBatch
+@rem carry on anyway as this is legitimate for jdk9
+goto noTools
 
 :okTools
-set TOOLS_JAR=%JAVA_HOME%\lib\tools.jar
+set CP=%BYTEMAN_INSTALL_JAR%;%JAVA_HOME%\lib\tools.jar
+
+:noTools
 
 @rem exception avoidance; java.lang.UnsatisfiedLinkError: no attach in java.library.path
 if exist "%JAVA_HOME%\jre\bin" set PATH=%PATH%;%JAVA_HOME%\jre\bin
 
 @rem allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 @rem attach class will validate arguments
-java %BYTEMAN_JAVA_OPTS% -classpath "%BYTEMAN_INSTALL_JAR%;%TOOLS_JAR%" org.jboss.byteman.agent.install.Install %*
+java %BYTEMAN_JAVA_OPTS% -classpath "%CP%" org.jboss.byteman.agent.install.Install %*
 
 :exitBatch
 if "%OS%" == "Windows_NT" endlocal

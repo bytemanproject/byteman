@@ -541,7 +541,7 @@ public class Compiler implements Opcodes
      * helper class's rule
      * @param helperAdapterName the name of the helper adaptter class to be loaded
      * @param classBytes the byte array defining the class
-     * @return
+     * @return the new helper class
      */
     public static Class<?> loadHelperAdapter(ClassLoader triggerClassLoader, String helperAdapterName, byte[] classBytes)
     {

@@ -73,12 +73,12 @@ public class TryCatchDetails
 
     /**
      * construct a try catch details instance
-     * @param cfg
-     * @param start
-     * @param end
-     * @param handler
-     * @param type
-     * @param isTriggerHandler
+     * @param cfg the control flow graph
+     * @param start the try block start
+     * @param end the try block end
+     * @param handler the handler block start
+     * @param type the handled exception type
+     * @param isTriggerHandler true if this handler handles Byteman errors
      */
     public TryCatchDetails(CFG cfg, Label start, Label end, Label handler, String type, boolean isTriggerHandler)
     {
@@ -117,7 +117,7 @@ public class TryCatchDetails
     /**
      * add a new monitor enter location to the list of open locations associated with this handler
      * maintaining the reverse position ordering
-     * @param openEnter
+     * @param openEnter the location of the monitor enter
      */
     public void addOpenEnter(CodeLocation openEnter)
     {
@@ -143,7 +143,8 @@ public class TryCatchDetails
 
     /**
      * check if a monitor enter location belongs to the list of open locations associated with this handler
-     * @param openEnter
+     * @param openEnter the location of the monitor enter
+     * @return true if it belongs ot the list
      */
     public boolean containsOpenEnter(CodeLocation openEnter)
     {
@@ -153,7 +154,7 @@ public class TryCatchDetails
     /**
      * add all the open locations associated with this handler to the supplied list of open locations
      * maintaining the reverse position ordering
-     * @param openMonitorEnters
+     * @param openMonitorEnters list of locations of the monitor enters
      */
     public void addOpenLocations(List<CodeLocation> openMonitorEnters) {
         Iterator<CodeLocation> iterator = openEnters.iterator();
@@ -189,7 +190,7 @@ public class TryCatchDetails
 
     /**
      * add a shadowing region to the list of regions which shadow this one
-     * @param tryCatchDetails
+     * @param tryCatchDetails detaisl of a try catch block
      */
     public void addShadowRegion(TryCatchDetails tryCatchDetails)
     {

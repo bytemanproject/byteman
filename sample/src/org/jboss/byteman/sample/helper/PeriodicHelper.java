@@ -70,6 +70,7 @@ public class PeriodicHelper extends Helper
      * a method which is called when the periodic helper thread is started to compute the interval in milliseconds
      * for which the thread should wait between calls to the trigger method which by default returns the default
      * interval of 10 seconds. This can either be overridden or redefined by attaching a rule to the method.
+     * @return the wait period
      */
 
     protected long getPeriod()
@@ -81,6 +82,7 @@ public class PeriodicHelper extends Helper
      * a method which is called when the periodic helper thread is about to wait which by default returns the
      * input value. this can be overridden or redefined by attaching a rule to the method.
      * @param initialPeriod the initial wait time returned by getPeriod when the periodic thread was created
+     * @return the wait period
      */
 
     protected long resetPeriod(long initialPeriod)
