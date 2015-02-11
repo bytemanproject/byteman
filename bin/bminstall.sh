@@ -73,7 +73,7 @@ else
 fi
 # for jdk6/7/8 we also need a tools jar from JAVA_HOME
 JAVA_VERSION=$(print_java_version)
-if [ $JAVA_VERSION -lt 8 ]; then
+if [ $JAVA_VERSION -le 8 ]; then
   if [ -z "$JAVA_HOME" ]; then
      echo "please set JAVA_HOME"
      exit
@@ -84,12 +84,24 @@ if [ $JAVA_VERSION -lt 8 ]; then
   if [ ${OS} != "Darwin" ]; then
     if [ -r ${JAVA_HOME}/lib/tools.jar ]; then
       TOOLS_JAR=${JAVA_HOME}/lib/tools.jar
+      CP=${BYTEMAN_INSTALL_JAR}:${TOOLS_JAR}
     else
       echo "Cannot locate tools jar"
-      exit
+      CP=${BYTEMAN_INSTALL_JAR}
+    fi
+  else
+    if [ $JAVA_VERSION -gt 6 ]; then
+      if [ -r ${JAVA_HOME}/Classes/classes.jar ]; then
+        TOOLS_JAR=${JAVA_HOME}/Classes/classes.jar
+        CP=${BYTEMAN_INSTALL_JAR}:${TOOLS_JAR}
+      else
+        echo "Cannot locate tools jar"
+        CP=${BYTEMAN_INSTALL_JAR}
+      fi
+    else
+      CP=${BYTEMAN_INSTALL_JAR}                          
     fi
   fi
-  CP=${BYTEMAN_INSTALL_JAR}:${TOOLS_JAR}
 else
   CP=${BYTEMAN_INSTALL_JAR}
 fi
