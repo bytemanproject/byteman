@@ -323,7 +323,7 @@ public class Type {
                 // see if the supplied type is assignable from this type's class
                 return (this.clazz.isAssignableFrom(boxedType.clazz));
             }
-        } else if (isObject()) {
+        } else if (isObject() || isArray()) {
             // we only get here if we have a known type i.e. both clazz values are non-null
             // see if the supplied type is assignable from this type's class
             return (this.clazz.isAssignableFrom(type.clazz));
