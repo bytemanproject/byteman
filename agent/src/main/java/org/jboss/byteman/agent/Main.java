@@ -24,18 +24,18 @@
 package org.jboss.byteman.agent;
 
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.lang.instrument.Instrumentation;
 import java.lang.instrument.ClassFileTransformer;
+import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.jar.JarFile;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.io.File;
-import java.io.IOException;
-import java.io.FileInputStream;
-import java.net.Socket;
+import java.util.jar.JarFile;
 
 /**
  * agent class supplied at JVM startup to install byteman package bytecode transformer
@@ -55,7 +55,6 @@ public class Main {
                 throw new Exception("Main : attempting to load Byteman agent more than once");
             }
         }
-        boolean allowRedefine = false;
         boolean installPolicy = false;
 
         if (args != null) {
@@ -71,17 +70,12 @@ public class Main {
                     sysJarPaths.add(arg.substring(SYS_PREFIX.length(), arg.length()));
                 } else if (arg.startsWith(ADDRESS_PREFIX)) {
                     hostname = arg.substring(ADDRESS_PREFIX.length(), arg.length());
-                    // setting host name forces listener on
-                    allowRedefine = true;
                 } else if (arg.startsWith(PORT_PREFIX)) {
                     try {
                         port = Integer.valueOf(arg.substring(PORT_PREFIX.length(), arg.length()));
                         if (port <= 0) {
                             System.err.println("Invalid port specified [" + port + "]");
                             port = null;
-                        } else {
-                            // setting port forces listener on
-                            allowRedefine = true;
                         }
                     } catch (Exception e) {
                         System.err.println("Invalid port specified [" + arg + "]. Cause: " + e);
@@ -92,18 +86,14 @@ public class Main {
                     resourcescriptPaths.add(arg.substring(RESOURCE_SCRIPT_PREFIX.length(), arg.length()));
                 } else if (arg.startsWith(LISTENER_PREFIX)) {
                     String value = arg.substring(LISTENER_PREFIX.length(), arg.length());
-                    allowRedefine = Boolean.parseBoolean(value);
-                    // clearing listener when port or host is set should be flagged
-                    if (!allowRedefine && (hostname != null || port != null)) {
-                        System.err.println("listener disabled with host/port set");
+                    if (Boolean.parseBoolean(value)) {
+                        managerClassName = TransformListener.class.getName();
                     }
                 } else if (arg.startsWith(REDEFINE_PREFIX)) {
                     // this is only for backwards compatibility -- it is the same as listener
                     String value = arg.substring(REDEFINE_PREFIX.length(), arg.length());
-                    allowRedefine = Boolean.parseBoolean(value);
-                    // clearing listener when port or host is set should be flagged
-                    if (!allowRedefine && (hostname != null || port != null)) {
-                        System.err.println("listener disabled with host/port set");
+                    if (Boolean.parseBoolean(value)) {
+                        managerClassName = TransformListener.class.getName();
                     }
                 } else if (arg.startsWith(PROP_PREFIX)) {
                     // this can be used to set byteman properties
@@ -130,6 +120,8 @@ public class Main {
                 } else if (arg.startsWith(POLICY_PREFIX)) {
                     String value = arg.substring(POLICY_PREFIX.length(), arg.length());
                     installPolicy = Boolean.parseBoolean(value);
+                } else if (arg.startsWith(MANAGER_PREFIX)) {
+                    managerClassName = arg.substring(MANAGER_PREFIX.length(), arg.length());
                 } else {
                     System.err.println("org.jboss.byteman.agent.Main:\n" +
                             "  illegal agent argument : " + arg + "\n" +
@@ -224,7 +216,7 @@ public class Main {
         ClassLoader loader = ClassLoader.getSystemClassLoader();
         Class transformerClazz;
 
-        if (allowRedefine && isRedefine) {
+        if (managerClassName != null && isRedefine) {
             transformerClazz = loader.loadClass("org.jboss.byteman.agent.Retransformer");
             //transformer = new Retransformer(inst, scriptPaths, scripts, true);
             Constructor constructor = transformerClazz.getConstructor(Instrumentation.class, List.class, List.class, boolean.class);
@@ -237,10 +229,17 @@ public class Main {
         }
 
         inst.addTransformer(transformer, true);
-        
-        if (allowRedefine && isRedefine) {
-            Method method = transformerClazz.getMethod("addTransformListener", String.class, Integer.class);
-            method.invoke(transformer, hostname, port);
+
+        if (managerClassName != null && isRedefine) {
+            Class managerClazz = loader.loadClass(managerClassName);
+
+            try {
+                Method method = managerClazz.getMethod("initialize", transformerClazz, String.class, Integer.class);
+                method.invoke(null, transformer, hostname, port);
+            } catch (NoSuchMethodException e) {
+                Method method = managerClazz.getMethod("initialize", transformerClazz);
+                method.invoke(null, transformer);
+            }
         }
 
         if (installPolicy) {
@@ -270,7 +269,7 @@ public class Main {
      * prefix used to specify bind address argument for agent
      */
     private static final String ADDRESS_PREFIX = "address:";
-    
+
     /**
      * prefix used to specify boot jar argument for agent
      */
@@ -317,6 +316,12 @@ public class Main {
     private static final String PROP_PREFIX = "prop:";
 
     /**
+     * prefix used to specify the manager class
+     */
+
+    private static final String MANAGER_PREFIX = "manager:";
+
+    /**
      * list of paths to extra bootstrap jars supplied on command line
      */
     private static List<String> bootJarPaths = new ArrayList<String>();
@@ -340,14 +345,21 @@ public class Main {
      * list of scripts read from script files
      */
     private static List<String> scripts = new ArrayList<String>();
-    
+
     /**
      * The hostname to bind the listener to, supplied on the command line (optional argument)
      */
     private static String hostname = null;
-    
+
     /**
      * The port that the listener will listen to, supplied on the command line (optional argument)
      */
     private static Integer port = null;
+
+    /**
+     * The name of the manager class responsible for loading/unloading scripts, supplied on the
+     * command line (optional argument)
+     */
+    private static String managerClassName = null;
+
 }

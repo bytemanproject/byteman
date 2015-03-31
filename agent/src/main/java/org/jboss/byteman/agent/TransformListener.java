@@ -24,19 +24,25 @@
  */
 package org.jboss.byteman.agent;
 
-import org.jboss.byteman.agent.Retransformer;
-import org.jboss.byteman.rule.Rule;
-
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.InetSocketAddress;
-import java.io.*;
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.jar.JarFile;
+
+import org.jboss.byteman.rule.Rule;
 
 /**
  * a socket based listener class which reads scripts from stdin and installs them in the current runtime
@@ -52,7 +58,12 @@ public class TransformListener extends Thread
     private TransformListener(Retransformer retransformer)
     {
         this.retransformer = retransformer;
-        setDaemon(true);        
+        setDaemon(true);
+    }
+
+    public static synchronized boolean initialize(Retransformer retransformer)
+    {
+        return (initialize(retransformer, null, null));
     }
 
     public static synchronized boolean initialize(Retransformer retransformer, String hostname, Integer port)
@@ -118,10 +129,11 @@ public class TransformListener extends Thread
         }
     }
 
+    @Override
     public void run()
     {
         // we don't want to see any triggers in the listener thread
-        
+
         Rule.disableTriggersInternal();
 
         while (true) {
@@ -387,7 +399,7 @@ public class TransformListener extends Thread
         if (Boolean.parseBoolean(sysProps.getProperty(Transformer.SYSPROPS_STRICT_MODE, "true"))) {
             strictMode = true;
         }
-                
+
         for (Map.Entry<Object, Object> entry : sysProps.entrySet()) {
             String name = entry.getKey().toString();
             if (!strictMode || name.startsWith("org.jboss.byteman.")) {
@@ -398,14 +410,14 @@ public class TransformListener extends Thread
         out.println("OK");
         out.flush();
     }
-    
+
     private void setSystemProperties(BufferedReader in, PrintWriter out) throws Exception
     {
         boolean strictMode = false;
         if (Boolean.parseBoolean(System.getProperty(Transformer.SYSPROPS_STRICT_MODE, "true"))) {
             strictMode = true;
         }
-        
+
         final String endMarker = "ENDSETSYSPROPS";
         String line = in.readLine().trim();
         while (line != null && !line.equals(endMarker)) {
@@ -417,7 +429,7 @@ public class TransformListener extends Thread
                 String name = nameValuePair[0];
                 String value = nameValuePair[1];
                 if (strictMode && !name.startsWith("org.jboss.byteman.")) {
-                    throw new Exception("strict mode is enabled, cannot set non-byteman system property");                    
+                    throw new Exception("strict mode is enabled, cannot set non-byteman system property");
                 }
                 if (name.equals(Transformer.SYSPROPS_STRICT_MODE) && !value.equals("true")) {
                     // nice try
@@ -427,7 +439,7 @@ public class TransformListener extends Thread
                 // everything looks good and we are allowed to set the system property now
                 if (value.length() > 0) {
                 	// "some.sys.prop=" means the client wants to delete the system property
-                	System.setProperty(name, value);                	
+                	System.setProperty(name, value);
                 	out.append("Set system property [" + name + "] to value [" + value + "]\n");
                 } else {
                 	System.clearProperty(name);

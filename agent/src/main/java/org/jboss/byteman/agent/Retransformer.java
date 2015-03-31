@@ -23,10 +23,14 @@
 */
 package org.jboss.byteman.agent;
 
-import java.lang.instrument.Instrumentation;
-import java.util.*;
-import java.util.jar.JarFile;
 import java.io.PrintWriter;
+import java.lang.instrument.Instrumentation;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.jar.JarFile;
 
 /**
  * byte code transformer used to introduce byteman events into JBoss code
@@ -146,7 +150,7 @@ public class Retransformer extends Transformer {
                 }
             }
         }
-        
+
         // now we can safely purge keys for all deleted scripts
 
         for (RuleScript ruleScript : toBeRemoved) {
@@ -203,11 +207,6 @@ public class Retransformer extends Transformer {
         }
     }
 
-    public void addTransformListener(String hostname, Integer port)
-    {
-        TransformListener.initialize(this, hostname, port);
-    }
-
     public void removeScripts(List<String> scriptTexts, PrintWriter out) throws Exception
     {
         List<RuleScript> toBeRemoved;
@@ -243,7 +242,7 @@ public class Retransformer extends Transformer {
             out.println("ERROR No rule scripts to remove");
             return;
         }
-        
+
         for (RuleScript ruleScript : toBeRemoved) {
             if (scriptRepository.removeScript(ruleScript) != ruleScript) {
                 out.println("ERROR remove failed to find script " + ruleScript.getName());
@@ -328,10 +327,10 @@ public class Retransformer extends Transformer {
     /**
      * Returns jars that this retransformer was asked to
      * {@link #appendJarFile(PrintWriter, JarFile, boolean) add} to the boot classloader.
-     * 
+     *
      * Note that the returned set will not include those jars that were added to the
      * instrumentor object at startup via the -javaagent command line argument.
-     * 
+     *
      * @return set of jar pathnames for all jars loaded in the boot classloader
      */
     public Set<String> getLoadedBootJars() {
@@ -341,10 +340,10 @@ public class Retransformer extends Transformer {
     /**
      * Returns jars that this retransformer was asked to
      * {@link #appendJarFile(PrintWriter, JarFile, boolean) add} to the system classloader.
-     * 
+     *
      * Note that the returned set will not include those jars that were added to the
      * instrumentor object at startup via the -javaagent command line argument.
-     * 
+     *
      * @return set of jar pathnames for all jars loaded in the system classloader
      */
     public Set<String> getLoadedSystemJars() {
