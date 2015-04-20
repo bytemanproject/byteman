@@ -85,15 +85,21 @@ public class Main {
                 } else if (arg.startsWith(RESOURCE_SCRIPT_PREFIX)) {
                     resourcescriptPaths.add(arg.substring(RESOURCE_SCRIPT_PREFIX.length(), arg.length()));
                 } else if (arg.startsWith(LISTENER_PREFIX)) {
+                    // listener:true is an alias for manager:o.j.b.a.TransformListener
+                    // listener:false means no manager (yes, not even TransformListener)
                     String value = arg.substring(LISTENER_PREFIX.length(), arg.length());
                     if (Boolean.parseBoolean(value)) {
                         managerClassName = TransformListener.class.getName();
+                    } else {
+                        managerClassName = null;
                     }
                 } else if (arg.startsWith(REDEFINE_PREFIX)) {
                     // this is only for backwards compatibility -- it is the same as listener
                     String value = arg.substring(REDEFINE_PREFIX.length(), arg.length());
                     if (Boolean.parseBoolean(value)) {
                         managerClassName = TransformListener.class.getName();
+                    } else {
+                        managerClassName = null;
                     }
                 } else if (arg.startsWith(PROP_PREFIX)) {
                     // this can be used to set byteman properties
