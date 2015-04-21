@@ -33,6 +33,6 @@
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-root</artifactId>
-        <version>2.2.2-SNAPSHOT</version>
+        <version>2.2.2</version>
     </parent>
 </project>
