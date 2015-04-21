@@ -183,7 +183,7 @@ public class Retransformer extends Transformer {
         }
     }
 
-    protected void listScripts(PrintWriter out)  throws Exception
+    public void listScripts(PrintWriter out)  throws Exception
     {
         Iterator<RuleScript> iterator = scriptRepository.currentRules().iterator();
 
