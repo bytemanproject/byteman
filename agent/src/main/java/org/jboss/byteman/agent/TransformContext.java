@@ -281,7 +281,7 @@ public class TransformContext
 
         // if the method is blacklisted then reject it with a warning
         if (transformer.isBlacklisted(triggerClassName, targetMethodName, desc)) {
-            warn(targetMethodName, targetDescriptor, "Cannot inject into target class " + triggerClassName);
+            warn(targetMethodName, targetDescriptor, "Blacklisted method : cannot safely inject into target class " + triggerClassName);
             return false;
         }
 
