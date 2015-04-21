@@ -287,7 +287,7 @@ public class TypeHelper {
         int argEnd = desc.indexOf(')');
         int max = desc.length();
         if (argStart < 0 || argEnd < 0) {
-            return "(???)";
+            return "(...)";
         }
         int arrayCount = 0;
         boolean addSepr = false;

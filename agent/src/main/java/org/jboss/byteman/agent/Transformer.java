@@ -953,6 +953,41 @@ public class Transformer implements ClassFileTransformer {
     }
 
     /**
+     * hash set naming blacklisted methods we refuse to inject into
+     */
+    private HashSet<String> blacklisted = initBlackList();
+
+    /**
+     * init method to create hash set naming blacklisted methods we refuse to inject into
+     *
+      * @return the hash set
+     */
+    private HashSet<String> initBlackList()
+    {
+        HashSet<String> set = new HashSet<String>();
+
+        set.add("java.lang.Object.<init>");
+        set.add("java.lang.ThreadLocal.get");
+        set.add("java.lang.ThreadLocal.put");
+
+        return set;
+    }
+
+    /**
+     * check whether we are unwilling to inject into a given target method
+     *
+     * @param triggerClassName the name of the target class
+     * @param targetMethodName the name of the target method
+     * @param targetDescriptor the descriptor of the target method ignored at present
+     * @return  true if we are unwilling to inject into the target method
+     */
+    public boolean isBlacklisted(String triggerClassName, String targetMethodName, String targetDescriptor)
+    {
+        //
+        return blacklisted.contains(triggerClassName + "." + targetMethodName);
+    }
+
+    /**
      * classloader used by transformer when verification is switched on to detect errors in transformed bytecode 
      */
 

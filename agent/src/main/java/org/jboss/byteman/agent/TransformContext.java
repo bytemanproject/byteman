@@ -272,9 +272,21 @@ public class TransformContext
 
     public boolean matchTargetMethod(int access, String name, String desc)
     {
-        return ((access & (Opcodes.ACC_NATIVE|Opcodes.ACC_ABSTRACT|Opcodes.ACC_SYNTHETIC)) == 0 &&
-                targetMethodName.equals(name) &&
-                (targetDescriptor.equals("") || TypeHelper.equalDescriptors(targetDescriptor, desc)));
+        // check the method is one we are really targeting
+        if ((access & (Opcodes.ACC_NATIVE|Opcodes.ACC_ABSTRACT|Opcodes.ACC_SYNTHETIC)) != 0 ||
+                !targetMethodName.equals(name) ||
+                (!targetDescriptor.equals("") && !TypeHelper.equalDescriptors(targetDescriptor, desc))) {
+            return false;
+        }
+
+        // if the method is blacklisted then reject it with a warning
+        if (transformer.isBlacklisted(triggerClassName, targetMethodName, desc)) {
+            warn(targetMethodName, targetDescriptor, "Cannot inject into target class " + triggerClassName);
+            return false;
+        }
+
+        // yes we do want to inject
+        return true;
     }
 
     public boolean injectIntoMethod(String name, String desc)
