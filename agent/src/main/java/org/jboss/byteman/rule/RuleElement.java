@@ -363,7 +363,7 @@ public abstract class RuleElement {
         if (toType == Type.Z) {
             if (fromType == Type.OBJECT) {
                 fromType = Type.BOOLEAN;
-                mv.visitTypeInsn(Opcodes.CHECKCAST, fromType.getInternalName(false, true));
+                mv.visitTypeInsn(Opcodes.CHECKCAST, fromType.getInternalName());
             }
             assert fromType == Type.BOOLEAN;
             compileUnbox(fromType, toType, mv, compileContext);
@@ -396,7 +396,7 @@ public abstract class RuleElement {
         } else {
             // this happens when we downcast a bound variable from Object to the variable's type
             assert fromType.isAssignableFrom(toType);
-            mv.visitTypeInsn(Opcodes.CHECKCAST, toType.getInternalName(false, true));
+            mv.visitTypeInsn(Opcodes.CHECKCAST, toType.getInternalName());
         }
     }
 

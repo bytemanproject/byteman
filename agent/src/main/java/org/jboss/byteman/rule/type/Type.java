@@ -131,10 +131,17 @@ public class Type {
             return internalNames.get(typeName);
         } else {
             Class targetClass = aliasFor.getTargetClass();
-            String name = targetClass.getCanonicalName();
-            if (name == null) {
-                // local or anonymous class
+            Class enclosingClass = targetClass.getEnclosingClass();
+            String name;
+            if (enclosingClass != null && !forDescriptor) {
+                // retain the $ separator for inner classes and local/anon classes
                 name = targetClass.getName();
+            } else {
+                name = targetClass.getCanonicalName();
+                if (name == null) {
+                    // local or anonymous class
+                    name = targetClass.getName();
+                }
             }
             if (slashSeparate) {
                 name = name.replace('.', '/');
