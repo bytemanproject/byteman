@@ -3145,14 +3145,16 @@ public class Helper
      * enable or disable recursive triggering of rules by subsequent operations performed during binding,
      * testing or firing of the current rule in the current thread.
      * @param enabled true if triggering should be enabled or false if it should be disabled
+     * @return always returns true so it can be called in a rule condition
      */
-    public void setTriggering(boolean enabled)
+    public boolean setTriggering(boolean enabled)
     {
         if (enabled) {
             Rule.enableTriggers();
         } else {
             Rule.disableTriggers();
         }
+        return true;
     }
 
     // exposed functionality of the instrumentation instance

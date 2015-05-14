@@ -23,7 +23,9 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import org.jboss.byteman.agent.Transformer;
 import org.jboss.byteman.rule.compiler.CompileContext;
+import org.jboss.byteman.rule.helper.Helper;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.type.TypeGroup;
 import org.jboss.byteman.rule.binding.Binding;
@@ -50,6 +52,20 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class MethodExpression extends Expression
 {
+    public static Method setTriggeringMethod;
+
+    static {
+        try {
+            setTriggeringMethod = Helper.class.getMethod("setTriggering", boolean.class);
+        } catch (NoSuchMethodException e) {
+            if (Transformer.isVerbose()) {
+                System.out.println("MethodExpression: failed to lookup Helper.setTriggering(boolean) " + e);
+                e.printStackTrace();
+            }
+            setTriggeringMethod = null;
+        }
+    }
+
     public MethodExpression(Rule rule, Type type, ParseNode token, Expression recipient, List<Expression> arguments, String[] pathList) {
         super(rule, type, token);
         this.name = token.getText();
@@ -333,7 +349,18 @@ public class MethodExpression extends Expression
             for (int i = 0; i < argCount; i++) {
                 argValues[i] = arguments.get(i).interpret(helper);
             }
-
+            // execute setTriggering directly rather than via reflection
+            // that way rule code switch off triggering for a rule injected
+            // into code used by Method.invoke()
+            if (method.equals(setTriggeringMethod)) {
+                boolean setting = (Boolean)argValues[0];
+                if (setting) {
+                    Rule.enableTriggers();
+                } else {
+                    Rule.disableTriggers();
+                }
+                return true;
+            }
             // we have to enable triggers whenever we call out to a method in case it contians a trigger point
             // TODO - do we do this if the method is a built-in? i.e. if the target is an instance of the helper class
             // TODO - this breaks the user disable option so fix it!
