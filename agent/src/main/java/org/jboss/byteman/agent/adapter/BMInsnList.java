@@ -48,7 +48,7 @@ public class BMInsnList extends InsnList
     }
     public void accept(final MethodVisitor mv)
     {
-        // this method visitor must implement LocalScopeMethodVisitor or else we woudl not be here
+        // this method visitor must implement LocalScopeMethodVisitor or else we would not be here
         
         LocalScopeMethodVisitor lsmv = (LocalScopeMethodVisitor) mv;
         

@@ -91,7 +91,8 @@ public class InvokeCheckAdapter extends RuleCheckAdapter
             final int opcode,
             final String owner,
             final String name,
-            final String desc)
+            final String desc,
+            boolean itf)
         {
             if ((count == 0 || visitedCount < count) && matchCall(owner, name, desc)) {
                 // a relevant invocation occurs in the called method
@@ -100,7 +101,7 @@ public class InvokeCheckAdapter extends RuleCheckAdapter
                     setTriggerPoint();
                 }
             }
-            super.visitMethodInsn(opcode, owner, name, desc);
+            super.visitMethodInsn(opcode, owner, name, desc, itf);
         }
 
         private boolean matchCall(String owner, String name, String desc)

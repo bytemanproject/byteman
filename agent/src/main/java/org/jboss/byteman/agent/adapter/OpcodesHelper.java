@@ -76,6 +76,10 @@ public class OpcodesHelper implements Opcodes
  */
     public final static int INSN_MULTIANEWARRAY = 11;
 /**
+ * instruction type for visitInvokeDynamicInsn opcodes
+ */
+    public final static int INSN_INDYMETH = 12;
+/**
  * instruction type for unused opcodes
  */
     public final static int INSN_UNUSED = 99;
@@ -287,7 +291,7 @@ public class OpcodesHelper implements Opcodes
         insnType[Opcodes.INVOKESPECIAL] = INSN_METHOD;
         insnType[Opcodes.INVOKESTATIC] = INSN_METHOD;
         insnType[Opcodes.INVOKEINTERFACE] = INSN_METHOD;
-        insnType[Opcodes.INVOKEINTERFACE  + 1] = INSN_UNUSED;
+        insnType[Opcodes.INVOKEDYNAMIC] = INSN_INDYMETH;
         // insnType[Opcodes.UNUSED] = INSN_UNUSED;
         insnType[Opcodes.NEW] = INSN_TYPE;
         insnType[Opcodes.NEWARRAY] = INSN_INT;
@@ -495,7 +499,7 @@ public class OpcodesHelper implements Opcodes
         insnName[Opcodes.INVOKESPECIAL] = "invokespecial";
         insnName[Opcodes.INVOKESTATIC] = "invokestatic";
         insnName[Opcodes.INVOKEINTERFACE] = "invokeinterface";
-        insnName[Opcodes.INVOKEINTERFACE  + 1] = "unused";
+        insnName[Opcodes.INVOKEDYNAMIC] = "invokedynamic";
         // insnName[Opcodes.UNUSED] = "unused";
         insnName[Opcodes.NEW] = "new";
         insnName[Opcodes.NEWARRAY] = "newarray";

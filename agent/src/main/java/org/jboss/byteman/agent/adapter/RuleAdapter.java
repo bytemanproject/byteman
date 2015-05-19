@@ -30,11 +30,11 @@ import org.objectweb.asm.*;
  * generic asm Adapter class specialised by both check adapters (RuleCheckAdapter) and trigger
  * adapters (RuleTriggerAdapter)
  */
-public class RuleAdapter extends ClassAdapter
+public class RuleAdapter extends ClassVisitor
 {
     protected RuleAdapter(ClassVisitor cv, TransformContext transformContext)
     {
-        super(cv);
+        super(Opcodes.ASM5, cv);
         this.transformContext =  transformContext;
     }
 

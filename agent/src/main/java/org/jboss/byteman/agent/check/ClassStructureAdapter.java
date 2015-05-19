@@ -32,11 +32,13 @@ import org.objectweb.asm.*;
  * its enclosing class and the interfaces it implements directly
  */
 
-public class ClassStructureAdapter implements ClassVisitor {
+public class ClassStructureAdapter extends ClassVisitor {
     private boolean isInterface = false;
     private String[] interfaces = null;
     private String superName = null;
     private String outerClass = null;
+
+    public ClassStructureAdapter() { super(Opcodes.ASM5); }
 
     public boolean isInterface() {
         return isInterface;

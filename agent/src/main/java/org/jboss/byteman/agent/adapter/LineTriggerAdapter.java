@@ -99,9 +99,10 @@ public class LineTriggerAdapter extends RuleTriggerAdapter
             final int opcode,
             final String owner,
             final String name,
-            final String desc)
+            final String desc,
+            boolean itf)
         {
-            super.visitMethodInsn(opcode, owner, name, desc);
+            super.visitMethodInsn(opcode, owner, name, desc, itf);
             // hmm, this probably means the super constructor has been invoked :-)
             unlatched |= isSuperOrSiblingConstructorCall(opcode, owner, name);
         }

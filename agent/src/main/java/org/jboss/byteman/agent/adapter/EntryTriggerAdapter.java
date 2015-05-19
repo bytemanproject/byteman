@@ -159,12 +159,12 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
         }
 
         @Override
-        public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+        public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
             if (unlatched && !visited) {
                 visited = true;
                 injectTriggerPoint();
             }
-            super.visitMethodInsn(opcode, owner, name, desc);
+            super.visitMethodInsn(opcode, owner, name, desc, itf);
         }
 
         @Override
@@ -221,9 +221,10 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
             final int opcode,
             final String owner,
             final String name,
-            final String desc)
+            final String desc,
+            final boolean itf)
         {
-            super.visitMethodInsn(opcode, owner, name, desc);
+            super.visitMethodInsn(opcode, owner, name, desc, itf);
             unlatched |= isSuperOrSiblingConstructorCall(opcode, owner, name);
         }
     }

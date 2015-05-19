@@ -226,6 +226,28 @@ public class InstructionSequence
     }
 
     /**
+     * add an instruction with four encoded arguments to the sequence
+     * @param insn the instruction
+     * @param arg1 the first argument index
+     * @param arg2 the second argument index
+     * @param arg3 the third argument index
+     * @param arg4 the third argument index
+     * @return the index of the newly added instruction
+     */
+    public int add(int insn, int arg1, int arg2, int arg3, int arg4)
+    {
+        int result = numInstructions;
+        ensureSpace(4);
+        instructionOffsets[numInstructions++] = numEncoded;
+        encodedInstructions[numEncoded++] = insn;
+        encodedInstructions[numEncoded++] = arg1;
+        encodedInstructions[numEncoded++] = arg2;
+        encodedInstructions[numEncoded++] = arg3;
+        encodedInstructions[numEncoded++] = arg4;
+        return result;
+    }
+
+    /**
      * add an instruction with an arbitrary number of encoded arguments to the sequence
      * @param insn the instruction
      * @param args the arguments

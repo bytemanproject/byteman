@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.agent.adapter;
 
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.Label;
@@ -712,10 +713,16 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
     }
 
     @Override
-    public void visitMethodInsn(int opcode, String owner, String name, String desc)
+    public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf)
     {
-        super.visitMethodInsn(opcode, owner, name, desc);
-        cfg.add(opcode, owner, name, desc);
+        super.visitMethodInsn(opcode, owner, name, desc, itf);
+        cfg.add(opcode, owner, name, desc, itf);
+    }
+
+    @Override
+    public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
+        super.visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
+        cfg.add(Opcodes.INVOKEDYNAMIC, name, desc);
     }
 
     @Override

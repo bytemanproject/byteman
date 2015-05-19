@@ -427,7 +427,28 @@ public class CFG
     }
 
     /**
-     * append a field or method instruction with 3 String operands to the current block
+     * append an invokedynamic instruction with 2 String operands to the current block
+     * @param instruction the invokedynamic instruction to be appended
+     * @param name the first String operand
+     * @param desc the second String operand
+     */
+    public void add(int instruction, String name, String desc)
+    {
+        int idx1 = names.indexOf(name);
+        if (idx1 < 0) {
+            idx1 = names.size();
+            names.add(name);
+        }
+        int idx2 = names.indexOf(desc);
+        if (idx2 < 0) {
+            idx2 = names.size();
+            names.add(desc);
+        }
+        current.append(instruction, idx1, idx2);
+    }
+
+    /**
+     * append a field instruction with 3 String operands to the current block
      * @param instruction the instruction to be appended
      * @param owner the first String operand
      * @param name the second String operand
@@ -451,6 +472,37 @@ public class CFG
             names.add(desc);
         }
         current.append(instruction, idx1, idx2, idx3);
+    }
+
+    /**
+     * append a method instruction with 3 String operands
+     * and a boolean operand to the current block
+     * @param instruction the instruction to be appended
+     * @param owner the first String operand
+     * @param name the second String operand
+     * @param desc the third String operand
+     * @param itf the boolean operand
+     */
+    public void add(int instruction, String owner, String name, String desc, boolean itf)
+    {
+        int idx1 = names.indexOf(owner);
+        if (idx1 < 0) {
+            idx1 = names.size();
+            names.add(owner);
+        }
+        int idx2 = names.indexOf(name);
+        if (idx2 < 0) {
+            idx2 = names.size();
+            names.add(name);
+        }
+        int idx3 = names.indexOf(desc);
+        if (idx3 < 0) {
+            idx3 = names.size();
+            names.add(desc);
+        }
+        int idx4 = (itf ? 1 : 0);
+
+        current.append(instruction, idx1, idx2, idx3, idx4);
     }
 
     /**

@@ -216,7 +216,21 @@ public class BBlock
         return instructions.add(instruction, operand1, operand2, operand3);
     }
 
-    /**
+     /**
+     * add an instruction with four int operands to the sequence in the block
+     * @param instruction an Opcode
+     * @param operand1 an int operand or the code for a String operand lcoated in the cfg name table
+     * @param operand2 an int operand or the code for a String operand lcoated in the cfg name table
+     * @param operand3 an int operand or the code for a String operand lcoated in the cfg name table
+     * @param operand4 an int operand or the code for a String operand lcoated in the cfg name table
+     * @return the index of the newly added instruction
+     */
+    public int append(int instruction, int operand1, int operand2, int operand3, int operand4)
+    {
+        return instructions.add(instruction, operand1, operand2, operand3, operand4);
+    }
+
+   /**
      * add an instruction with an arbitrary number of int operands to thhe sequence in the block
 
      * @param instruction an Opcode
@@ -983,6 +997,21 @@ public class BBlock
                     buf.append(name);
                     buf.append(" ");
                     buf.append(desc);
+                    buf.append("\n");
+                }
+                break;
+                case OpcodesHelper.INSN_INDYMETH:
+                {
+                    // print the instruction with the owner, name and descriptor
+                    int idx1 = this.getInstructionArg(i, 0);
+                    int idx2 = this.getInstructionArg(i, 1);
+                    String owner = cfg.getName(idx1);
+                    String name = cfg.getName(idx2);
+                    buf.append(OpcodesHelper.insnName(opcode));
+                    buf.append(" ");
+                    buf.append(owner);
+                    buf.append(" ");
+                    buf.append(name);
                     buf.append("\n");
                 }
                 break;

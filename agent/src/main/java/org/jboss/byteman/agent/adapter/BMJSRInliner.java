@@ -23,19 +23,19 @@
 */
 package org.jboss.byteman.agent.adapter;
 
-import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * a modified version of JSRInliner which uses a slightly modified version of JSRInlinerAdapter
  * to ensure that local variable scopes are notified during code visits
  */
-public class BMJSRInliner extends ClassAdapter
+public class BMJSRInliner extends ClassVisitor
 {
     public BMJSRInliner(ClassVisitor cv)
     {
-        super(cv);
+        super(Opcodes.ASM5, cv);
     }
 
     @Override

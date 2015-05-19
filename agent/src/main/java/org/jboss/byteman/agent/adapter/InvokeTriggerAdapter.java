@@ -114,11 +114,12 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
             final int opcode,
             final String owner,
             final String name,
-            final String desc)
+            final String desc,
+            boolean itf)
         {
             if (whenComplete) {
                 // invoke the method before generating the trigger call
-                super.visitMethodInsn(opcode, owner, name, desc);
+                super.visitMethodInsn(opcode, owner, name, desc, itf);
             }
             if ((count == 0 || visitedCount < count) && matchCall(owner, name, desc)) {
                 // a relevant invocation occurs in the called method
@@ -129,7 +130,7 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
             }
             if (!whenComplete) {
                 // invoke the method before generating the trigger call
-                super.visitMethodInsn(opcode, owner, name, desc);
+                super.visitMethodInsn(opcode, owner, name, desc, itf);
             }
         }
 
@@ -185,9 +186,10 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
             final int opcode,
             final String owner,
             final String name,
-            final String desc)
+            final String desc,
+            boolean itf)
         {
-            super.visitMethodInsn(opcode, owner, name, desc);
+            super.visitMethodInsn(opcode, owner, name, desc, itf);
             if (latched && isSuperOrSiblingConstructorCall(opcode, owner, name)) {
                 latched = false;
             }

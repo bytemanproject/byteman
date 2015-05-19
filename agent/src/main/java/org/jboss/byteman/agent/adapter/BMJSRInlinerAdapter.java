@@ -24,6 +24,7 @@
 package org.jboss.byteman.agent.adapter;
 
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
 
 /**
@@ -33,7 +34,7 @@ import org.objectweb.asm.commons.JSRInlinerAdapter;
 public class BMJSRInlinerAdapter extends JSRInlinerAdapter
 {
     public BMJSRInlinerAdapter(MethodVisitor mv, int access, String name, String desc, String signature, String[] exceptions) {
-        super(mv, access, name, desc, signature, exceptions);
+        super(Opcodes.ASM5, mv, access, name, desc, signature, exceptions);
         if (mv instanceof LocalScopeMethodVisitor) {
             // replace the instruction list so that it generates the required start and end local scope calls
             instructions = new BMInsnList(localVariables);

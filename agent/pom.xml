@@ -34,7 +34,7 @@
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-root</artifactId>
-        <version>2.2.3-SNAPSHOT</version>
+        <version>3.0.0</version>
     </parent>
     <build>
         <plugins>
@@ -64,7 +64,7 @@
                         <configuration>
                             <artifactSet>
                                 <includes>
-                                    <include>asm:asm-all</include>
+                                    <include>org.ow2.asm:asm-all</include>
                                     <include>net.sf.squirrel-sql.thirdparty-non-maven:java-cup</include>
                                 </includes>
                             </artifactSet>
@@ -76,7 +76,7 @@
                                     </includes>
                                 </filter>
                                 <filter>
-                                    <artifact>asm:asm-all</artifact>
+                                    <artifact>org.ow2.asm:asm-all</artifact>
                                     <includes>
                                         <include>org/objectweb/asm/**</include>
                                     </includes>
@@ -1911,10 +1911,36 @@
     </build>
     <profiles>
         <profile>
+            <!-- this always active profile forces inclusion of
+            asm-all jar unless the profile is explicitly deactivated
+           -->
+            <id>default</id>
+            <activation>
+                <file>
+                    <exists>${java.home}</exists>
+                </file>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.ow2.asm</groupId>
+                    <artifactId>asm-all</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <!--
               during development we want asm classes to appear in
               their correct package so we can step through the asm
-              code in the debugger
+              code in the debugger. so we need to use jar
+              asm-debug-all instead of jar asm-all
+              use command
+
+                  mvn -P '!default,asmdebug' install
+
+              to disable the always on default profile (which provides
+              the dependency on jar asm-all) and enable this profile
+              (which provides the dependency on jar asm-debug-all)
             -->
             <id>asmdebug</id>
             <build>
@@ -1931,7 +1957,7 @@
                           <configuration>
                             <artifactSet>
                               <includes>
-                                <include>asm:asm-debug-all</include>
+                                <include>org.ow2.asm:asm-debug-all</include>
                                 <include>net.sf.squirrel-sql.thirdparty-non-maven:java-cup</include>
                               </includes>
                             </artifactSet>
@@ -1943,7 +1969,7 @@
                                 </includes>
                               </filter>
                               <filter>
-                                <artifact>asm:asm-debug-all</artifact>
+                                <artifact>org.ow2.asm:asm-debug-all</artifact>
                                 <includes>
                                   <include>org/objectweb/asm/**</include>
                                 </includes>
@@ -1963,9 +1989,10 @@
             </build>
             <dependencies>
               <dependency>
-                <groupId>asm</groupId>
+                <groupId>org.ow2.asm</groupId>
                 <artifactId>asm-debug-all</artifactId>
-                <version>3.3.1</version>
+                <version>5.0.3</version>
+                <scope>compile</scope>
               </dependency>
             </dependencies>
         </profile>
@@ -2020,11 +2047,6 @@
         </profile>
     </profiles>
     <dependencies>
-        <dependency>
-            <groupId>asm</groupId>
-            <artifactId>asm-all</artifactId>
-            <scope>compile</scope>
-        </dependency>
         <dependency>
             <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
             <artifactId>java-cup</artifactId>

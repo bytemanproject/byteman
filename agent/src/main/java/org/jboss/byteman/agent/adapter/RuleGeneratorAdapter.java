@@ -90,6 +90,8 @@ import org.objectweb.asm.commons.TableSwitchGenerator;
  */
 public class RuleGeneratorAdapter extends RuleMethodAdapter {
 
+    private static final String CLDESC = "Ljava/lang/Class;";
+
     private final static Type BYTE_TYPE = Type.getObjectType("java/lang/Byte");
 
     private final static Type BOOLEAN_TYPE = Type.getObjectType("java/lang/Boolean");
@@ -398,8 +400,53 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
         if (value == null) {
             visitInsn(Opcodes.ACONST_NULL);
         } else {
-            visitLdcInsn(value);
+            switch (value.getSort()) {
+            case Type.BOOLEAN:
+                visitFieldInsn(Opcodes.GETSTATIC, "java/lang/Boolean",
+                        "TYPE", CLDESC);
+                break;
+            case Type.CHAR:
+                visitFieldInsn(Opcodes.GETSTATIC, "java/lang/Character",
+                        "TYPE", CLDESC);
+                break;
+            case Type.BYTE:
+                visitFieldInsn(Opcodes.GETSTATIC, "java/lang/Byte", "TYPE",
+                        CLDESC);
+                break;
+            case Type.SHORT:
+                visitFieldInsn(Opcodes.GETSTATIC, "java/lang/Short", "TYPE",
+                        CLDESC);
+                break;
+            case Type.INT:
+                visitFieldInsn(Opcodes.GETSTATIC, "java/lang/Integer",
+                        "TYPE", CLDESC);
+                break;
+            case Type.FLOAT:
+                visitFieldInsn(Opcodes.GETSTATIC, "java/lang/Float", "TYPE",
+                        CLDESC);
+                break;
+            case Type.LONG:
+                visitFieldInsn(Opcodes.GETSTATIC, "java/lang/Long", "TYPE",
+                        CLDESC);
+                break;
+            case Type.DOUBLE:
+                visitFieldInsn(Opcodes.GETSTATIC, "java/lang/Double",
+                        "TYPE", CLDESC);
+                break;
+            default:
+                visitLdcInsn(value);
+            }
         }
+    }
+
+    /**
+     * Generates the instruction to push a handle on the stack.
+     *
+     * @param handle
+     *            the handle to be pushed on the stack.
+     */
+    public void push(final Handle handle) {
+        mv.visitLdcInsn(handle);
     }
 
     // ------------------------------------------------------------------------
@@ -1148,15 +1195,14 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
     private void invokeInsn(
         final int opcode,
         final Type type,
-        final Method method)
+        final Method method,
+        final boolean itf)
     {
         String owner = type.getSort() == Type.ARRAY
                 ? type.getDescriptor()
                 : type.getInternalName();
-        visitMethodInsn(opcode,
-                owner,
-                method.getName(),
-                method.getDescriptor());
+        visitMethodInsn(opcode, owner, method.getName(),
+                method.getDescriptor(), itf);
     }
 
     /**
@@ -1166,7 +1212,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
      * @param method the method to be invoked.
      */
     public void invokeVirtual(final Type owner, final Method method) {
-        invokeInsn(Opcodes.INVOKEVIRTUAL, owner, method);
+        invokeInsn(Opcodes.INVOKEVIRTUAL, owner, method, false);
     }
 
     /**
@@ -1176,7 +1222,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
      * @param method the constructor to be invoked.
      */
     public void invokeConstructor(final Type type, final Method method) {
-        invokeInsn(Opcodes.INVOKESPECIAL, type, method);
+        invokeInsn(Opcodes.INVOKESPECIAL, type, method, false);
     }
 
     /**
@@ -1186,7 +1232,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
      * @param method the method to be invoked.
      */
     public void invokeStatic(final Type owner, final Method method) {
-        invokeInsn(Opcodes.INVOKESTATIC, owner, method);
+        invokeInsn(Opcodes.INVOKESTATIC, owner, method, false);
     }
 
     /**
@@ -1196,7 +1242,28 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
      * @param method the method to be invoked.
      */
     public void invokeInterface(final Type owner, final Method method) {
-        invokeInsn(Opcodes.INVOKEINTERFACE, owner, method);
+        invokeInsn(Opcodes.INVOKEINTERFACE, owner, method, true);
+    }
+
+    /**
+     * Generates an invokedynamic instruction.
+     *
+     * @param name
+     *            the method's name.
+     * @param desc
+     *            the method's descriptor (see {@link Type Type}).
+     * @param bsm
+     *            the bootstrap method.
+     * @param bsmArgs
+     *            the bootstrap method constant arguments. Each argument must be
+     *            an {@link Integer}, {@link Float}, {@link Long},
+     *            {@link Double}, {@link String}, {@link Type} or {@link Handle}
+     *            value. This method is allowed to modify the content of the
+     *            array so a caller should expect that this array may change.
+     */
+    public void invokeDynamic(String name, String desc, Handle bsm,
+            Object... bsmArgs) {
+        visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
     }
 
     // ------------------------------------------------------------------------
@@ -1363,7 +1430,12 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
         final Label end,
         final Type exception)
     {
-        visitTryCatchBlock(start, end, mark(), exception.getInternalName());
+        if (exception == null) {
+            visitTryCatchBlock(start, end, mark(), null);
+        } else {
+            visitTryCatchBlock(start, end, mark(),
+                    exception.getInternalName());
+        }
     }
 
     // local variable handling
