@@ -70,12 +70,17 @@ public class Main {
                     sysJarPaths.add(arg.substring(SYS_PREFIX.length(), arg.length()));
                 } else if (arg.startsWith(ADDRESS_PREFIX)) {
                     hostname = arg.substring(ADDRESS_PREFIX.length(), arg.length());
+                    if (managerClassName == null) {
+                        managerClassName=MANAGER_NAME;
+                    }
                 } else if (arg.startsWith(PORT_PREFIX)) {
                     try {
                         port = Integer.valueOf(arg.substring(PORT_PREFIX.length(), arg.length()));
                         if (port <= 0) {
                             System.err.println("Invalid port specified [" + port + "]");
                             port = null;
+                        } else if (managerClassName == null) {
+                            managerClassName=MANAGER_NAME;
                         }
                     } catch (Exception e) {
                         System.err.println("Invalid port specified [" + arg + "]. Cause: " + e);
@@ -89,7 +94,7 @@ public class Main {
                     // listener:false means no manager (yes, not even TransformListener)
                     String value = arg.substring(LISTENER_PREFIX.length(), arg.length());
                     if (Boolean.parseBoolean(value)) {
-                        managerClassName = TransformListener.class.getName();
+                        managerClassName = MANAGER_NAME;
                     } else {
                         managerClassName = null;
                     }
@@ -97,7 +102,7 @@ public class Main {
                     // this is only for backwards compatibility -- it is the same as listener
                     String value = arg.substring(REDEFINE_PREFIX.length(), arg.length());
                     if (Boolean.parseBoolean(value)) {
-                        managerClassName = TransformListener.class.getName();
+                        managerClassName = MANAGER_NAME;
                     } else {
                         managerClassName = null;
                     }
@@ -128,6 +133,9 @@ public class Main {
                     installPolicy = Boolean.parseBoolean(value);
                 } else if (arg.startsWith(MANAGER_PREFIX)) {
                     managerClassName = arg.substring(MANAGER_PREFIX.length(), arg.length());
+                    if (managerClassName.length() == 0) {
+                        managerClassName = null;
+                    }
                 } else {
                     System.err.println("org.jboss.byteman.agent.Main:\n" +
                             "  illegal agent argument : " + arg + "\n" +
@@ -223,12 +231,12 @@ public class Main {
         Class transformerClazz;
 
         if (managerClassName != null && isRedefine) {
-            transformerClazz = loader.loadClass("org.jboss.byteman.agent.Retransformer");
+            transformerClazz = loader.loadClass(RETRANSFORMER_NAME);
             //transformer = new Retransformer(inst, scriptPaths, scripts, true);
             Constructor constructor = transformerClazz.getConstructor(Instrumentation.class, List.class, List.class, boolean.class);
             transformer = (ClassFileTransformer)constructor.newInstance(new Object[] { inst, scriptPaths, scripts, isRedefine});
         } else {
-            transformerClazz = loader.loadClass("org.jboss.byteman.agent.Transformer");
+            transformerClazz = loader.loadClass(TRANSFORMER_NAME);
             //transformer = new Transformer(inst, scriptPaths, scripts, isRedefine);
             Constructor constructor = transformerClazz.getConstructor(Instrumentation.class, List.class, List.class, boolean.class);
             transformer = (ClassFileTransformer)constructor.newInstance(new Object[] { inst, scriptPaths, scripts, isRedefine});
@@ -327,6 +335,24 @@ public class Main {
 
     private static final String MANAGER_PREFIX = "manager:";
 
+    /**
+     * name of basic transformer class.
+     */
+
+    private static final String TRANSFORMER_NAME = "org.jboss.byteman.agent.Transformer";
+    
+    /**
+     * name of retransformer class.
+     */
+
+    private static final String RETRANSFORMER_NAME = "org.jboss.byteman.agent.Retransformer";
+    
+    /**
+     * name of default manager class.
+     */
+
+    private static final String MANAGER_NAME = "org.jboss.byteman.agent.TransformListener";
+    
     /**
      * list of paths to extra bootstrap jars supplied on command line
      */
