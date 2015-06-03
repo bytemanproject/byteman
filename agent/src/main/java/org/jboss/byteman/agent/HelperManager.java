@@ -298,7 +298,7 @@ public class HelperManager
      * return a static public method with the given parameter types it exists otherwise null
      * @param name
      * @param paramTypes
-     * @return
+     * @return the method if found otherwise null
      */
     private Method lookupLifecycleMethod(Class<?> clazz, String name, Class<?>[] paramTypes)
     {

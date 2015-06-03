@@ -1263,7 +1263,7 @@ public class CFG
      * instruction offset less than or equal to the enter instruction idx + 1.
      * @param enter
      * @param tryStart
-     * @return
+     * @return true iff the instructions may be contained within the scope of a tryStart
      */
     private boolean tryStartMayContainEnter(CodeLocation tryStart, CodeLocation enter)
     {

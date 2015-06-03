@@ -883,7 +883,7 @@ public class Transformer implements ClassFileTransformer {
     /**
      * return a checker object which can be used to retrieve the super and interfaces of a class from its defining bytecode
      * @param bytecode
-     * @return
+     * @return a checker
      */
     private org.jboss.byteman.agent.check.ClassChecker getClassChecker(byte[] bytecode)
     {
@@ -1026,7 +1026,7 @@ public class Transformer implements ClassFileTransformer {
      * @param classname
      * @param protectionDomain
      * @param bytes
-     * @return
+     * @return the verified bytecode or the original
      */
     private byte[] maybeVerifyTransformedBytes(ClassLoader loader, String classname, ProtectionDomain protectionDomain, byte[] bytes)
     {

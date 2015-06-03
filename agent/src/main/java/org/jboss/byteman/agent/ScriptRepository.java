@@ -457,7 +457,7 @@ public class ScriptRepository
      * matching class rules
      * @param isOverride true if we are only interested in rules which apply to overriding methods false
      * if we are happy with any rule
-     * @return
+     * @return true if any scripts are found otherwise false
      */
     private boolean matchTarget(String name, Class<?> clazz, boolean isInterface, boolean isOverride) {
         Map<String, List<RuleScript>> index = (isInterface ? targetInterfaceIndex : targetClassIndex);

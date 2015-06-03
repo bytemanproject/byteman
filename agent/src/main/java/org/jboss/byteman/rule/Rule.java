@@ -773,7 +773,7 @@ public class Rule
 
     /**
      * a method to return the next available counter for use in constructing a key for the rule
-     * @return
+     * @return the next id
      */
     private synchronized static int nextId()
     {

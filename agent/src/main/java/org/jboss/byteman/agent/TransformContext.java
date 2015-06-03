@@ -369,9 +369,9 @@ public class TransformContext
     }
 
     /**
-     * return the triggger method name used to construct the supplied rule key
+     * return the trigger method name used to construct the supplied rule key
      * @param key
-     * @return
+     * @return the trigger method name
      */
     private String getKeyTriggerMethodName(String key)
     {
@@ -381,9 +381,9 @@ public class TransformContext
     }
 
     /**
-     * return the triggger method descriptor used to construct the supplied rule key
+     * return the trigger method descriptor used to construct the supplied rule key
      * @param key
-     * @return
+     * @return the trigger method descriptor
      */
     private String getKeyTriggerMethodDescriptor(String key)
     {
@@ -401,7 +401,7 @@ public class TransformContext
      * detect a method specification which includes a return type preceding the method name and transform
      * it so that the return type is at the end.
      * @param targetMethodSpec
-     * @return
+     * @return the method spec in the desired format
      */
     private String mungeMethodSpecReturnType(String targetMethodSpec)
     {
@@ -425,7 +425,7 @@ public class TransformContext
      * attempt to load the bytecode as a resource and identify supers via the bytecode.
      *
      * @param flags
-     * @return
+     * @return a non-loading class writer
      */
     private ClassWriter getNonLoadingClassWriter(int flags)
     {

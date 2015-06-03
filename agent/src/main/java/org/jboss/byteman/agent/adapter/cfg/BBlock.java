@@ -445,7 +445,6 @@ public class BBlock
     /**
      * write a string represenattion of this block to the buffer
      * @param buf the buffer to be written to
-     * @return
      */
     void printTo(StringBuffer buf)
     {
