@@ -115,7 +115,13 @@ public enum LocationType
      * injected at ALL return points
      * script syntax : 'AT' 'RETURN'
      */
-    EXIT;
+    EXIT,
+
+    /**
+     * specifies a location for trigger insertion on exception exit from the trigger method
+     * script syntax : 'AT' 'EXCEPTION' 'EXIT'
+     */
+    EXCEPTION_EXIT;
 
     public String specifierText()
     {
@@ -184,7 +190,8 @@ public enum LocationType
             "LINE", // for compatibility
             "AT[ \t]*CALL", // for ambiguity :-)
             "AFTER[ \t]*CALL", // for ambiguity :-)
-            "AT[ \t]*RETURN" // for ambiguity :-)
+            "AT[ \t]*RETURN", // for ambiguity :-)
+            "AT[ \t]*EXCEPTION[ \t]*EXIT" // for ambiguity :-)
     };
 
     private static Pattern[] specifierPatterns = createPatterns();
@@ -205,6 +212,7 @@ public enum LocationType
             LINE,
             INVOKE,
             INVOKE_COMPLETED,
-            EXIT
+            EXIT,
+            EXCEPTION_EXIT
     };
 }
