@@ -145,13 +145,12 @@ Float = {Sign}? {PosFloat}
 
 "]"		{ return symbol(sym.RSQUARE); }
 
-/* braces are not required
+/* braces are required for array initializations */
 
 "{"		{ return symbol(sym.LBRACE); }
 
 "}"		{ return symbol(sym.RBRACE); }
 
-*/
 
 /* expression separator */
 

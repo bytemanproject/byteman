@@ -68,10 +68,10 @@ public class ArrayInitExpression extends Expression
     public Type typeCheck(Type expected) throws TypeException
     {
         Type baseType;
-        if (type.isUndefined()) {
+        if (expected.isUndefined()) {
             baseType = Type.UNDEFINED;
-        } else if (type.isArray()) {
-            baseType = type.getBaseType();
+        } else if (expected.isArray()) {
+            baseType = expected.getBaseType();
         } else {
             throw new TypeException("ArrayInitExpression.typeCheck : cannot initialise non-array type from array list " + type.getName() + getPos());
         }
@@ -124,8 +124,10 @@ public class ArrayInitExpression extends Expression
         mv.visitLdcInsn(length);
         compileContext.addStackCount(1);
         // new array pops count and pushes array so no change to stack size
-        if (baseType.isObject()) {
-            mv.visitTypeInsn(Opcodes.NEWARRAY, baseType.getInternalName());
+        if (baseType.isArray()) {
+            mv.visitMultiANewArrayInsn(getType().getInternalName(), 1);
+        } else if (baseType.isObject()) {
+            mv.visitTypeInsn(Opcodes.ANEWARRAY, baseType.getInternalName());
         } else {
             int operand = 0;
             if (baseType.equals(Type.Z)) {
@@ -156,7 +158,7 @@ public class ArrayInitExpression extends Expression
             // copy array so we can assign it -- adds one to height
             mv.visitInsn(Opcodes.DUP);
             // compile expression index -- adds 1 to height
-            mv.visitLdcInsn(idx);
+            mv.visitLdcInsn(idx++);
             compileContext.addStackCount(2);
             // compile value -- adds one or two words to height
             element.compile(mv, compileContext);

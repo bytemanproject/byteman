@@ -51,6 +51,7 @@ public class NewExpression extends Expression
     private String typeName;
     private List<Expression> arguments;
     private List<Expression> arrayDims;
+    private ArrayInitExpression arrayInits;
     private List<Type> argumentTypes;
     private List<Type> paramTypes;
     private Constructor constructor;
@@ -58,12 +59,16 @@ public class NewExpression extends Expression
     private int arrayDimCount;
     // if the new value is an array this many of its dimensions are specified and are to be instantiated
     private int arrayDimDefinedCount;
+    // if hte new value has an array initializer list then this tracks how many entries it has
+    private int arrayInitsCount;
 
-    public NewExpression(Rule rule, ParseNode token, List<Expression> arguments, List<Expression> arraySizes) {
+    public NewExpression(Rule rule, ParseNode token, List<Expression> arguments,
+                         List<Expression> arraySizes, ArrayInitExpression arrayInits) {
         super(rule, Type.UNDEFINED, token);
         this.typeName = token.getText();
         this.arguments = arguments;
         this.arrayDims = arraySizes;
+        this.arrayInits = arrayInits;
         this.arrayDimCount = arraySizes.size();
         // we check this at bind time and throw a TypeError if it is invalid
         this.arrayDimDefinedCount = 0;
@@ -96,6 +101,12 @@ public class NewExpression extends Expression
                 expr.bind();
                 arrayDimDefinedCount++;
             }
+        }
+
+        // bind the array init expression if we have one
+
+        if (arrayInits != null) {
+            arrayInits.bind();
         }
     }
 
@@ -188,15 +199,32 @@ public class NewExpression extends Expression
             // if we have a primitive type then have to have some array dimensions
             throw new TypeException("NewExpression.typeCheck : invalid type for new operation " + getPos());
         }
-        // if this is a new array operation we must have at least one defined dimension and we cannot have
-        // more dimensions than we can fit into a byte
+        // if this is a new array operation without an initializer then we must have at least one defined
+        // dimension
 
-        if (arrayDimCount > 0 && arrayDimDefinedCount == 0) {
+        if (arrayDimCount > 0 && arrayDimDefinedCount == 0 && arrayInits == null) {
             throw new TypeException("NewExpression.typeCheck : array dimension missing " + getPos());
         }
 
+        // we cannot have more dimensions than we can fit into a byte
+
         if (arrayDimCount > Byte.MAX_VALUE) {
             throw new TypeException("NewExpression.typeCheck : too many array dimensions " + getPos());
+        }
+
+        // if we have an array initializer then we must have some dimensions
+        // but cannot have any specified dimensions
+
+        if (arrayInits != null) {
+            if (arrayDimCount == 0)
+            {
+                throw new TypeException("NewExpression.typeCheck : cannot specify initializer for non array" + getPos());
+            }
+
+            if (arrayDimDefinedCount != 0)
+            {
+                throw new TypeException("NewExpression.typeCheck : cannot specify both array dimensions and initializer " + getPos());
+            }
         }
         // if we have any array dimension sizings then ensure they all type check as integer expressions
 
@@ -207,6 +235,12 @@ public class NewExpression extends Expression
             }
             // replace the current type with the corresponding array type
             type = typeGroup.createArray(type);
+        }
+
+        // if we have been passed an ArrayInitExpression then type check it against our result type
+
+        if (arrayInits != null) {
+            arrayInits.typeCheck(type);
         }
 
         // if the expected type is defined then ensure we can assign this type to it
@@ -265,7 +299,7 @@ public class NewExpression extends Expression
             int l = arguments.size();
             int i;
             Object[] callArgs = new Object[l];
-            for (i =0; i < l; i++) {
+            for (i = 0; i < l; i++) {
                 callArgs[i] = arguments.get(i).interpret(helper);
             }
             try {
@@ -278,6 +312,9 @@ public class NewExpression extends Expression
             } catch (InvocationTargetException e) {
                 throw new ExecuteException("NewExpression.interpret : unable to invoke constructor for class " + typeName + getPos(), e);
             }
+        } else if (arrayInits != null) {
+            Object result = arrayInits.interpret(helper);
+            return result;
         } else {
             int[] dims = new int[arrayDimDefinedCount];
             Type componentType = type;
@@ -337,9 +374,11 @@ public class NewExpression extends Expression
             mv.visitMethodInsn(Opcodes.INVOKESPECIAL, instantiatedClassName, "<init>", getDescriptor());
 
             // modify the stack height to account for the removed exception and params
-            compileContext.addStackCount(-(extraParams+1));
+            compileContext.addStackCount(-(extraParams + 1));
+        } else if (arrayInits != null) {
+            // use the initializer to create the array
+            arrayInits.compile(mv, compileContext);
         } else {
-            // TODO !!! implement compilation for array types !!!
             if (arrayDimCount == 1) {
                 // we can use a NEWARRAY or ANEWARRAY
                 Type baseType = type.getBaseType();
@@ -401,20 +440,28 @@ public class NewExpression extends Expression
     }
 
     public void writeTo(StringWriter stringWriter) {
-        stringWriter.write("throw ");
+        stringWriter.write("new ");
         if (type == null || Type.UNDEFINED == type) {
             stringWriter.write(typeName);
         } else {
             stringWriter.write(type.getName());
         }
         String separator = "";
-        stringWriter.write("(");
-        for (Expression argument : arguments) {
-            stringWriter.write(separator);
-            argument.writeTo(stringWriter);
-            separator = ",";
+        if (arrayDimCount == 0) {
+            stringWriter.write("(");
+            for (Expression argument : arguments) {
+                stringWriter.write(separator);
+                argument.writeTo(stringWriter);
+                separator = ",";
+            }
+            stringWriter.write(")");
+        } else {
+            for (int i = 0; i < arrayDimCount ; i++) {
+                stringWriter.write("[]");
+            }
+            if (arrayInits != null) {
+                arrayInits.writeTo(stringWriter);
+            }
         }
-        stringWriter.write(")");
-
     }
 }

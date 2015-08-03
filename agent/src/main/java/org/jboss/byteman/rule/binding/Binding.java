@@ -25,6 +25,7 @@ package org.jboss.byteman.rule.binding;
 
 import org.jboss.byteman.agent.Transformer;
 import org.jboss.byteman.rule.compiler.CompileContext;
+import org.jboss.byteman.rule.expression.ArrayInitExpression;
 import org.jboss.byteman.rule.expression.DollarExpression;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.expression.Expression;
@@ -123,16 +124,40 @@ public class Binding extends RuleElement
                 if (Transformer.disallowDowncast()) {
                     // compatibility behaviour -- use declared type to help infer expression type
                     value.typeCheck(type);
-                } else {
-                    // allow downcasts in the binding
 
-                    // typecheck the value first and then check for assignability in either direction
-                    // modulo assigning void
-                    Type valueType = value.typeCheck(expected);
-                    if (!type.isAssignableFrom(valueType)) {
-                        // if this is a downcast we need to check whether downcasts are disabled
-                        if (valueType == Type.VOID || !valueType.isAssignableFrom(type)) {
-                            throw new TypeException("Binding.typecheck : incompatible type for binding expression " + valueType + value.getPos());
+                } else {
+                    // downcasts in the binding are allowed but . . .
+
+                    if (type.isArray() && value instanceof ArrayInitExpression) {
+                        // with an array init we could try to infer the type but that
+                        // would be dangerous for two reasons.
+                        //
+                        // Firstly, it means the user has to ensure all elements of the
+                        // initializer have types which match the first one. So, e.g.
+                        // { 1, "foo" } is ok to initialize an Object[] but inference
+                        // will infer int[] at element 1 and then give an error at "foo".
+                        //
+                        // Even more pernicious, { "foo", "bar" } would be inferred to
+                        // type String[] which the type checker will accept as a valid
+                        // value to assign to an Object[]. However, when the rule is
+                        // executed this will initialise the Object[] bind var to a new
+                        // String[] with potentially nasty consequences should an object
+                        // be inserted into the array.
+                        //
+                        // Clearly, the latter can also happen with other initialization
+                        // expressions but an array initializer is a special case because
+                        // it is a form of array literal and so we ought to use the type
+                        // info to ensure we get the right type result.
+                        value.typeCheck(type);
+                    } else {
+                        // typecheck the value first and then check for assignability in either direction
+                        // modulo assigning void
+                        Type valueType = value.typeCheck(expected);
+                        if (!type.isAssignableFrom(valueType)) {
+                            // if this is a downcast we need to check whether downcasts are disabled
+                            if (valueType == Type.VOID || !valueType.isAssignableFrom(type)) {
+                                throw new TypeException("Binding.typecheck : incompatible type for binding expression " + valueType + value.getPos());
+                            }
                         }
                     }
                 }

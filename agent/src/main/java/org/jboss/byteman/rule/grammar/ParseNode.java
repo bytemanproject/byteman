@@ -54,6 +54,7 @@ public abstract class ParseNode
     public final static int NEW = 20;
     public final static int NULL_LITERAL = 21;
     public final static int CLASS = 22;
+    public final static int ARRAY_INIT = 23;
     /* tags for operators */
     public final static int AND = 30;
     public final static int BAND = 31;
@@ -330,6 +331,8 @@ public abstract class ParseNode
                     return "-";
                 case NULL_LITERAL:
                     return "null";
+                case ARRAY_INIT:
+                    return "{}";
                 default:
                     System.out.println("NullaryNode.getText() : Unexpected tag " + tag);
                     return "???";
@@ -400,6 +403,8 @@ public abstract class ParseNode
                     return ((String)child0);
                 case CLASS:
                     return ((String)child0);
+                case ARRAY_INIT:
+                    return ("{" + ((ParseNode)child0).getText() + "}");
                 default:
                     System.out.println("UnaryNode.getText() : Unexpected tag " + tag);
                     return "???";
@@ -480,7 +485,19 @@ public abstract class ParseNode
                 case PATH:
                     return (String)child0;
                 case SEMI:
-                    return ";";                    
+                {
+                    String text = ((ParseNode)child0).getText();
+                    text += ";";
+                    text += ((ParseNode)child1).getText();
+                    return text;
+                }
+                case COMMA:
+                {
+                    String text = ((ParseNode)child0).getText();
+                    text += ",";
+                    text += ((ParseNode)child1).getText();
+                    return text;
+                }
                 case THROW:
                     return "THROW";
                 case NEW:

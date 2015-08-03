@@ -29,7 +29,6 @@ import static org.jboss.byteman.rule.grammar.ParseNode.*;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.Rule;
-import org.omg.CORBA.FieldNameHelper;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -71,6 +70,8 @@ public class ExpressionHelper
         //                   (DOLLAR string)
         //                   (ASSIGN simple_name expr)
         //                   (ASSIGN dollar_expr expr)
+        //                   (ARRAY_INIT expr_list)
+        //                   (ARRAY_INIT)
 
         int tag = exprTree.getTag();
         Expression expr;
@@ -253,6 +254,11 @@ public class ExpressionHelper
                 expr = createTernaryExpression(rule, bindings, exprTree, type);
             }
             break;
+            case ARRAY_INIT:
+            {
+                expr = createArrayInitExpression(rule, bindings, exprTree, type);
+            }
+            break;
             default:
             {
                 throw new TypeException("ExpressionHelper.createExpression : unexpected token type " + tag + " for expression " + exprTree.getPos());
@@ -395,6 +401,7 @@ public class ExpressionHelper
         Expression expr;
         List<Expression> args;
         List<Expression> arrayDims;
+        ArrayInitExpression arrayInits;
         if (argTree == null) {
             args = new ArrayList<Expression>();
         } else {
@@ -402,11 +409,24 @@ public class ExpressionHelper
         }
         if (arrayDimsTree == null) {
             arrayDims = new ArrayList<Expression>();
+            arrayInits = null;
         } else {
-            arrayDims = createNewExpressionIndexList(rule, bindings, arrayDimsTree);
+            // we expect
+            // (ARRAY_INIT array_dims array_init)
+            // array_dims
+            if (arrayDimsTree.getTag() == ParseNode.ARRAY_INIT) {
+                ParseNode child0 = (ParseNode)arrayDimsTree.getChild(0);
+                ParseNode child1 = (ParseNode)arrayDimsTree.getChild(1);
+
+                arrayDims = createNewArrayDimsList(rule, bindings, child0);
+                arrayInits = createArrayInitExpression(rule, bindings, child1, Type.UNDEFINED);
+            } else {
+                arrayDims = createNewArrayDimsList(rule, bindings, arrayDimsTree);
+                arrayInits = null;
+            }
         }
 
-        expr = new NewExpression(rule, typeNameTree, args, arrayDims);
+        expr = new NewExpression(rule, typeNameTree, args, arrayDims, arrayInits);
 
         return expr;
     }
@@ -656,6 +676,32 @@ public class ExpressionHelper
         return expr;
     }
 
+    public static ArrayInitExpression createArrayInitExpression(Rule rule, Bindings bindings, ParseNode exprTree, Type type)
+            throws TypeException
+    {
+        // we expect (ARRAY_INIT expr_list)
+        //           (ARRAY_INIT)
+
+        List<Expression> expr_list;
+
+        if (exprTree.getChildCount() == 1) {
+            Type baseType;
+            if (type.isArray()) {
+                baseType = type.getBaseType();
+            } else {
+                baseType = Type.UNDEFINED;
+            }
+            ParseNode child0 = (ParseNode) exprTree.getChild(0);
+            expr_list = createExpressionList(rule, bindings, child0, baseType);
+        }  else {
+            expr_list = new ArrayList<Expression>();
+        }
+
+        ArrayInitExpression expr = new ArrayInitExpression(rule, type, exprTree, expr_list);
+
+        return expr;
+    }
+
     public static AssignableExpression createAssignableExpression(Rule rule, Bindings bindings, ParseNode exprTree, Type type)
             throws TypeException
     {
@@ -801,14 +847,14 @@ public class ExpressionHelper
 
         return exprList;
     }
-    public static List<Expression> createNewExpressionIndexList(Rule rule, Bindings bindings, ParseNode exprTree)
+    public static List<Expression> createNewArrayDimsList(Rule rule, Bindings bindings, ParseNode exprTree)
             throws TypeException
     {
-        // we expect new_expr_idx_list = new_expr_idx
-        //                               ^(COMMA expr new_expr_idx_list)
-        // where          new_expr_idx = ^(EXPR) |
-        //                               ^(NOTHING)
-        // and we also have the constraints that any EXPR is expected to have an int type andthat
+        // we expect array_dims = array_dim
+        //                        ^(COMMA array_dim array_dims)
+        // where     array_dim = ^(EXPR) |
+        //                       ^(NOTHING)
+        // and we also have the constraints that any EXPR is expected to have an int type and that
         // once we see the first NOTHING we only expect NOTHING from then onwards
 
         Type type =  Type.I;
@@ -845,7 +891,7 @@ public class ExpressionHelper
                     exprList.add(expr);
                 } else {
                     // once we see an empty dim we expect to see al empty dims
-                    throw new TypeException("ExpressionHelper.createNewExpressionIndexList : invalid array dimension " + child.getPos());
+                    throw new TypeException("ExpressionHelper.createNewArrayDimsList : invalid array dimension " + child.getPos());
                 }
             } catch (TypeException te) {
                 exceptions.add(te);
@@ -857,7 +903,7 @@ public class ExpressionHelper
                 throw exceptions.get(0);
             } else {
                 StringBuffer buffer = new StringBuffer();
-                buffer.append("ExpressionHelper.createExpressionList : errors checking new expression array dimensions");
+                buffer.append("ExpressionHelper.createNewArrayDimsList : errors checking new expression array dimensions");
                 for (TypeException typeException : exceptions) {
                     buffer.append("\n");
                     buffer.append(typeException.toString());

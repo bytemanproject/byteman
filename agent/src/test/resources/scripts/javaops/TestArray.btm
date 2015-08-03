@@ -29,10 +29,39 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0;
      iarray : int[] = $1;
-     oarray : Object[][] = $2
+     oarray : Object[][] = $2;
+     iarray2 : int[] = { 1, 2, 3};
+     oarray2 : Object[] = { $0, $1, $2 };
+     oarray3 : int[][] = { $1 };
+     mtarray1 :Object[] = {};
+     mtarray2 : int[] = {};
+     nested : Object[][] = { new Object[] { "foo" } , new Object[] { "bar" } };
+     nested2 : Object[][] = { { "foo" }, { "bar" } }
 IF TRUE
 DO test.log("triggerMethod1 : iarray[0] == " + iarray[0]);
    test.log("triggerMethod1 : oarray[0][0] == " + oarray[0][0]);
+   test.log( "triggerMethod1 : iarray2[0] == " +  iarray2[0]);
+   test.log( "triggerMethod1 : oarray2[1] == " +  oarray2[1]);
+   test.log( "triggerMethod1 : oarray3[0][0] == " +  oarray3[0][0]);
+   test.log( "triggerMethod1 : mtarray1.length == " +  mtarray1.length);
+   test.log( "triggerMethod1 : mtarray2.length == " +  mtarray2.length);
+   test.log( "triggerMethod1 : nested.length == " + nested.length);
+   test.log( "triggerMethod1 : nested[0].length == " + nested[0].length);
+   test.log( "triggerMethod1 : nested[1].length == " + nested[1].length);
+   test.log( "triggerMethod1 : nested[0][0] == " + nested[0][0]);
+   test.log( "triggerMethod1 : nested[1][0] == " + nested[1][0]);
+   test.log( "triggerMethod1 : nested2.length == " + nested2.length);
+   test.log( "triggerMethod1 : nested2[0].length == " + nested2[0].length);
+   test.log( "triggerMethod1 : nested2[1].length == " + nested2[1].length);
+   test.log( "triggerMethod1 : nested2[0][0] == " + nested2[0][0]);
+   test.log( "triggerMethod1 : nested2[1][0] == " + nested2[1][0]);
+   # at present nested arrays may have different dimensions -- fixme?
+   nested2 = new Object[][][]  { { { 1 } }, { { 2 } }, { {}, {} }, { } };
+   test.log( "triggerMethod1 : nested2.length == " + nested2.length);
+   test.log( "triggerMethod1 : nested2[0].length == " + nested2[0].length);
+   test.log( "triggerMethod1 : nested2[1].length == " + nested2[1].length);
+   test.log( "triggerMethod1 : nested2[2].length == " + nested2[2].length);
+   test.log( "triggerMethod1 : nested2[3].length == " + nested2[3].length);
    return oarray[0]
 ENDRULE
 

@@ -209,9 +209,9 @@ terminal	BIND, IF, DO;
 terminal	NOTHING, RETURN, THROW;
 
 /* brackets */
-/* don't need braces yet */
-/* terminal	LBRACE, RBRACE; */
 terminal	LPAREN, RPAREN, LSQUARE, RSQUARE;
+/* braces are used for array initializers */
+terminal	LBRACE, RBRACE;
 
 /* separators */
 terminal	SEMI, COMMA, DOT;
@@ -280,6 +280,7 @@ non terminal ParseNode ca;
 non terminal ParseNode event;
 non terminal ParseNode bindings;
 non terminal ParseNode binding;
+non terminal ParseNode binding_expr;
 non terminal ParseNode bind_sym;
 
 non terminal ParseNode condition;
@@ -301,17 +302,22 @@ non terminal ParseNode expr_field_expr;
 non terminal ParseNode meth_expr;
 non terminal ParseNode expr_meth_expr;
 non terminal ParseNode new_expr;
-non terminal ParseNode new_array_idx_list;
+non terminal ParseNode new_array_spec;
+non terminal ParseNode array_dims;
+non terminal ParseNode array_dim;
 non terminal ParseNode simple_expr;
 non terminal ParseNode null_expr;
 
 non terminal ParseNode array_idx_list;
 non terminal ParseNode array_idx;
 
+non terminal ParseNode array_init_list;
+non terminal ParseNode array_init;
+
 /* names and paths */
 
 non terminal ParseNode typename;
-non terminal Integer arraydims;
+non terminal Integer empty_array_dims;
 non terminal ParseNode name;
 non terminal ParseNode simple_name;
 non terminal ParseNode path;
@@ -427,8 +433,22 @@ bindings
 	|	binding:b {: RESULT = b; :}
 	;
 
-binding	::=	bind_sym:s ASSIGN expr:e {: RESULT = node(ParseNode.ASSIGN, sleft, sright, s, e); :}
+binding	::=	bind_sym:s ASSIGN binding_expr:e {: RESULT = node(ParseNode.ASSIGN, sleft, sright, s, e); :}
 	;
+
+binding_expr ::= expr:e {: RESULT = e; :}
+    | array_init:ai {: RESULT = ai; :}
+    ;
+
+array_init ::= LBRACE:l RBRACE {: RESULT = node(ParseNode.ARRAY_INIT, lleft, lright); :}
+    | LBRACE expr_list:el RBRACE {: RESULT = node(ParseNode.ARRAY_INIT, elleft, elright, el); :}
+    | LBRACE array_init_list:ail RBRACE {: RESULT = node(ParseNode.ARRAY_INIT, ailleft, ailright, ail); :}
+    ;
+
+array_init_list ::=  array_init:ai {: RESULT = ai; :}
+    | array_init:ai COMMA array_init_list:ail {: RESULT = node(ParseNode.COMMA, aileft, airight, ai, ail); :}
+    ;
+
 
 // a bound symbol can optionally be specified to be of a particular type
 
@@ -439,7 +459,7 @@ bind_sym
 
 // a typename is a simple type or an array type
 typename
-    ::= name:t arraydims:d
+    ::= name:t empty_array_dims:d
         {:
             ParseNode tmp = t;
             for (int i = 0; i < d; i++) {
@@ -450,8 +470,8 @@ typename
     | name:t {: RESULT = t; :}
     ;
 
-arraydims
-    ::= LSQUARE RSQUARE arraydims:a {: RESULT = a + 1; :}
+empty_array_dims
+    ::= LSQUARE RSQUARE empty_array_dims:a {: RESULT = a + 1; :}
     |   LSQUARE RSQUARE  {: RESULT =  1; :}
     ;
 
@@ -646,24 +666,37 @@ expr_meth_expr
 	;
 
 new_expr
-    ::=	NEW name:i LPAREN RPAREN
-		{: RESULT = node(ParseNode.NEW, ileft, iright, i, null, null); :}
-	|	NEW name:i new_array_idx_list:as
-		{: RESULT = node(ParseNode.NEW, ileft, iright, i, null, as); :}
-	|	NEW name:i LPAREN expr_list:args RPAREN
-		{: RESULT = node(ParseNode.NEW, ileft, iright, i, args, null); :}
+    ::=	NEW name:n LPAREN RPAREN
+		{: RESULT = node(ParseNode.NEW, nleft, nright, n, null, null); :}
+	|	NEW name:n LPAREN expr_list:args RPAREN
+		{: RESULT = node(ParseNode.NEW, nleft, nright, n, args, null); :}
+	|	NEW name:n new_array_spec :nas
+		{: RESULT = node(ParseNode.NEW, nleft, nright, n, null, nas); :}
 	;
 
-new_array_idx_list
-    ::= LSQUARE:l RSQUARE
-        // we use NOTHING to indicate an empty dimension
-        {: RESULT = node(ParseNode.NOTHING, lleft, lright); :}
-    |   LSQUARE expr:e RSQUARE
-        {: RESULT = e; :}
-    |   LSQUARE:l RSQUARE new_array_idx_list:as
-        {: RESULT = node(ParseNode.COMMA, lleft, lright, node(ParseNode.NOTHING, lleft, lright), as); :}
-    |   LSQUARE expr:e RSQUARE new_array_idx_list:as
-        {: RESULT = node(ParseNode.COMMA, eleft, eright, e, as); :}
+// we can either have
+//   array_dims empty_array_dims
+// or
+//   empty_array_dims array_init
+new_array_spec
+    ::= array_dims:ad
+        {: RESULT = ad; :}
+    |   array_dims:ad array_init:ai
+        {: RESULT = node(ParseNode.ARRAY_INIT, adleft, adright, ad, ai); :}
+    ;
+
+array_dims
+    ::= array_dim:ad array_dims:ads
+        {: RESULT = node(ParseNode.COMMA, adleft, adright, ad, ads); :}
+    |   array_dim:ad
+        {: RESULT = ad; :}
+    ;
+
+array_dim
+    ::= LSQUARE expr:e RSQUARE
+    {: RESULT = e; :}
+    |   LSQUARE:l RSQUARE
+    {: RESULT = node(ParseNode.NOTHING, lleft, lright, null); :}
     ;
 
 simple_expr
