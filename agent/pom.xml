@@ -312,6 +312,22 @@
                       </configuration>
                     </execution>
                     <execution>
+                      <id>location.TestExceptionExit</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                         <forkMode>once</forkMode>
+                         <includes>
+                           <include>org/jboss/byteman/tests/location/TestExceptionExit.class</include>
+                         </includes>
+                         <!-- -Dorg.jboss.byteman.verbose -Dorg.jboss.byteman.debug  -->
+                         <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/location/TestExceptionExit.btm</argLine>
+                      </configuration>
+                    </execution>
+                    <execution>
                       <id>location.TestLine</id>
                       <phase>integration-test</phase>
                       <goals>
@@ -1198,6 +1214,21 @@
                                 <include>org/jboss/byteman/tests/location/TestExit.class</include>
                             </includes>
                             <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/location/TestExit.btm</argLine>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>location.TestExceptionExit.compiled</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkMode>once</forkMode>
+                            <includes>
+                                <include>org/jboss/byteman/tests/location/TestExceptionExit.class</include>
+                            </includes>
+                            <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/location/TestExceptionExit.btm</argLine>
                         </configuration>
                     </execution>
                     <execution>

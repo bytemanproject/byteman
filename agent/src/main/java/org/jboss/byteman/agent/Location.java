@@ -66,6 +66,8 @@ public abstract class Location
                 return ThrowLocation.create(parameters);
             case EXIT:
                 return ExitLocation.create(parameters);
+            case EXCEPTION_EXIT:
+                return ExceptionExitLocation.create(parameters);
         }
 
         return null;
@@ -944,6 +946,55 @@ public abstract class Location
 
         public String toString() {
             return "AT EXIT";
+        }
+    }
+
+    /**
+     * location identifying a method exceptional exit trigger point
+     */
+    private static class ExceptionExitLocation extends Location
+    {
+        /**
+         * create a location identifying a method exceptional exit trigger point
+         * @param parameters the text of the parameters appended to the location specifier
+         * @return a method entry location or null if the parameters is not a blank String
+         */
+        protected static Location create(String parameters) {
+            if (!parameters.trim().equals("")) {
+                // hmm, not expecting any parameters here
+                return null;
+            }
+            return new ExceptionExitLocation();
+        }
+
+        /**
+         * return an adapter which can be used to check whether a method contains a trigger point whose position
+         * matches this location
+         * @return the required adapter
+         */
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext) {
+            // a line check adapter with line -1 will do the job
+
+            return new ExceptionExitCheckAdapter(cv, transformContext);
+        }
+
+        /**
+         * return an adapter which can be used to insert a trigger call in a method containing a trigger point whose
+         * position matches this location
+         * @return the required adapter
+         */
+        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext) {
+            // a line adapter with line -1 will do the job
+
+            return new ExceptionExitTriggerAdapter(cv, transformContext);
+        }
+
+        public LocationType getLocationType() {
+            return LocationType.EXCEPTION_EXIT;
+        }
+
+        public String toString() {
+            return "AT EXCEPTION EXIT";
         }
     }
 
