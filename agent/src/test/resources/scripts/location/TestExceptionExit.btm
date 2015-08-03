@@ -61,3 +61,67 @@ BIND test : Test = $0.getTest()
 IF TRUE
 DO test.log("EXCEPTIONAL EXIT: "+$^.getMessage())
 ENDRULE
+
+RULE test exception exit trigger for testMethodMultiRule A
+CLASS TestExceptionExitAuxiliary
+METHOD testMethodMultiRule
+HELPER org.jboss.byteman.tests.helpers.Default
+AT EXCEPTION EXIT
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("EXCEPTIONAL EXIT A: "+$^.getMessage());
+    THROW new RuntimeException("oops!");
+ENDRULE
+
+RULE test exception exit trigger for testMethodMultiRule B
+CLASS TestExceptionExitAuxiliary
+METHOD testMethodMultiRule
+HELPER org.jboss.byteman.tests.helpers.Default
+AT EXCEPTION EXIT
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("EXCEPTIONAL EXIT B: "+$^.getMessage());
+    THROW new RuntimeException("more oops!");
+ENDRULE
+
+RULE test exception exit trigger for testMethodMultiRule2 A
+CLASS TestExceptionExitAuxiliary
+METHOD testMethodMultiRule2
+HELPER org.jboss.byteman.tests.helpers.Default
+AT EXCEPTION EXIT
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("EXCEPTIONAL EXIT A: "+$^.getMessage());
+    RETURN
+ENDRULE
+
+RULE test exception exit trigger for testMethodMultiRule2 B
+CLASS TestExceptionExitAuxiliary
+METHOD testMethodMultiRule2
+HELPER org.jboss.byteman.tests.helpers.Default
+AT EXCEPTION EXIT
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("EXCEPTIONAL EXIT B: "+$^.getMessage());
+    RETURN
+ENDRULE
+
+  RULE test exception exit trigger for testMethodMultiRule3 A
+CLASS TestExceptionExitAuxiliary
+METHOD testMethodMultiRule3
+HELPER org.jboss.byteman.tests.helpers.Default
+AT EXCEPTION EXIT
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("EXCEPTIONAL EXIT A: "+$^.getMessage());
+ENDRULE
+
+RULE test exception exit trigger for testMethodMultiRule3 B
+CLASS TestExceptionExitAuxiliary
+METHOD testMethodMultiRule3
+HELPER org.jboss.byteman.tests.helpers.Default
+AT EXCEPTION EXIT
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("EXCEPTIONAL EXIT B: "+$^.getMessage());
+ENDRULE

@@ -40,7 +40,7 @@ public class TestExceptionExitAuxiliary implements TestInterface {
     public void testMethod()
     {
         test.log("inside TestExceptionExitAuxiliary.testMethod");
-        
+
         try {
         	testVoidMethod(true);
         } catch (Throwable t) {
@@ -65,9 +65,27 @@ public class TestExceptionExitAuxiliary implements TestInterface {
         	test.log("caught: "+t.getMessage());
         }
 
+        try {
+        	testMethodMultiRule(true);
+        } catch (Throwable t) {
+        	test.log("caught: "+t.getMessage());
+        }
+
+        try {
+        	testMethodMultiRule2(true);
+        } catch (Throwable t) {
+        	test.log("caught: "+t.getMessage());
+        }
+
+        try {
+        	testMethodMultiRule3(true);
+        } catch (Throwable t) {
+        	test.log("caught: "+t.getMessage());
+        }
+
         test.log("exiting TestExceptionExitAuxiliary.testMethod");
     }
-    
+
     public void testVoidMethod(boolean fail) {
         test.log("inside TestExceptionExitAuxiliary.testVoidMethod");
         if (fail) {
@@ -107,7 +125,7 @@ public class TestExceptionExitAuxiliary implements TestInterface {
 	        	throw new ExcC("testMethodNestedTryCatch exception");
 	        }
         } catch (ExcC ec) {
-        	try {        		
+        	try {
         		throw new ExcB(ec.getMessage());
         	} finally {
         		test.log("finally testMethodNestedTryCatch");
@@ -116,25 +134,82 @@ public class TestExceptionExitAuxiliary implements TestInterface {
         test.log("exit TestExceptionExitAuxiliary.testMethodNestedTryCatch");
     }
 
+    private void runtimeExceptionSource(boolean fail, String message)
+    {
+        if (fail) {
+            throw new RuntimeException(message);
+        }
+    }
+
+    private void throwableSource(boolean fail, String message) throws Throwable
+    {
+        if (fail) {
+            throw new Throwable(message);
+        }
+    }
+
+    private void excCSource(boolean fail, String message) throws ExcC
+    {
+        if (fail) {
+            throw new ExcC(message);
+        }
+    }
+
+    public void testMethodMultiRule(boolean fail) throws Throwable {
+        test.log("inside TestExceptionExitAuxiliary.testMethodMultiRule");
+        try {
+            runtimeExceptionSource(fail, "testMethodMultiRule inner RuntimeException");
+            throwableSource(fail, "testMethodMultiRule inner Throwable");
+        } catch (ExcC exc) {
+            throwableSource(fail, "testMethodMultiRule catch ExcC");
+        } finally {
+            test.log("finally testMethodMultiRule");
+        }
+        throwableSource(fail, "testMethodMultiRule outer Throwable");
+        test.log("exit TestExceptionExitAuxiliary.testMethodMultiRule");
+    }
+
+    public void testMethodMultiRule2(boolean fail) throws Throwable {
+        test.log("inside TestExceptionExitAuxiliary.testMethodMultiRule2");
+        try {
+            excCSource(fail, "testMethodMultiRule2 inner ExcC");
+        } catch (ExcC exc) {
+            throwableSource(fail, "testMethodMultiRule2 catch ExcC");
+        } finally {
+            test.log("finally testMethodMultiRule2");
+        }
+        test.log("exit TestExceptionExitAuxiliary.testMethodMultiRule2");
+    }
+
+    public void testMethodMultiRule3(boolean fail) throws Throwable {
+        test.log("inside TestExceptionExitAuxiliary.testMethodMultiRule3");
+        try {
+            throwableSource(fail, "testMethodMultiRule3 inner Throwable");
+        } finally {
+            test.log("finally testMethodMultiRule3");
+        }
+        test.log("exit TestExceptionExitAuxiliary.testMethodMultiRule3");
+    }
+
     public Test getTest()
     {
         return test;
     }
-    
+
     public static class ExcA extends Exception {
 		private static final long serialVersionUID = 1L;
 		public ExcA(String mesg) {
     		super(mesg);
     	}
     }
-    
+
     public static class ExcB extends ExcA {
 		private static final long serialVersionUID = 1L;
 		public ExcB(String mesg) {
     		super(mesg);
     	}
     }
-    
+
     public static class ExcC extends ExcA {
 		private static final long serialVersionUID = 1L;
 		public ExcC(String mesg) {

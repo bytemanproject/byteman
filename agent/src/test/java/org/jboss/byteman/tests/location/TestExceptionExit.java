@@ -71,6 +71,23 @@ public class TestExceptionExit extends Test
         logExpected("EXCEPTIONAL EXIT: testMethodNestedTryCatch exception");
         logExpected("caught: testMethodNestedTryCatch exception");
 
+        // testMethodMultiRule
+        logExpected("inside TestExceptionExitAuxiliary.testMethodMultiRule");
+        logExpected("finally testMethodMultiRule");
+        logExpected("EXCEPTIONAL EXIT A: testMethodMultiRule inner RuntimeException");
+        logExpected("EXCEPTIONAL EXIT B: oops!");
+        logExpected("caught: more oops!");
+
+        logExpected("inside TestExceptionExitAuxiliary.testMethodMultiRule2");
+        logExpected("finally testMethodMultiRule2");
+        logExpected("EXCEPTIONAL EXIT A: testMethodMultiRule2 catch ExcC");
+
+        logExpected("inside TestExceptionExitAuxiliary.testMethodMultiRule3");
+        logExpected("finally testMethodMultiRule3");
+        logExpected("EXCEPTIONAL EXIT A: testMethodMultiRule3 inner Throwable");
+        logExpected("EXCEPTIONAL EXIT B: testMethodMultiRule3 inner Throwable");
+        logExpected("caught: testMethodMultiRule3 inner Throwable");
+
         logExpected("exiting TestExceptionExitAuxiliary.testMethod");
 
         return super.getExpected();
