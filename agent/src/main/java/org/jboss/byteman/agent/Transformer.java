@@ -26,6 +26,7 @@ package org.jboss.byteman.agent;
 import org.jboss.byteman.agent.adapter.*;
 import org.jboss.byteman.agent.check.ClassChecker;
 import org.jboss.byteman.agent.check.LoadCache;
+import org.jboss.byteman.modules.ModuleSystem;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.rule.exception.ParseException;
@@ -56,16 +57,17 @@ public class Transformer implements ClassFileTransformer {
      * @param scriptPaths list of file paths for each input script
      * @param scriptTexts the text of each input script
      * @param isRedefine true if class redefinition is allowed false if not
+     * @param moduleSystem the module system to use in transformation
      * @throws Exception if a script is in error
      */
-    public Transformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts, boolean isRedefine)
+    public Transformer(Instrumentation inst, ModuleSystem moduleSystem, List<String> scriptPaths, List<String> scriptTexts, boolean isRedefine)
             throws Exception
     {
         this.inst = inst;
         this.isRedefine = isRedefine;
         scriptRepository = new ScriptRepository(skipOverrideRules);
         loadCache = new LoadCache(inst);
-        helperManager = new HelperManager(inst);
+        helperManager = new HelperManager(inst, moduleSystem);
 
         Iterator<String> scriptsIter = scriptTexts.iterator();
         Iterator<String> filesIter = scriptPaths.iterator();
@@ -805,7 +807,7 @@ public class Transformer implements ClassFileTransformer {
             for (RuleScript ruleScript : ruleScripts) {
                 try {
                     // we only transform via isOverride rules if isOverride is true
-                    // we tarsnform via any matchign rules if isOverride is false
+                    // we transform via any matching rules if isOverride is false
                     if (!isOverride || ruleScript.isOverride()) {
                         // only do the transform if the script has not been deleted
                         synchronized (ruleScript) {

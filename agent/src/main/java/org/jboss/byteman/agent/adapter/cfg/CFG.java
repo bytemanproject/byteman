@@ -36,7 +36,7 @@ import java.util.*;
  *
  *
  * A trigger method adapter is required to notify the CFG each time an instruction or label is visited and
- * each time a try catch block is notified. It is also required to notify the CFG when trigger coe generartion
+ * each time a try catch block is notified. It is also required to notify the CFG when trigger code generation
  * begins and ends. The cfg allows the trigger method adapter to identify whether or not trigger code is
  * within the scope of one or more synchronized blocks, allowing it to protect the trigger call with try catch
  * handlers which ensure that any open monitor enters are rounded off with a corresponding monitor exit.

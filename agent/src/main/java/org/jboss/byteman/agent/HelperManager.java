@@ -26,6 +26,7 @@
 package org.jboss.byteman.agent;
 
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.modules.ModuleSystem;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
@@ -41,11 +42,13 @@ public class HelperManager
 
     /**
      * construct a manager
-     * @param inst will be non-null if 
+     * @param inst will be non-null if we are running in an agent
+     * @param moduleSystem must be non-null, use NonModuleSystem if nothing specal is needed
      */
-    public HelperManager(Instrumentation inst)
+    public HelperManager(Instrumentation inst, ModuleSystem moduleSystem)
     {
         this.inst = inst;
+        this.moduleSystem = moduleSystem;
         this.helperDetailsMap = new ConcurrentHashMap<Class<?>, LifecycleDetails>();
     }
 
@@ -155,6 +158,11 @@ public class HelperManager
         return this.inst.getObjectSize(o);
     }
 
+    public ModuleSystem getModuleSystem()
+    {
+        return moduleSystem;
+    }
+
     // private parts
 
     /**
@@ -162,6 +170,11 @@ public class HelperManager
      * a real agent so  we do no work.
      */
     private Instrumentation inst;
+
+    /**
+     * the module system implementation.
+     */
+    private ModuleSystem moduleSystem;
 
     /**
      * a hashmap from helper classes to their corresponding helper details. we don't use weak references here

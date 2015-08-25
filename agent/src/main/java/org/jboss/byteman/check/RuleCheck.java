@@ -35,11 +35,13 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.jboss.byteman.agent.HelperManager;
 import org.jboss.byteman.agent.LocationType;
 import org.jboss.byteman.agent.RuleScript;
 import org.jboss.byteman.agent.ScriptRepository;
 import org.jboss.byteman.agent.Transform;
 import org.jboss.byteman.agent.Transformer;
+import org.jboss.byteman.modules.NonModuleSystem;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.binding.Binding;
 import org.jboss.byteman.rule.binding.Bindings;
@@ -65,6 +67,7 @@ public class RuleCheck {
         result = new RuleCheckResult();
         output = null;
         verbose = false;
+        helperManager = new HelperManager(null, new RuleCheckModuleSystem());
     }
 
     public void setPrintStream(PrintStream printStream)
@@ -211,7 +214,7 @@ public class RuleCheck {
 
                 Transformer transformer = null;
                 try {
-                    transformer = new Transformer(null, emptyInitialTexts, emptyInitialFiles, false);
+                    transformer = new Transformer(null, helperManager.getModuleSystem(), emptyInitialTexts, emptyInitialFiles, false);
                 } catch (Exception e) {
                     // will not happen!
                 }
@@ -281,7 +284,7 @@ public class RuleCheck {
                 // ok, not necessarily a surprise - let's see if we can create a rule and parse/type check it
                 final Rule rule;
                 try {
-                    rule = Rule.create(script, loader, null);
+                    rule = Rule.create(script, loader, helperManager);
                 } catch (ParseException pe) {
                     parseError("ERROR : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine(), pe);
                     continue;
@@ -353,7 +356,7 @@ public class RuleCheck {
                         // we need a new copy of the rule
 
                         try {
-                            rule = Rule.create(script, loader, null);
+                            rule = Rule.create(script, loader, helperManager);
                         } catch (ParseException e) {
                             // will not happen
                         } catch (TypeException e) {
@@ -563,4 +566,14 @@ public class RuleCheck {
     private RuleCheckResult result;
     PrintStream output;
     private boolean verbose;
+    private HelperManager helperManager;
+
+    
+    class RuleCheckModuleSystem extends NonModuleSystem
+    {
+        protected void reportUnexpectedImports(String[] imports)
+        {
+            warning("WARNING : Rule checking does not support IMPORT. Additional classpath entries may be required");
+        }
+    }
 }

@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.jar.JarFile;
 
+import org.jboss.byteman.modules.ModuleSystem;
+
 /**
  * byte code transformer used to introduce byteman events into JBoss code
  */
@@ -50,10 +52,10 @@ public class Retransformer extends Transformer {
      * @param isRedefine true if class redefinition is allowed false if not
      * @throws Exception if a script is in error
      */
-    public Retransformer(Instrumentation inst, List<String> scriptPaths, List<String> scriptTexts, boolean isRedefine)
+    public Retransformer(Instrumentation inst, ModuleSystem moduleSystem, List<String> scriptPaths, List<String> scriptTexts, boolean isRedefine)
             throws Exception
     {
-        super(inst, scriptPaths, scriptTexts, isRedefine);
+        super(inst, moduleSystem, scriptPaths, scriptTexts, isRedefine);
         //addTransformListener(hostname, port);
     }
 
