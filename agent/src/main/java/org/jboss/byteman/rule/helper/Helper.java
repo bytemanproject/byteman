@@ -59,7 +59,7 @@ public class Helper
     public boolean debug(String text)
     {
         if (Transformer.isDebug()) {
-            System.out.println("rule.debug{" + rule.getName() + "} : " + text);
+            System.out.println("rule.debug{" + rule.getKey() + "} : " + text);
         }
         return true;
     }
