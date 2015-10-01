@@ -86,18 +86,16 @@
         </repository>
     </repositories>
     <distributionManagement>
-        <repository>
-            <id>jboss-releases-repository</id>
-            <name>JBoss Release Repository</name>
-            <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
-        </repository>
-        <!--
+        <!-- obviously we need to use the Sonatype staging repo for upload -->
         <snapshotRepository>
-            <id>jboss-snapshots-repository</id>
-            <name>JBoss Snapshot Repository</name>
-            <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
+            <id>sonatype-snapshots-repository</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
-        -->
+        <repository>
+            <id>sonatype-releases-repository</id>
+            <name>Sonatype Releases Repository</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+        </repository>
     </distributionManagement>
 
     <properties>
@@ -408,43 +406,49 @@
                   <gpg.passphrase>XXXXXXXXXX</gpg.passphrase>
               </properties>
             </profile>
+
+       you will also need to include a user name and
+       password entry for the nexus server and the nexus
+       snapshot server -- note that the ids must match the
+       ones used in the repositories section of this pom
+
+            <servers>
+              <server>
+                <id>sonatype-releases-repository</id>
+                <username>NNNNNNNN</username>
+                <password>PPPPPPPP</password>
+              </server>
+              <server>
+                <id>sonatype-snapshots-repository</id>
+                <username>NNNNNNNN</username>
+                <password>PPPPPPPP</password>
+              </server>
+           </servers>
       -->
       <profile>
-	<id>centralRelease</id>
-	<!-- obviously we need to use the Sonatype staging repo for upload -->
-	<distributionManagement>
-          <snapshotRepository>
-            <id>sonatype-releases-repository</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-          </snapshotRepository>
-	  <repository>
-	    <id>sonatype-releases-repository</id>
-	    <name>Sonatype Releases Repository</name>
-	    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-	  </repository>
-	</distributionManagement>
-	<!-- we need to be able to sign the jars we install -->
-	<build>
-	  <plugins>
-	    <plugin>
-	      <groupId>org.apache.maven.plugins</groupId>
-	      <artifactId>maven-gpg-plugin</artifactId>
-	      <configuration>
-		<passphrase>${gpg.passphrase}</passphrase>
-		<useAgent>${gpg.useAgent}</useAgent>
-	      </configuration>
-	      <executions>
-		<execution>
-		  <id>sign-artifacts</id>
-		  <phase>verify</phase>
-		  <goals>
-		    <goal>sign</goal>
-		  </goals>
-		</execution>
-	      </executions>
-	    </plugin>
-	  </plugins>
-	</build>
+          <id>centralRelease</id>
+          <!-- we need to be able to sign the jars we install -->
+          <build>
+              <plugins>
+                  <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-gpg-plugin</artifactId>
+                      <configuration>
+                          <passphrase>${gpg.passphrase}</passphrase>
+                          <useAgent>${gpg.useAgent}</useAgent>
+                      </configuration>
+                      <executions>
+                          <execution>
+                              <id>sign-artifacts</id>
+                              <phase>verify</phase>
+                              <goals>
+                                  <goal>sign</goal>
+                              </goals>
+                          </execution>
+                      </executions>
+                  </plugin>
+              </plugins>
+          </build>
       </profile>
     </profiles>
 </project>
