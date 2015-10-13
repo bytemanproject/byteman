@@ -176,7 +176,7 @@ public class TryCatchDetails
                     break;
                 }
             }
-            
+
             if (pos >= 0) {
                 openMonitorEnters.add(pos, location);
             }
@@ -205,5 +205,10 @@ public class TryCatchDetails
     public List<TryCatchDetails> getShadowRegions()
     {
         return shadowRegions;
+    }
+
+    public boolean hasShadowRegion(TryCatchDetails tryCatchDetails)
+    {
+        return (shadowRegions != null && shadowRegions.contains(tryCatchDetails));
     }
 }

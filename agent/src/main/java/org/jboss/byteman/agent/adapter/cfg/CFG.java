@@ -1522,16 +1522,34 @@ public class CFG
 
             while (currentStartsIter.hasNext()) {
                 TryCatchDetails currentStart = currentStartsIter.next();
-                if (newStarts.contains(currentStart)) {
-                    // this was just added so no shadowing occurs
-                    continue;
-                }
                 Iterator<TryCatchDetails> newStartsIter = newStarts.iterator();
+                boolean seenCurrent = false;
                 while (newStartsIter.hasNext()) {
                     TryCatchDetails newStart = newStartsIter.next();
                     // TODO extend this to cope with superclass shadowing
+                    if (newStart == currentStart) {
+                        // remember we have seen the current start
+                        seenCurrent = true;
+                        // starts don't shadow themselves
+                        continue;
+                    }
                     if (newStart.getType() == null || newStart.getType().equals(currentStart.getType())) {
-                        currentStart.addShadowRegion(newStart);
+                        // currentStart opens either before or at the same position as newStart
+                        // and catches a compatible exception type.
+
+                        if (newStarts.contains(currentStart)) {
+                            // currentStart and newStart are both new so both begin at
+                            // the same position. we want to add the earlier one as a
+                            // shadow region for the later one.
+                            if (seenCurrent) {
+                                // newStart appears later than currentStart in the list
+                                newStart.addShadowRegion(currentStart);
+                            }
+                        } else {
+                            // currentStart is not new so it opens before newStart which means
+                            // newStart shadows it
+                            currentStart.addShadowRegion(newStart);
+                        }
                     }
                 }
             }
