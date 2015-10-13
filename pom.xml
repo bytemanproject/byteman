@@ -409,7 +409,7 @@
 
        you will also need to include a user name and
        password entry for the nexus server and the nexus
-       snapshot server -- note that the ids must match the
+       snapshot server - note that the ids must match the
        ones used in the repositories section of this pom
 
             <servers>
