@@ -1451,6 +1451,9 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
             int size = 1;
             Type type = null;
             switch(opcode) {
+                // n.b. this fails to distinguish boolean types
+                // we need to check for them specially when we try
+                // to use a local which is marked as int
                 case Opcodes.ISTORE:
                     type = Type.INT_TYPE;
                 break;

@@ -443,7 +443,13 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
                 int idx = binding.getLocalIndex();
                 loadLocal(idx);
                 // local type may be Object when actual type is more specific but we don't care here
-                box(getLocalType(idx));
+                // special case -- if this is a bool we may have recorded it as int when it was saved
+                // using an iload. we can use the descriptor in the binding to detect this special case
+                if (binding.getDescriptor().equals("boolean")) {
+                    box(Type.BOOLEAN_TYPE);
+                } else {
+                    box(getLocalType(idx));
+                }
             } else if (binding.isParamCount()){
                 int count = argumentTypes.length;
                 push(count);
@@ -539,9 +545,13 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
                     // insert that when we see an ALOAD for a local var we do not know about.
                     // but we can rely on the descriptor in the binding which we derived during
                     // rule check processing
+                    // similarly, if this is a bool we may have recorded it as int when it was saved
+                    // using an iload.
                     if (t.getClassName().equals("java.lang.Object")) {
                         String descriptor = binding.getDescriptor();
                         t = Type.getType("L" + descriptor.replace('.', '/') + ";");
+                    } else if (t == Type.INT_TYPE && binding.getDescriptor().equals("boolean")) {
+                        t = Type.BOOLEAN_TYPE;
                     }
                     unbox(t);
                     storeLocal(idx);
