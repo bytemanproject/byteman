@@ -211,4 +211,11 @@ public class TryCatchDetails
     {
         return (shadowRegions != null && shadowRegions.contains(tryCatchDetails));
     }
+
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("" + type + " try: " + cfg.getLocation(start) + " catch: " + cfg.getLocation(end) + " handler: " + cfg.getLocation(handler));
+        return builder.toString();
+    }
 }
