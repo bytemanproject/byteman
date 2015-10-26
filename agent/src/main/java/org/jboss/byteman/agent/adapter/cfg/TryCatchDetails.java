@@ -170,7 +170,7 @@ public class TryCatchDetails
                     pos++;
                 } else {
                     // need to insert before this one unless it is already present
-                    if (compare > 0) {
+                    if (compare == 0) {
                         pos = -1;
                     }
                     break;
