@@ -450,7 +450,7 @@ public class BBlock
     void printTo(StringBuffer buf)
     {
         int blockIdx = this.getBlockIdx();
-        int bcpos = -1;
+        int bcpos = 0;
         buf.append(this.getLabel().getOffset());
         buf.append(": BB ");
         buf.append(blockIdx);
@@ -569,18 +569,15 @@ public class BBlock
                 containedPosition = (containedLabel != null ? cfg.getBlockInstructionIdx(containedLabel) : -1);
             }
             // buf.append("   ");
-            if (bcpos > 0) {
                 buf.append(bcpos);
-                buf.append(':');
-                bcpos = -1;
-            }
-            buf.append("\t");
+            buf.append(":\t");
             buf.append(blockIdx);
             buf.append(".");
             buf.append(i);
             buf.append(": ");
             int opcode = this.getInstruction(i);
-            switch (OpcodesHelper.insnType(opcode)) {
+            int insnType = OpcodesHelper.insnType(opcode);
+            switch (insnType) {
                 case OpcodesHelper.INSN_NONE:
                 {
                     // print the instruction name
@@ -1062,10 +1059,12 @@ public class BBlock
                 }
                 break;
             }
+            bcpos = nextBCPos(opcode, i, bcpos);
         }
         // print the active starts for this block
         if (activeTryStarts != null) {
             Iterator<TryCatchDetails> activeStartsIter = activeTryStarts.iterator();
+            buf.append("active try starts:\n");
             while (activeStartsIter.hasNext()) {
                 TryCatchDetails details = activeStartsIter.next();
                 Label label = details.getStart();
@@ -1109,5 +1108,93 @@ public class BBlock
                 buf.append("\n");
             }
         }
+    }
+    private int nextBCPos(int opcode, int insnIdx, int currentPos)
+    {
+        int size = OpcodesHelper.insnsSize(opcode);
+        if (size < 0) {
+            // normal (non-wide) size is the negative of the returned value
+            size = -size;
+            // may be a wide opcode or a table/lookupswitch
+            switch (opcode) {
+                case Opcodes.LOOKUPSWITCH:
+                {
+                    // LOOKUPSWITCH has 0..3 padding bytes, off_def, N, key_1, off_1, ... key_N, off_N
+                    // add one byte for bytecode
+                    currentPos += 1;
+                    // round up to multiple of 4
+                    currentPos = ((currentPos + 3) / 4) * 4;
+                    // count fixed operand bytes
+                    currentPos += 8;
+                    // count variable operand bytes
+                    int count = this.getInstructionArg(insnIdx, 0);
+                    currentPos += count * 8;
+                }
+                break;
+                case Opcodes.TABLESWITCH:
+                {
+                    // TABLESWITCH has 0..3 padding bytes, off_def, lo, hi, off_1, ... off_N where N = ((hi + 1) - lo)
+                    // add one byte for bytecode
+                    currentPos += 1;
+                    // round up to multiple of 4
+                    currentPos = ((currentPos + 3) / 4) * 4;
+                    // count fixed operand bytes
+                    currentPos += 12;
+                    // count variable operand bytes
+                    int hi = this.getInstructionArg(insnIdx, 0);
+                    int lo = this.getInstructionArg(insnIdx, 1);
+                    int count = (hi + 1 - lo);
+                    currentPos += count * 4;
+                }
+                break;
+                default:
+                {
+                    // most wide operands just need an extra wide byte and an extra operand byte
+                    // but we have a few special cases
+                    if (opcode == Opcodes.IINC) {
+                        // wide iinc needs wide byte plus two extra operand bytes
+                        int slot = this.getInstructionArg(insnIdx, 0);
+                        int value = this.getInstructionArg(insnIdx, 1);
+                        if(slot > 255 || value > 127 || value < -128) {
+                            // wide format add one byte for preceding wide, one for operand and four operand bytes
+                            currentPos += 6;
+                        } else {
+                            // add one byte for operand and two operand bytes
+                            currentPos += 3;
+                        }
+                    } else if (opcode >= Opcodes.ILOAD && opcode <= Opcodes.ALOAD ||
+                            opcode >= Opcodes.ISTORE && opcode <= Opcodes.ASTORE) {
+                        // we can see xload when the real opcode is xload_<n>
+                        int slot = this.getInstructionArg(insnIdx, 0);
+                        if(slot < 4) {
+                            // add one byte for operand
+                            currentPos += 1;
+                        } else if(slot > 255) {
+                            // wide format add one byte for preceding wide, one for operand and two operand bytes
+                            currentPos += 4;
+                        } else {
+                            // add one byte for operand and one operand bytes
+                            currentPos += 2;
+                        }
+                    } else if (opcode == Opcodes.LDC) {
+                        int offset = this.getInstructionArg(insnIdx, 0);
+                        if (offset > 255) {
+                            // wide format add one byte for operand and two operand bytes
+                            currentPos += 3;
+                        } else {
+                            // add one byte for operand and one operand bytes
+                            currentPos += 2;
+                        }
+                    } else {
+                        // add one byte for preceding wide and one extra operand byte
+                        currentPos += (size + 2);
+                    }
+                }
+                break;
+            }
+        } else {
+            currentPos += size;
+        }
+        return currentPos;
     }
 }

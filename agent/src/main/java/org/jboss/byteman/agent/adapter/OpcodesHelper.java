@@ -95,6 +95,11 @@ public class OpcodesHelper implements Opcodes
     private static String[] insnName = new String[256];
 
 /**
+ * lookup table to derive instruction bytecount from instruction
+ */
+    private static int[] insnSize = new int[256];
+
+/**
  * initializer block for insnType and insnName lookup tables
  */
 
@@ -517,7 +522,224 @@ public class OpcodesHelper implements Opcodes
         insnName[Opcodes.IFNONNULL] = "ifnonnull";
         insnName[Opcodes.IFNONNULL + 1] = "goto_w";
         insnName[Opcodes.IFNONNULL + 2] = "jsr_w";
-    }
+
+        insnSize[Opcodes.NOP] = 1;
+        insnSize[Opcodes.ACONST_NULL] = 1;
+        insnSize[Opcodes.ICONST_M1] = 1;
+        insnSize[Opcodes.ICONST_0] = 1;
+        insnSize[Opcodes.ICONST_1] = 1;
+        insnSize[Opcodes.ICONST_2] = 1;
+        insnSize[Opcodes.ICONST_3] = 1;
+        insnSize[Opcodes.ICONST_4] = 1;
+        insnSize[Opcodes.ICONST_5] = 1;
+        insnSize[Opcodes.LCONST_0] = 1;
+        insnSize[Opcodes.LCONST_1] = 1;
+        insnSize[Opcodes.FCONST_0] = 1;
+        insnSize[Opcodes.FCONST_1] = 1;
+        insnSize[Opcodes.FCONST_2] = 1;
+        insnSize[Opcodes.DCONST_0] = 1;
+        insnSize[Opcodes.DCONST_1] = 1;
+        insnSize[Opcodes.BIPUSH] = 3;
+        insnSize[Opcodes.SIPUSH] = 3;
+        insnSize[Opcodes.LDC] = -2;
+        for (int i = 1; i < Opcodes.ILOAD; i++) {
+            insnSize[Opcodes.LDC + i] = -3;
+        }
+        // insnSize[Opcodes.LDC_W] = 3;
+        // insnSize[Opcodes.LDC2_W] = 3;
+        insnSize[Opcodes.ILOAD] = -2; // XLOAD may be wide
+        insnSize[Opcodes.LLOAD] = -2;
+        insnSize[Opcodes.FLOAD] = -2;
+        insnSize[Opcodes.DLOAD] = -2;
+        insnSize[Opcodes.ALOAD] = -2;
+        for (int i = 1; i < Opcodes.IALOAD - Opcodes.ALOAD; i++) {
+            insnSize[Opcodes.ALOAD + i] = -1;
+        }
+        // insnSize[Opcodes.ILOAD_0] = 1;
+        // insnSize[Opcodes.ILOAD_1] = 1;
+        // insnSize[Opcodes.ILOAD_2] = 1;
+        // insnSize[Opcodes.ILOAD_3] = 1;
+        // insnSize[Opcodes.LLOAD_0] = 1;
+        // insnSize[Opcodes.LLOAD_1] = 1;
+        // insnSize[Opcodes.LLOAD_2] = 1;
+        // insnSize[Opcodes.LLOAD_3] = 1;
+        // insnSize[Opcodes.FLOAD_0] = 1;
+        // insnSize[Opcodes.FLOAD_1] = 1;
+        // insnSize[Opcodes.FLOAD_2] = 1;
+        // insnSize[Opcodes.FLOAD_3] = 1;
+        // insnSize[Opcodes.DLOAD_0] = 1;
+        // insnSize[Opcodes.DLOAD_1] = 1;
+        // insnSize[Opcodes.DLOAD_2] = 1;
+        // insnSize[Opcodes.DLOAD_3] = 1;
+        // insnSize[Opcodes.ALOAD_0] = 1;
+        // insnSize[Opcodes.ALOAD_1] = 1;
+        // insnSize[Opcodes.ALOAD_2] = 1;
+        // insnSize[Opcodes.ALOAD_3] = 1;
+        insnSize[Opcodes.IALOAD] = 1;
+        insnSize[Opcodes.LALOAD] = 1;
+        insnSize[Opcodes.FALOAD] = 1;
+        insnSize[Opcodes.DALOAD] = 1;
+        insnSize[Opcodes.AALOAD] = 1;
+        insnSize[Opcodes.BALOAD] = 1;
+        insnSize[Opcodes.CALOAD] = 1;
+        insnSize[Opcodes.SALOAD] = 1;
+        insnSize[Opcodes.ISTORE] = -2;  // XSTORE may be wide
+        insnSize[Opcodes.LSTORE] = -2;
+        insnSize[Opcodes.FSTORE] = -2;
+        insnSize[Opcodes.DSTORE] = -2;
+        insnSize[Opcodes.ASTORE] = -2;
+        for (int i = 1; i < Opcodes.IASTORE - Opcodes.ASTORE; i++) {
+            insnSize[Opcodes.ASTORE + i] = 1;
+        }
+        // insnSize[Opcodes.ISTORE_0] = 1;
+        // insnSize[Opcodes.ISTORE_1] = 1;
+        // insnSize[Opcodes.ISTORE_2] = 1;
+        // insnSize[Opcodes.ISTORE_3] = 1;
+        // insnSize[Opcodes.LSTORE_0] = 1;
+        // insnSize[Opcodes.LSTORE_1] = 1;
+        // insnSize[Opcodes.LSTORE_2] = 1;
+        // insnSize[Opcodes.LSTORE_3] = 1;
+        // insnSize[Opcodes.FSTORE_0] = 1;
+        // insnSize[Opcodes.FSTORE_1] = 1;
+        // insnSize[Opcodes.FSTORE_2] = 1;
+        // insnSize[Opcodes.FSTORE_3] = 1;
+        // insnSize[Opcodes.DSTORE_0] = 1;
+        // insnSize[Opcodes.DSTORE_1] = 1;
+        // insnSize[Opcodes.DSTORE_2] = 1;
+        // insnSize[Opcodes.DSTORE_3] = 1;
+        // insnSize[Opcodes.ASTORE_0] = 1;
+        // insnSize[Opcodes.ASTORE_1] = 1;
+        // insnSize[Opcodes.ASTORE_2] = 1;
+        // insnSize[Opcodes.ASTORE_3] = 1;
+        insnSize[Opcodes.IASTORE] = 1;
+        insnSize[Opcodes.LASTORE] = 1;
+        insnSize[Opcodes.FASTORE] = 1;
+        insnSize[Opcodes.DASTORE] = 1;
+        insnSize[Opcodes.AASTORE] = 1;
+        insnSize[Opcodes.BASTORE] = 1;
+        insnSize[Opcodes.CASTORE] = 1;
+        insnSize[Opcodes.SASTORE] = 1;
+        insnSize[Opcodes.POP] = 1;
+        insnSize[Opcodes.POP2] = 1;
+        insnSize[Opcodes.DUP] = 1;
+        insnSize[Opcodes.DUP_X1] = 1;
+        insnSize[Opcodes.DUP_X2] = 1;
+        insnSize[Opcodes.DUP2] = 1;
+        insnSize[Opcodes.DUP2_X1] = 1;
+        insnSize[Opcodes.DUP2_X2] = 1;
+        insnSize[Opcodes.SWAP] = 1;
+        insnSize[Opcodes.IADD] = 1;
+        insnSize[Opcodes.LADD] = 1;
+        insnSize[Opcodes.FADD] = 1;
+        insnSize[Opcodes.DADD] = 1;
+        insnSize[Opcodes.ISUB] = 1;
+        insnSize[Opcodes.LSUB] = 1;
+        insnSize[Opcodes.FSUB] = 1;
+        insnSize[Opcodes.DSUB] = 1;
+        insnSize[Opcodes.IMUL] = 1;
+        insnSize[Opcodes.LMUL] = 1;
+        insnSize[Opcodes.FMUL] = 1;
+        insnSize[Opcodes.DMUL] = 1;
+        insnSize[Opcodes.IDIV] = 1;
+        insnSize[Opcodes.LDIV] = 1;
+        insnSize[Opcodes.FDIV] = 1;
+        insnSize[Opcodes.DDIV] = 1;
+        insnSize[Opcodes.IREM] = 1;
+        insnSize[Opcodes.LREM] = 1;
+        insnSize[Opcodes.FREM] = 1;
+        insnSize[Opcodes.DREM] = 1;
+        insnSize[Opcodes.INEG] = 1;
+        insnSize[Opcodes.LNEG] = 1;
+        insnSize[Opcodes.FNEG] = 1;
+        insnSize[Opcodes.DNEG] = 1;
+        insnSize[Opcodes.ISHL] = 1;
+        insnSize[Opcodes.LSHL] = 1;
+        insnSize[Opcodes.ISHR] = 1;
+        insnSize[Opcodes.LSHR] = 1;
+        insnSize[Opcodes.IUSHR] = 1;
+        insnSize[Opcodes.LUSHR] = 1;
+        insnSize[Opcodes.IAND] = 1;
+        insnSize[Opcodes.LAND] = 1;
+        insnSize[Opcodes.IOR] = 1;
+        insnSize[Opcodes.LOR] = 1;
+        insnSize[Opcodes.IXOR] = 1;
+        insnSize[Opcodes.LXOR] = 1;
+        insnSize[Opcodes.IINC] = -3; // IINC may be wide
+        insnSize[Opcodes.I2L] = 1;
+        insnSize[Opcodes.I2F] = 1;
+        insnSize[Opcodes.I2D] = 1;
+        insnSize[Opcodes.L2I] = 1;
+        insnSize[Opcodes.L2F] = 1;
+        insnSize[Opcodes.L2D] = 1;
+        insnSize[Opcodes.F2I] = 1;
+        insnSize[Opcodes.F2L] = 1;
+        insnSize[Opcodes.F2D] = 1;
+        insnSize[Opcodes.D2I] = 1;
+        insnSize[Opcodes.D2L] = 1;
+        insnSize[Opcodes.D2F] = 1;
+        insnSize[Opcodes.I2B] = 1;
+        insnSize[Opcodes.I2C] = 1;
+        insnSize[Opcodes.I2S] = 1;
+        insnSize[Opcodes.LCMP] = 1;
+        insnSize[Opcodes.FCMPL] = 1;
+        insnSize[Opcodes.FCMPG] = 1;
+        insnSize[Opcodes.DCMPL] = 1;
+        insnSize[Opcodes.DCMPG] = 1;
+        insnSize[Opcodes.IFEQ] = 3;
+        insnSize[Opcodes.IFNE] = 3;
+        insnSize[Opcodes.IFLT] = 3;
+        insnSize[Opcodes.IFGE] = 3;
+        insnSize[Opcodes.IFGT] = 3;
+        insnSize[Opcodes.IFLE] = 3;
+        insnSize[Opcodes.IF_ICMPEQ] = 3;
+        insnSize[Opcodes.IF_ICMPNE] = 3;
+        insnSize[Opcodes.IF_ICMPLT] = 3;
+        insnSize[Opcodes.IF_ICMPGE] = 3;
+        insnSize[Opcodes.IF_ICMPGT] = 3;
+        insnSize[Opcodes.IF_ICMPLE] = 3;
+        insnSize[Opcodes.IF_ACMPEQ] = 3;
+        insnSize[Opcodes.IF_ACMPNE] = 3;
+        insnSize[Opcodes.GOTO] = 3;
+        insnSize[Opcodes.JSR] = 3;
+        insnSize[Opcodes.RET] = -2; // RET may be wide
+        insnSize[Opcodes.TABLESWITCH] = -1; // TABLESWITCH has 0..3 padding bytes, off_def, lo, hi, off_1, ... off_N where N = ((hi + 1) - lo)
+        insnSize[Opcodes.LOOKUPSWITCH] = -1;  // LOOKUPSWITCH has 0..3 padding bytes, off_def, N, key_1, off_1, ... key_N, off_N
+        insnSize[Opcodes.IRETURN] = 1;
+        insnSize[Opcodes.LRETURN] = 1;
+        insnSize[Opcodes.FRETURN] = 1;
+        insnSize[Opcodes.DRETURN] = 1;
+        insnSize[Opcodes.ARETURN] = 1;
+        insnSize[Opcodes.RETURN] = 1;
+        insnSize[Opcodes.GETSTATIC] = 3;
+        insnSize[Opcodes.PUTSTATIC] = 3;
+        insnSize[Opcodes.GETFIELD] = 3;
+        insnSize[Opcodes.PUTFIELD] = 3;
+        insnSize[Opcodes.INVOKEVIRTUAL] = 3;
+        insnSize[Opcodes.INVOKESPECIAL] = 3;
+        insnSize[Opcodes.INVOKESTATIC] = 3;
+        insnSize[Opcodes.INVOKEINTERFACE] = 5;
+        insnSize[Opcodes.INVOKEDYNAMIC] = 5;
+        // insnSize[Opcodes.UNUSED] = INSN_UNUSED;
+        insnSize[Opcodes.NEW] = 3;
+        insnSize[Opcodes.NEWARRAY] = 2;
+        insnSize[Opcodes.ANEWARRAY] = 3;
+        insnSize[Opcodes.ARRAYLENGTH] = 1;
+        insnSize[Opcodes.ATHROW] = 1;
+        insnSize[Opcodes.CHECKCAST] = 3;
+        insnSize[Opcodes.INSTANCEOF] = 3;
+        insnSize[Opcodes.MONITORENTER] = 1;
+        insnSize[Opcodes.MONITOREXIT] = 1;
+        insnSize[Opcodes.MONITOREXIT + 1] = 1;
+        // insnSize[Opcodes.WIDE] = 1;
+        insnSize[Opcodes.MULTIANEWARRAY] = 4;
+        insnSize[Opcodes.IFNULL] = 3;
+       insnSize[Opcodes.IFNONNULL] = 3;
+        for (int i = 1; i < 3; i++) {
+            insnSize[Opcodes.IFNONNULL + i] = 5;
+        }
+        // insnSize[Opcodes.GOTO_W] = 5;
+        // insnSize[Opcodes.JSR_W] = 5;
+  }
 
     static public int insnType(int opcode)
     {
@@ -528,4 +750,6 @@ public class OpcodesHelper implements Opcodes
     {
         return insnName[opcode];
     }
+
+    static public int insnsSize(int opcode) { return insnSize[opcode]; }
 }
