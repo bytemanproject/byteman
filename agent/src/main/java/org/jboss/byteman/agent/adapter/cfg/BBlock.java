@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.agent.adapter.cfg;
 
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
 import org.jboss.byteman.agent.adapter.OpcodesHelper;
@@ -443,12 +444,13 @@ public class BBlock
     }
 
     /**
-     * write a string represenattion of this block to the buffer
+     * write a string representation of this block to the buffer
      * @param buf the buffer to be written to
      */
     void printTo(StringBuffer buf)
     {
         int blockIdx = this.getBlockIdx();
+        int bcpos = -1;
         buf.append(this.getLabel().getOffset());
         buf.append(": BB ");
         buf.append(blockIdx);
@@ -462,6 +464,7 @@ public class BBlock
             if (containsIter.hasNext()) {
                 containedLabel = containsIter.next();
                 containedPosition = cfg.getBlockInstructionIdx(containedLabel);
+                bcpos =  containedLabel.getOffset();
             } else {
                 containedLabel = null;
                 containedPosition = -1;
@@ -477,11 +480,10 @@ public class BBlock
             // we will never enter this if containedPosition is -1 which safeguards us when containsIter
             // is null or containedLabel is null
             while (containedPosition == i) {
-                buf.append(containedLabel.getOffset());
+                bcpos = containedLabel.getOffset();
+                buf.append(bcpos);
                 buf.append(": ");
                 buf.append(containedLabel);
-                buf.append(" +");
-                buf.append(containedPosition);
                 if (cfg.tryCatchStart(containedLabel)) {
                     List<TryCatchDetails> detailsList = cfg.tryCatchStartDetails(containedLabel);
                     int detailsCount = detailsList.size();
@@ -489,9 +491,10 @@ public class BBlock
                         TryCatchDetails details = detailsList.get(j);
                         Label handlerLabel = details.getHandler();
                         CodeLocation handlerLocation = cfg.getLocation(handlerLabel);
+                        buf.append("\n  ");
                         buf.append(" try ");
                         buf.append(details.getType());
-                        buf.append(" ");
+                        buf.append(" -> ");
                         if (handlerLocation != null) {
                             buf.append(handlerLabel.getOffset());
                         } else {
@@ -508,9 +511,10 @@ public class BBlock
                         TryCatchDetails details = detailsList.get(j);
                         Label handlerLabel = details.getHandler();
                         CodeLocation handlerLocation = cfg.getLocation(handlerLabel);
+                        buf.append("\n  ");
                         buf.append(" catch ");
                         buf.append(details.getType());
-                        buf.append(" ");
+                        buf.append(" -> ");
                         if (handlerLocation != null) {
                             buf.append(handlerLabel.getOffset());
                         } else {
@@ -525,26 +529,31 @@ public class BBlock
                     int detailsCount = detailsList.size();
                     for (int j = 0; j < detailsCount; j++) {
                         TryCatchDetails details = detailsList.get(j);
+                        buf.append("\n  ");
                         buf.append(" handle ");
                         buf.append(details.getType());
-                        buf.append(" ");
-                        buf.append(details.getStart().getOffset());
-                        buf.append(" ");
-                        buf.append(details.getEnd().getOffset());
+                        buf.append(" <- ");
+                        Label start = details.getStart();
+                        Label end = details.getEnd();
+                        buf.append(cfg.getLocation(start) == null ? start.toString() : start.getOffset());
+                        buf.append(":");
+                        buf.append(cfg.getLocation(end) == null ? end.toString() : end.getOffset());
                     }
                 }
                 if (cfg.triggerStart(containedLabel)) {
+                    buf.append("\n  ");
                     buf.append(" trigger start");
                     TriggerDetails details = cfg.triggerStartDetails(containedLabel);
                 }
                 if (cfg.triggerEnd(containedLabel)) {
+                    buf.append("\n  ");
                     buf.append(" trigger end");
                 }
-                buf.append("\n");
                 List<CodeLocation> openEnters = cfg.getOpenMonitorEnters(containedLabel);
                 if (openEnters != null) {
                     int openCount = openEnters.size();
                     if (openCount > 0) {
+                        buf.append("\n  ");
                         buf.append("open monitors: ");
                         for (int j = 0; j < openCount; j++) {
                             CodeLocation l = openEnters.get(j);
@@ -553,13 +562,19 @@ public class BBlock
                             buf.append(".");
                             buf.append(l.getInstructionIdx());
                         }
-                        buf.append('\n');
                     }
                 }
+                buf.append("\n");
                 containedLabel = (containsIter.hasNext() ? containsIter.next() : null);
                 containedPosition = (containedLabel != null ? cfg.getBlockInstructionIdx(containedLabel) : -1);
             }
             // buf.append("   ");
+            if (bcpos > 0) {
+                buf.append(bcpos);
+                buf.append(':');
+                bcpos = -1;
+            }
+            buf.append("\t");
             buf.append(blockIdx);
             buf.append(".");
             buf.append(i);
@@ -1055,7 +1070,7 @@ public class BBlock
                 TryCatchDetails details = activeStartsIter.next();
                 Label label = details.getStart();
                 BBlock block = cfg.getBlock(label);
-                buf.append("try: ");
+                buf.append("  try: ");
                 if (block != null) {
                     buf.append(label.getOffset());
                     buf.append(" ");

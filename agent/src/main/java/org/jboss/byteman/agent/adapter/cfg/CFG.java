@@ -809,7 +809,8 @@ public class CFG
             List<TryCatchDetails> active = current.getActiveTryStarts();
             int openEntersCount = openEnters.size();
 
-            System.out.print("Carry forward open monitors for " + current.getBlockIdx() +" ==> {" );
+            System.out.println("Carry forward");
+            System.out.println("  open monitors for " + current.getBlockIdx() +" ==> {" );
             String sepr = "";
             for (int i = 0; i < openEntersCount; i++) {
                 System.out.print(sepr);
@@ -819,7 +820,7 @@ public class CFG
             System.out.println("}");
 
             int activeTryStartsCount = active.size();
-            System.out.print("active try starts for " + current.getBlockIdx() +" ==> {" );
+            System.out.print("  active try starts for " + current.getBlockIdx() +" ==> {" );
             sepr = "";
             for (int i = 0; i < activeTryStartsCount; i++) {
                 TryCatchDetails details = active.get(i);
@@ -839,7 +840,7 @@ public class CFG
             System.out.println("}");
 
             int currentTryStartsCount = currentTryCatchStarts.size();
-            System.out.print("current try starts for " + current.getBlockIdx() +" ==> {" );
+            System.out.print("  current try starts for " + current.getBlockIdx() +" ==> {" );
             sepr = "";
             for (int i = 0; i < currentTryStartsCount; i++) {
                 TryCatchDetails details = currentTryCatchStarts.get(i);
@@ -998,8 +999,9 @@ public class CFG
                 }
             }
         }
+
         if (Transformer.isDumpCFGPartial()) {
-            System.out.println();
+            System.out.println("propagating locally closed monitors to active handlers");
         }
 
         List<TryCatchDetails> activeTryStarts = current.getActiveTryStarts();
@@ -1039,7 +1041,7 @@ public class CFG
                     int containment = computeContainment(tryStart, tryEnd, enter, exit, OVERLAPS);
                     if (containment == OVERLAPS) {
                         if (Transformer.isDumpCFGPartial()) {
-                            System.out.println("try:catch " + tryStart + ":" + tryEnd + " overlaps enter:exit " + enter + ":" + exit);
+                            System.out.println("  try:catch " + tryStart + ":" + tryEnd + " overlaps enter:exit " + enter + ":" + exit);
                         }
                         // the enter/exit overlaps the try region but we still need to check whether
                         // it lies in a shadowing region
@@ -1055,11 +1057,11 @@ public class CFG
                                 // we will not see UNKNOWN in this case as exit is known
                                 if (containment == CONTAINS) {
                                     if (Transformer.isDumpCFGPartial()) {
-                                        System.out.println("shadow try:catch " + tryStart + ":" + tryEnd + " contains enter:exit " + enter + ":" + exit);
+                                        System.out.println("  shadow try:catch " + tryStart + ":" + tryEnd + " contains enter:exit " + enter + ":" + exit);
                                     }
                                     // this region encloses the enter/exit so there is no need to propagate it
                                     if (Transformer.isDumpCFGPartial()) {
-                                        System.out.println("ignoring open enter " +  enter +
+                                        System.out.println("  ignoring open enter " +  enter +
                                                 " for region " + tryStart +  ":" + (tryEnd != null ? tryEnd.toString() : "??") +
                                                 " shadowed by region " + shadowStart +  ":" + (shadowEnd != null ? shadowEnd.toString() : "??"));
                                     }
@@ -1070,7 +1072,7 @@ public class CFG
                         if (!isShadow) {
                             // ok, we need to add the enter to this region's open enter list
                             if (Transformer.isDumpCFGPartial()) {
-                                System.out.println("propagating enter " +  enter + " to try handler for " +
+                                System.out.println("  propagating enter " +  enter + " to try handler for " +
                                         tryStart +  ":" + (tryEnd != null ? tryEnd.toString() : "??"));
                             }
                             activeRegion.addOpenEnter(enter);
@@ -1079,6 +1081,9 @@ public class CFG
                 }
             }
 
+            if (Transformer.isDumpCFGPartial()) {
+             System.out.println("propagating open monitors to active handlers");
+         }
             // for each monitor enter open at the end of the block to see if it's extent overlaps an active try catch
             // anywhere in the current block
 
@@ -1103,7 +1108,7 @@ public class CFG
 
                     if (containment == OVERLAPS) {
                         if (Transformer.isDumpCFGPartial()) {
-                            System.out.println("try:catch " + tryStart + ":" + tryEnd + " overlaps enter:... " + enter + ":...");
+                            System.out.println(" try:catch " + tryStart + ":" + tryEnd + " overlaps enter:... " + enter + ":...");
                         }
                         // the enter/exit overlaps the try region but we still need to check whether
                         // it lies in a shadowing region
@@ -1118,18 +1123,18 @@ public class CFG
                                 containment = computeContainment(shadowStart, shadowEnd, enter, null, CONTAINS);
                                 if (containment == CONTAINS) {
                                     if (Transformer.isDumpCFGPartial()) {
-                                        System.out.println("shadow try:catch " + tryStart + ":" + tryEnd + " contains enter:... " + enter + ":...");
+                                        System.out.println("  shadow try:catch " + tryStart + ":" + tryEnd + " contains enter:... " + enter + ":...");
                                     }
                                     // ok, the inner shadowing region overlaps the enter/exit
                                     if (Transformer.isDumpCFGPartial()) {
-                                        System.out.println("ignoring open enter " +  enter +
+                                        System.out.println("  ignoring open enter " +  enter +
                                                 " for region " + tryStart +  ":" + (tryEnd != null ? tryEnd.toString() : "??") +
                                                 " shadowed by region " + shadowStart +  ":" + (shadowEnd != null ? shadowEnd.toString() : "??"));
                                     }
                                     isShadow = true;
                                 } else if (containment == UNKNOWN) {
                                     if (Transformer.isDumpCFGPartial()) {
-                                        System.out.println("shadow try:catch " + tryStart + ":" + tryEnd + " unknown containment for enter:... " + enter + ":...");
+                                        System.out.println("  shadow try:catch " + tryStart + ":" + tryEnd + " unknown containment for enter:... " + enter + ":...");
                                     }
                                     // this region may shadow the outer region but we don't know because we
                                     // have not yet seen an exit or a tryEnd for the inner region -- we will
@@ -1556,7 +1561,7 @@ public class CFG
                         // currentStart opens either before or at the same position as newStart
                         // and catches a compatible exception type so newStart shadows it.
                         if (Transformer.isDumpCFGPartial()) {
-                            System.out.println("" + newStart + " shadows + " + currentStart);
+                            System.out.println("" + newStart + " shadows " + currentStart);
                         }
                         currentStart.addShadowRegion(newStart);
                     }
@@ -1585,7 +1590,7 @@ public class CFG
                         // newStart2 opens at the same position as newStart1
                         // and catches a compatible exception type so newStart1 shadows it.
                         if (Transformer.isDumpCFGPartial()) {
-                            System.out.println("" + newStart1 + "shadows + " + newStart2);
+                            System.out.println("" + newStart1 + "shadows " + newStart2);
                         }
                         newStart2.addShadowRegion(newStart1);
                     }
