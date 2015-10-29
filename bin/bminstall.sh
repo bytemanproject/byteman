@@ -25,7 +25,7 @@
 # a JVM which was started without the agent. This provides an
 # alternative to using the -javaagent java command line flag
 #
-# usage: bminstall [-p port] [-h host] [-b] [-Dname[=value]]* pid
+# usage: bminstall [-p port] [-h host] [-b] [-s] [-Dname[=value]]* pid
 #   pid is the process id of the target JVM
 #   -h host selects the host name or address the agent listener binds to
 #   -p port selects the port the agent listener binds to
