@@ -1,0 +1,363 @@
+== Introduction to Byteman
+
+Byteman is a bytecode manipulation tool which makes it simple to change the operation of
+Java applications either at load time or while the application is running. It works without the
+need to rewrite or recompile the original program. In fact, Byteman can even be used to
+modify Java code which forms part of the Java virtual machine, classes such as String,
+Thread etc. Byteman employs a clear, simple and easy-to-use Event Condition Action
+(ECA) rule language, based on Java. ECA rules are used to specify where, when and how
+the original Java code should be transformed to modify its operation. +
+
+Byteman was invented primarily to support automation of tests for multi-threaded and
+multi-JVM Java applications using a technique called fault injection. It includes features
+which have been designed to resolve problems which arise with this type of testing.
+Byteman provides explicit support for test automation in four main areas: +
+
+* tracing execution of specific code paths and displaying application or JVM state
+* subverting normal execution by changing state, making unscheduled method calls
+or forcing an unexpected return or throw
+* orchestrating the timing of activities performed by independent application threads
+* monitoring and gathering statistics summarising application and JVM operation
+
+Byteman is actually of much more general use than as a tool for testing. The core engine
+which underlies Byteman is a general purpose code injection program capable of injecting
+rule code into almost any location reachable during execution of a Java method. Byteman
+rule conditions and actions can employ all the normal Java built-in operations in order to
+test and modify program state. They can also invoke methods of application or JVM
+instances which are in scope at the injection point. +
+
+The Byteman rule language provides a standard set of built-in operations which support
+specific tasks from the categories outlined above. For example, a rule condition may
+enforce a wait on a thread rendezvous or an action may update a statistical counter. The
+available set of built-in calls is configured using a POJO plugin. This can easily be
+replaced with an alternative implementation either for a set of rules or on a piecemeal
+basis for individual rules. This makes it trivial to modify and/or extend the rule language to
+support ad-hoc program modifications which are specific to the application domain. +
+
+=== Running an Application with the Byteman Agent
+
+In order to use Byteman to test a Java application the JVM must be configured to load and
+run the Byteman rule engine. At the most basic level this can be achieved using the
+`-javaagent` command line argument. The traiiling text appended to this argument points
+the JVM at a jar containing the Byteman rule engine. It may also identify the location of
+one or more Byteman rule scripts, files comprising a sequence of ECA rules specifying the
+side-effects to be introduced into the application under test. The engine reads these scripts
+when the application is launched and applies the rules to any code which matches a rule in
+the supplied scripts. Command scripts are provided to simplify the task of loading the
+agent and installing rules into your program. +
+
+In order to simplify test automation Byteman has been integrated with the two popular
+testing frameworks JUnit and TestNG, allowing Byteman tests to be driven from either ant
+or Maven. Using the integration modules fault injection testing involves no more than
+annotating your program with suitable rules and ensuring that the Byteman jars are located
+in the classpath.
+
+If your Java application is a long-running program then you may want to load the rule
+scripts and, possibly even, the rule engine after the program has started running. For
+example, you may decide to install Byteman into your application server when it appears
+to be suffering from performance problems and only then upload rules which trace
+execution of the code you suspect is misbehaving. Once the rule engine is loaded it
+cannot be unloaded. However, rules can be added and removed ad lib, allowed you to
+focus in on the problem in hand using more and more specific trace or monitoring rules.
+Note that when rules are removed the methods they affect are guaranteed to return to their
+original behaviour.
+
+Full details of how to install the Byteman agent and how to upload rules either at boot time
+or at runtime are provided in subsection Using Byteman. Full examples of how to use
+Byteman from the command line, plus examples of how to configure annotation based
+fault injection testing from ant or Maven project, are available in the online tutorials which
+are linked from the documentation page of the Byteman site http://www.jboss.org/byteman.
+
+=== Event Condition Action Rules
+
+The Byteman rule engine operates by introducing side-effects at specified points during
+execution. A Byteman script comprises a sequence of Event Condition Action (ECA) rules
+which specify precisely how the application behaviour should be transformed at runtime.
+The three components of these rules, event, condition and action, are used, respectively,
+to define:
+
+* _where_ during application execution a side-effect should occur
+* _whether_ the side-effect should happen or not
+* _what_ the side effect should be
+
+For example, in the following example rule the event is defined by the `CLASS`, `METHOD` and
+`AT INVOKE` clauses. It specifies a trigger point in method `get()` of class
+`BoundedBuffer`. The example assumes that the definition of method `get()` includes a
+call to `Object.wait()`. This would be appropriate if, say, the buffer were empty. The
+location specifier `AT INVOKE` places the trigger point just before the call to this method.
+
+....
+  RULE throw on Nth empty get
+  CLASS org.my.BoundedBuffer
+  METHOD get()
+  AT INVOKE Object.wait()
+  BIND buffer = $this
+  IF countDown(buffer)
+  DO throw new org.my.ClosedException(buffer)
+  ENDRULE
+....
+
+The event also includes a `BIND` clause which establishes a binding for local variable
+buffer assigning it with the value `$this` (a rather artificial thing to do but this is an
+example). `$this` is an automatic binding which refers to the target of the the `get()` call
+which triggered the rule. buffer can be referred to later in the rule; in this case it is
+passed as an argument to the exception constructor in the `DO` clause.
+
+The condition is defined by the `IF` clause. It invokes the standard Byteman built-in
+`countDown(Object)` which decrements a `CountDown` associated with the buffer ─ the
+example assumes some other rule has called `createCountDown(buffer, N)` to create
+this CountDown and initialise it with value N. The `countDown` built-in returns true 
+when the value of the CountDown decrements to zero.
+
+The action is defined by the `DO` clause. It causes an instance of `ClosedException` to be
+created and thrown from the `get()` call which triggered the rule.
+
+So, in this example the condition will evaluate to `false` the first N-1 times that a getter
+attempts to wait. At the Nth triggering the condition will evaluate to `true` and the rule will
+fire, running the built-in action throw. This will cause the triggering thread to throw a
+`ClosedException` to the caller of method `get()`.
+
+=== Rule Bindings and Parameterization
+
+The corresponding rule to set up the countDown might be defined as follows
+
+....
+  RULE set up buffer countDown
+  CLASS org.my.BoundedBuffer
+  METHOD <init>(int)
+  AT EXIT
+  BIND buffer = $0;
+  size = $1
+  IF $1 < 100
+  DO createCountDown(buffer, size - 1)
+  ENDRULE
+....
+
+This rule is attached to the constructor for class `BoundedBuffer` which takes a single
+int parameter. The `AT EXIT` location means it is triggered just before the constructor
+returns. The `BIND` clause employs the indexed notation to refer to the method target, `$0`,
+and the first argument `$1`. The latter is assumed for the sake of the example to be the
+buffer size. If the buffer size is less than 100 then the rule creates a `c`ountDown with
+count `size – 1` using the buffer as a key to identify it.
+
+Notice how the parameterization of the `createCountDown` and `countDown` calls with
+the bound variable buffer restricts the scope of these rules to specific cases. If there are
+two buffers, `buffer1` and `buffer2`, but only `buffer1` has size less than 100 then the
+condition for the set up rule will return false when `buffer2` is created. This means the
+action will not run and a countDown will not be associated with `buffer2.` When a
+subsequent call is made to `buffer2.get()` the throw rule will be triggered but the
+condition will always return false and the rule will not fire.
+
+If instead both buffers have size less than 100 then two countDowns will be created. The
+throw rule will be triggered when either `buffer1.get()` and `buffer2.get()` is called
+and in both cases will eventually fire and throw an exception. However, each countDown
+will still decrement independently.
+
+=== Built-in Conditions and Actions
+
+Byteman provides a suite of built-in conditions and actions used to coordinate the activities
+of independent threads e.g. delays, waits and signals, countdowns, flag operations and so
+on. These are particularly useful for testing multi-threaded programs subject to arbitrary
+scheduling orders. Judicious insertion of byteman actions can guarantee that thread
+interleavings in a given test run will occur in a desired order, enabling test code to reliably
+exercise parallel execution paths which do not normally occur with synthetic workloads.
+
+Tracing operations are also provided so that test scripts can track progress of a test run
+and identify successful or unsuccessful test completion. Trace output can also be used to
+debug rule execution. Trace output to be quite finely tuned simply by providing a condition
+which tests the state of local or parameter variable bindings. Trace actions can insert 
+these bound values into message strings, allowing detailed scrutiny of test execution paths.
+
+A few special built-in actions can be used to subvert the behaviour of application code by
+modifying execution paths. This is particularly important in a test environment where it is
+often necessary to force application methods to generate dummy results or simulate an
+error.
+
+A _return_ action forces an early return from the code location targeted by the rule. If the
+method is non-void then the return action supplies a value to use as the method result.
+
+A _throw_ action enables exceptions to be thrown from the trigger method frame. A rule is
+always allowed to throw a runtime exception (i.e. instances of `RuntimeException` or its
+subclasses). If none of the caller methods up the stack from the trigger method include a a
+catch for `RuntimeException` or `Throwable` then effectively this aborts the current
+thread. Other exceptions may also be thrown so long as the trigger method declares the
+exception in its throws list. This restriction is necessary to ensure that the injected code
+does not break the method contract between the trigger method and its callers.
+
+Finally, a call to the _killJVM_ builtin allows a machine crash to be simulated by configuring
+an immediate exit from the JVM.
+
+It is worth noting that rules are not just restricted to using built-in operations. Application-
+specific side-effects can also be introduced by writing object fields or calling Java methods
+in rule events, conditions or actions. The obvious target for such field write or method call
+operations is objects supplied from the triggering method via local or parameter variable
+bindings. However, it is also possible to update static data and invoke static methods of
+any class accessible from the classloader of the triggering method. So, it is quite feasible
+to use Byteman rules to apply arbitrary modifications to the original program. Byteman
+rules have special access privileges which means that it is possible to read and write
+protected or private fields and call protected or private data.
+
+=== Extending or Replacing the Byteman Language Built-ins
+
+Another option to bear in mind is that the set of built-in operations available to Byteman
+rules is not fixed. The rule engine works by mapping built-in operations which occur in a
+given rule to public instance methods of a helper class associated with the rule. By default,
+this helper class is `org.jboss.byteman.rule.helper.Helper`. which provides the
+standard set of built-ins designed to simplify management of threads in a multi-threaded
+application. For example, the builtin operations `createCountDown()` and `countDown()` 
+used in the example rules provided above are just public methods of class Helper. The
+set of built-ins available for use in a given rule can by changed merely by specifying an
+alternative helper class for that rule.
+
+Any non-abstract class may be specified as the helper. Its public instance methods
+automatically become available as built-in operations in the rule event, condition and
+action. For example, by specifying a helper class which extended the default class, Helper,
+a rule would be able to use any of the existing built-ins and/or also make rule-specific (or
+application-specific) built-in calls. So, although the default Byteman rule language is
+oriented towards orchestrating the behaviour of independent threads in multi-threaded
+tests, Byteman can easily be reconfigured to support a much wider range of application
+requirements.
+
+=== Agent Transformation
+
+The bytecode modifications performed by Byteman are implemented using a _Java agent_ program. 
+JVM class loaders provide agents with an opportunity to modify loaded bytecode
+just prior to compilation (see package `java.lang.Instrumentation` for details of how
+Java agents work). The Byteman agent reads the rule script at JVM bootstrap. It then
+monitors method code as it is loaded looking for _trigger points_, locations in the method
+bytecode which match the locations specified in rule events.
+
+The agent inserts _trigger calls_ into code at each point which matches a rule event. Trigger
+calls are calls to the rule execution engine which identify:
+
+* the _trigger method_, i.e. the method which contains the trigger point
+* the rule which has been matched
+* the arguments to the trigger method
+
+If several rules match the same trigger point then there will be a sequence of trigger calls,
+one for each matching rule. In this case rules are mostly triggered in the order they appear
+in their script(s).The only exception is rules which specify an `AFTER` location, such as
+`AFTER READ myField` or `AFTER INVOKE` someMethod, which are executed in reverse
+order of appearance.
+
+When a trigger call occurs the rule execution engine locates the relevant rule and then
+executes it. The rule execution engine establishes bindings for variables mentioned in the
+rule event and then tests the rule condition. If the condition evaluates to true it fires the
+rule. executing each of the rule actions in sequence.
+
+Trigger calls pass the method recipient (this) and method arguments to the rule engine.
+These values may be referred to in the condition and action with a standard naming
+convention, $0, $1 etc. The event specification can introduce bindings for additional
+variables. Bindings for these variables may be initialized using literal data or by invoking
+methods or operations on the method parameters and/or static data. Variables bound in
+the event can simply be referred to by name in the condition or action. Bindings allow
+arbitrary data from the triggering context to be tested in the condition in order to decide
+whether to fire the rule and to be employed as a target or parameter for rule actions. Note
+that where the trigger code is compiled with the relevant debug options enabled the agent
+is able to pass local variables which are in scope at the trigger point as arguments to the
+trigger call, making them available as default bindings. Rules may refer to in-scope
+variables (including the method recipient and arguments) by prefixing their symbolic
+names with the $ character e.g. $this, $arg1, $i etc.
+
+The agent also compiles exception handler code around the trigger calls in order to deal
+with exceptions which might arise during rule processing. This is not intended to handle
+errors detected during operation of the rule execution engine (they should all be caught
+and dealt with internally). Exceptions are thrown out of the execution engine to alter the
+flow of control through the triggering method. Normally, after returning from a trigger call
+the triggering thread continues to execute the original method code. However, a rule can
+use the return and throw built-in actions to specify that an early return or exception
+throw should be performed from the trigger method. The rule language implementation
+achieves this by throwing its own private, internal exceptions below the trigger call. The
+handler code compiled into the trigger method catches these internal exceptions and then
+either returns to the caller or recursively throws a runtime or application-specific exception.
+This avoids normal execution of the remaining code in the body of the triggering method. If
+there are other trigger calls pending at the trigger point then these are also bypassed when
+a return or throw action is executed.
+
+=== Agent Retransformation
+
+The agent also allows rules to be uploaded while the application is still running. This can
+be used to redefine previously loaded rules as well as to introduce new rules on the fly. In
+cases where no currently loaded class matches the uploaded rule the agent merely adds
+the new rule to the current rule set. This may possibly replace an earlier version of the
+rule (rules are equated if they have the same name). When a matching class is loaded the
+latest version of the rule will be used to transform it.
+
+In cases where there are already loaded classes which match the rule the agent will
+retransform them, modifying the relevant target methods to include any necessary trigger
+calls. If an uploaded rule replaces an existing rule in this situation then when the previous
+rule is deleted all trigger calls associated with it are removed from the affected target
+methods. Note that retransforming a class does not associate a new class object with
+existing instances of the class. It merely installs a different implementation for their
+methods.
+
+An important point where retransformation may occur automatically without an explicit
+upload is during bootstrap of the agent. The JVM needs to load various of its own
+bootstrap classes before it can start the agent and allow it to register a transformer. Once
+the agent has processed the initial rule set and registered a transformer it scans all
+currently loaded classes and identifies those which match rules in the rule set. It
+automatically retransforms these classes, causing subsequent calls to bootstrap code to
+trigger rule processing.
+
+=== ECA Rule Engine
+
+The Byteman rule execution engine consists of a rule parser, type checker and
+interpreter/compiler. The rule parser is invoked by the agent during bootstrap. This
+provides enough information to enable the agent to identify potential trigger points.
+
+Rules are not type checked and compiled during trigger injection. These steps are delayed
+until the class and method bytecode they refer to has been loaded. Type checking requires
+identifying properties of the trigger class and, potentially, of classes it mentions using
+reflection. To do this the type checker needs to identify properties of loaded classes such
+as the types and accessibility of fields, method signatures etc. So, in order to ensure that
+the trigger class and all its dependent classes have been loaded before the type checker
+tries to access them, rules are type checked and compiled the first time they are triggered.
+This also avoids the cost of checking and compiling rules included in the rule set which do
+not actually get called.
+
+A single rule may be associated with more than one trigger point. Firstly, depending upon
+how precisely the rule specifies its event, it may apply to more than one class or more
+than one method within a class. But secondly, even if a rule specifies a class and method
+unambiguously the same class file may be loaded by different class loaders. So, the rule
+has to be type checked and compiled for each applicable trigger point.
+
+If a type check or compile operation fails the rule engine prints an error and disables
+execution of the trigger call. Note that in cases where the event specification is ambiguous
+a rule may type check successfully against one trigger point but not against another. Rule
+execution is only disabled for cases where the type check fails.
+
+In the basic operating mode, trigger calls execute a rule by interpreting the rule parse tree.
+It is also possible to configure the rule engine to translate the rule bindings, condition and
+actions to bytecode which can then be passed by the JIT compiler. In either case,
+execution is performed with the help of an auxiliary class generated at runtime by the
+Byteman agent called a helper adapter. This class is actually a subclass of the helper
+class associated with the rule. It inherits from the helper class so that it knows how to
+execute built-in operations defined by the helper class. A subclass is used to add extra
+functionality required by the rule system, most notably method execute which gets called
+at the trigger point and a local bindings field which stores a hashmap mapping method
+parameters and event variables to their bound values.
+
+When a rule is triggered the rule engine creates an instance of the rule's helper adapter
+class to provide a context for the trigger call. It uses setter methods generated by the
+Byteman agent to initialise the rule and bindings fields and then it calls the adapter
+instance's execute method. Since each rule triggering is handled by its own adapter
+instance this ensures that concurrent triggers of the same rule from different threads do
+not interfere with each other.
+
+The interpreted version of `execute0` locates the triggered rule and, from there, the parse
+tree for the event, condition and action. It traverses the parse trees of these three rule
+components evaluating each expression recursively. Bindings are looked up or assigned
+during rule execution when they are referred to from within the rule event, condition or
+action. When the execute method encounters a call to a built-in it can execute this call
+using reflection to invoke one of the methods inherited from its helper superclass.
+When compilation of rules is enabled the Byteman agent generates an execute method
+which contains inline bytecode derived from the rule event condition and action. This
+directly encodes all the operations and method invocations defined in the rule. This code
+accesses bindings and executes built-ins in the same way as the interpreted code except
+that calls to built-in are compiled as direct method invocations on this rather than relying
+on reflective invocation.
+
+Although compilation takes slightly more time to generate it should provide a performance
+pay off where the trigger method gets called many times. Ideally, compilation should be
+selectable per rule or across the board for all rules in a rule set. At present it can only be
+enabled or disabled globally.
