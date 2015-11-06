@@ -1,0 +1,332 @@
+<!-- ~ JBoss, Home of Professional Open Source. ~ Copyright 2015, Red Hat 
+	and individual contributors ~ as indicated by the @author tags. See the copyright.txt 
+	file in the ~ distribution for a full listing of individual contributors. 
+	~ ~ This is free software; you can redistribute it and/or modify it ~ under 
+	the terms of the GNU Lesser General Public License as ~ published by the 
+	Free Software Foundation; either version 2.1 of ~ the License, or (at your 
+	option) any later version. ~ ~ This software is distributed in the hope that 
+	it will be useful, ~ but WITHOUT ANY WARRANTY; without even the implied warranty 
+	of ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU ~ Lesser 
+	General Public License for more details. ~ ~ You should have received a copy 
+	of the GNU Lesser General Public ~ License along with this software; if not, 
+	write to the Free ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, 
+	Boston, MA ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>byteman-jboss-modules-tests</artifactId>
+	<packaging>jar</packaging>
+	<parent>
+		<groupId>org.jboss.byteman</groupId>
+		<artifactId>byteman-jboss-modules</artifactId>
+		<version>3.0.3-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<properties>
+		<!-- <debug.options>-agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=y</debug.options> -->
+        <debug.options></debug.options>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.10</version>
+				<executions>
+					<!-- Copy the byteman jar so we can use it -->
+					<execution>
+						<id>copy-jboss-modules</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<stripVersion>true</stripVersion>
+							<outputDirectory>${project.build.directory}</outputDirectory>
+						</configuration>
+					</execution>
+					<!-- explode the test dependencies into the relevant module -->
+					<execution>
+						<id>copy</id>
+						<phase>package</phase>
+						<goals>
+							<goal>unpack-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeArtifactIds>junit</includeArtifactIds>
+							<outputDirectory>${project.build.directory}/modules-root/common/main/classes</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.4</version>
+				<executions>
+					<!-- copy the module.xml files into the local module root -->
+					<execution>
+						<id>module-definitions</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<resources>
+								<resource>
+									<directory>src/modules/resources</directory>
+								</resource>
+							</resources>
+							<outputDirectory>${project.build.directory}/modules-root</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<!-- now add the test code into the modules -->
+				<executions>
+					<execution>
+						<id>jar-common</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<includes>
+								<include>byteman/tests/**/*</include>
+							</includes>
+							<outputDirectory>${project.build.directory}/modules-root/common/main</outputDirectory>
+							<finalName>common</finalName>
+						</configuration>
+					</execution>
+					<execution>
+						<id>jar-runner</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<includes>
+								<include>runner/**/*</include>
+							</includes>
+							<outputDirectory>${project.build.directory}/modules-root/runner/main</outputDirectory>
+							<finalName>runner</finalName>
+						</configuration>
+					</execution>
+					<execution>
+						<id>jar-helper</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<includes>
+								<include>helper/**/*</include>
+							</includes>
+							<outputDirectory>${project.build.directory}/modules-root/helper/main</outputDirectory>
+							<finalName>helper</finalName>
+						</configuration>
+					</execution>
+                    <execution>
+                        <id>jar-testimport</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>testimport/**/*</include>
+                            </includes>
+                            <outputDirectory>${project.build.directory}/modules-root/testimport/main</outputDirectory>
+                            <finalName>testimport</finalName>
+                        </configuration>
+                    </execution>
+					<execution>
+						<id>jar-testhelper</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<includes>
+								<include>testhelper/**/*</include>
+							</includes>
+							<outputDirectory>${project.build.directory}/modules-root/testhelper/main</outputDirectory>
+							<finalName>testhelper</finalName>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- set up the test executions -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<skipExec>true</skipExec>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>2.18.1</version>
+				<!-- we have to do this the hard way by forking each test in a separate 
+					VM running the byteman agent and the appropriate script first we run each 
+					test interpreted. then we repeat them all setting -Dorg.jboss.byteman.compile.to.bytecode 
+					so we also test the rules when compiled -->
+				<executions>
+					<!-- basic import testing -->
+					<execution>
+						<id>jbossmodules.TestImport</id>
+						<phase>integration-test</phase>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<forkMode>always</forkMode>
+							<useSystemClassLoader>true</useSystemClassLoader>
+							<useManifestOnlyJar>false</useManifestOnlyJar>
+							<reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport</reportsDirectory>
+							<includes>
+								<include>byteman/tests/modules/jbossmodules/TestTrampoline.class</include>
+							</includes>
+							<argLine>
+							    ${debug.options}
+								-javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestImport.btm
+								-Djboss.modules.system.pkgs=org.jboss.byteman
+								-Dmodulartest.module=testimport
+								-Dmodulartest.class=testimport.TestImport
+								-jar ${project.build.directory}/jboss-modules.jar
+								-mp ${project.build.directory}/modules-root
+								-class
+						    </argLine>
+						</configuration>
+					</execution>
+					<execution>
+						<id>jbossmodules.TestImport-compiled</id>
+						<phase>integration-test</phase>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<forkMode>always</forkMode>
+							<useSystemClassLoader>true</useSystemClassLoader>
+							<useManifestOnlyJar>false</useManifestOnlyJar>
+							<reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport-compiled</reportsDirectory>
+							<includes>
+								<include>byteman/tests/modules/jbossmodules/TestTrampoline.class</include>
+							</includes>
+							<argLine>${debug.options}
+								-javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestImport.btm
+                                -Djboss.modules.system.pkgs=org.jboss.byteman
+								-Dmodulartest.module=testimport
+								-Dmodulartest.class=testimport.TestImport
+								-Dorg.jboss.byteman.compile.to.bytecode=true
+								-jar ${project.build.directory}/jboss-modules.jar
+								-mp ${project.build.directory}/modules-root
+								-class </argLine>
+						</configuration>
+					</execution>
+
+					<!-- helper testing -->
+					<execution>
+						<id>jbossmodules.TestHelper</id>
+						<phase>integration-test</phase>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<forkMode>always</forkMode>
+							<useSystemClassLoader>true</useSystemClassLoader>
+							<useManifestOnlyJar>false</useManifestOnlyJar>
+							<reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestHelper</reportsDirectory>
+							<includes>
+								<include>byteman/tests/modules/jbossmodules/TestTrampoline.class</include>
+							</includes>
+							<argLine>${debug.options}
+								-javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestHelper.btm
+                                -Djboss.modules.system.pkgs=org.jboss.byteman
+								-Dmodulartest.module=testhelper
+								-Dmodulartest.class=testhelper.TestHelper
+								-jar ${project.build.directory}/jboss-modules.jar
+								-mp ${project.build.directory}/modules-root
+								-class </argLine>
+						</configuration>
+					</execution>
+					<execution>
+						<id>jbossmodules.TestHelper-compiled</id>
+						<phase>integration-test</phase>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<forkMode>always</forkMode>
+							<useSystemClassLoader>true</useSystemClassLoader>
+							<useManifestOnlyJar>false</useManifestOnlyJar>
+							<reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestHelper-compiled</reportsDirectory>
+							<includes>
+								<include>byteman/tests/modules/jbossmodules/TestTrampoline.class</include>
+							</includes>
+							<argLine>${debug.options}
+								-javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestImport.btm
+                                -Djboss.modules.system.pkgs=org.jboss.byteman
+								-Dmodulartest.module=testimport
+								-Dmodulartest.class=testimport.TestImport
+								-Dorg.jboss.byteman.compile.to.bytecode=true
+								-jar ${project.build.directory}/jboss-modules.jar
+								-mp ${project.build.directory}/modules-root
+								-class </argLine>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- verify stage ensures each test generated a report file this catches 
+				cases where the VM fails to start because the agent fails to load or cannot 
+				read script files -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-verifier-plugin</artifactId>
+				<configuration>
+					<verificationFile>verification.xml</verificationFile>
+				</configuration>
+				<executions>
+					<execution>
+						<id>main</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.byteman</groupId>
+			<artifactId>byteman</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.byteman</groupId>
+			<artifactId>byteman-jboss-modules-plugin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.modules</groupId>
+			<artifactId>jboss-modules</artifactId>
+		</dependency>
+	</dependencies>
+</project>

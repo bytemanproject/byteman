@@ -53,6 +53,17 @@
             <outputFileNameMapping>${artifact.artifactId}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
         </dependencySet>
         <dependencySet>
+            <outputDirectory>contrib/jboss-modules-system</outputDirectory>
+            <includes>
+                <include>org.jboss.byteman:byteman-jboss-modules-plugin:jar:*</include>
+            </includes>
+            <excludes>
+                <exclude>*:javadoc</exclude>
+                <exclude>*:sources</exclude>
+            </excludes>
+            <outputFileNameMapping>${artifact.artifactId}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
+        </dependencySet>
+        <dependencySet>
             <outputDirectory>javadoc</outputDirectory>
             <includes>
                 <include>org.jboss.byteman:*:jar:javadoc</include>
@@ -107,6 +118,11 @@
         <file>
             <source>../contrib/bmunit/README.txt</source>
             <outputDirectory>contrib/bmunit</outputDirectory>
+            <lineEnding>keep</lineEnding>
+        </file>
+        <file>
+            <source>../contrib/jboss-modules-system/README.txt</source>
+            <outputDirectory>contrib/jboss-modules-system</outputDirectory>
             <lineEnding>keep</lineEnding>
         </file>
         <file>

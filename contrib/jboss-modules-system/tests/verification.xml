@@ -1,0 +1,27 @@
+<verifications xmlns="http://maven.apache.org/verifications/1.0.0"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="http://maven.apache.org/verifications/1.0.0 http://maven.apache.org/xsd/verifications-1.0.0.xsd">
+  <!--
+      ensure each test has output a results file 
+      this catches cases where the VM fails to start because
+      of an error with the agent configuration
+  -->
+  <files>
+    <file>
+      <location>target/failsafe-reports/jbossmodules.TestImport/byteman.tests.modules.jbossmodules.TestTrampoline.txt</location>
+      <exists/>
+    </file>
+    <file>
+      <location>target/failsafe-reports/jbossmodules.TestImport-compiled/byteman.tests.modules.jbossmodules.TestTrampoline.txt</location>
+      <exists/>
+    </file>
+    <file>
+      <location>target/failsafe-reports/jbossmodules.TestHelper/byteman.tests.modules.jbossmodules.TestTrampoline.txt</location>
+      <exists/>
+    </file>
+    <file>
+      <location>target/failsafe-reports/jbossmodules.TestHelper-compiled/byteman.tests.modules.jbossmodules.TestTrampoline.txt</location>
+      <exists/>
+    </file>
+   </files>
+</verifications>
