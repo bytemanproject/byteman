@@ -62,6 +62,8 @@ public class ScriptRepository
             String targetMethod = null;
             String targetHelper = null;
             String defaultHelper = null;
+            String[] targetImports  = null;
+            String[] defaultImports = new String[0];
             LocationType locationType = null;
             Location targetLocation = null;
             boolean isInterface = false;
@@ -91,10 +93,25 @@ public class ScriptRepository
                         targetHelper = line.substring(7).trim();
                     } else {
                         defaultHelper = line.substring(7).trim();
-                        // empty classanme resets to the default
+                        // empty classname resets to the default
                         if (defaultHelper.length() == 0) {
                             defaultHelper = null;
                         }
+                    }
+                } else if (line.startsWith("IMPORT ")) {
+                    String imp = line.substring(7).trim();
+                    if (inRule) {
+                        if (targetImports == null)
+                            targetImports = new String[1];
+                        else
+                            targetImports = Arrays.copyOf(targetImports, targetImports.length + 1);
+                        targetImports[targetImports.length - 1] = imp;
+                    } else {
+                        if (defaultImports == null)
+                            defaultImports = new String[1];
+                        else
+                            defaultImports = Arrays.copyOf(defaultImports, defaultImports.length + 1);
+                        defaultImports[defaultImports.length - 1] = imp;
                     }
                 } else if (!inRule) {
                     if (!line.equals("")) {
@@ -135,7 +152,10 @@ public class ScriptRepository
                         if (targetHelper == null) {
                             targetHelper = defaultHelper;
                         }
-                        RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetLocation, nextRule, startNumber, scriptFile);
+                        if (targetImports == null) {
+                            targetImports = defaultImports;
+                        }
+                        RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetImports, targetLocation, nextRule, startNumber, scriptFile);
                         ruleScripts.add(ruleScript);
                     }
                     name = null;
@@ -143,6 +163,7 @@ public class ScriptRepository
                     targetMethod = null;
                     targetLocation = null;
                     targetHelper = null;
+                    targetImports = null;
                     nextRule = "";
                     sepr = "";
                     inRule = false;

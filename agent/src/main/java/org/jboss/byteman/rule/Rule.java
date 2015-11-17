@@ -23,7 +23,9 @@
 */
 package org.jboss.byteman.rule;
 
+import java.io.PrintWriter;
 import org.jboss.byteman.agent.HelperManager;
+import org.jboss.byteman.modules.ModuleSystem;
 import org.jboss.byteman.rule.type.TypeGroup;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.exception.*;
@@ -68,7 +70,11 @@ public class Rule
     /**
      * the class loader for the target class
      */
-    private ClassLoader loader;
+    private ClassLoader targetLoader;
+    /**
+     * the class loader for the help adapter
+     */
+    private ClassLoader helperLoader;
     /**
      * the parsed event derived from the script for this rule
      */
@@ -168,9 +174,8 @@ public class Rule
 
         this.ruleScript = ruleScript;
         this.helperClass = null;
-        this.loader = loader;
+        this.targetLoader = loader;
 
-        typeGroup = new TypeGroup(loader);
         bindings = new Bindings();
         checked = false;
         triggerClass = null;
@@ -182,6 +187,7 @@ public class Rule
         accessibleMethods = null;
         // this is only set when the rule is created via a real installed transformer
         this.helperManager =  helperManager;
+
         ECAGrammarParser parser = null;
         try {
             String file = getFile();
@@ -206,6 +212,29 @@ public class Rule
             }
             message += "\n" + th.getMessage();
             throw new ParseException(message);
+        }
+
+
+        // set up the TypeGroup, which needs to see the correct classes
+        // ensure that we have a valid helper class
+        // this needs to be done here, rather than typechecking, since Event.create() may need it
+        String helperName = ruleScript.getTargetHelper();
+        String[] imports = ruleScript.getImports();
+        if (helperName != null || isCompileToBytecode() || imports.length > 0) {
+            try {
+                // We always need to load the helper via the module system if we're compiling to byte code
+                // so that the compiler can use it.
+                String helperToUse = (helperName != null) ? helperName : Helper.class.getName();
+                this.helperLoader = getModuleSystem().createLoader(targetLoader, imports);
+                helperClass = helperLoader.loadClass(helperToUse);
+                typeGroup = new TypeGroup(helperLoader);
+            } catch (ClassNotFoundException e) {
+                throw new TypeException("Rule.typecheck : unknown helper class " + helperName + " for rule " + getName());
+            }
+        } else {
+            this.helperLoader = null;
+            helperClass = Helper.class;
+            typeGroup = new TypeGroup(targetLoader);
         }
 
         ParseNode eventTree = (ParseNode)ruleTree.getChild(0);
@@ -308,7 +337,16 @@ public class Rule
      */
     public ClassLoader getLoader()
     {
-        return loader;
+        return targetLoader;
+    }
+
+    /**
+     * get the class loader of the rule-specific helper adapter class
+     * @return the class loader
+     */
+    public ClassLoader getHelperLoader()
+    {
+        return helperLoader;
     }
 
     public static Rule create(RuleScript ruleScript, ClassLoader loader, HelperManager helperManager)
@@ -478,7 +516,8 @@ public class Rule
                 System.out.println(detail);
             }
 
-            ruleScript.recordCompile(triggerClass, loader, !checkFailed, detail);
+            // this uses the original class loader for matching
+            ruleScript.recordCompile(triggerClass, targetLoader, !checkFailed, detail);
             return !checkFailed;
         }
 
@@ -487,23 +526,11 @@ public class Rule
 
     /**
      * type check this rule
-     * @throws TypeException if the ruele contains type errors
+     * @throws TypeException if the rule contains type errors
      */
     public void typeCheck()
             throws TypeException
     {
-        String helperName = ruleScript.getTargetHelper();
-        
-        // ensure that we have a valid helper class
-        if (helperName != null) {
-            try {
-                helperClass = loader.loadClass(helperName);
-            } catch (ClassNotFoundException e) {
-                throw new TypeException("Rule.typecheck : unknown helper class " + helperName + " for rule " + getName());
-            }
-        } else {
-            helperClass = Helper.class;
-        }
         if (triggerExceptions != null) {
             // ensure that the type group includes the exception types
             typeGroup.addExceptionTypes(triggerExceptions);
@@ -523,6 +550,11 @@ public class Rule
         action.typeCheck(Type.VOID);
     }
 
+    public ModuleSystem getModuleSystem()
+    {
+        return helperManager.getModuleSystem();
+    }
+
     /**
      * install helper class used to execute this rule. this may involve generating a compiled helper class
      * for the rule and, if compilation to bytecode is enabled, generating bytecode for a method of this class
@@ -535,8 +567,9 @@ public class Rule
             throws CompileException
     {
         boolean compileToBytecode = isCompileToBytecode();
+        String[] imports = ruleScript.getImports();
 
-        if (helperClass == Helper.class && !compileToBytecode) {
+        if (helperClass == Helper.class && !compileToBytecode && imports.length == 0) {
             // we can use the builtin interpreted helper adapter for class Helper
            helperImplementationClass = InterpretedHelper.class;
         } else {

@@ -43,7 +43,6 @@ public class Compiler implements Opcodes
 {
     public static Class getHelperAdapter(Rule rule, Class helperClass, boolean compileToBytecode) throws CompileException
     {
-        Class adapterClass;
         // ok we have to create the adapter class
 
         // n.b. we don't bother synchronizing here -- if another rule is racing to create an adapter
@@ -67,8 +66,8 @@ public class Compiler implements Opcodes
             Transformer.maybeDumpClass(externalName, classBytes);
             // ensure the class is loaded
             // think we need to load the generated helper using the class loader of the trigger class
-            ClassLoader loader = rule.getLoader();
-            adapterClass = loadHelperAdapter(loader, externalName, classBytes);
+            ClassLoader loader = rule.getHelperLoader();
+            return rule.getModuleSystem().loadHelperAdapter(loader, externalName, classBytes);
         } catch(CompileException ce) {
             throw ce;
         } catch (Throwable th) {
@@ -78,8 +77,6 @@ public class Compiler implements Opcodes
                 throw new CompileException("Compiler.createHelperAdapter : exception creating interpreted helper adapter for " + helperClass.getName(), th);
             }
         }
-
-        return adapterClass;
     }
 
     private static byte[] compileBytes(Rule rule, Class helperClass, String helperName, String compiledHelperName, boolean compileToBytecode) throws Exception
@@ -512,47 +509,6 @@ public class Compiler implements Opcodes
     private static synchronized int nextId()
     {
         return ++nextId;
-    }
-
-    /**
-     * this is a classloader used to define classes from bytecode
-     */
-    private static class ClassbyteClassLoader extends ClassLoader
-    {
-        ClassbyteClassLoader(ClassLoader cl)
-        {
-            super(cl);
-        }
-
-        public Class addClass(String name, byte[] bytes)
-                throws ClassFormatError
-        {
-            Class cl = defineClass(name, bytes, 0, bytes.length);
-            resolveClass(cl);
-
-            return cl;
-        }
-    }
-
-    /**
-     * dynamically load and return a generated helper adapter classes using a custom classloader derived from the
-     * trigger class's loader
-     * @param triggerClassLoader the class loader of the trigger class which has been matched with this
-     * helper class's rule
-     * @param helperAdapterName the name of the helper adaptter class to be loaded
-     * @param classBytes the byte array defining the class
-     * @return the new helper class
-     */
-    public static Class<?> loadHelperAdapter(ClassLoader triggerClassLoader, String helperAdapterName, byte[] classBytes)
-    {
-        // create the helper class in a classloader derived from the trigger class
-        // this allows the injected code to refer to the triggger class type and related
-        // application types. the defalt helper will be accessible because it is loaded bby the
-        // ootstrap loader. custom helpers need to be made avvailable to the applicattion either
-        // by deployng them with it or by locating them in the JVM classpath.
-        ClassbyteClassLoader loader = new ClassbyteClassLoader(triggerClassLoader);
-
-        return loader.addClass(helperAdapterName, classBytes);
     }
 
 }

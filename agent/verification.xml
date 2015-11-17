@@ -3,7 +3,7 @@
                xsi:schemaLocation="http://maven.apache.org/verifications/1.0.0 http://maven.apache.org/xsd/verifications-1.0.0.xsd">
   <!--
       ensure each test has output a results file 
-      this catches cases where the VM faislto start because
+      this catches cases where the VM fails to start because
       of an error with the agent configuration
   -->
   <files>

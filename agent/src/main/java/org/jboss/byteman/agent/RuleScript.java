@@ -32,7 +32,7 @@ import java.io.StringWriter;
 import java.io.PrintWriter;
 
 /**
- * details of a single rule obtained from a rule file. RuleScritp instances are stored in the script repository
+ * details of a single rule obtained from a rule file. RuleScript instances are stored in the script repository
  * attached to the transformer. They are used to generate Rule instances at transform time. The RuleScript contains
  * a list of Transforms which detail failed or successful transforms performed using the script.
  */
@@ -40,7 +40,7 @@ import java.io.PrintWriter;
 public class RuleScript
 {
     /**
-     * the name of the rule from which this scritp is derived
+     * the name of the rule from which this script is derived
      */
     private String name;
     /**
@@ -68,6 +68,10 @@ public class RuleScript
      * in the rule body
      */
     private String targetHelper;
+    /**
+     * the details of the IMPORT lines
+     */
+    private String[] imports;
     /**
      * identifies the location in the method if the trigger point at which the rule code should be injected.
      * note that for an AT EXIT rule there may be multiple trigger points.
@@ -109,7 +113,7 @@ public class RuleScript
      * @param line the line at which the rule starts in it's rule script
      * @param file the path to the file containing the rule
      */
-    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, Location targetLocation, String ruleText, int line, String file)
+    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file)
     {
         this.name = name;
         this.targetClass = targetClass;
@@ -117,6 +121,7 @@ public class RuleScript
         this.isOverride = isOverride;
         this.targetMethod = targetMethod;
         this.targetHelper = targetHelper;
+        this.imports = imports;
         this.targetLocation = (targetLocation != null ? targetLocation : Location.create(LocationType.ENTRY, ""));
         this.ruleText = ruleText;
         this.line = line;
@@ -138,6 +143,10 @@ public class RuleScript
 
     public String getTargetHelper() {
         return targetHelper;
+    }
+
+    public String[] getImports() {
+        return imports;
     }
 
     public String getTargetMethod() {

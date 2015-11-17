@@ -58,7 +58,7 @@ public class Main {
         boolean installPolicy = false;
 
         if (args != null) {
-            // args are supplied eparated by ',' characters
+            // args are supplied separated by ',' characters
             String[] argsArray = args.split(",");
             // we accept extra jar files to be added to the boot/sys classpaths
             // script files to be scanned for rules
@@ -136,6 +136,24 @@ public class Main {
                     if (managerClassName.length() == 0) {
                         managerClassName = null;
                     }
+                } else if (arg.startsWith(MODULE_PREFIX)) {
+                    // this can be used to set byteman properties
+                    String mod = arg.substring(MODULE_PREFIX.length(), arg.length());
+                    String moduleArgs="";
+                    int index = mod.indexOf('=');
+                    if (index > 0) {
+                        // need to split off the value
+                        if (index == mod.length() - 1)
+                        {
+                            // value is empty so just drop the =
+                            mod = mod.substring(0, index);
+                        } else {
+                            moduleArgs = mod.substring(index + 1);
+                            mod = mod.substring(0, index);
+                        }
+                    }
+                    moduleSystemName = mod;
+                    moduleSystemArgs = moduleArgs;
                 } else {
                     System.err.println("org.jboss.byteman.agent.Main:\n" +
                             "  illegal agent argument : " + arg + "\n" +
@@ -167,7 +185,7 @@ public class Main {
                 throw ioe;
             }
         }
-        // create a socket so we can be sure it is loaded before the transformer gets cerated. otherwise
+        // create a socket so we can be sure it is loaded before the transformer gets created. otherwise
         // we seem to hit a deadlock when trying to instrument socket
 
         Socket dummy = new Socket();
@@ -175,8 +193,9 @@ public class Main {
         // look up rules in any script files
 
         for (String scriptPath : scriptPaths) {
+            FileInputStream fis = null;
             try {
-                FileInputStream fis = new FileInputStream(scriptPath);
+                fis = new FileInputStream(scriptPath);
                 byte[] bytes = new byte[fis.available()];
                 fis.read(bytes);
                 String ruleScript = new String(bytes);
@@ -184,6 +203,9 @@ public class Main {
             } catch (IOException ioe) {
                 System.err.println("org.jboss.byteman.agent.Main: unable to read rule script file : " + scriptPath);
                 throw ioe;
+            } finally {
+                if (fis != null)
+                    fis.close();
             }
         }
 
@@ -209,37 +231,45 @@ public class Main {
 
         // install an instance of Transformer to instrument the bytecode
         // n.b. this is done with boxing gloves on using explicit class loading and method invocation
-        // via reflection for a GOOD reason. This class (Main) gets laoded by the System class loader.
-        // If we refer to Transformer by name then it also gets loaded va the System class loader.
+        // via reflection for a GOOD reason. This class (Main) gets loaded by the System class loader.
+        // If we refer to Transformer by name then it also gets loaded via the System class loader.
         // But if we want to transform a bootstrap class we need Transformer (et al) to be visible
         // from the bootstrap class loader. That will not happen until after this method has called
         // inst.appendToBootstrapClassLoaderSearch (see above) to add the byteman jar to the path.
-        // Directly referring to Transformer will giveus two versions of Transformer et al. Not only
-        // does that cause us class mismathc problem it also means that a new done here will not install
-        // the new instance in the static field fo the oneloaded in the bootstrap loader. If instead we
-        // use boxing gloves then the byteman code wil get loaded in the bootstrap loader and its constructor
+        // Directly referring to Transformer will give us two versions of Transformer et al. Not only
+        // does that cause us class mismatch problem it also means that a new done here will not install
+        // the new instance in the static field of the one loaded in the bootstrap loader. If instead we
+        // use boxing gloves then the byteman code will get loaded in the bootstrap loader and its constructor
         // will be called.
         //
         // Of course, if the user does not supply boot:byteman.jar as a -javaagent option then class references
         // resolve against the system loader and injection into bootstrap classes fails. But that's still ok
-        // because the byteman classes are still only foudn in one place.
+        // because the byteman classes are still only found in one place.
+
+        ClassLoader loader = ClassLoader.getSystemClassLoader();
+
+        if (moduleSystemName == null) {
+            moduleSystemName = "org.jboss.byteman.modules.NonModuleSystem";
+        }
+        Class<?/*ModuleSystem*/> moduleSystemInteraceClazz = loader.loadClass(MODULE_SYSTEM_NAME);
+        Class<?/*ModuleSystem*/> moduleSystemImplClazz = loader.loadClass(moduleSystemName);
+        final Object/*ModuleSystem*/  moduleSystem = moduleSystemImplClazz.newInstance();
+        final Method/*String->void*/ moduleSystemInit = moduleSystemInteraceClazz.getMethod("initialize", String.class);
+        moduleSystemInit.invoke(moduleSystem, moduleSystemArgs);
 
         boolean isRedefine = inst.isRedefineClassesSupported();
-
+        Class/*<Transformer>*/ transformerClazz;
         ClassFileTransformer transformer;
-        ClassLoader loader = ClassLoader.getSystemClassLoader();
-        Class transformerClazz;
-
         if (managerClassName != null && isRedefine) {
             transformerClazz = loader.loadClass(RETRANSFORMER_NAME);
-            //transformer = new Retransformer(inst, scriptPaths, scripts, true);
-            Constructor constructor = transformerClazz.getConstructor(Instrumentation.class, List.class, List.class, boolean.class);
-            transformer = (ClassFileTransformer)constructor.newInstance(new Object[] { inst, scriptPaths, scripts, isRedefine});
+            //transformer = new Retransformer(inst, moduleSystem, scriptPaths, scripts, true);
+            Constructor/*<Transformer>*/ constructor = transformerClazz.getConstructor(Instrumentation.class,moduleSystemInteraceClazz, List.class, List.class, boolean.class);
+            transformer = (ClassFileTransformer)constructor.newInstance(new Object[] { inst, moduleSystem, scriptPaths, scripts, isRedefine});
         } else {
             transformerClazz = loader.loadClass(TRANSFORMER_NAME);
-            //transformer = new Transformer(inst, scriptPaths, scripts, isRedefine);
-            Constructor constructor = transformerClazz.getConstructor(Instrumentation.class, List.class, List.class, boolean.class);
-            transformer = (ClassFileTransformer)constructor.newInstance(new Object[] { inst, scriptPaths, scripts, isRedefine});
+            //transformer = new Transformer(inst, moduleSystem, scriptPaths, scripts, isRedefine);
+            Constructor/*<Retransformer>*/ constructor = transformerClazz.getConstructor(Instrumentation.class, moduleSystemInteraceClazz, List.class, List.class, boolean.class);
+            transformer = (ClassFileTransformer)constructor.newInstance(new Object[] { inst, moduleSystem, scriptPaths, scripts, isRedefine});
         }
 
         inst.addTransformer(transformer, true);
@@ -336,6 +366,13 @@ public class Main {
     private static final String MANAGER_PREFIX = "manager:";
 
     /**
+     * prefix used to specify the module system class
+     */
+
+    private static final String MODULE_PREFIX = "modules:";
+
+
+    /**
      * name of basic transformer class.
      */
 
@@ -344,15 +381,21 @@ public class Main {
     /**
      * name of retransformer class.
      */
-
-    private static final String RETRANSFORMER_NAME = "org.jboss.byteman.agent.Retransformer";
     
+    private static final String RETRANSFORMER_NAME = "org.jboss.byteman.agent.Retransformer";
+
     /**
      * name of default manager class.
      */
 
     private static final String MANAGER_NAME = "org.jboss.byteman.agent.TransformListener";
     
+    /**
+     * name of module system interface.
+     */
+
+    private static final String MODULE_SYSTEM_NAME = "org.jboss.byteman.modules.ModuleSystem";
+
     /**
      * list of paths to extra bootstrap jars supplied on command line
      */
@@ -393,5 +436,17 @@ public class Main {
      * command line (optional argument)
      */
     private static String managerClassName = null;
+
+    /**
+     * The name of the module system implementation class, supplied on the
+     * command line (optional argument)
+     */
+    private static String moduleSystemName = null;
+
+    /**
+     * The arguments to the module system implementation class, supplied on the
+     * command line (optional argument)
+     */
+    private static String moduleSystemArgs = "";
 
 }
