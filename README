@@ -51,7 +51,7 @@ above directories plus the following extra directories
 
 Using Byteman
 -------------
-Access to the Byteman project downlaods, documentation, user and
+Access to the Byteman project downloads, documentation, user and
 developer forums and source code is available from the project
 home page at http://www.jboss.org/byteman
 
@@ -71,7 +71,7 @@ Copyright
 See the copyright file in the docs directory for details of the open
 source license under which this code is released. Note that this code
 employs the ObjectWeb ASM package to do bytecode manipulation and the
-JFlex and JavaCUP tokeniser and parser genereators to generate and
+JFlex and JavaCUP tokenizer and parser generators to generate and
 provide runtime support for the rule parser which are also released
 under open source licenses.
 
