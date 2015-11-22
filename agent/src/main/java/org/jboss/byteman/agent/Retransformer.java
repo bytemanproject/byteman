@@ -47,6 +47,7 @@ public class Retransformer extends Transformer {
      * implementation
      *
      * @param inst the instrumentation object used to interface to the JVM
+     * @param moduleSystem the module system to use for helper and class loading
      * @param scriptPaths list of file paths for each input script
      * @param scriptTexts the text of each input script
      * @param isRedefine true if class redefinition is allowed false if not

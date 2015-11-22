@@ -112,6 +112,7 @@ public class RuleScript
      * @param isOverride true if the rule should inject down class hierarchies false if it should inly inject into direct implementations
      * @param targetMethod the name of the method to which the rule applies
      * @param targetHelper the name of the helper class to be used
+     * @param imports the list of imports for the module system
      * @param targetLocation description of where the rule should be injected
      * @param ruleText the body of the rule as text including the BIND, IF and DO clasue
      * @param line the line at which the rule starts in it's rule script
