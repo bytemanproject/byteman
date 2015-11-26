@@ -841,6 +841,19 @@ public class Rule
         stringWriter.write(getTargetLocation().toString());
         stringWriter.write('\n');
         String[] imports = ruleScript.getImports();
+        if (imports != null) {
+            for (int i = 0; i < imports.length; i++) {
+                stringWriter.write("IMPORT ");
+                stringWriter.write(imports[i]);
+                stringWriter.append('\n');
+            }
+        }
+        String targetHelper = ruleScript.getTargetHelper();
+        if (targetHelper != null) {
+            stringWriter.write("HELPER ");
+            stringWriter.write(targetHelper);
+            stringWriter.write('\n');
+        }
         if (ruleScript.isCompileToBytecode()) {
             stringWriter.write("COMPILE\n");
         } else {

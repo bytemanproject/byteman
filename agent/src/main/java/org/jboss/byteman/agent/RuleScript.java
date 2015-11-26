@@ -371,16 +371,22 @@ public class RuleScript
         writer.println(targetClass);
         writer.print("METHOD ");
         writer.println(targetMethod);
+        if (imports != null) {
+            for (int i = 0; i < imports.length ; i++) {
+                writer.print("IMPORT ");
+                writer.println(imports[i]);
+            }
+        }
         if (targetHelper != null) {
             writer.print("HELPER ");
             writer.println(targetHelper);
         }
-        writer.println(targetLocation.toString());
         if (compileToBytecode) {
             writer.write("COMPILE\n");
         } else {
             writer.write("NOCOMPILE\n");
         }
+        writer.println(targetLocation.toString());
         writer.println(ruleText);
         writer.println("ENDRULE");
     }
