@@ -585,7 +585,7 @@ public class Rule
      */
     private boolean isCompileToBytecode()
     {
-        return Transformer.isCompileToBytecode();
+        return ruleScript.isCompileToBytecode();
     }
 
     private void installParameters(boolean isStatic, String className)
@@ -813,11 +813,6 @@ public class Rule
         return nextId++;
     }
 
-    private static boolean compileRules()
-    {
-        return Transformer.isCompileToBytecode();
-    }
-
     /**
      * generate a string representation of the rule
      *
@@ -845,6 +840,12 @@ public class Rule
         stringWriter.write('\n');
         stringWriter.write(getTargetLocation().toString());
         stringWriter.write('\n');
+        String[] imports = ruleScript.getImports();
+        if (ruleScript.isCompileToBytecode()) {
+            stringWriter.write("COMPILE\n");
+        } else {
+            stringWriter.write("NOCOMPILE\n");
+        }
         if (event != null) {
             event.writeTo(stringWriter);
         } else {

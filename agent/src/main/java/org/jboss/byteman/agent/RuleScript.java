@@ -96,6 +96,10 @@ public class RuleScript
      */
     private String file;
     /**
+     * true if this rule should be compiled to bytecode otherwise false
+     */
+    private final boolean compileToBytecode;
+    /**
      * a list of records identifying contexts in which the rule has been applied.
      */
     private List<Transform> transformed;
@@ -112,8 +116,9 @@ public class RuleScript
      * @param ruleText the body of the rule as text including the BIND, IF and DO clasue
      * @param line the line at which the rule starts in it's rule script
      * @param file the path to the file containing the rule
+     * @param compileToBytecode true if the rule should be compiled otherwise false
      */
-    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file)
+    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file, boolean compileToBytecode)
     {
         this.name = name;
         this.targetClass = targetClass;
@@ -126,6 +131,7 @@ public class RuleScript
         this.ruleText = ruleText;
         this.line = line;
         this.file = file;
+        this.compileToBytecode = compileToBytecode;
         this.transformed = new ArrayList<Transform>();
     }
 
@@ -174,6 +180,8 @@ public class RuleScript
     {
         return file;
     }
+
+    public boolean isCompileToBytecode() { return compileToBytecode; }
 
     /**
      * getter for list of transforms applied for this script. must be called synchronized on the script.
@@ -368,6 +376,11 @@ public class RuleScript
             writer.println(targetHelper);
         }
         writer.println(targetLocation.toString());
+        if (compileToBytecode) {
+            writer.write("COMPILE\n");
+        } else {
+            writer.write("NOCOMPILE\n");
+        }
         writer.println(ruleText);
         writer.println("ENDRULE");
     }
