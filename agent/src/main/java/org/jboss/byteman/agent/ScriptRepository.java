@@ -114,7 +114,7 @@ public class ScriptRepository
                         ruleCompileToBytecode = false;
                     } else {
                         scriptCompileToBytecode = false;
-                        ruleCompileToBytecode = true;
+                        ruleCompileToBytecode = false;
                     }
                 } else if (line.startsWith("IMPORT ")) {
                     String imp = line.substring(7).trim();
