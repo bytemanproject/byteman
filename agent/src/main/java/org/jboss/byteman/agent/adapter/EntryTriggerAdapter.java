@@ -66,11 +66,20 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
          */
         private boolean visited;
 
+        /**
+         * label generated before in
+         */
+        private Label startMarker;
+
+        private Label offsetMarker;
+
         EntryTriggerMethodAdapter(MethodVisitor mv, TransformContext transformContext, int access, String name, String descriptor, String signature, String[] exceptions)
         {
             super(mv, transformContext, access, name, descriptor, signature, exceptions);
             this.unlatched = true;  // subclass can manipulate this to postponne visit
             visited = false;
+            startMarker = null;
+            offsetMarker = null;
         }
 
         // if possible inject a trigger as soon as we visit the code. This will precede any visit to labels defined
@@ -86,9 +95,29 @@ public class EntryTriggerAdapter extends RuleTriggerAdapter
             super.visitCode();
 
             if (unlatched && !visited) {
+                // if we inject here we keep markers for the original
+                // and offset start of real code. that allows us to identify
+                // parameters whose start pos has been pushed forward to the
+                // end marker and reset it to the start marker
+                startMarker = new Label();
+                visitLabel(startMarker);
                 visited = true;
                 injectTriggerPoint();
+                offsetMarker = new Label();
+                visitLabel(offsetMarker);
             }
+        }
+        @Override
+        public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index)
+        {
+            if (offsetMarker != null && (offsetMarker.getOffset() == start.getOffset())) {
+                // this local wil be a parameter whose start
+                // offset was originally 0 and now has been
+                // offset by the inejcted AT ENTRY code
+                // passing startMarker will reset it's start to 0
+                start = startMarker;
+            }
+            super.visitLocalVariable(name, desc, signature, start, end, index);
         }
 
         // we will not be able to inject into a constructor at visitCode because we need to delay until
