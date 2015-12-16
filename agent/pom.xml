@@ -584,6 +584,66 @@
                          <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestTriggerClassMethodBinding.btm</argLine>
                       </configuration>
                     </execution>
+                    <execution>
+                        <id>misc.TestIncludeExclude-INCLUDED</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkMode>once</forkMode>
+                            <includes>
+                                <include>org/jboss/byteman/tests/misc/TestIncludeExclude.class</include>
+                            </includes>
+                            <argLine>-Dbyteman.included=misc.TestIncludeExclude -Dtestcase=INCLUDED -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestIncludeExclude.btm</argLine>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>misc.TestIncludeExclude-NOT_INCLUDED</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkMode>once</forkMode>
+                            <includes>
+                                <include>org/jboss/byteman/tests/misc/TestIncludeExclude.class</include>
+                            </includes>
+                            <argLine>-Dbyteman.included=misc.Other -Dtestcase=NOT_INCLUDED -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestIncludeExclude.btm</argLine>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>misc.TestIncludeExclude-EXCLUDED</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkMode>once</forkMode>
+                            <includes>
+                                <include>org/jboss/byteman/tests/misc/TestIncludeExclude.class</include>
+                            </includes>
+                            <argLine>-Dbyteman.excluded=misc.TestIncludeExclude -Dtestcase=EXCLUDED -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestIncludeExclude.btm</argLine>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>misc.TestIncludeExclude-NOT_EXCLUDED</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkMode>once</forkMode>
+                            <includes>
+                                <include>org/jboss/byteman/tests/misc/TestIncludeExclude.class</include>
+                            </includes>
+                            <argLine>-Dbyteman.excluded=misc.Other -Dtestcase=NOT_EXCLUDED -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestIncludeExclude.btm</argLine>
+                        </configuration>
+                    </execution>
                     <!--
                     <execution>
                       <id>misc.TestDowncast</id>
