@@ -288,8 +288,8 @@ public class Install
     }
 
     /**
-     * check for environment setting BYTEMAN_HOME and use it to identify the location of
-     * the byteman agent jar.
+     * Check for system property org.jboss.byteman.home in preference to the environment setting
+     * BYTEMAN_HOME and use it to identify the location of the byteman agent jar.
      */
     private void locateAgent() throws IOException
     {
@@ -298,11 +298,11 @@ public class Install
         String bmHome = System.getProperty(BYTEMAN_HOME_SYSTEM_PROP);
         if (bmHome == null || bmHome.length() == 0) {
             bmHome = System.getenv(BYTEMAN_HOME_ENV_VAR);
-            if (bmHome == null || bmHome.length() == 0 || bmHome.equals("null")) {
-                locateAgentFromClasspath();
-            } else {
-                locateAgentFromHomeDir(bmHome);
-            }
+        }
+        if (bmHome == null || bmHome.length() == 0 || bmHome.equals("null")) {
+            locateAgentFromClasspath();
+        } else {
+            locateAgentFromHomeDir(bmHome);
         }
     }
 
