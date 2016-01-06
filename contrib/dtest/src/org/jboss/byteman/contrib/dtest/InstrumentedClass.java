@@ -114,6 +114,29 @@ public class InstrumentedClass implements RemoteInterface
     }
 
     /**
+     * Checks that the number of known invocations of the given method is specified count.
+     *
+     * @param message the message to print in case of assertion failure.
+     * @param methodName the method name to look for.
+     * @param callCount the expected number of the invocation count.
+     */
+    public void assertMethodCallCount(String message, String methodName, int callCount)
+    {
+    	assertMethodCallCount(message, methodName, new CallCount(callCount, callCount));
+    }
+    
+    /**
+     * Checks that the number of known invocations of the given method is specified count.
+     *
+     * @param methodName the method name to look for.
+     * @param callCount the expected number of the invocation count.
+     */
+    public void assertMethodCallCount(String methodName, int callCount)
+    {
+    	assertMethodCallCount(null, methodName, new CallCount(callCount, callCount));
+    }
+
+    /**
      * Checks that the given method has been called at least once on each known instance of the class.
      * Uses junit internally, hence expect the normal exception throwing in case of failure.
      *

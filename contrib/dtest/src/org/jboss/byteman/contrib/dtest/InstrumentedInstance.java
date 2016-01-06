@@ -89,7 +89,13 @@ public class InstrumentedInstance
     public void assertMethodCallCount(String message, String methodName, CallCount callCount)
     {
         int invocationCount = getInvocationCount(methodName);
-        assertTrue((message == null ? "" : message)+" - required minimum call count "+callCount.getMin()+" but was "+invocationCount, callCount.getMin() <= invocationCount);
-        assertTrue((message == null ? "" : message)+" - required maximum call count "+callCount.getMax()+" but was "+invocationCount, callCount.getMax() >= invocationCount);
+
+        String assertInfo = (message == null ? "" : message + " - ") + String.format("Method %s#%s ", className, methodName);
+        if(callCount.getMin() == callCount.getMax()) {
+        	assertTrue(assertInfo + "required call count " + callCount.getMin() + " but was " + invocationCount, callCount.getMin() == invocationCount);
+        } else {
+        	assertTrue(assertInfo + "required minimum call count " + callCount.getMin() + " but was " + invocationCount, callCount.getMin() <= invocationCount);
+        	assertTrue(assertInfo + "required maximum call count " + callCount.getMax() + " but was " + invocationCount, callCount.getMax() >= invocationCount);
+        }
     }
 }

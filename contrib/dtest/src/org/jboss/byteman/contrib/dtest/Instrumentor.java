@@ -111,29 +111,55 @@ public class Instrumentor
     public InstrumentedClass instrumentClass(Class clazz, Set<String> methodNames) throws Exception
     {
         String className = clazz.getCanonicalName();
+
+        Set<String> methodNamesToInstrument = new HashSet<String>();
+
+        for(Method method : clazz.getDeclaredMethods()) {
+        	String declaredMethodName = method.getName();
+        	if(methodNames == null || methodNames.contains(declaredMethodName)) {
+        		methodNamesToInstrument.add(declaredMethodName);
+        	}
+        }
+
+        return instrumentClass(className, methodNamesToInstrument);
+    }
+
+    /**
+     * Add method tracing rules to the specified class name.<br>
+     * If a null set of method names is supplied, {@link NullPointerException} is thrown.
+     *
+     * @param className the class name to instrument.
+     * @param methodNames the selection of methods to instrument.
+     * @return a local proxy for the instrumentation.
+     * @throws NullPointerException in case of methodNames parameter is null
+     * @throws Exception in case of failure.
+     */
+    public InstrumentedClass instrumentClass(String className, Set<String> methodNames) throws Exception
+    {
+    	if(methodNames == null) {
+    		throw new NullPointerException("methodNames");
+    	}
+
         Set<String> instrumentedMethods = new HashSet<String>();
 
         StringBuilder ruleScriptBuilder = new StringBuilder();
-        for(Method method : clazz.getDeclaredMethods()) {
-            String methodName = method.getName();
+        for(String methodName : methodNames) {
             
             if(instrumentedMethods.contains(methodName)) {
               // do not add two identical rules for methods which differ by parameters
               continue;
             }
             
-            if(methodNames == null || methodNames.contains(methodName)) {
 
-                String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_remotetrace_entry";
+            String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_remotetrace_entry";
 
-                RuleBuilder ruleBuilder = new RuleBuilder(ruleName);
-                ruleBuilder.onClass(className).inMethod(methodName).atEntry();
-                ruleBuilder.usingHelper(BytemanTestHelper.class);
-                ruleBuilder.doAction("setTriggering(false), debug(\"firing "+ruleName+"\", $0), remoteTrace(\""+className+"\", \""+methodName+"\", $*)");
-                ruleScriptBuilder.append(ruleBuilder.toString());
-                
-                instrumentedMethods.add(methodName);
-            }
+            RuleBuilder ruleBuilder = new RuleBuilder(ruleName);
+            ruleBuilder.onClass(className).inMethod(methodName).atEntry();
+            ruleBuilder.usingHelper(BytemanTestHelper.class);
+            ruleBuilder.doAction("setTriggering(false), debug(\"firing "+ruleName+"\", $0), remoteTrace(\""+className+"\", \""+methodName+"\", $*)");
+            ruleScriptBuilder.append(ruleBuilder.toString());
+            
+            instrumentedMethods.add(methodName);
         }
 
         String scriptString = ruleScriptBuilder.toString();
