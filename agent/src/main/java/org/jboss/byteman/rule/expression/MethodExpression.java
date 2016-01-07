@@ -584,7 +584,7 @@ public class MethodExpression extends Expression
         for (int i = 0; i < candidates.size();) {
             Method m = candidates.get(i);
             Class nextClazz = m.getParameterTypes()[argIdx];
-            if (nextClazz.isAssignableFrom(argClazz)) {
+            if (nextClazz == argClazz || nextClazz.isAssignableFrom(argClazz)) {
                 i++;
             } else {
                 candidates.remove(i);
