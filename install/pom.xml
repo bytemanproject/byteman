@@ -24,7 +24,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>byteman-install</artifactId>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
     <description>
         The Byteman install jar contains classes to install the Byteman agent into the current JVM
         or a remote JVM
@@ -56,5 +56,21 @@
           </dependencies>
         </profile>
     </profiles>
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <extensions>true</extensions>
+          <configuration>
+            <instructions>
+              <Export-Package>org.jboss.byteman.agent.install</Export-Package>
+              <Bundle-SymbolicName>org.jboss.byteman.agent.install</Bundle-SymbolicName>
+              <_noee>true</_noee> <!-- Do not generate Require-Capability header -->
+            </instructions>
+          </configuration>
+        </plugin>
+      </plugins>
+    </build>
 
 </project>
