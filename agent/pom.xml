@@ -2166,6 +2166,28 @@
             </dependencies>
 
         </profile>
+        <!--
+            the parser generator omits to generate some necessary
+            javadoc attributes in the generated code. so we have
+            to escape doclint errors which arise when using jdk9
+            and later jdk8 versions
+        -->
+        <profile>
+            <id>fix javadoc lint errors</id>
+            <build>
+                <plugins>
+                    <!-- switch off errors for missing javadoc fields -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <additionalparam>-Xdoclint:-missing</additionalparam>
+                        </configuration>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
     </profiles>
     <dependencies>
         <dependency>
