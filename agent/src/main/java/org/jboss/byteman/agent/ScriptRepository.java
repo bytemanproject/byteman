@@ -116,20 +116,34 @@ public class ScriptRepository
                         scriptCompileToBytecode = false;
                         ruleCompileToBytecode = false;
                     }
-                } else if (line.startsWith("IMPORT ")) {
-                    String imp = line.substring(7).trim();
+                } else if (line.startsWith("IMPORT ") || line.equals("IMPORT")) {
+                    String imp = line.substring(6).trim();
                     if (inRule) {
-                        if (targetImports == null)
-                            targetImports = new String[1];
-                        else
-                            targetImports = Arrays.copyOf(targetImports, targetImports.length + 1);
-                        targetImports[targetImports.length - 1] = imp;
+                        if (imp.isEmpty()) {
+                            // remove any globally defined imports
+                            targetImports = new String[0];
+                        } else {
+                            // add to the existing rule imports if any, otherwise the global ones
+                            if (targetImports == null) {
+                                if (defaultImports == null)
+                                    targetImports = new String[1];
+                                else
+                                    targetImports = Arrays.copyOf(defaultImports, defaultImports.length + 1);
+                            } else {
+                                targetImports = Arrays.copyOf(targetImports, targetImports.length + 1);
+                            }
+                            targetImports[targetImports.length - 1] = imp;
+                        }
                     } else {
-                        if (defaultImports == null)
-                            defaultImports = new String[1];
-                        else
-                            defaultImports = Arrays.copyOf(defaultImports, defaultImports.length + 1);
-                        defaultImports[defaultImports.length - 1] = imp;
+                        if (imp.isEmpty())
+                            defaultImports = null;
+                        else {
+                            if (defaultImports == null)
+                                defaultImports = new String[1];
+                            else
+                                defaultImports = Arrays.copyOf(defaultImports, defaultImports.length + 1);
+                            defaultImports[defaultImports.length - 1] = imp;
+                        }
                     }
                 } else if (!inRule) {
                     if (!line.equals("")) {
@@ -171,7 +185,7 @@ public class ScriptRepository
                             targetHelper = defaultHelper;
                         }
                         if (targetImports == null) {
-                            targetImports = defaultImports;
+                            targetImports = (defaultImports != null) ? defaultImports : new String[0];
                         }
                         RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetImports, targetLocation, nextRule, startNumber, scriptFile, ruleCompileToBytecode);
                         ruleScripts.add(ruleScript);

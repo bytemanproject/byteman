@@ -265,7 +265,7 @@ public class TransformContext
 
     public void recordFailedTransform(Throwable th)
     {
-        ruleScript.recordTransform(loader, triggerClassName, null, null, null, th);
+        ruleScript.recordFailedTransform(loader, triggerClassName, th);
 
         purgeRules();
     }

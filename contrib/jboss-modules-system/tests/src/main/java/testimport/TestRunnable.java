@@ -1,10 +1,12 @@
 package testimport;
 
+import byteman.tests.Test;
+
 public class TestRunnable implements Runnable
 {
-    private final TestImport ti;
+    private final Test ti;
 
-    public TestRunnable(TestImport ti)
+    public TestRunnable(Test ti)
     {
         this.ti = ti;
     }

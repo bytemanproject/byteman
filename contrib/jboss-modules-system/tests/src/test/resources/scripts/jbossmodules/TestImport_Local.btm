@@ -21,7 +21,7 @@
 #
 # @authors James Livingston
 #
-# Test that we can import a module not visible to the class
+# Test that we can import a module not visible to the class, local to a rule
 
 RULE check import of other module
 CLASS runner.Runner
