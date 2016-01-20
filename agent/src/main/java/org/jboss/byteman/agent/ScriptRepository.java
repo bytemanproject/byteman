@@ -36,6 +36,8 @@ public class ScriptRepository
     {
         targetClassIndex = new HashMap<String, List<RuleScript>>();
         targetInterfaceIndex = new HashMap<String, List<RuleScript>>();
+        targetPrefixClassIndex = new HashMap<String, List<RuleScript>>();
+        targetPrefixInterfaceIndex = new HashMap<String, List<RuleScript>>();
         ruleNameIndex = new HashMap<String, RuleScript>();
         this.skipOverrideRules = skipOverrideRules;
     }
@@ -72,6 +74,7 @@ public class ScriptRepository
             Location targetLocation = null;
             boolean isInterface = false;
             boolean isOverride = false;
+            boolean isPrefixSearch = false;
             int lineNumber = 0;
             int startNumber = -1;
             int maxLines = lines.length;
@@ -141,12 +144,20 @@ public class ScriptRepository
                         isOverride = true;
                         targetClass = targetClass.substring(1).trim();
                     }
+                    if (targetClass.endsWith("*")) {
+                    	isPrefixSearch = true;
+                    	targetClass = targetClass.substring(0, targetClass.length()-1);
+                    }
                 } else if (line.startsWith("INTERFACE ")) {
                     targetClass = line.substring(10).trim();
                     isInterface = true;
                     if (targetClass.startsWith("^")) {
                         isOverride = true;
                         targetClass = targetClass.substring(1).trim();
+                    }
+                    if (targetClass.endsWith("*")) {
+                    	isPrefixSearch = true;
+                    	targetClass = targetClass.substring(0, targetClass.length()-1);
                     }
                 } else if (line.startsWith("METHOD ")) {
                     targetMethod = line.substring(7).trim();
@@ -173,7 +184,7 @@ public class ScriptRepository
                         if (targetImports == null) {
                             targetImports = defaultImports;
                         }
-                        RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetImports, targetLocation, nextRule, startNumber, scriptFile, ruleCompileToBytecode);
+                        RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, isPrefixSearch, targetMethod, targetHelper, targetImports, targetLocation, nextRule, startNumber, scriptFile, ruleCompileToBytecode);
                         ruleScripts.add(ruleScript);
                     }
                     name = null;
@@ -246,9 +257,19 @@ public class ScriptRepository
             // now index the new script
 
             if (script.isInterface()) {
-                indexTarget(script,  targetInterfaceIndex);
+            	if (script.isPrefixSearch()) {
+            		indexTarget(script,  targetPrefixInterfaceIndex);
+            	}
+            	else {
+            		indexTarget(script,  targetInterfaceIndex);
+            	}
             } else {
-                indexTarget(script, targetClassIndex);
+            	if (script.isPrefixSearch()) {
+            		indexTarget(script, targetPrefixClassIndex);
+            	}
+            	else {
+            		indexTarget(script, targetClassIndex);
+            	}
             }
         } else {
             boolean wasOverride = previous.isOverride();
@@ -262,15 +283,51 @@ public class ScriptRepository
 
             if (isInterface == wasInterface) {
                 // both in the same index so try a reindex
-                Map<String, List<RuleScript>> index = (isInterface ? targetInterfaceIndex : targetClassIndex);
+                Map<String, List<RuleScript>> index = null;
+                if (isInterface) {
+                	if (script.isPrefixSearch()) {
+                		index = targetPrefixInterfaceIndex;
+                	}
+                	else {
+                		index = targetInterfaceIndex;
+                	}
+                }
+                else {
+                	if (script.isPrefixSearch()) {
+                		index = targetPrefixClassIndex;
+                	}
+                	else {
+                		index = targetClassIndex;
+                	}
+                }
                 reindexTarget(script, previous, index);
             } else if (isInterface) {
                 // different indexes so unindex then index
-                unindexTarget(previous, targetClassIndex);
-                indexTarget(script, targetInterfaceIndex);
+            	if (previous.isPrefixSearch()) {
+            		unindexTarget(previous, targetPrefixClassIndex);
+            	}
+            	else {
+            		unindexTarget(previous, targetClassIndex);
+            	}
+            	if (script.isPrefixSearch()) {
+            		indexTarget(script, targetPrefixInterfaceIndex);
+            	}
+            	else {
+            		indexTarget(script, targetInterfaceIndex);
+            	}
             } else {
-                unindexTarget(previous, targetInterfaceIndex);
-                indexTarget(script, targetClassIndex);
+            	if (previous.isPrefixSearch()) {
+            		unindexTarget(previous, targetPrefixInterfaceIndex);
+            	}
+            	else {
+            		unindexTarget(previous, targetInterfaceIndex);
+            	}
+            	if (script.isPrefixSearch()) {
+            		indexTarget(script, targetPrefixClassIndex);
+            	}
+            	else {
+            		indexTarget(script, targetClassIndex);
+            	}
             }
             // decrement count if necessary after unindexing
             if (wasOverride) {
@@ -313,7 +370,23 @@ public class ScriptRepository
         // if we found a script then we have to unindex it
 
         if (current != null) {
-            Map<String, List<RuleScript>> index = (current.isInterface() ? targetInterfaceIndex : targetClassIndex);
+            Map<String, List<RuleScript>> index = null;	//(current.isInterface() ? targetInterfaceIndex : targetClassIndex);
+            if (current.isInterface()) {
+            	if (current.isPrefixSearch()) {
+            		index = targetPrefixInterfaceIndex;
+            	}
+            	else {
+            		index = targetInterfaceIndex;
+            	}
+            }
+            else {
+            	if (current.isPrefixSearch()) {
+            		index = targetPrefixClassIndex;
+            	}
+            	else {
+            		index = targetClassIndex;
+            	}
+            }
             unindexTarget(current, index);
 
             boolean wasOverride = current.isOverride();
@@ -374,6 +447,19 @@ public class ScriptRepository
             return targetClassIndex.get(name);
         }
     }
+    
+    public List<RuleScript> scriptsForPrefixClassName(String name)
+    {
+        synchronized (targetPrefixClassIndex) {
+        	List<RuleScript> ruleScript = new ArrayList<RuleScript>();
+        	for(String key : targetPrefixClassIndex.keySet()) {
+        		if (name.startsWith(key)) {
+        			ruleScript.addAll(targetPrefixClassIndex.get(key));
+        		}
+        	}
+            return ruleScript;
+        }
+    }
 
     /**
      * return a list of all interface scripts indexed using the supplied name. note that if name is
@@ -389,6 +475,19 @@ public class ScriptRepository
     {
         synchronized (targetInterfaceIndex) {
             return targetInterfaceIndex.get(name);
+        }
+    }
+    
+    public List<RuleScript> scriptsForPrefixInterfaceName(String name)
+    {
+        synchronized (targetPrefixInterfaceIndex) {
+        	List<RuleScript> ruleScript = new ArrayList<RuleScript>();
+        	for(String key : targetPrefixInterfaceIndex.keySet()) {
+        		if (name.startsWith(key)) {
+        			ruleScript.addAll(targetPrefixInterfaceIndex.get(key));
+        		}
+        	}
+            return ruleScript;
         }
     }
 
@@ -412,7 +511,7 @@ public class ScriptRepository
         while (nextClazz != null) {
             String name = nextClazz.getName();
 
-            if (matchTarget(name, clazz, false, isOverride)) {
+            if (matchTarget(name, clazz, false, isOverride) || matchPrefixTarget(name, clazz, false, isOverride)) {
                 return true;
             }
 
@@ -447,9 +546,10 @@ public class ScriptRepository
                         // check the next interface
                         Class interfaze = toVisit.pop();
                         name = interfaze.getName();
-                        if (matchTarget(name, clazz, true, isOverride)) {
+                        if (matchTarget(name, clazz, true, isOverride) || matchPrefixTarget(name, clazz, true, isOverride)) {
                             return true;
-                        } else {
+                        } 
+                        else {
                             lastDot = name.lastIndexOf('.');
                             if (lastDot >= 0) {
                                 if (matchTarget(name.substring(lastDot + 1), clazz, true, isOverride)) {
@@ -543,6 +643,56 @@ public class ScriptRepository
                     }
                 }
             }
+        }
+        return false;
+    }
+    
+    private boolean matchPrefixTarget(String name, Class<?> clazz, boolean isInterface, boolean isOverride) {
+        Map<String, List<RuleScript>> index = (isInterface ? targetPrefixInterfaceIndex : targetPrefixClassIndex);
+        synchronized (index) {
+        	for(String key : index.keySet()) {
+        		if (!name.startsWith(key)) {
+        			continue;
+        		}
+        		List<RuleScript> ruleScripts = index.get(key);
+        		for (RuleScript ruleScript: ruleScripts) {
+        			if (isOverride && !ruleScript.isOverride()) {
+                        continue;
+                    }
+                    String methodName = ruleScript.getTargetMethod();
+                    int signaturePos = methodName.indexOf("(");
+                    if (signaturePos > 0) {
+                        methodName = methodName.substring(0, signaturePos).trim();
+                    }
+                    int wsPos = methodName.indexOf(' ');
+                    if (wsPos < 0) {
+                       wsPos = methodName.indexOf('\t');
+                    }
+                    if (wsPos > 0) {
+                        // ok, so METHOD spec must be in format "type methodname"
+                        methodName = methodName.substring(wsPos).trim();
+                    }
+                    if ("<init>".equals(methodName) || "<clinit>".equals(methodName)) {
+                        // every class has some sort of constructor so accept it
+                        return true;
+                    }
+                    // this filters out cases where the class does not have a method with the correct name
+                    try {
+                        Method[] declaredMethods = clazz.getDeclaredMethods();
+                        for (int i = 0; i < declaredMethods.length; i++) {
+                            Method method = declaredMethods[i];
+                            if (method.getName().equals(methodName)) {
+                                return true;
+                            }
+                        }
+                    } catch (NoClassDefFoundError e) {
+                        // we cam sometimes get an Error thrown if the class we are lookingb up has unresolved
+                        // refernces ot a non-existent class. don't really know why such classes turn up
+                        // in the inst allLoaddedClasses list but they do.
+                        // ignore
+                    }
+        		}
+        	}
         }
         return false;
     }
@@ -690,6 +840,8 @@ public class ScriptRepository
      */
 
     private final Map<String, List<RuleScript>> targetClassIndex;
+    
+    private final Map<String, List<RuleScript>> targetPrefixClassIndex;
 
     /**
      * a 1-m mapping from target interface names which appear in rules to a script object holding the
@@ -697,6 +849,8 @@ public class ScriptRepository
      */
 
     private final Map<String, List<RuleScript>> targetInterfaceIndex;
+    
+    private final Map<String, List<RuleScript>> targetPrefixInterfaceIndex;
 
     /**
      * a 1-m mapping from rule names which appear in rules to a script object holding the

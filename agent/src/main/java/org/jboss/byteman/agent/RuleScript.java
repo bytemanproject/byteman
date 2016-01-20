@@ -63,6 +63,9 @@ public class RuleScript
      * case of an interface rule, by the class directly implementing the target interface
      */
     private boolean isOverride;
+    
+    private boolean isPrefixSearch;
+    
     /**
      * the name of a class whose public instance methods define the built-in methods available for use
      * in the rule body
@@ -119,12 +122,14 @@ public class RuleScript
      * @param file the path to the file containing the rule
      * @param compileToBytecode true if the rule should be compiled otherwise false
      */
-    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file, boolean compileToBytecode)
+   
+	public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, boolean isPrefixSearch, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file, boolean compileToBytecode)
     {
         this.name = name;
         this.targetClass = targetClass;
         this.isInterface =  isInterface;
         this.isOverride = isOverride;
+        this.isPrefixSearch = isPrefixSearch;
         this.targetMethod = targetMethod;
         this.targetHelper = targetHelper;
         this.imports = imports;
@@ -136,6 +141,10 @@ public class RuleScript
         this.transformed = new ArrayList<Transform>();
     }
 
+    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file, boolean compileToBytecode) {
+    	this(name, targetClass, isInterface, isOverride, false, targetMethod, targetHelper, imports, targetLocation, ruleText, line, file, compileToBytecode);
+    }
+    
     public String getName() {
         return name;
     }
@@ -162,6 +171,10 @@ public class RuleScript
 
     public boolean isOverride() {
         return isOverride;
+    }
+    
+    public boolean isPrefixSearch() {
+    	return isPrefixSearch;
     }
 
     public Location getTargetLocation() {
@@ -369,7 +382,11 @@ public class RuleScript
         if (isOverride) {
             writer.print("^");
         }
-        writer.println(targetClass);
+        writer.print(targetClass);
+        if (isPrefixSearch) {
+        	writer.print("*");
+        }
+        writer.println();
         writer.print("METHOD ");
         writer.println(targetMethod);
         if (imports != null) {
