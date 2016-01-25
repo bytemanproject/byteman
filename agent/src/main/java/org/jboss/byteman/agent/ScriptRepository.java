@@ -631,7 +631,7 @@ public class ScriptRepository
                         Method[] declaredMethods = clazz.getDeclaredMethods();
                         for (int i = 0; i < declaredMethods.length; i++) {
                             Method method = declaredMethods[i];
-                            if (method.getName().equals(methodName)) {
+                            if (method.getName().equals(methodName) || (methodName.startsWith("^") && method.getName().matches(methodName)) ) {
                                 return true;
                             }
                         }
@@ -681,7 +681,7 @@ public class ScriptRepository
                         Method[] declaredMethods = clazz.getDeclaredMethods();
                         for (int i = 0; i < declaredMethods.length; i++) {
                             Method method = declaredMethods[i];
-                            if (method.getName().equals(methodName)) {
+                            if (method.getName().equals(methodName) || (methodName.startsWith("^") && method.getName().matches(methodName)) ) {
                                 return true;
                             }
                         }
