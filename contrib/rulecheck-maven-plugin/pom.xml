@@ -113,7 +113,7 @@
         <profile>
             <id>fix javadoc for jdk9</id>
             <activation>
-                <jdk>1.9</jdk>
+                <jdk>[1.8,)</jdk>
             </activation>
             <build>
                 <plugins>
