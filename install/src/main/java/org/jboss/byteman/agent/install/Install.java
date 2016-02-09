@@ -151,6 +151,25 @@ public class Install
      */
     public static String getSystemProperty(String id, String property)
     {
+        return getProperty(id, property);
+    }
+
+    /**
+     * attach to the virtual machine identified by id and return {@code true} if a Byteman
+     * agent has already been attached to it. id must be the id of a virtual machine
+     * returned by method availableVMs.
+     * @param id the id of the machine to attach to
+     * @return {@code true} if and only if a Byteman agent has already been attached to the
+     * virtual machine.
+     */
+    public static boolean isAgentAttached(String id)
+    {
+        String value = getProperty(id, BYTEMAN_AGENT_LOADED_PROPERTY);
+        return Boolean.parseBoolean(value);
+    }
+
+    private static String getProperty(String id, String property)
+    {
         VirtualMachine vm = null;
         try {
             vm = VirtualMachine.attach(id);
@@ -430,18 +449,6 @@ public class Install
         }
 
 
-        //!! TODO -- find a way for the agent to notify it is already loaded via an agent property
-        /*
-        Properties properties = vm.getAgentProperties();
-
-        System.out.println("agent properties:");
-        for (String name : properties.stringPropertyNames()) {
-            System.out.print("  ");
-            System.out.print(name);
-            System.out.print("=");
-            System.out.println(properties.getProperty(name));
-        }
-        */
     }
 
     /**
@@ -504,6 +511,8 @@ public class Install
     private VirtualMachine vm;
 
     private static final String BYTEMAN_PREFIX="org.jboss.byteman.";
+
+    private static final String BYTEMAN_AGENT_LOADED_PROPERTY = "org.jboss.byteman.agent.loaded";
 
     /**
      * System property used to idenitfy the location of the installed byteman release.

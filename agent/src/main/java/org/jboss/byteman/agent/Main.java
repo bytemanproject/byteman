@@ -43,6 +43,7 @@ import java.util.jar.JarFile;
 public class Main {
     public static boolean firstTime = true;
     public final static String BYTEMAN_PREFIX = "org.jboss.byteman.";
+    public final static String BYTEMAN_AGENT_LOADED = "org.jboss.byteman.agent.loaded";
 
     public static void premain(String args, Instrumentation inst)
             throws Exception
@@ -51,6 +52,7 @@ public class Main {
         synchronized (Main.class) {
             if (firstTime) {
                 firstTime = false;
+                System.setProperty(BYTEMAN_AGENT_LOADED, Boolean.TRUE.toString());
             } else {
                 throw new Exception("Main : attempting to load Byteman agent more than once");
             }
