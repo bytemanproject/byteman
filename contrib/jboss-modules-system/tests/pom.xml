@@ -277,10 +277,10 @@
 								<include>byteman/tests/modules/jbossmodules/TestTrampoline.class</include>
 							</includes>
 							<argLine>${debug.options}
-								-javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestImport.btm
+								-javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestHelper.btm
                                 -Djboss.modules.system.pkgs=org.jboss.byteman
-								-Dmodulartest.module=testimport
-								-Dmodulartest.class=testimport.TestImport
+								-Dmodulartest.module=testhelper
+								-Dmodulartest.class=testhelper.TestHelper
 								-Dorg.jboss.byteman.compile.to.bytecode=true
 								-jar ${project.build.directory}/jboss-modules.jar
 								-mp ${project.build.directory}/modules-root
