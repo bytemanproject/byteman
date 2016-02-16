@@ -428,7 +428,7 @@ public class Helper
      * @param id the tracestream to write to
      * @param th the throwable to dump a stacktrace for
      */
-    private static void doTraceException(String id, Throwable th)
+    private static void doTraceException(Object id, Throwable th)
     {
         PrintStream ps;
         synchronized (traceMap) {
