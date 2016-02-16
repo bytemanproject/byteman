@@ -49,194 +49,104 @@ public class Helper
     {
         this.rule = rule;
     }
-    // tracing support
+    // rule debug tracing support
     /**
      * builtin to print a message during rule execution. n.b. this always returns true which
-     * means it can be invoked during condition execution
+     * means it can be invoked during condition execution.
+     * punts to a static call to Helper.dotraceln("dbg", debugPrefix + text) to
+     * do the actual printing to the "dbg" trace stream where debugPrefix is a prefix
+     * including the keyword debug and a key based on the rule name which is specific
+     * to the injection point for the rule.
      * @param text the message to be printed as trace output
      * @return true
      */
     public boolean debug(String text)
     {
         if (Transformer.isDebug()) {
-            System.out.println("rule.debug{" + rule.getKey() + "} : " + text);
+            dotraceln("dbg", "rule.debug{" + rule.getKey() + "} : " + text);
         }
         return true;
     }
 
-    // file based trace support
+    // file + System.out/err based trace support
     /**
-     * open a trace output stream identified by identifier to a file located in the current working
-     * directory using a unique generated name
+     * builtin to open a trace output stream identified by identifier to a file located in the
+     * current working directory using a unique generated name. equivalent to calling
+     * traceOpen(identifier, null).
      * @param identifier an identifier used subsequently to identify the trace output stream
      * @return true if new file and stream was created, false if a stream identified by identifier
-     * already existed or the identifer is null, "out" or "err"
+     * already existed or the identifier is null, "out" or "err"
      */
     public boolean traceOpen(Object identifier)
     {
         return traceOpen(identifier, null);
     }
 
+
     /**
-     * open a trace output stream identified by identifier to a file located in the current working
-     * directory using the given file name or a generated name if the supplied name is null
+     * builtin to open a trace output stream which is redirected to a file in the current directory
+     * if specified. Punts to static call Helper.doTraceOpen(identifier, fileName)
      * @param identifier an identifier used subsequently to identify the trace output stream
      * @param fileName the name of the trace file or null if a name should be generated
-     * @return true if new file and stream was created, false if a stream identified by identifier
-     * already existed or if a file of the same name already exists or the identifer is null, "out"
-     * or "err"
+     * @return true if the output stream was successfully created. false if a stream identified by
+     * identifier already existed or if a file of the same name already exists or the identifier is
+     * null, "out" or "err"
      */
     public boolean traceOpen(Object identifier, String fileName)
     {
-        if (identifier == null) {
-            return false;
-        }
-
-        synchronized(traceMap) {
-            PrintStream stream = traceMap.get(identifier);
-            String name = fileName;
-            if (stream != null) {
-                return false;
-            }
-            if (fileName == null) {
-                name = nextFileName();
-            }
-            File file = new File(name);
-
-            if (file.exists() && !file.canWrite()) {
-                if (fileName == null) {
-                    // keep trying new names until we hit an unused one
-                    do {
-                        name = nextFileName();
-                        file = new File(name);
-                    } while (file.exists() && !file.canWrite());
-                } else {
-                    // can't open file as requested
-                    return false;
-                }
-            }
-                
-            FileOutputStream fos;
-
-            try {
-                if (file.exists()) {
-                    fos = new FileOutputStream(file, true);
-                } else {
-                    fos = new FileOutputStream(file, true);
-                }
-            } catch (FileNotFoundException e) {
-                // oops, just return false
-                return false;
-            }
-
-            PrintStream ps = new PrintStream(fos, true);
-
-            traceMap.put(identifier, ps);
-
-            return true;
-        }
+    	return doTraceOpen(identifier, fileName);
     }
 
     /**
-     * close the trace output stream identified by identifier flushing any pending output
+     * builtin to close the trace output stream identified by identifier flushing any pending
+     * output. Punts to static call Helper.doTraceClose(identifier)
      * @param identifier an identifier used subsequently to identify the trace output stream
-     * @return true if the stream was flushed and closed, false if no stream is identified by identifier
-     * or the identifer is null, "out" or "err"
+     * @return true if the stream was flushed and closed, false if no stream is identified by
+     * identifier or identifer is null, "out" or "err"
      */
     public boolean traceClose(Object identifier)
     {
-        if (identifier == null ||
-                identifier.equals("out") ||
-                identifier.equals("err")) {
-            return false;
-        }
-
-        synchronized(traceMap) {
-            PrintStream ps = traceMap.get(identifier);
-            if (ps != null) {
-                // need to do the close while synchornized so we ensure an open cannot
-                // proceed until we have flushed all changes to disk
-                ps.close();
-                traceMap.remove(identifier);
-                return true;
-            }
-        }
-
-        return false;
+        return doTraceClose(identifier);
     }
 
     /**
-     * call trace("out, message").
-     * @param message the message to be printed
+     * equivalent to calling trace("out", message).
+     * @param message the message to be printed in the output stream
      * @return true
      */
     public boolean trace(String message)
     {
-        return trace("out", message);
+        return dotrace("out", message);
     }
-
+    
     /**
-     * write the supplied message to the trace stream identified by identifier, creating a new stream
-     * if none exists
-     * @param identifier an identifier used subsequently to identify the trace output stream
-     * @param message the message to be traced
+     * punts to static call Helper.dotrace(identifier, message).
+     * @param message the message to be printed
      * @return true
-     *
-     * caveat: if identifier is the string "out" or null the message will be written to System.out.
-     * if identifier is the string "err" the message will be written to System.err.
      */
     public boolean trace(Object identifier, String message)
     {
-        synchronized(traceMap) {
-            PrintStream ps = traceMap.get(identifier);
-            if (ps == null) {
-                if (openTrace(identifier)) {
-                    ps = traceMap.get(identifier);
-                } else {
-                    ps = System.out;
-                }
-            }
-            ps.print(message);
-            ps.flush();
-        }
-        return true;
+        return dotrace(identifier, message);
     }
 
     /**
-     * call traceln("out", message).
+     * equivalent to calling traceln("out", message).
      * @param message the message to be traced
      * @return true
      */
     public boolean traceln(String message)
     {
-        return traceln("out", message);
+        return dotraceln("out", message);
     }
-    
+
     /**
-     * write the supplied message to the trace stream identified by identifier, creating a new stream
-     * if none exists, and append a new line
-     * @param identifier an identifier used subsequently to identify the trace output stream
+     * punts to static call dotraceln(identifier, message).
      * @param message the message to be traced
      * @return true
-     *
-     * caveat: if identifier is the string "out" or null the message will be written to System.out.
-     * if identifier is the string "err" the message will be written to System.err.
      */
     public boolean traceln(Object identifier, String message)
     {
-        synchronized(traceMap) {
-            PrintStream ps = traceMap.get(identifier);
-            if (ps == null) {
-                if (openTrace(identifier)) {
-                    ps = traceMap.get(identifier);
-                } else {
-                    ps = System.out;
-                }
-            }
-            ps.println(message);
-            ps.flush();
-        }
-        return true;
+        return dotraceln(identifier, message);
     }
 
     /**
@@ -266,6 +176,268 @@ public class Helper
     public boolean closeTrace(Object identifier)
     {
         return traceClose(identifier);
+    }
+
+    // public static methods (i.e. non-builtins) allowing Byteman agent to access trace capability
+
+    /**
+     * punts to static call dotraceln("out", msg) to print msg to the "out"
+     * trace stream
+     * @param msg the message to be traced
+     * @return true
+     */
+    public static boolean out(String msg)
+    {
+        dotrace("out", msg);
+        return true;
+    }
+
+    /**
+     * punts to static call dotraceln("err", msg) to print msg to the "err"
+     * trace stream
+     * @param msg the message to be traced
+     * @return true
+     */
+    public static boolean err(String msg)
+    {
+        dotrace("err", msg);
+        return true;
+    }
+
+    /**
+     * punts to static call dotraceln("vrb", msg) to print msg to the "vrb"
+     * trace stream when the verbose log level is enabled
+     * @param msg the message to be traced
+     * @return true
+     */
+    public static boolean verbose(String msg)
+    {
+        if (Transformer.isVerbose()) {
+            dotraceln("vrb", msg);
+        }
+        return true;
+    }
+
+
+    /**
+     * punts to static call dotraceln("nzy", msg) to print msg to the "nzy"
+     * trace stream when the noisy log level is enabled
+     *
+     * @param msg the message to be traced
+     * @return true
+     */
+    public static boolean noisy(String msg)
+    {
+        // cannot implement this properly until noisy logging can be configured
+        if (false) {
+            dotraceln("nzy", msg);
+        }
+        return true;
+    }
+
+    /**
+     * Print the stack trace for th to the "out" trace stream
+     * @param th the throwable stack trace
+     */
+    public static void outTraceException(Throwable th)
+    {
+        doTraceException("out", th);
+    }
+
+    /**
+     * Print the stack trace for th to the "err" trace stream
+     * @param th the throwable stack trace
+     */
+    public static void errTraceException(Throwable th)
+    {
+        doTraceException("err", th);
+    }
+
+    /**
+     * Print the stack trace for th to System.out when the verbose log level is enabled
+     * @param th the throwable stack trace
+     */
+    public static void verboseTraceException(Throwable th)
+    {
+        if (Transformer.isVerbose()) {
+            doTraceException("vrb", th);
+        }
+    }
+    
+    /**
+     * Print the stack trace to System.out when the noisy log level is enabled
+     * @param th the throwable stack trace 
+     */
+    public static void noisyTraceException(Throwable th)
+    {
+        // cannot implement this properly until noisy logging can be configured
+        if(false) {
+            doTraceException("nzy", th);
+        }
+    }
+
+    // private static implementation of trace functionality
+
+    /**
+     * open a trace output stream identified by identifier to a file located in the current working
+     * directory using the given file name or a generated name if the supplied name is null
+     * @param identifier an identifier used subsequently to identify the trace output stream
+     * @param fileName the name of the trace file or null if a name should be generated
+     * @return true if new file and stream was created, false if a stream identified by identifier
+     * already existed or if a file of the same name already exists or the identifier is null, "out"
+     * or "err"
+     */
+    private static boolean doTraceOpen(Object identifier, String fileName) {
+    	if (identifier == null) {
+            return false;
+        }
+
+        synchronized(traceMap) {
+            PrintStream stream = traceMap.get(identifier);
+            String name = fileName;
+            if (stream != null) {
+                return false;
+            }
+            if (fileName == null) {
+                name = nextFileName(identifier);
+            }
+            File file = new File(name);
+
+            if (file.exists() && !file.canWrite()) {
+                if (fileName == null) {
+                    // keep trying new names until we hit an unused one
+                    do {
+                        name = nextFileName(identifier);
+                        file = new File(name);
+                    } while (file.exists() && !file.canWrite());
+                } else {
+                    // can't open file as requested
+                    return false;
+                }
+            }
+
+            FileOutputStream fos;
+
+            try {
+                if (file.exists()) {
+                    fos = new FileOutputStream(file, true);
+                } else {
+                    fos = new FileOutputStream(file, true);
+                }
+            } catch (FileNotFoundException e) {
+                // oops, just return false
+                return false;
+            }
+
+            PrintStream ps = new PrintStream(fos, true);
+
+            traceMap.put(identifier, ps);
+
+            return true;
+        }
+    }
+
+    /**
+     * close the trace output stream identified by identifier flushing any pending output.
+     * @param identifier an identifier used subsequently to identify the trace output stream
+     * @return true if the stream was flushed and closed, false if no stream is identified by
+     * identifier or identifer is null, "out" or "err"
+     */
+    private static boolean doTraceClose(Object identifier)
+    {
+        if (identifier == null ||
+                identifier.equals("out") ||
+                identifier.equals("err")) {
+            return false;
+        }
+
+        synchronized(traceMap) {
+            // need to do the close while synchronized so we ensure an open cannot
+            // proceed until we have flushed all changes to disk
+            PrintStream ps = traceMap.get(identifier);
+            if (ps != null) {
+                // make sure not to close System.out which we may see as the
+                // trace stream bound to "dbg", "vrb" or "nzy"
+                if (ps != System.out && ps != System.err) {
+                    ps.close();
+                }
+                traceMap.remove(identifier);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * write the supplied message to the trace stream identified by identifier, creating a new stream
+     * if none exists
+     * @param identifier an identifier used subsequently to identify the trace output stream
+     * @param message the message to be traced
+     * @return true
+     *
+     * caveat: if identifier is the string "out" or null the message will be written to System.out.
+     * if identifier is the string "err" the message will be written to System.err.
+     */
+    private static boolean dotrace(Object identifier, String message)
+    {
+        synchronized(traceMap) {
+            PrintStream ps = traceMap.get(identifier);
+            if (ps == null) {
+                if (doTraceOpen(identifier, null)) {
+                    ps = traceMap.get(identifier);
+                } else {
+                    ps = System.out;
+                }
+            }
+            ps.print(message);
+            ps.flush();
+        }
+        return true;
+    }
+
+    /**
+     * write the supplied message to the trace stream identified by identifier, creating a new stream
+     * if none exists, and append a new line
+     * @param identifier an identifier used subsequently to identify the trace output stream
+     * @param message the message to be traced
+     * @return true
+     *
+     * caveat: if identifier is the string "out" or null the message will be written to System.out.
+     * if identifier is the string "err" the message will be written to System.err.
+     */
+    private static boolean dotraceln(Object identifier, String message)
+    {
+        synchronized(traceMap) {
+            PrintStream ps = traceMap.get(identifier);
+            if (ps == null) {
+                if (doTraceOpen(identifier, null)) {
+                    ps = traceMap.get(identifier);
+                } else {
+                    ps = System.out;
+                }
+            }
+            ps.println(message);
+            ps.flush();
+        }
+        return true;
+    }
+
+    /**
+     *
+     * @param id the tracestream to write to
+     * @param th the throwable to dump a stacktrace for
+     */
+    private static void doTraceException(String id, Throwable th)
+    {
+        PrintStream ps;
+        synchronized (traceMap) {
+            ps = traceMap.get(id);
+            if (ps == null) {
+                ps = System.out;
+            }
+        }
+        th.printStackTrace(ps);
     }
 
     // flag support
@@ -690,7 +862,7 @@ public class Helper
             rendezvous = new Rendezvous(expected, restartable);
             rendezvousMap.put(identifier, rendezvous);
         }
-        
+
         return true;
     }
 
@@ -1599,8 +1771,7 @@ public class Helper
     {
     	trace(key, formatAllStacks(prefix, maxFrames));
     }
-    
-    
+
     // trace stack of a specific thread
 
     /**
@@ -2434,7 +2605,6 @@ public class Helper
         appendStack(buffer, prefix, maxFrames, Thread.currentThread(), getStack());
         return buffer.toString();
     }
-    
 
     //
     // retrieving frames for all threads
@@ -3131,7 +3301,7 @@ public class Helper
             buffer.append('\n');
         }
         // n.b. the range includes the last matched frame
-        
+
         for (i = first; i <= last; i++) {
             printlnFrame(buffer, stack[i]);
         }
@@ -3140,7 +3310,7 @@ public class Helper
     }
 
     // trigger management
-    
+
     /**
      * enable or disable recursive triggering of rules by subsequent operations performed during binding,
      * testing or firing of the current rule in the current thread.
@@ -3411,14 +3581,41 @@ public class Helper
         return nextFileIndex++;
     }
 
-    private String nextFileName()
+    /**
+     * generate a name for an output file to be used to sink the trace stream
+     * named by identifier. the name will normally start with the prefix
+     * "trace" followed by a 9 digit number followed by a ".log" suffix.
+     * In the special case that identifier is one of the special String values
+     * "dbg", "vrb" or "nzy" idenitfying the 3 special Byteman trace streams
+     * used to log rule debug messages or verbose/noisy level Byteman agent trace
+     * messages the returned file name will start with the respective prefixes
+     * "debug", "verbose" and "noisy".
+     * @param identifier the identifier of the trace stream for which a file
+     * is being opened
+     * @return a name to be used for the trace file.
+     */
+    private static String nextFileName(Object identifier)
     {
+        // if we are writing to the debug, verbose or noisy trace streams
+        // then start the file name with the that name as prefix otherwise
+        // juts start it with the prefix "trace"
+        String prefix;
+
+        if ("dbg".equals(identifier)) {
+            prefix = "debug";
+        } else if ("vrb".equals(identifier)) {
+            prefix = "verbose";
+        } else if ("nzy".equals(identifier)) {
+            prefix = "noisy";
+        } else {
+            prefix = "trace";
+        }
         StringWriter writer = new StringWriter();
         String digits = Integer.toString(nextFileIndex());
         int numDigits = digits.length();
         int idx;
 
-        writer.write("trace");
+        writer.write(prefix);
 
         // this pads up to 9 digits but we may get more if we open enough files!
         for (idx = 9; idx > numDigits; idx--) {
@@ -3426,7 +3623,7 @@ public class Helper
         }
 
         writer.write(digits);
-
+        writer.write(".log");
         return writer.toString();
     }
     /**
@@ -3472,12 +3669,19 @@ public class Helper
      * objects
      */
     private static HashMap<Object, Timer> timerMap = new HashMap<Object, Timer>();
-    
+
     // initialise the trace map so it contains the system output and
     // error keyed under "out" and "err"
 
     static {
+        // set up out and err trace streams to System.out and System.err
+        // traceClose ensures they cannot be closed and hence re-opened
         traceMap.put("out", System.out);
         traceMap.put("err", System.err);
+        // default dbg, vrb and nzy trace streams to System.out
+        // they can be closed and re-opened
+        traceMap.put("dbg", System.out);
+        traceMap.put("vrb", System.out);
+        traceMap.put("nzy", System.out);
     }
 }
