@@ -182,7 +182,7 @@
 				<executions>
 					<!-- basic import testing -->
 					<execution>
-						<id>jbossmodules.TestImport</id>
+						<id>jbossmodules.TestImport_Local</id>
 						<phase>integration-test</phase>
 						<goals>
 							<goal>integration-test</goal>
@@ -192,13 +192,13 @@
 							<forkMode>always</forkMode>
 							<useSystemClassLoader>true</useSystemClassLoader>
 							<useManifestOnlyJar>false</useManifestOnlyJar>
-							<reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport</reportsDirectory>
+							<reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport_Local</reportsDirectory>
 							<includes>
 								<include>byteman/tests/modules/jbossmodules/TestTrampoline.class</include>
 							</includes>
 							<argLine>
 							    ${debug.options}
-								-javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestImport.btm
+								-javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestImport_Local.btm
 								-Djboss.modules.system.pkgs=org.jboss.byteman
 								-Dmodulartest.module=testimport
 								-Dmodulartest.class=testimport.TestImport
@@ -209,7 +209,7 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>jbossmodules.TestImport-compiled</id>
+						<id>jbossmodules.TestImport_Local-compiled</id>
 						<phase>integration-test</phase>
 						<goals>
 							<goal>integration-test</goal>
@@ -219,12 +219,12 @@
 							<forkMode>always</forkMode>
 							<useSystemClassLoader>true</useSystemClassLoader>
 							<useManifestOnlyJar>false</useManifestOnlyJar>
-							<reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport-compiled</reportsDirectory>
+							<reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport_Local-compiled</reportsDirectory>
 							<includes>
 								<include>byteman/tests/modules/jbossmodules/TestTrampoline.class</include>
 							</includes>
 							<argLine>${debug.options}
-								-javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestImport.btm
+								-javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestImport_Local.btm
                                 -Djboss.modules.system.pkgs=org.jboss.byteman
 								-Dmodulartest.module=testimport
 								-Dmodulartest.class=testimport.TestImport
@@ -234,6 +234,114 @@
 								-class </argLine>
 						</configuration>
 					</execution>
+                    <!-- global import testing -->
+                    <execution>
+                        <id>jbossmodules.TestImport_Global</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkMode>always</forkMode>
+                            <useSystemClassLoader>true</useSystemClassLoader>
+                            <useManifestOnlyJar>false</useManifestOnlyJar>
+                            <reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport_Global</reportsDirectory>
+                            <includes>
+                                <include>byteman/tests/modules/jbossmodules/TestTrampoline.class</include>
+                            </includes>
+                            <argLine>
+                                ${debug.options}
+                                -javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestImport_Global.btm
+                                -Djboss.modules.system.pkgs=org.jboss.byteman
+                                -Dmodulartest.module=testimport
+                                -Dmodulartest.class=testimport.TestImport
+                                -jar ${project.build.directory}/jboss-modules.jar
+                                -mp ${project.build.directory}/modules-root
+                                -class
+                            </argLine>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>jbossmodules.TestImport_Global-compiled</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkMode>always</forkMode>
+                            <useSystemClassLoader>true</useSystemClassLoader>
+                            <useManifestOnlyJar>false</useManifestOnlyJar>
+                            <reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport_Global-compiled</reportsDirectory>
+                            <includes>
+                                <include>byteman/tests/modules/jbossmodules/TestTrampoline.class</include>
+                            </includes>
+                            <argLine>${debug.options}
+                                -javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestImport_Global.btm
+                                -Djboss.modules.system.pkgs=org.jboss.byteman
+                                -Dmodulartest.module=testimport
+                                -Dmodulartest.class=testimport.TestImport
+                                -Dorg.jboss.byteman.compile.to.bytecode=true
+                                -jar ${project.build.directory}/jboss-modules.jar
+                                -mp ${project.build.directory}/modules-root
+                                -class </argLine>
+                        </configuration>
+                    </execution>
+                    <!-- clearing global imports -->
+                    <execution>
+                        <id>jbossmodules.TestImport_Clearing</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkMode>always</forkMode>
+                            <useSystemClassLoader>true</useSystemClassLoader>
+                            <useManifestOnlyJar>false</useManifestOnlyJar>
+                            <reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport_Clearing</reportsDirectory>
+                            <includes>
+                                <include>byteman/tests/modules/jbossmodules/TestTrampoline.class</include>
+                            </includes>
+                            <argLine>
+                                ${debug.options}
+                                -javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestImport_Clearing.btm
+                                -Djboss.modules.system.pkgs=org.jboss.byteman
+                                -Dmodulartest.module=testimport
+                                -Dmodulartest.class=testimport.TestImportFailure
+                                -jar ${project.build.directory}/jboss-modules.jar
+                                -mp ${project.build.directory}/modules-root
+                                -class
+                            </argLine>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>jbossmodules.TestImport_Clearing-compiled</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkMode>always</forkMode>
+                            <useSystemClassLoader>true</useSystemClassLoader>
+                            <useManifestOnlyJar>false</useManifestOnlyJar>
+                            <reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport_Clearing-compiled</reportsDirectory>
+                            <includes>
+                                <include>byteman/tests/modules/jbossmodules/TestTrampoline.class</include>
+                            </includes>
+                            <argLine>${debug.options}
+                                -javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestImport_Clearing.btm
+                                -Djboss.modules.system.pkgs=org.jboss.byteman
+                                -Dmodulartest.module=testimport
+                                -Dmodulartest.class=testimport.TestImportFailure
+                                -Dorg.jboss.byteman.compile.to.bytecode=true
+                                -jar ${project.build.directory}/jboss-modules.jar
+                                -mp ${project.build.directory}/modules-root
+                                -class </argLine>
+                        </configuration>
+                    </execution>
 
 					<!-- helper testing -->
 					<execution>
@@ -277,10 +385,10 @@
 								<include>byteman/tests/modules/jbossmodules/TestTrampoline.class</include>
 							</includes>
 							<argLine>${debug.options}
-								-javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestImport.btm
+								-javaagent:${project.build.directory}/byteman.jar=sys:${project.build.directory}/byteman-jboss-modules-plugin.jar,modules:org.jboss.byteman.modules.jbossmodules.JBossModulesSystem,prop:org.jboss.byteman.verbose=true,script:${project.build.testOutputDirectory}/scripts/jbossmodules/TestHelper.btm
                                 -Djboss.modules.system.pkgs=org.jboss.byteman
-								-Dmodulartest.module=testimport
-								-Dmodulartest.class=testimport.TestImport
+								-Dmodulartest.module=testhelper
+								-Dmodulartest.class=testhelper.TestHelper
 								-Dorg.jboss.byteman.compile.to.bytecode=true
 								-jar ${project.build.directory}/jboss-modules.jar
 								-mp ${project.build.directory}/modules-root

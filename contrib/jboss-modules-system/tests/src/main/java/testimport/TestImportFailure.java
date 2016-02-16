@@ -1,14 +1,15 @@
 package testimport;
 
-import byteman.tests.Test;
+import org.jboss.byteman.rule.exception.TypeException;
 
+import byteman.tests.Test;
 import runner.Runner;
 
-public class TestImport extends Test
+public class TestImportFailure extends Test
 {
-    public TestImport()
+    public TestImportFailure()
     {
-        super(TestImport.class.getCanonicalName());
+        super(TestImportFailure.class.getCanonicalName());
     }
 
     public void test()
@@ -33,7 +34,7 @@ public class TestImport extends Test
     @Override
     public String getExpected() {
         logExpected("calling TestImport.triggerMethod");
-        logExpected("TestImport $runnable");
+        // this will be missing, since the rule failed to compile: logExpected("TestImport $runnable");
         logExpected("Runnable.run");
         logExpected("called TestImport.triggerMethod");
 

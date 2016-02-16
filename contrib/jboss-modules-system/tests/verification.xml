@@ -8,11 +8,27 @@
   -->
   <files>
     <file>
-      <location>target/failsafe-reports/jbossmodules.TestImport/byteman.tests.modules.jbossmodules.TestTrampoline.txt</location>
+      <location>target/failsafe-reports/jbossmodules.TestImport_Local/byteman.tests.modules.jbossmodules.TestTrampoline.txt</location>
       <exists/>
     </file>
     <file>
-      <location>target/failsafe-reports/jbossmodules.TestImport-compiled/byteman.tests.modules.jbossmodules.TestTrampoline.txt</location>
+      <location>target/failsafe-reports/jbossmodules.TestImport_Local-compiled/byteman.tests.modules.jbossmodules.TestTrampoline.txt</location>
+      <exists/>
+    </file>
+    <file>
+      <location>target/failsafe-reports/jbossmodules.TestImport_Global/byteman.tests.modules.jbossmodules.TestTrampoline.txt</location>
+      <exists/>
+    </file>
+    <file>
+      <location>target/failsafe-reports/jbossmodules.TestImport_Global-compiled/byteman.tests.modules.jbossmodules.TestTrampoline.txt</location>
+      <exists/>
+    </file>
+    <file>
+      <location>target/failsafe-reports/jbossmodules.TestImport_Clearing/byteman.tests.modules.jbossmodules.TestTrampoline.txt</location>
+      <exists/>
+    </file>
+    <file>
+      <location>target/failsafe-reports/jbossmodules.TestImport_Clearing-compiled/byteman.tests.modules.jbossmodules.TestTrampoline.txt</location>
       <exists/>
     </file>
     <file>
