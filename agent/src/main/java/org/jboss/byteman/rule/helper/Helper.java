@@ -1258,6 +1258,135 @@ public class Helper
         }
     }
 
+    // link support
+
+    /**
+     * create a LinkMap used to store links between names and values
+     * @param mapName the identifier for the map
+     * @return true if a new map was created and false if one already existed under the given identifier
+     */
+    public boolean createLinkMap(Object mapName)
+    {
+        synchronized(linkMaps) {
+            if (linkMaps.get(mapName) == null) {
+                linkMaps.put(mapName, new HashMap<Object, Object>());
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * delete a LinkMap used to store links between names and values
+     * @param mapName the identifier for the map
+     * @return true if the map was deleted and false if no map existed under the given identifier
+     */
+    public boolean deleteLinkMap(Object mapName)
+    {
+        synchronized(linkMaps) {
+            HashMap<Object, Object> map = linkMaps.get(mapName);
+            if (map != null) {
+                linkMaps.remove(mapName);
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    /**
+     * atomically add a link from name to value to the LinkMap
+     * identified by mapName returning any previously linked
+     * Object or null if no link currently exists in the map
+     * @param mapName the identifier for the map
+     * @param name    the name of the key
+     * @param value   the value to be stored in the map
+     * @return the previous value stored under name, if any, or null
+     */
+    public Object link(Object mapName, Object name, Object value)
+    {
+        synchronized(linkMaps) {
+            HashMap<Object, Object> map = linkMaps.get(mapName);
+            if (map == null) {
+                linkMaps.put(mapName, new HashMap<Object, Object>());
+                map = linkMaps.get(mapName);
+            }
+            return map.put(name, value);
+        }
+    }
+
+    /**
+     * retrieve the Object name currently is linked to from
+     * the LinkMap named by mapName or null if no link currently
+     * exists in the map
+     * @param mapName the identifier for the map
+     * @param name    the name of the key
+     * @return the value stored in the map under the given key
+     */
+    public Object linked(Object mapName, Object name)
+    {
+        synchronized(linkMaps) {
+            HashMap<Object, Object> map = linkMaps.get(mapName);
+            if (map != null) {
+                return map.get(name);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * atomically remove any link from name returning the
+     * Object it is currently linked to or null if no link
+     * currently exists in the map
+     * @param mapName the identifier for the map
+     * @param name    the name of the key
+     * @return the previous value stored under name, if any, or null
+     */
+    public Object unlink(Object mapName, Object name)
+    {
+        synchronized(linkMaps) {
+            HashMap<Object, Object> map = linkMaps.get(mapName);
+            if (map != null) {
+                return map.remove(name);
+            }
+        }
+        return null;
+    }
+
+    // default link support
+
+    /**
+     * add a link to the default LinkMap by calling link("default", name, value)
+     * @param name  the name of the key
+     * @param value the value to be stored under key
+     * @return the previous value stored under name, if any, or null
+     */
+    public Object link(Object name, Object value)
+    {
+        return link("default", name, value);
+    }
+
+    /**
+     * retrieve a link from the default LinkMap by calling linked("default", name)
+     * @param name the name of the key
+     * @return the value stored in the map under the given key
+     */
+    public Object linked(Object name)
+    {
+        return linked("default", name);
+    }
+
+    /**
+     * delete a link from the default LinkMap by calling unlink("default", name)
+     * @param name the name of the key
+     * @return the previous value stored under name, if any, or null
+     */
+    public Object unlink(Object name)
+    {
+        return unlink("default", name);
+    }
+
+
     /**
      * cause the current thread to throw a runtime exception which will normally cause it to exit.
      * The exception may not kill the thread if the trigger method or calling code contains a
@@ -2515,6 +2644,7 @@ public class Helper
     {
         traceStackRange(from, to, true, includeClass, includePackage, prefix, key);
     }
+
     /**
      * print all stack frames between the frames which match start and end to the trace stream identified by key
      * preceded by prefix.
@@ -3669,6 +3799,12 @@ public class Helper
      * objects
      */
     private static HashMap<Object, Timer> timerMap = new HashMap<Object, Timer>();
+
+    /**
+     * a hash map used to identify maps from their identifying
+     * objects
+     */
+    private static HashMap<Object, HashMap<Object, Object>> linkMaps = new HashMap<Object, HashMap<Object, Object>>();
 
     // initialise the trace map so it contains the system output and
     // error keyed under "out" and "err"
