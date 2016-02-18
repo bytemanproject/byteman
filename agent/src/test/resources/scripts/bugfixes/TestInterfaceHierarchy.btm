@@ -28,7 +28,7 @@ RULE test interface injection without overriding
 INTERFACE I3
 METHOD testMethod(Test)
 HELPER org.jboss.byteman.tests.helpers.Default
-BIND test : TestInterfaceHierarchy = $1
+BIND test : Test = $1
 IF TRUE
 DO test.log("I3.testMethod() AT ENTRY");
 ENDRULE
@@ -37,7 +37,7 @@ RULE test interface injection with overriding
 INTERFACE ^I3
 METHOD testMethod(Test)
 HELPER org.jboss.byteman.tests.helpers.Default
-BIND test : TestInterfaceHierarchy = $1
+BIND test : Test = $1
 IF TRUE
 DO test.log("^I3.testMethod() AT ENTRY");
 ENDRULE

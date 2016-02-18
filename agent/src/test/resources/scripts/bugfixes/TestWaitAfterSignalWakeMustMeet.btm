@@ -68,7 +68,7 @@ RULE triggerWaitFor
 CLASS TestWaitAfterSignalWakeMustMeet
 METHOD triggerWaitFor
 HELPER org.jboss.byteman.tests.helpers.WaitAfterSignalWakeMustMeetHelper
-BIND test : TestEmptySignature = $0
+BIND test : Test = $0
 IF TRUE
 DO test.log("waitFor");
    waitFor("test")
@@ -81,7 +81,7 @@ RULE triggerSignalWake
 CLASS TestWaitAfterSignalWakeMustMeet
 METHOD triggerSignalWake
 HELPER org.jboss.byteman.tests.helpers.WaitAfterSignalWakeMustMeetHelper
-BIND test : TestEmptySignature = $0
+BIND test : Test = $0
 IF TRUE
 DO test.log("signalWake");
    signalWake("test", true)

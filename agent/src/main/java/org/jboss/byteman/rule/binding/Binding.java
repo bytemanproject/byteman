@@ -27,6 +27,7 @@ import org.jboss.byteman.agent.Transformer;
 import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.expression.ArrayInitExpression;
 import org.jboss.byteman.rule.expression.DollarExpression;
+import org.jboss.byteman.rule.helper.Helper;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.expression.Expression;
 import org.jboss.byteman.rule.exception.TypeException;
@@ -39,6 +40,9 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Class used to store a binding of a named variable to a value of some given type
@@ -118,13 +122,28 @@ public class Binding extends RuleElement
         
         // value can be null if this is a rule method parameter
         if (value != null) {
-            // type check the binding expression, using the bound variable's expected if it is known
-
-            if (type.isDefined()) {
+            // type check the binding expression, using the bound variable's expected type if it is known
+            //
+            // n.b. the binding type might be provided but still UNKNOWN
+            // that can happen legitimately when a declaration omits the
+            // package qualifier. if it does then we may still be able to
+            // infer the binding type from that derived for the
+            // initializer expression either because type checking
+            // adds the qualified version to the type group or because
+            // it produces a type whose supers or implemented interfaces
+            // identifies the necessary qualified type
+            if (type != Type.UNDEFINED) {
+                if (type.isUndefined() && !type.getPackageName().isEmpty()) {
+                    // a qualified name means it should already be resolved
+                    throw new TypeException("Binding.typecheck unknown type for binding " + name);
+                }
                 if (Transformer.disallowDowncast()) {
                     // compatibility behaviour -- use declared type to help infer expression type
-                    value.typeCheck(type);
-
+                    Type valueType = value.typeCheck(type);
+                    // if the type was UNKNOWN try to resolve it from the derived type
+                    if (type.isUndefined()) {
+                        resolveUnknownAgainstDerived(valueType);
+                    }
                 } else {
                     // downcasts in the binding are allowed but . . .
 
@@ -153,7 +172,10 @@ public class Binding extends RuleElement
                         // typecheck the value first and then check for assignability in either direction
                         // modulo assigning void
                         Type valueType = value.typeCheck(expected);
-                        if (!type.isAssignableFrom(valueType)) {
+                        // if the type was UNKNOWN try to resolve it from the derived type
+                        if (type.isUndefined()) {
+                            resolveUnknownAgainstDerived(valueType);
+                        } else if (!type.isAssignableFrom(valueType)) {
                             // if this is a downcast we need to check whether downcasts are disabled
                             if (valueType == Type.VOID || !valueType.isAssignableFrom(type)) {
                                 throw new TypeException("Binding.typecheck : incompatible type for binding expression " + valueType + value.getPos());
@@ -161,16 +183,71 @@ public class Binding extends RuleElement
                         }
                     }
                 }
-            }  else {
+            } else {
                 Type valueType = value.typeCheck(expected);
-
-                type = valueType;
+                type     = valueType;
             }
         } else if (type.isUndefined()) {
             // can we have no expected for a method parameter?
             throw new TypeException("Binding.typecheck unknown type for binding " + name);
         }
         return type;
+    }
+
+    private void resolveUnknownAgainstDerived(Type derived) throws TypeException
+    {
+        // this should only get called when we have a type with no package name
+        // and when derived is a resolved type
+        // TODO -- deal with nested classes/interfaces where typename will include $
+        // this is tricky because we may get false positives if we replace $ with .
+        String typename = type.getName();
+        Class<?> derivedClazz = Type.dereference(derived).getTargetClass();
+        // check the super chain for a class with a matching name
+        Class<?> nextClazz = derivedClazz;
+        while (nextClazz != null) {
+            String clazzName = nextClazz.getCanonicalName();
+            if (clazzName.endsWith(typename)) {
+                // use this class to resolve typename
+                getTypeGroup().create(clazzName, nextClazz);
+                return;
+            }
+            nextClazz = nextClazz.getSuperclass();
+        }
+        // ok maybe we need to look for an interface
+        List<Class<?>> allInterfaces = new ArrayList<Class<?>>();
+        LinkedList<Class<?>> toCheck = new LinkedList<Class<?>>();
+        toCheck.addLast(derivedClazz);
+        while ((nextClazz = toCheck.pop()) != null) {
+            // if we are looking at a class the include the super for further checking
+            if (!nextClazz.isInterface()) {
+                Class<?> nextSuper = nextClazz.getSuperclass();
+                if (nextSuper != null) {
+                    toCheck.addLast(nextSuper);
+                }
+            }
+            // check for new interfaces
+            Class[] interfaces = nextClazz.getInterfaces();
+            for (int i = 0; i < interfaces.length; i++) {
+                Class<?> nextInterface = interfaces[i];
+                // only process new interfaces
+                if (!allInterfaces.contains(nextInterface)) {
+                    // this might be the one
+                    String interfaceName = nextInterface.getCanonicalName();
+                    if (interfaceName.endsWith(typename)) {
+                        // use this class to resolve typename
+                        getTypeGroup().create(interfaceName, nextInterface);
+                        return;
+                    }
+                    // remember that we have see this interface
+                    allInterfaces.add(nextInterface);
+                    // add it for recursive checking of its implemented interfaces
+                    toCheck.addLast(nextInterface);
+                }
+            }
+        }
+
+        // failed to resolve type so throw a wobbly
+        throw new TypeException("Binding.typecheck unknown type for binding " + name);
     }
 
     public Object interpret(HelperAdapter helper) throws ExecuteException

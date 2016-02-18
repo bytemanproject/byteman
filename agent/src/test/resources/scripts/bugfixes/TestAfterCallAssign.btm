@@ -27,7 +27,7 @@ CLASS TestAfterCallAssign
 METHOD triggerMethod(int)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL computeDouble
-BIND test : TestAssign = $0;
+BIND test : TestAfterCallAssign = $0;
      result = $!
 IF TRUE
 DO test.log("triggerMethod : $! == " + $!);

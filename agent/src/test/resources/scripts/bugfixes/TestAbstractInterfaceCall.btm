@@ -36,7 +36,7 @@ RULE test abstract interface method call
 CLASS C3
 METHOD testMethod(Test)
 HELPER org.jboss.byteman.tests.helpers.Default
-BIND test : TestAbstractInterfaceCall = $1
+BIND test : Test = $1
 IF TRUE
 DO $0.interfaceMethod(test)
 ENDRULE
