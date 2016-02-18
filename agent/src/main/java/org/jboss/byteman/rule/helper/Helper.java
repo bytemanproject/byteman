@@ -188,7 +188,7 @@ public class Helper
      */
     public static boolean out(String msg)
     {
-        dotrace("out", msg);
+        dotraceln("out", msg);
         return true;
     }
 
@@ -200,7 +200,7 @@ public class Helper
      */
     public static boolean err(String msg)
     {
-        dotrace("err", msg);
+        dotraceln("err", msg);
         return true;
     }
 
