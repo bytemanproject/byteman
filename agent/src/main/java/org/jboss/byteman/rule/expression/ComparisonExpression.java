@@ -52,8 +52,15 @@ public class ComparisonExpression extends BooleanExpression
         Type type1 = getOperand(0).typeCheck(Type.UNDEFINED);
         Type type2 = getOperand(1).typeCheck(Type.UNDEFINED);
         if (type1.isNumeric() || type2.isNumeric()) {
-            comparisonType = Type.promote(type1,  type2);
-            comparable = true;
+            if (type1.isNumeric() && type2.isNumeric()) {
+                comparisonType = Type.promote(type1, type2);
+                comparable = true;
+            } else if (oper == EQ || oper == NE) {
+                // we can still promote the numeric and do an object comparison
+                comparisonType = Type.OBJECT;
+            } else {
+                throw new TypeException("ComparisonExpression.typeCheck : incomparable argument types " + type1.getName() + " and " + type2.getName() + " for comparison expression"  + getPos());
+            }
         } else if (type1.isAssignableFrom(type2)) {
             comparisonType = type1;
             comparable = Comparable.class.isAssignableFrom(comparisonType.getTargetClass());
