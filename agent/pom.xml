@@ -433,6 +433,21 @@
                          <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/helpertests/TestStackTrace.btm</argLine>
                       </configuration>
                     </execution>
+                    <execution>
+                      <id>helpertests.TestLinkMap</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                         <forkMode>once</forkMode>
+                         <includes>
+                           <include>org/jboss/byteman/tests/helpertests/TestLinkMap.class</include>
+                         </includes>
+                         <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/helpertests/TestLinkMap.btm</argLine>
+                      </configuration>
+                    </execution>
                     <!-- miscellaneous tests -->
                     <execution>
                       <id>misc.TestInterfaceInjection</id>
@@ -1380,6 +1395,21 @@
                                 <include>org/jboss/byteman/tests/helpertests/TestStackTrace.class</include>
                             </includes>
                             <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/helpertests/TestStackTrace.btm</argLine>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>helpertests.TestLinkMap.compiled</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkMode>once</forkMode>
+                            <includes>
+                                <include>org/jboss/byteman/tests/helpertests/TestLinkMap.class</include>
+                            </includes>
+                            <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/helpertests/TestLinkMap.btm</argLine>
                         </configuration>
                     </execution>
                     <!-- miscellenaeous tests compiled -->

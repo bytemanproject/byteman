@@ -1,0 +1,165 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2016, Red Hat and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+
+RULE test create link map
+CLASS TestLinkMap
+METHOD triggerMethod1()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0
+IF createLinkMap($0) == true
+DO test.log("triggerMethod1 : created link map " + $this)
+ENDRULE
+
+RULE test create link map 2
+CLASS TestLinkMap
+METHOD triggerMethod1()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0
+IF createLinkMap($0) == true
+DO test.log("triggerMethod1 : error created link map twice!!! " + $this)
+ENDRULE
+
+RULE test lookup link
+CLASS TestLinkMap
+METHOD triggerMethod1()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0
+IF linked($0, 1) == null
+DO test.log("triggerMethod1 : lookup of 1 == " + null)
+ENDRULE
+
+RULE test insert link
+CLASS TestLinkMap
+METHOD triggerMethod1()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0
+IF link($0, 1, "one") == null
+DO test.log("triggerMethod1 : link(1, one) == " + null)
+ENDRULE
+
+RULE test insert link 2
+CLASS TestLinkMap
+METHOD triggerMethod1()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0
+IF link($0, 1, "uno") == "one"
+DO test.log("triggerMethod1 : link(1, uno) == one")
+ENDRULE
+
+RULE test delete link
+CLASS TestLinkMap
+METHOD triggerMethod1()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0
+IF unlink($0, 1) == "uno"
+DO test.log("triggerMethod1 : unlink(1) == uno")
+ENDRULE
+
+RULE test delete link 2
+CLASS TestLinkMap
+METHOD triggerMethod1()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0
+IF unlink($0, 1) == null
+DO test.log("triggerMethod1 : unlink(1) == " + null)
+ENDRULE
+
+RULE test delete link map
+CLASS TestLinkMap
+METHOD triggerMethod1()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0
+IF deleteLinkMap($0) == true
+DO test.log("triggerMethod1 : deleted link map " + $this)
+ENDRULE
+
+RULE test delete link map 2
+CLASS TestLinkMap
+METHOD triggerMethod1()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0
+IF deleteLinkMap($0) == true
+DO test.log("triggerMethod1 : error deleted link map twice!!! " + $this)
+ENDRULE
+
+# default link map tests
+
+RULE test default link map link
+CLASS TestLinkMap
+METHOD triggerMethod2()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0
+IF link("one", 1) == null
+DO test.log("triggerMethod2 : link(one, 1) == null")
+ENDRULE
+
+RULE test default link map link 2
+CLASS TestLinkMap
+METHOD triggerMethod2()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0
+IF link("uno", "one") == null
+DO test.log("triggerMethod2 : link(uno, one) == null")
+ENDRULE
+
+RULE test default map linked
+CLASS TestLinkMap
+METHOD triggerMethod2()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0
+IF linked(linked("uno")) == 1
+DO test.log("triggerMethod2 : linked(linked(uno)) == 1")
+ENDRULE
+
+RULE test default map linked 2
+CLASS TestLinkMap
+METHOD triggerMethod2()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0;
+IF linked("default", linked("default", "uno")) == 1
+DO test.log("triggerMethod2 : linked(default, linked(default, uno)) == 1")
+ENDRULE
+
+RULE test default map deleteLinkMap
+CLASS TestLinkMap
+METHOD triggerMethod2()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : TestLinkMap = $0
+IF deleteLinkMap("default") == true
+DO test.log("triggerMethod2 : deleteLinkMap(default) == true")
+ENDRULE
