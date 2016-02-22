@@ -254,7 +254,10 @@ public class Binding extends RuleElement
     {
         if (isBindVar()) {
             Object result = value.interpret(helper);
-            if (doCheckCast) {
+            if (type.isPrimitive()) {
+                // if the assigment involves a type conversion then we need to rebox the value
+                result = rebox(value.getType(), type, result);
+            } else if (doCheckCast) {
                 if (type.getTargetClass().isInstance(result)) {
                     throw new ClassCastException("Cannot cast " + result + " to class " + type);
                 }
@@ -280,6 +283,7 @@ public class Binding extends RuleElement
             value.compile(mv, compileContext);
             // make sure value is boxed if necessary
             if (type.isPrimitive()) {
+                compileTypeConversion(value.getType(), type, mv, compileContext);
                 compileBox(Type.boxType(type), mv, compileContext);
             } else if (doCheckCast) {
                 mv.visitTypeInsn(Opcodes.CHECKCAST, type.getInternalName());
