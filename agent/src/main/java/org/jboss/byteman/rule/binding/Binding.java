@@ -27,6 +27,7 @@ import org.jboss.byteman.agent.Transformer;
 import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.expression.ArrayInitExpression;
 import org.jboss.byteman.rule.expression.DollarExpression;
+import org.jboss.byteman.rule.expression.NullLiteral;
 import org.jboss.byteman.rule.helper.Helper;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.expression.Expression;
@@ -122,25 +123,31 @@ public class Binding extends RuleElement
         
         // value can be null if this is a rule method parameter
         if (value != null) {
-            // type check the binding expression, using the bound variable's expected type if it is known
-            //
-            // n.b. the binding type might be provided but still UNKNOWN
-            // that can happen legitimately when a declaration omits the
-            // package qualifier. if it does then we may still be able to
-            // infer the binding type from that derived for the
-            // initializer expression either because type checking
-            // adds the qualified version to the type group or because
-            // it produces a type whose supers or implemented interfaces
-            // identifies the necessary qualified type
             if (type != Type.UNDEFINED) {
-                if (type.isUndefined() && !type.getPackageName().isEmpty()) {
-                    // a qualified name means it should already be resolved
+                // in most cases TypeGroup.resolve() should have found a
+                // class for any types referenced from the rule. However,
+                // the one special case is when we have a declaration type
+                // for a BIND variable. A failure to resolve to a class is
+                // only legitimate when the declaration type omits the
+                // package qualifier.
+
+                if (type.isUndefined() && type.getName().indexOf('.') > 0) {
                     throw new TypeException("Binding.typecheck unknown type for binding " + name);
                 }
+
+                // If the name is unqualified we may still be able to
+                // infer the type from that derived for the initializer
+                // expression either because type checking the expression
+                // adds a suitably qualified alias to the type group or
+                // because it produces a type whose supers or implemented
+                // interfaces include a matching qualified type. There
+                // are a few specific cases where we cannot use the
+                // initializer which we need to handle separately.
+
                 if (Transformer.disallowDowncast()) {
                     // compatibility behaviour -- use declared type to help infer expression type
                     Type valueType = value.typeCheck(type);
-                    // if the type was UNKNOWN try to resolve it from the derived type
+                    // if the type is still undefined try to resolve it from the derived type
                     if (type.isUndefined()) {
                         resolveUnknownAgainstDerived(valueType);
                     }
@@ -167,12 +174,28 @@ public class Binding extends RuleElement
                         // expressions but an array initializer is a special case because
                         // it is a form of array literal and so we ought to use the type
                         // info to ensure we get the right type result.
+                        Type valueType = value.typeCheck(type);
+                        // if this failed to resolve an already undefined array type
+                        // call resolveUnknownAgainstDerived to throw a type error
+                        if (type.isUndefined()) {
+                            resolveUnknownAgainstDerived(valueType);
+                        }
+                    } else if (value instanceof NullLiteral) {
+                        // a null literal is polysemous (put that in your Funk and Wagnell)
+                        // i.e. null can stand for an instance of any Object type. so we
+                        // cannot infer it's type and instead can only type it against a
+                        // known declaration type. so first reject any undefined declaraton
+                        // type
+                        if (type.isUndefined()) {
+                            throw new TypeException("Binding.typecheck unknown type for binding " + name);
+                        }
+                        // use declaration type to type the null literal
                         value.typeCheck(type);
                     } else {
                         // typecheck the value first and then check for assignability in either direction
                         // modulo assigning void
-                        Type valueType = value.typeCheck(expected);
-                        // if the type was UNKNOWN try to resolve it from the derived type
+                        Type valueType = value.typeCheck(Type.UNDEFINED);
+                        // if the type is still undefined try to resolve it from the derived type
                         if (type.isUndefined()) {
                             resolveUnknownAgainstDerived(valueType);
                         } else if (!type.isAssignableFrom(valueType)) {
@@ -184,11 +207,12 @@ public class Binding extends RuleElement
                     }
                 }
             } else {
+                // type the BIND var using whatever type we can derive for the initializer
                 Type valueType = value.typeCheck(expected);
-                type     = valueType;
+                type = valueType;
             }
         } else if (type.isUndefined()) {
-            // can we have no expected for a method parameter?
+            // if we could not resolve this using the bare name then we have a problem
             throw new TypeException("Binding.typecheck unknown type for binding " + name);
         }
         return type;
@@ -196,13 +220,26 @@ public class Binding extends RuleElement
 
     private void resolveUnknownAgainstDerived(Type derived) throws TypeException
     {
-        // this should only get called when we have a type with no package name
-        // and when derived is a resolved type
-        // TODO -- deal with nested classes/interfaces where typename will include $
-        // this is tricky because we may get false positives if we replace $ with .
+        // derived will be resolved to a class while type
+        // is a type name which we have not yet resolved
+        // to a class. that also implies that it has no
+        // package qualifier
+
+        // if we have an unresolved array type then we have a problem
+        // because we can only accept an array built from the same
+        // base type as derived. which means type and derived should
+        // both be the same type.
+
+        if (type.isArray()) {
+            throw new TypeException("Binding.typecheck unknown type for binding " + name);
+        }
+
         String typename = type.getName();
         Class<?> derivedClazz = Type.dereference(derived).getTargetClass();
-        // check the super chain for a class with a matching name
+
+        // if we have a name without package we need to look
+        // through the super class/interface tree of the derived
+        // class to find a match
         Class<?> nextClazz = derivedClazz;
         while (nextClazz != null) {
             String clazzName = nextClazz.getCanonicalName();
@@ -217,7 +254,7 @@ public class Binding extends RuleElement
         List<Class<?>> allInterfaces = new ArrayList<Class<?>>();
         LinkedList<Class<?>> toCheck = new LinkedList<Class<?>>();
         toCheck.addLast(derivedClazz);
-        while ((nextClazz = toCheck.pop()) != null) {
+        while (!toCheck.isEmpty() && (nextClazz = toCheck.pop()) != null) {
             // if we are looking at a class the include the super for further checking
             if (!nextClazz.isInterface()) {
                 Class<?> nextSuper = nextClazz.getSuperclass();

@@ -60,9 +60,23 @@ public class AssignExpression extends BinaryOperExpression
         // of the lhs.
         // if either operand cannot type check then it will throw an error
 
-        Type type2 = getOperand(1).typeCheck(expected);
-        Type type1 = lhs.typeCheckAssign(type2);
-        type = type1;
+        // if we are assigning a variable and we have no expected type
+        // or it is void then type check the bind var against undefined
+        // first and then push the bind var type down as the expected
+        // type for the assigned value
+        //
+        // otherwise type check the assigned value using the expected
+        // type
+        Expression rhs = getOperand(1);
+        if ((expected.isUndefined() || expected.isVoid()) && lhs instanceof Variable) {
+            Type type1 = lhs.typeCheckAssign(Type.UNDEFINED);
+            Type type2 = rhs.typeCheck(type1);
+            type = type1;
+        } else {
+            Type type2 = rhs.typeCheck(expected);
+            Type type1 = lhs.typeCheckAssign(type2);
+            type = type1;
+        }
         return type;
     }
 

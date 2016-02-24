@@ -185,7 +185,7 @@ public class MethodExpression extends Expression
 
         // see if we can find a method for this call
         
-        findMethod(isBuiltIn);
+        findMethod(isBuiltIn, expected);
 
         // now go back and identify the parameter types
 
@@ -211,7 +211,7 @@ public class MethodExpression extends Expression
      * @param publicOnly true if only public methods should be considered
      * @throws TypeException
      */
-    private void findMethod(boolean publicOnly) throws TypeException
+    private void findMethod(boolean publicOnly, Type expected) throws TypeException
     {
         // check all declared methods of each class in the class hierarchy using the one with
         // the most specific recipient type if we can find it
@@ -300,7 +300,7 @@ public class MethodExpression extends Expression
 
                 // see if we have a unique best fit
 
-                Method method = bestMatchCandidate(candidates);
+                Method method = bestMatchCandidate(candidates, expected);
 
                 if (method != null) {
                     if (!Modifier.isPublic(method.getModifiers())) {
@@ -602,13 +602,18 @@ public class MethodExpression extends Expression
      *
      * @return the best match if there is a unique one otherwise NULL
      */
-    public Method bestMatchCandidate(List<Method> candidates)
+    public Method bestMatchCandidate(List<Method> candidates, Type expected)
     {
         int argCount = argumentTypes.size();
         Method bestFit = null;
         int bestExactFitCount = -1;
         int bestInheritedFitCount = 0;
         boolean ambiguous = false;
+        Class<?> expectedClazz =  null;
+
+        if (expected.isDefined() && expected != Type.VOID) {
+            expectedClazz = expected.getTargetClass();
+        }
 
         for (int i = 0; i < candidates.size(); i++) {
             Method m = candidates.get(i);
@@ -618,9 +623,20 @@ public class MethodExpression extends Expression
             for (int j = 0; j < argCount; j++) {
                 Class argClazz = argumentTypes.get(j).getTargetClass();
                 Class methodParamClazz = m.getParameterTypes()[j];
-                if (argClazz == methodParamClazz) {
+                if (methodParamClazz == argClazz) {
                     exactFitCount++;
-                } else if (argClazz.isAssignableFrom(argClazz)) {
+                } else if (methodParamClazz.isAssignableFrom(argClazz)) {
+                    inheritedFitCount++;
+                }
+            }
+
+            // also filter according to return type
+
+            if (expectedClazz != null) {
+                Class<?> methodRetClazz = m.getReturnType();
+                if (methodRetClazz == expectedClazz) {
+                    exactFitCount++;
+                } else if (expectedClazz.isAssignableFrom(methodRetClazz)) {
                     inheritedFitCount++;
                 }
             }
@@ -637,7 +653,12 @@ public class MethodExpression extends Expression
                     bestInheritedFitCount = inheritedFitCount;
                     ambiguous = false;
                 } else if (inheritedFitCount == bestInheritedFitCount) {
-                    ambiguous = true;
+                    // if we have a method with a more restrictive return type then pick it
+                    if (bestFit.getReturnType().isAssignableFrom(m.getReturnType())) {
+                        bestFit = m;
+                    } else if (!m.getReturnType().isAssignableFrom(bestFit.getReturnType())) {
+                        ambiguous = true;
+                    }
                 }
             }
         }
