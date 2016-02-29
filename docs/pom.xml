@@ -10,7 +10,7 @@
   </parent>
     
   <artifactId>byteman-docs</artifactId>
-  <version>3.0.2-SNAPSHOT</version>
+  <version>3.0.5-SNAPSHOT</version>
   <name>Byteman Documentation</name>
   <packaging>pom</packaging>
 

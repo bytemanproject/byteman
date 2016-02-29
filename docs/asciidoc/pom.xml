@@ -10,7 +10,7 @@
   </parent>
     
   <artifactId>byteman-asciidoc</artifactId>
-  <version>3.0.2-SNAPSHOT</version>
+  <version>3.0.5-SNAPSHOT</version>
   <name>Byteman AsciiDoc Documentation</name>
 
   <properties>
