@@ -1,0 +1,485 @@
+== Using Byteman
+
+=== Using Byteman from java or ant
+
+If you are using Byteman from the java command line or from ant then you will need to download a 
+Byteman release and install it locally. The latest Byteman release is available as a zip file from 
+the Byteman project downloads page at
+
+- http://www.jboss.org/byteman/downloads 
+
+You need to download either the binary release or the full release and install it in a directory 
+accessible on the machine on which you want to run Byteman. The rest of this document assumes that 
+environment variable `BYTEMAN_HOME` identifies the directory into which the binary release is 
+unzipped.
+
+The binary release contains all the binary (classfile) jars and command scripts you will need to 
+use Byteman, a copy of the programmers guide plus some sample scripts and an associated helper jar. 
+The full release also provides source and javadoc jars.
+
+Details of how to use Byteman from the command line are included in the 
+https://community.jboss.org/wiki/ABytemanTutorial#top[Byteman Command Line Tutorial].
+
+If you are using Byteman from ant you need to use the BMUnit package which integrates Byteman with 
+JUnit and TestNG. Details of how to configure an ant build script to reference the required jars 
+from your Byteman download are provided in the 
+https://developer.jboss.org/wiki/BMUnitUsingBytemanWithJUnitOrTestNGFromMavenAndAnt#top[Byteman 
+BMUnit Tutorial]. A more complex example showing the possibilities offered by BMUnit is provided in 
+the https://community.jboss.org/wiki/FaultInjectionTestingWithByteman#top[Byteman Fault Injection 
+Tutorial].
+
+The downloads page also contains a link to downloads for older binary release versions. Note that 
+from Byteman 1.1 onwards the agent can only be run in JDK 6 or 7. Previous releases can also be run 
+in JDK 5. 
+
+=== Using Byteman from maven
+
+If you are using Byteman from maven, in particular, if you are using the BMUnit package which 
+integrates Byteman with JUnit and TestNG, then you normally only need to declare dependencies on 
+the Byteman jars. maven will download these jars automaticaly from the 
+http://central.sonatype.org/[Maven Central repository].
+
+Details of how to configure your pom to depend on the required jars are provided in the 
+https://developer.jboss.org/wiki/BMUnitUsingBytemanWithJUnitOrTestNGFromMavenAndAnt#top[Byteman 
+BMUnit Tutorial]. A more complex example showing the possibilities offered by BMUnit is provided in 
+the https://community.jboss.org/wiki/FaultInjectionTestingWithByteman#top[Byteman Fault Injection 
+Tutorial].
+
+Byteman also provides a maven plugin which can be used to parse and type-check your test rule 
+scripts as part of the maven test cycle. Details of how to configure the maven plugin are provided 
+in the http://community.jboss.org/wiki/CheckingYourBytemanRuleScriptsUnderMaven#top[Byteman Rulecheck 
+Plugin Tutorial].
+
+=== Obtaining the source build tree
+
+If you want to understand how Byteman works and, possibly, contribute to the Byteman project you 
+will need to download the latest Byteman source tree. The sources are available from the master 
+git repository at
+
+- https://github.com/bytemanproject/byteman
+
+The source tree is structured as a maven project..
+
+=== Building Byteman from the sources
+
+Byteman can be built by executing command mvn package in the top level directory of the source tree. 
+The build process should produce binary, source and javadoc jars in the target directory of each of 
+the dependent sub-modules (`agent/target`, `submit/target`, etc.) and assemble these into both a 
+binary and a full release zip file in subdirectory `download/target`.
+
+If you are using Byteman from ant or the java command line then you should unzip one of the 
+download zip files into your local `BYTEMAN_HOME` directory as you would for any of the official 
+downloads.
+
+If you want to use Byteman from maven then you need to install the byteman jars in your local 
+machine's maven repository by executing command mvn install. In this case before performing the 
+install process you should modify the project version in the root pom and the parent version in 
+each of the dependent sub-module poms so that the version you install locally does not overwrite a 
+version obtained form the JBoss master repository.
+
+=== Running Applications with Byteman
+
+The Byteman tutorials explain how to use Byteman to trace and test the behaviour of a variety of 
+programs ranging from simple examples to sophisticated test cases. 
+
+- The https://community.jboss.org/wiki/ABytemanTutorial#top[Byteman Command Line Tutorial] 
+  covers the basics of how to run Byteman from the command line. 
+- The https://community.jboss.org/wiki/FaultInjectionTestingWithByteman#top[Byteman BMUnit Tutorial] 
+  explains how to integrate Byteman into your JUnit or TestNG tests drievn either from ant or maven. 
+- The https://community.jboss.org/wiki/FaultInjectionTestingWithByteman#top[Byteman Fault Injection 
+  Tutorial] provides an example of how to use Byteman to do more sophisticated fault injection 
+  testing. 
+
+The tutorials are probably the best thing to look at if you are new to Byteman. The rest of this 
+guide provides complete details of how to use Byteman from the Java command line and explains the 
+effect of all the configuration options which are available when using Byteman. Many of these 
+options can also be configured when using BMUnit from ant or maven.
+
+=== Configuring a java agent
+
+Using Byteman from the java command line is refreshingly simple. Installing Byteman at JVM startup 
+requires only one extra argument. This argument points the JVM at the agent code in the byteman jar 
+and at the script files containing your byteman rules. This is specified using the java command 
+flag
+
+....
+-javaagent:agentlib=options
+....
+
+This is a standard option for JDK 1.6 and upwards.
+
+- _agentlib_ is a path to the byteman jar. The build process inserts a metadata file in the jar which 
+allows the JVM to identify the agent program entry point so everything else is shrink-wrapped.
+
+- _options_ is a comma-separated sequence of options which are passed to the agent.
+
+For example, setting
+
+....
+export JAVA_OPTS="-javaagent:$BYTEMAN_HOME/lib/byteman.jar=
+script:$SCRIPT_HOME/HeuristicSaveAndRecover.btm,
+script:$SCRIPT_HOME/JBossTSTrace.btm"
+....
+
+will cause the JVM to pick up the byteman jar file from the install root, `BYTEMAN_HOME` and inject 
+all rules found in the two scripts `HeuristicSaveAndRecover.btm` and `JBossTSTrace.btm` located in 
+directory `SCRIPT_HOME`. (n.b. the command should actually be all on one line without any line 
+breaks – these have been inserted merely as an aid to readability)
+
+Normally, the script option is all that is required . However there are several other options 
+provided to configure more sophisticated features of the agent such as dynamic rule upload. The 
+`bmjava` command script (see below) can be used to simplify the task of concatenating these options 
+into a valid `-javaagent` argument.
+
+=== Installing Byteman in a Running JVM using Script bminstall
+
+If your Java application is already running you may still be able to install the Byteman agent into 
+the JVM. The installed bin directory contains a script `bminstall` footnote:[There is a Windows 
+script called `bminstall.bat` which you can execute using the command `bminstall`. The Linux script is 
+called `bminstall.sh` and you must supply this full name to execute it.] which can be used to contact 
+your application's JVM and install the agent. Once installed you can then use script `bmsubmit` 
+described below to upload or unload rules via the Byteman agent listener. The command line syntax 
+for the `bminstall` script is
+
+....
+bminstall [-p port] [-h host] [-b] [-s] [-Dproperty[=value]]* pid
+....
+
+where terms between _[_ and _]_ are optional and _*_ means zero or more repetitions.
+
+- `pid` is the process id of the JVM running your application or, alternatively, the name of the 
+  application as displayed by running command `jps -l`.
+- `-h` host means use host as the host name when opening the listener socket (the default is 
+  localhost)
+- `-p` port means use port as the port when opening the listener socket (the default is 9091)
+- `-b` means add the byteman jar to the bootstrap class path
+- `-s` sets an access-all-areas security policy for the Byteman agent code. This may be necessary 
+  when the JVM is running an application employing a security manager which imposes access 
+  restrictions (this includes recent versions of JBoss Wildfly/EAP).
+- `-Dproperty=value` means call `System.setProperty(property, value)` before starting the agent. 
+  More than one such property setting may be provided. If value is omitted then it defaults to “”. 
+  Note that property must start with prefix “`org.jboss.byteman.`”.
+
+Note that when you identify the JVM using an application name instead of a process id you do not 
+have to provide the full name but you must be sure the name is unambiguous. For example, if you 
+want to install the agent into the JBoss Application Server you can use the full name `org.jboss.Main` 
+or the abbreviated names `jboss.Main` or `Main`. Clearly, `Main` will often be a bad choice as many 
+applications will use that name. The install will be done using the first matching JVM.
+
+Note also that loading the agent at runtime may not work with certain JVMs. It will definitely not 
+work unless your Java release includes a jar named lib/tools.jar below your top-level Java install 
+directory and this jar must contain a class called `com.sun.tools.attach.VirtualMachine`. However, 
+even with this jar in place the upload may fail.
+
+=== Available -javaagent Options
+
+Each option comprises a keyword prefix, identifying the type of the option, and a suffix, 
+identifying the value of the option. Prefix and suffix are separated by a colon, :. Multiple 
+options are separated by commas. Valid options include
+
+*script:scriptfile* where _scriptfile_ is a path to a file containing Byteman rules. This option 
+causes the agent to read the rules in _scriptFile_ and apply them to subsequently loaded classes. 
+Multiple script arguments may be provided to ensure that more than one rule set is installed. It is 
+possible to start the agent with no initial script arguments but this only makes sense if the 
+listener option is supplied with value `true`.
+
+*resourcescript:scriptfile* where _scriptfile_ is a path to a resource file on the CLASSPATH 
+containing Byteman rules. This option is like the script option except that the file containing the 
+Byteman rules is located as a class loader resource (the _scriptfile_ argument is passed directly to 
+`ClassLoader.getSystemResourceAsStream())`.
+
+*listener:boolean* where _boolean_ is either `true` or `false`. When set to `true` this option causes the 
+agent to start a listener thread at startup. The listener can be talked to using the `bmsubmit 
+script, either to provide listings of rule applications performed by the agent or to dynamically 
+load, reload or unload rules. Loading or reloading of a rule causes any matching classes which 
+have already been loaded into the JVM to be retransformed, inserting a trigger call for the newly 
+loaded rules into their target methods. Unloading a rule causes trigger code to be removed from any
+matching classes.
+
+n.b. this option is actually an alias for option manager (see below)
+
+*port:portnum* where _portnum_ is a positive whole number. This option selects the port used by the 
+agent listener when opening a server socket to listen on. If not supplied the port defaults to 9091. 
+Supplying this option defaults the listener option to `true`.
+
+*address:host* where _host_ is a host name. This option selects the address used by the agent 
+listener when opening a server socket to listen on. If not supplied the address defaults to 9091. 
+Supplying this option defaults the listener option to `true`.
+
+*manager:classname* where _classname_ is the full, package qualified name of a class which is to 
+manage loading and unloading of rules. The manager option allows you to provide your own plugin 
+class to manage the Byteman agent's installed rule base. The plugin class implements an initialize 
+method with one of the following signatures:
+
+....
+void initialize(org.jboss.byteman.agent.Retransfromer, String, int)
+
+void initialize(org.jboss.byteman.agent.Retransfromer)
+....
+
+The first argument is the retransformer instance which regulates operation of the Byteman agent's 
+class file transformer. It provides methods for installing and deinstalling rules and for querying 
+the installed rule base. The second and third arguments allow a hostname and port to be passed to 
+the manager class.
+
+An instance of the named manager class is created and its initialize method called when the agent 
+is first loaded. The first variant of initialize is called by preference (passing `null` or -1 if, 
+respectively, no hostname or port was provided as a Byteman agent option). Alternatively, the 
+second variant is invoked. At least one implementation of initialize must be provided.
+
+Option *listener:true* is an alias for *manager:org.jboss.byteman.agent.TransformListener*, e.g. 
+it requests the agent to use the standard Byteman manager class to manage the agent's rule base. 
+`TransformListener` simply opens a socket listener and passes requests from the `bmsubmit` script on 
+to the `Retransformer` then posts results back via the socket. If you wish to implement your own 
+manager then you should study class `TransformListener` in order to understand how the 
+`Retransformer` provides access to the agent rule base.
+
+*sys:jarfile* where _jarfile_ is a path to to a jar file to be added to the JVM _system_ class path. 
+This option makes classes contained in the jar file available for use when type checking, 
+compiling and executing rule conditions and actions. It provides a useful way to ensure that 
+Helper classes mentioned in rules are able to be resolved. If a rule's trigger class is loaded by 
+some other class loader this loader will normally have the system loader as a parent so references 
+to the Helper class should resolve correctly.
+
+*boot:jarfile* where _jarfile_ is a path to to a jar file to be added to the JVM _bootstrap_ class 
+path. This option provides a similar facility to the sys option but it ensures that the classes 
+contained in the jar file are loaded by the bootstrap class loader. This is only significant when 
+rules try to inject code into JVM classes which are loaded by the bootstrap class loader (which is 
+a parent of the system loader).
+
+*policy:boolean* where _boolean_ is either `true` or `false`. When set to `true` this option 
+causes the agent toi install an access all areas security policy for the Byteman agent code. This 
+may be necessary when the JVM is running an application employing a security manager which imposes 
+access restrictions (this includes recent versions of JBoss Wildfly/EAP).
+
+*prop:name=value* where _name_ identifies a System property to be set to value or to the empty 
+String if no value is provided. Note that property names must begin with the prefix 
+“`org.jboss.byteman'.”.
+
+Note that when injecting into JVM classes it is necessary to install the byteman jar into the boot 
+classpath by passing option `boot:${BYTEMAN_HOME}/lib/byteman.jar`. Without it compilation of the 
+transformed class will fail because it cannot locate classes `Rule`, `ExecuteException`, 
+`ThrowException` and `ReturnException.` Script `bmjava` automatically takes care of this requirement.
+
+=== Running Byteman Using Script bmjava
+
+The installed `bin` directory contains a script `bmjava` which can be used to assemble the options 
+passed to the byteman agent and combine them with other java options supplied on the java command 
+line. The command line syntax for this script is
+
+....
+bmjava [-p port] [-h host] [ -l script|-b jar|-s jar|-nb|-nl|-nj ]* [--] javaargs
+....
+
+where terms between [ ] are optional, terms separated by | are alternatives, * means zero or more 
+repetitions and
+
+- `-l` _script_ means load the rules in file _script_ during program start up
+- `-b` _jar_ means add jar file _jar_ to the bootstrap class path
+- `-s` _jar_ means add jar file _jar_ to the system class path
+- `-p` _port_ means use _port_ as the port when opening the listener socket (the default is 9091)
+- `-h` _host_ means use _host_ as the host name when opening the listener socket (the default is 
+  `localhost`)
+- `-nb` means don't add the byteman jar to the bootstrap class path (it is added by default)
+- `-nl` means don't start the agent listener (it is started by default)
+- `-nj` means don't inject into java.lang classes (this is allowed by default)
+
+=== Submitting Rules Dynamically Using Script bmsubmit
+
+The installed bin directory contains a script called `bmsubmit` which can be used to communicate 
+with the agent listener started up when option `listener:true` is passed as an option to the 
+Byteman agent (recall that this option is always enabled by the `bminstall` and `bmjava` scripts). 
+
+This script can be used to upload rules into the running program, to unload previously loaded rules 
+and to report which rules have been injected and/or whether any errors were detected when 
+attempting injection. `bmsubmit` can also be used to install jars containing helper classes into 
+the bootstrap or system classpath.
+
+The command line syntax for the `bmsubmit` script is:
+
+....
+submit [-p port] [-h host] [-l|-u] [script1 . . . scriptN]
+submit [-p port] [-h host] [-b|-s] jarfile1 . . .
+submit [-p port] [-h host] -c
+submit [-p port] [-h host] -y [prop1[=[value1]]. . .]
+submit [-p port] [-h host] -v
+....
+
+Flags `-p` and `-h` can be used to supply the port and host address used to connect to the Byteman 
+agent listener. If not supplied they default to 9091 and localhost, respectively.
+
+Flag `-l` selects the default execution mode for `bmsubmit`. If no other flag is supplied this mode 
+will be used. When run with no arguments submit lists all currently applied transformations. This 
+listing includes details of failed transformations, typechecks and compiles.
+
+When run with a list of script files `bmsubmit` uploads the scripts to the agent:
+
+1. If any of the uploaded rules have the same name as an existing rule then the old rule is 
+   replaced with the new rule and all classes transformed by the rule are automatically 
+   retransformed. This includes the case where a target class was transformed but a subsequent 
+   typecheck or compile of the rule failed. This will (eventually) cause all threads executing 
+   target methods to trigger the new rule instead of the old rule. Depending upon when the 
+   compiler installs the new method code and when executing threads switch to this new code there 
+   may be a small window following the upload where neither the old nor the new rule is triggered.
+
+2. If any of the uploaded rules apply to already loaded classes which were not previously 
+   successfully transformed (because no rule applied to them or because attempts to transform them 
+   failed) then those classes will be retransformed. Once again, depending upon when the compiler 
+   installs the new method code and when executing threads switch to this new code there may be a 
+   small window following the upload where neither the old nor the new rule is triggered.
+
+3. Any other rules will be stored in the agents rule set and applied to newly loaded classes which 
+   match the rule.
+
+Flag `-u` selects the uninstall mode for `bmsubmit`. When run with no arguments `bmsubmit` 
+uninstalls all currently loaded rules. When run with a list of script files `bmsubmit` uninstalls 
+each installed rule whose name matches a rule definition contained in one of the supplied script 
+files. `bmsubmit` does not check that rules in the supplied scripts are well formed, it merely 
+looks for lines starting with the text `RULE`.
+
+Flags `-b` and `-s` request installation of jar files into the bootstrap or system classpath, 
+respectively. This is useful if rules which are to be submitted dynamically need to be provided 
+with access to helper classes which were not in the original class path. There is no undo 
+operation for this mode; jar files cannot be uninstalled once they have been installed. Also, it 
+is not possible to use this option to install the byteman jar into the bootstrap classpath if it 
+was omitted at agent startup. By the time the listener responds to this request the system class 
+loader will already have loaded classes from the byteman jar so adding the jar to the bootstrap 
+classpath will result in classloader conflicts.
+
+Flag `-c` can be used to list all helper jars which have been installed by the agent into the 
+bootstrap or system classpath.
+
+Flag `-y` can be used to list or dynamically update the system properties which configure the 
+operation of the Byteman agent. If no following arguments are supplied `bmsubmit` will print the 
+value of all system properties in the agent JVM with prefix $$“$$`org.joss.byteman.`$$”$$. When arguments 
+are supplied `bmsubmit` will set or clear the relevant system properties and notify the agent to 
+update its configuration. If a bare property name is supplied then `bmsubmit` will unset the 
+property. If the property name is followed by = and a value then the system property will be set 
+to this value (= with no value sets it to an empty string). Note that for performance reasons the 
+agent does not, by default, respond to configuration updates (this allows it to test configuration 
+settings during operation without incurring any synchronization overhead). Dynamic configuration 
+update must be enabled when the agent is started by setting system property 
+`org.jboss.byteman.allow.config.updates` on the JVM command line (to any value).
+
+=== Checking Rules Offline Using Script bmcheck
+
+The installed bin directory contains a script called `bmcheck` which should be used to parse and 
+typecheck your Byteman rules offline before attempting to inject them into your application. This 
+script uses environment variable `BYTEMAN_HOME` to locate the byteman jars needed to type check 
+the rules. However, it still needs to be supplied with a classpath locating any application 
+classes mentioned in the rules.
+
+The command line syntax for the `bmcheck` script is:
+
+....
+bmcheck [-cp classpath] [-p package]* script1 [. . . scriptN]
+....
+
+Flag `-cp` provides a single classpath element used to locate classes mentioned in the scripts. If 
+your code is located in several jars then you must supply `-cp` multiple times.
+
+Flag `-p` provides one or more package names which are used to resolve target classes which have 
+been specified on the `CLASS` line without a qualifying package name. For example, if a rule 
+specifies `CLASS myClass` and the class actually resides in package `org.myApp` then the rule will 
+be applied when class `org.myApp.myClass` is loaded during application execution. However, the 
+type checker cannot know where to find and load the relevant class without a hint. If `-p org.myApp` 
+is provided on the command line then after failing to locate myClass in the empty package the type 
+checker will try to lookup `myClass` in package `org.myApp`. Each package supplied on the command 
+line is tried in order until the class name can be resolved.
+
+=== Installing And Submitting from Java
+
+The scripts `bminstall` and `bmsubmit` used, respectively, to install the agent into a running 
+program and to upload and unload scripts are merely wrappers which invoke the behaviour of Java 
+classes, `org.jboss.byteman.agent.install.Install` and `org.jboss.byteman.agent.submit.Submit`, 
+located,respectively, in the `byteman-install` and `byteman-submit` jars in the installed `lib` 
+directory. The behaviour provided by these classes may be invoked from any Java program in order 
+to load the agent or rules into the current JVM or into a remote JVM. The contributed packages 
+provided with the Byteman release provide interesting examples of how to use this powerful 
+capability.
+
+Package `BMUnit` extends the JUnit and TestNG test frameworks so that they automatically install 
+an agent and loads and unloads rules into/from the JUnit or TestNg test JVM as successive unit 
+tests are executed. This makes it trivially easy to inject side effects such as tracing, 
+validation code and faults into your application before running a test and then remove these side 
+effects ready for the next test. Details of how to use BMUnit are provided in the 2nd of the 
+Byteman tutorials which can be accessed from the Byteman Documentation page of the Byteman project 
+web site located at http://jboss.org/[jboss.org].
+
+Package `DTest` allows a standalone test client to load and unload rules into/from a server JVM 
+which allow the client to inject faults into the server code then record and validate execution of 
+the server. Consult the Javadoc of these two API classes and the contributed package `README` 
+files and source code for full details.
+
+=== Environment Settings
+
+The agent is sensitive to various environment settings which configure its behaviour.
+
+`*org.jboss.byteman.compileToBytecode*`:: 
+When this system property is set (with any value), then the rule execution engine will compile 
+rules to bytecode before executing them. If this property is unset it will execute rules by 
+interpreting the rule parse tree.
++
+Transformations performed by the agent can be observed by setting several environment variables 
+which cause the transformed bytecode to be dumped to disk.
+
+`*org.jboss.byteman.dump.generated.classes*`:: 
+When this system property is set, the agent transformer code will dump a class file containing the 
+bytecode of any class it has modified. The class file is dumped in a directory hierarchy derived 
+from the package of the transformed class. So, for example, class `com.arjuna.Foo` will be dumped 
+to file `com/arjuna/Foo.class`. 
+
+`*org.jboss.byteman.dump.generated.classes.directory*`::
+When this system property is set to the name of a directory writeable by the JVM, then class files 
+will be dumped in a package directory hierarchy below this directory. For example, if this 
+property is set with value `/tmp/dump` then class `com.arjuna.Foo` will be dumped to file 
+`/tmp/dump/com/arjuna/Foo.class.` If this property is unset or does not identify a writeable 
+directory then class files will be dumped below the current working directory of the JVM.
+
+`*org.jboss.byteman.dump.generated.classes.intermediate*`::
+When this system property is set, the agent will dump successive versions of transformed bytecode 
+as successive rules applicable to a given class are injected into the bytecode.
+
+`*org.jboss.byteman.verbose*`, `*org.jboss.byteman.debug*`::
+When either of these system properties is set, then the rule execution engine will display a 
+variety of trace messages to the `System.out` as it parses, typechecks, compiles and executes 
+rules.
++
+Note that the debug built-in is sensitive to this system property as well as to its own 
+configuration switch 
++ 
+If either of these properties is set then debug calls will print to `System.out`.
+
+`*org.jboss.byteman.transform.all*`::
+When this system property is set, then the agent will allow rules to be injected into methods of 
+classes in the `java.lang` hierarchy. Note that this will require the Byteman jar to be installed 
+in the bootstrap classpath using the boot: option to the `-javaagent` JVM command line argument.
+
+`*org.jboss.byteman.skip.overriding.rules*`::
+When this system property is set, then the agent will not perform injection into overriding method 
+implementations. If an overriding rule is installed the agent will print a warning to `System.err`
+and treat the rule as if it applies only to the class named in the `CLASS` clause. This setting is 
+not actually provided to allow rules to be misused in this way. It is a performance tuning option. 
+The agent has to check every class as it is loaded in order to see if there are rules which apply 
+to it. It also has to check all loaded classes when rules are dynamically loaded via the agent 
+listener. This requires traversing the superclass chain to locate overriding rules attached to 
+superclasses. This increases the cost of running the agent (testing indicates that the cost goes 
+from negligible (<< 1%) to, at worst, noticeable (~ 2%) but not to significant) So, if you do not 
+intend to use overriding rules then setting this property helps to minimise the extent to which 
+the agent perturbs the timing of application runs. This is particularly important when testing 
+multi-threaded applications where timing is highly significant.
+
+`*org.jboss.byteman.allow.config.updates*`::
+When this system property is set (with any value), then the Byteman agent will update its 
+configuration when changes to the value of system properties are submitted using the `bmsubmit` 
+client with option `-y`. Note that this configuration property cannot be reset dynamically using 
+the submit client. It must be set when the agent is loaded either on the JVM command line or via 
+the `bminstall` client.
+
+`*org.jboss.byteman.sysprops.strict*`::
+When this system property is set to `false`, then the Byteman agent will allow the `bmsubmit` 
+client to modify any system properties. If it is unset or set to `true` then only properties with 
+prefix “`org.jboss.byteman.`” will be modified. Note that this configuration property cannot be 
+reset dynamically using the `bmsubmit` client. It must be set when the agent is loaded either on 
+the JVM command line or via the `bminstall` client.
+

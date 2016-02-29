@@ -1,0 +1,874 @@
+== Byteman Rule Language Standard Built-Ins
+
+The default helper class provides the following standard suite of built-in calls for use in rule 
+expressions. These are primarily intended for use in condition and action expressions but they may 
+also be called in event bindings. They provide features which are designed to make it easy to 
+perform complex tests, in particular to coordinate the actions of threads in multi-threaded 
+applications. Built-in operations divide into three categories, thread coordination operations, 
+rule state management operations and trace and debug operations
+
+=== Thread Coordination Operations
+
+==== Waiters
+
+The rule engine provides Waiters used to suspend threads during rule execution and then have other 
+threads wake them up. The wakeup can simply allow the suspended thread to resume execution of the 
+rule which suspended it. Alternatively, it can force the waiting thread to exit from the triggering 
+method with an exception. The API defined by the helper class is
+
+....
+  public void waitFor(Object identifier)
+  public void waitFor(Object identifier, long millisecsWait)
+  public boolean waiting(Object identifier)
+  public boolean signalWake(Object identifier)
+  public boolean signalWake(Object identifier, boolean mustMeet)
+  public boolean signalThrow(Object identifier)
+  public boolean signalThrow(Object identifier, boolean mustMeet)
+....
+
+As with CountDowns, Waiters are identified by an arbitrary object. Note that the wait operation is 
+not performed by invoking `Object.wait` on identifier. Doing so might interfere with locking and 
+synchronization operations performed by the triggering method or its callers. The identifier is 
+merely used by the rule engine to associate wait and signal operations. The Helper class employs 
+its own private Waiter object to manage the synchronization activity.
+
+`waitFor` is intended for use in a rule action. It suspends the current thread on the Waiter 
+associated with the identifier until either a `signalWake` or a `signalThrow` is called with the 
+same identifier. In the former case the thread will continue processing any subsequent actions and 
+then return from the trigger call. In the latter case the thread will throw a runtime exception 
+from the triggering method call frame. The version without a wait parameter will never time out. 
+The version which employs a wait parameter will time out after the specified number of milliseconds.
+
+`waiting` is intended for use in rule conditions. it will return `true` if any threads are waiting on 
+the relevant Waiter for a signal. It returns false if there are no threads waiting.
+
+`signalWake` is intended for use in rule conditions or actions. If there are threads waiting on the 
+Waiter associated with `identifier` it wakes them and returns `true`. If not it returns false. +
+_Note:_ this behaviour ensures that a race between multiple threads to signal waiting threads from 
+a rule condition can only have one winner.
+
+`signalWake` takes an optional argument `mustMeet` which is useful in situations where it cannot 
+be guaranteed that the waiting thread will reach its trigger point before the signalling thread 
+arrives at its trigger point. If this argument is supplied as `true` then the signalling thread will 
+not deliver its signal until another thread is waiting. If necessary the signalling thread will 
+suspend until a waiting thread arrives. Supplying value false is equivalent to omitting the 
+optional argument.
+
+`signalThrow` is identical to `signalWake` except that it does not just wake any waiting threads. 
+It also causes them to throw a runtime exception of type `ExecuteException` from their triggering 
+method call frame when they wake up.
+
+`signalThrow` also takes an optional argument `mustMeet` which enables the same behaviour as for 
+signalWake.
+
+==== Rendezvous
+
+Waiters are useful in situations where there is an asymmetrical relationship between threads: one 
+or more threads need to wait for an event which will be signalled by the thread in which the event 
+happens. A rendezvous provides a way of synchronizing where there is no such asymmetry. A rendezvous 
+also provides a way of introducing asymmetry since it sorts threads by order of arrival. The value 
+returned from the rendezvous built-in can be checked to identify, say,  the first (or last) thread 
+to arrive and that thread can be the one whose action is triggered. 
+
+....
+  public boolean createRendezvous(Object identifier,
+                                  int expected)
+  public boolean createRendezvous(Object identifier,
+                                  int expected,
+                                  boolean rejoinable)
+  public boolean rendezvous(Object identifier)
+  public boolean rendezvous(Object identifier, long timeout)
+  public boolean isRendezvous(Object identifier, int expected)
+  public int getRendezvous(Object identifier, int expected)
+  public int deleteRendezvous(Object identifier, int expected)
+....
+
+`createRendezvous` creates a rendezvous identified by `identifier`. `count` identifies the number 
+of threads which must meet at the rendezvous before any one of them is allowed to continue 
+execution. The optional argument `rejoinable` defaults to false in which case any attempt to meet 
+once the first count threads have arrived will fail. If it is supplied as true then once count 
+threads have arrived the rendezvous will be reset, enabling another round of meetings to occur. 
+`createRendezvous` returns `true` if the rendezvous is created. If a rendezvous identified by 
+identifier already exists it returns false. Note that it is legitimate (although pathological) 
+to supply a count of 1.
+
+`rendezvous` is called to meet other threads at a `rendezvous` identified by `identifier`. If the 
+number of threads (_including the calling thread_) arrived at the rendezvous is less than the 
+expected count then the calling thread is suspended. If the number of threads equals the expected 
+count then all suspended threads are awoken. A rejoinable rendezvous has its arrived count reset 
+to 0 at this point. If the rendezvous is not rejoinable then it is deleted and any subsequent call 
+to rendezvous using the original identifier will return -1.
+
+`rendezvous` may also be passed a timeout identifying the number of milliseconds which the caller 
+should wait for the all threads to arrive. If the timeout interval is exceeded without the desired 
+number of threads reaching the rendezvous a (runtime) exception will be thrown from the call. A 
+zero or negative timeout value means do not time out.
+
+`isRendezvous` will return true if a rendezvous identified by identifier with the expected count 
+is currently active. If there is no active rendezvous identified by identifier or it exists but 
+has a different expected count then `getRendezvous` will return false.
+
+`getRendezvous` will return the number of threads waiting at the rendezvous identified by 
+`identifier` or 0 if no threads are currently waiting. If there is no rendezvous identified by 
+`identifier` or it exists but has a different expected count then `getRendezvous` will return -1.
+
+`deleteRendezvous` deletes a rendezvous, breaking the association between `identifier` and the 
+rendezvous and forcing any threads waiting under a call to rendezvous to return immediately with 
+result -1. If a rendezvous with the correct expected count is found and successfully deleted it 
+returns true. If there is no such rendezvous or if it is deleted either by another concurrent call 
+to `deleteRendezvous()` or because a concurrent call to rendezvous() completes the rendezvous it 
+returns `false`.
+
+==== Joiners
+
+Joiners are useful in situations where it is necessary to ensure that a thread does not proceed 
+until one or more related threads have exited. This is not always a requirement for an application 
+to execute correctly but may be necessary to validate a test scenario. For example, a socket 
+listener thread may create connection manager threads to handle incoming connection requests. The 
+listener might use the connection object to notify connection manager threads of a forced exit. It 
+does not necessarily have to retain a handle on the connection thread and explicitly call 
+`Thread.join()` be sure the therad will exit when notified. However, a test may want to check the 
+thread pool to be sure all activity has completed. This means the test needs to be able to 
+accumulate a list of managed threads and then subsequently join them either from the manager 
+thread or from a test thread.
+
+....
+  public boolean createJoin(Object identifier, int expected)
+  public boolean isJoin(Object identifier, int expected)
+  public boolean joinEnlist(Object identifier, int expected)
+  public boolean joinWait(Object identifier, int expected)
+  public boolean joinWait(Object identifier,
+                          int expected,long timeout)
+....
+
+`createJoin` creates a Joiner which can subsequently be referenced by identifier. expected 
+identifies the number of threads which are to be joined. If a Joiner is created it returns `true`. 
+If a Joiner is currently `identified` by identifier it returns false.
+
+`isJoin` tests whether `identifier` identifies a Joiner with the given expected count. If a Joiner 
+with the given expected count is currently identified by `identifier` it returns `true` otherwise 
+it returns `false`.
+
+`joinEnlist` adds the calling thread to the list of threads associated with a Joiner and returns 
+`true`, allowing the thread to proceed towards exit. If `identifier` does not identify a Joiner or 
+identifies a Joiner with the wrong expected count it returns `false`. It also returns `false` if 
+the calling thread is already contained in the Joiner's thread list or if the number of threads 
+added to the list has reached the `expected` count.
+
+`joinWait` suspends the calling thread until the number of threads in the list associated with the 
+Joiner reaches the expected count. It then joins each thread in the list and returns `true`. If 
+`identifier` does not identify a Joiner or identifies a Joiner with the wrong `expected` count it 
+returns `false`. 
+
+`joinWait` may also be passed a timeout identifying the number of milliseconds which the caller 
+should wait for the thread count to reach the expected count and for the subsequent join 
+operations to complete. If the timeout interval is exceeded without the desired number of threads 
+reaching the expected count a (runtime) exception will be thrown from the call. A zero or negative 
+timeout value means do not time out.
+
+==== Aborting Execution
+
+The rule engine provides two built-ins for use in rule actions which allow execution of the 
+triggering method to be aborted. The API defined by the helper class is the following:
+
+....
+  public void killThread()
+  public void killJVM()
+  public void killJVM(int exitCode)
+....
+
+`killThread` causes a runtime exception of type `ExecuteException` to be thrown from the triggering 
+method call frame. This will effectively kill the thread unless a catch-all exception handler is 
+installed somewhere up the call stack.
+
+`killJVM` results in a call to `java.lang.Runtime.getRuntime().halt()`. This effectively kills the 
+JVM without any opportunity for any registered exit handlers to run, simulating a JVM crash. If 
+exitCode is not supplied it is defaulted to -1
+
+=== Rule State Management Operations
+
+==== CountDowns
+
+The rule engine provides CountDowns which can be used to ensure that firing of some given rule 
+will only occur after other rules have been triggered or fired a certain number of times. The API 
+defined by the helper class is
+
+....
+  public boolean createCountDown(Object identifier, int count)
+  public boolean getCountDown(Object identifier)
+  public boolean countDown(Object identifier)
+....
+
+CountDowns are identified by an arbitrary object, allowing successive calls to the countdown API 
+to apply to the same or different cases. This identification can be made across different rule and 
+helper instances. For example, one rule might include action `createCountDown($0, 1)` and another 
+rule might include condition `countDown($0)`. A CountDown created by the first rule would only be 
+decremented if the second rule was triggered from a method call with the same value for this. 
+CountDowns created by invocations with distinct values for this would match up accordingly.  
+However, if the CountDown was identified using a common `String` literal (i.e. action and 
+condition were `createCountDown(“counter”, 1)` and `countDown(“counter”),` respectively), then the 
+CountDown created by the first rule would be decremented by the next firing of the second rule 
+irrespective of whether the trigger method calls were on related instances.
+
+`createCountDown` is used to create a CountDown. `count` specifies how many times the CountDown 
+will be decremented before a decrement operation fails i.e. if `count` is 1 then the CountDown 
+will decrement once and then fail at the next decrement. If `count` is supplied with a value less 
+than 1 it will be replaced with value 1. `createCountDown` would normally be employed in a rule 
+action. However, it is defined to return `true` if a new CountDown is created and false if there is 
+already a CountDown associated with the identifier. This allows it to be used in rule conditions 
+where several rules may be racing to create a CountDown.
+
+`getCountDown` is for use in a rule condition to test whether a CountDown associated with a given 
+identifier is present, returning `true` if so otherwise false.
+
+`countDown` is for use in a rule condition to decrement a CountDown. It returns `false` if the 
+decrement succeeds or if there is no CountDown associated with identifier. It returns `true` if 
+the CountDown fails i.e. it has count 0. In the latter case the association between the identifier 
+and the CountDown is removed, allowing a new CountDown to be started using the same identifier. 
+Note that this behaviour ensures that a race between multiple threads to decrement a counter from 
+one or more rule conditions can only have one winner.
+
+==== Flags
+
+The rule engine provides a simple mechanism for setting, testing and clearing global flags. The 
+API defined by the helper class is
+
+....
+  public boolean flag(Object identifier)
+  public boolean flagged(Object identifier)
+  public boolean clear(Object identifier)
+....
+
+As before, Flags are identified by an arbitrary object. All three methods are designed to be used 
+either in conditions or actions. 
+
+`flag` can be called to ensure that the Flag identified by `identifier` is set. It returns `true` if 
+the Flag was previously clear otherwise false. Note that the API is designed to ensure that race 
+conditions between multiple threads trying to set a Flag from rule conditions can only have one 
+winner.
+
+`flagged` tests whether the Flag identified by `identifier` is set. It returns `true` if the Flag 
+is set otherwise false. 
+
+`clear` can be called to ensure that the Flag identified by `identifier` is clear. It returns `true`
+if the Flag was previously set otherwise `false`. Note that the API is designed to ensure that 
+race conditions between multiple threads trying to clear a Flag from rule conditions can only 
+have one winner.
+
+==== Counters
+
+The rule engine provides Counters which maintain global counts across independent rule 
+triggerings. They can be created and initialised, read, incremented and decremented in order track 
+and respond to the number of times various triggerings or firings have happened. Note that unlike 
+CountDowns there are no special semantics associated with decrementing a Counter to zero. They may 
+even have negative values. The API defined by the helper class is
+
+....
+  public boolean createCounter(Object o)
+  public boolean createCounter(Object o, int count)
+  public boolean deleteCounter(Object o)
+  public int incrementCounter(Object o, int amount)
+  public int incrementCounter(Object o)
+  public int decrementCounter(Object o)
+  public int readCounter(Object o)
+  public int readCounter(Object o, boolean zero)
+....
+
+As before, Counters are identified by an arbitrary object. All methods are designed to be used in 
+rule conditions or actions. 
+
+`createCounter` can be called to create a new Counter associated with `o`. If argument count is 
+not supplied then the value of the new Counter defaults to `o`. `createCounter` returns `true` if a 
+new Counter was created and false if a Counter associated with `o` already exists. Note that the API 
+is designed to ensure that race conditions between multiple threads trying to create a Counter 
+from rule conditions can only have one winner.
+
+`deleteCounter` can be called to delete any existing Counter associated with `o`. It returns true if 
+the Counter was deleted and false if no Counter was associated with `o`. Note that the API is 
+designed to ensure that race conditions between multiple threads trying to delete a Counter from 
+rule conditions can only have one winner.
+
+`incrementCounter` can be called to increment the Counter associated with `o`. If no such Counter 
+exists it will create one with value 0 before incrementing it. `incrementCounter` returns the new 
+value of the Counter. If amount is omitted it defaults to 1.
+
+`decrementCounter` is equivalent to calling `incrementCounter(o, -1)` i.e. it adds -1 to the value 
+of the counter.
+
+`readCounter` can be called to read the value of the Counter associated with `o`. If no such 
+Counter exists it will create one with value 0. If the optional flag argument `zero` is passed as 
+`true` the counter is atomically read and zeroed. `zero` defaults to `false`.
+
+==== Timers
+
+The rule engine provides Timers which allow measurement of elapsed time between triggerings. 
+Timers can be created, read, reset and deleted via the following API
+
+....
+  public boolean createTimer(Object o)
+  public long getElapsedTimeFromTimer(Object o)
+  public long resetTimer(Object o)
+  public boolean deleteTimer(Object o)
+....
+
+As before, Timers are identified by an arbitrary object. All methods are designed to be used in 
+rule conditions or actions.
+
+`createTimer` can be called to create a new Timer associated with `o`. createTimer returns `true` 
+if a new Timer was created and `false` if a Timer associated with `o` already exists.
+
+`getElapsedTimeFromTimer` can be called to obtain the number of elapsed milliseconds since the 
+Timer associated with `o` was created or since the last call to resetTimer. If no timer associated 
+with `o` exists a new timer is created before returning the elapsed time.
+
+`resetTimer` can be called to zero the Timer associated with `o`. It returns the number of seconds 
+since the Timer was created or since the last previous call to `resetTimer` If no timer associated 
+with `o` exists a new timer is created before returning the elapsed time.
+
+`deleteTimer` can be called to delete the Timer associated with `o`. `deleteTimer` returns true if 
+a new Timer was deleted and false if no Timer associated with `o` exists.
+
+==== Recursive Triggering
+
+When a rule is triggered it executes the Java code in the event, condition and action and this may 
+include calls to Helper methods or methods defined by the application under test or by the JVM 
+runtime. If any of these methods match Byteman rules then this may result in a recursive entry to 
+the rule execution engine. In some cases this may be desirable. However, in other cases this 
+recursive entry may cause an infinite triggering chain and it is necessary to disable triggering 
+while the rule executes. For example, the following rule will fail because of this problem:
+
+....
+  RULE infinite triggering chain
+  CLASS java.io.FileOutputStream
+  METHOD open(String, int)
+  AT EXIT
+  BIND filename = $1
+  IF TRUE
+  DO traceln(“openlog”, “Opened “ + $1 + “ for write”)
+  ENDRULE
+....
+
+The problem is that on the first call to builtin method `traceln(Object, String)` the default helper 
+class attempts to open a trace file which it will then associate with key `“openlog”`. In doing so 
+it calls `FileOutputStream.open` and retriggers the rule.
+
+One way round this is to specify a condition which will break the chain. The trace file will have 
+a name of the form “trace _NNN_.txt” so the following version of the rule works as desired:
+
+....
+  RULE infinite triggering chain broken using IF test
+  CLASS java.io.FileOutputStream
+  METHOD open(String, int)
+  AT EXIT
+  BIND filename = $1
+  IF !filename.matches(“trace.*”)
+  DO traceln(“openlog”, “Opened “ + $1 + “ for write”)
+  ENDRULE
+....
+
+With this version the rule is triggered recursively under the call to `traceln` but the condition 
+stops it being fired, breaking the recursion.
+
+Of course in other cases it may not be so simple to come up with a condition which avoids 
+recursive firing. So, the default helper provides the following method which allows triggering to 
+be disabled or re-enabled while the rule is executing
+
+....
+  public boolean setTriggering(boolean enabled)
+....
+
+If enabled is `false` then triggering is disabled during execution of subsequent expressions in 
+the rule body. If it is `true` then triggering is re-enabled.
+
+This can be used to implement the behaviour shown in the example above without the need to 
+identify a suitable conditional
+
+....
+  RULE infinite triggering chain broken using IF test
+  CLASS java.io.FileOutputStream
+  METHOD open(String, int)
+  AT EXIT
+  BIND filename = $1
+  IF TRUE
+  DO setTriggering(false);
+   traceln(“openlog”, “Opened “ + $1 + “ for write”)
+  ENDRULE
+....
+
+Note that once execution of the rule has completed triggering is automatically re-enabled so, in 
+this case, there is no need to call `setTriggering(true)` at the end of the `DO` clause.
+
+Method `setTriggering` always returns boolean value `true`, allowing it to be ANDed into the 
+condition of an `IF` clause or used to initialise a rule variable declared in a `BIND` clause. 
+This is sometimes necessary to ensure that triggering is disabled early, before orther expressions 
+in the `IF` or `BIND` clause are evaluated.
+
+=== Trace and Debug Operations
+
+==== Debugging
+
+The rule engine provides a simple built-in dbug method to support conditional display of messages 
+during rule execution. The API defined by the helper class is
+
+....
+public boolean debug(String message)
+....
+
+`debug` prints the supplied message to `System.out`, prefixed with the name of the rule being 
+executed. It always returns true, allowing debug messages to be used in conditions by `AND`ing 
+them with other boolean expressions.
+
+Generation of debug messages can be switched on by setting the following system property on the 
+JVM command line:
+
+....
+org.jboss.byteman.debug
+....
+
+==== Tracing
+
+The rule engine provides a set of built-in methods to support logging of trace messages during 
+execution. Messages may be logged to `System.out`, `Sytem.err` or to a named file. The API defined 
+by the helper class is the following:
+
+....
+public boolean traceOpen(Object identifier, String filename)
+public boolean traceOpen(Object identifier)
+public boolean traceClose(Object identifier)
+public boolean trace(Object identifier, String message)
+public boolean traceln(Object identifier, String message)
+public boolean trace(String message)
+public boolean traceln(String message)
+....
+
+`traceOpen` opens the file identified by `fileName` and associates it with identifier, returning 
+`true`. `filename` can be either a relative or absolute path. Relative file names are located 
+relative to the current working directory of the JVM. If there is already a file associated with 
+identifier then `traceOpen` immediately returns `false`. If a file with the given name already 
+exists it is opened in append mode. If filename is omitted then a unique name is generated for the 
+file which is guaranteed not to match any existing trace file in the current working directory.
+
+`traceClose` closes the file associated with identifier and removes the association, returning 
+`true`. If no open file is associated with identifier it returns false.
+
+`trace` prints message to file associated with identifier, returning `true`. If no open file is 
+associated with identifier then a file will be opened and associated with identifier as if a call 
+to trace had been made with no file name supplied. If identifier is omitted then the output is 
+written to `System.out`.
+
+`traceln` prints message to file associated with identifier and appends a newline to the file, 
+returning true. If no open file is associated with identifier then a file will be opened and 
+associated with identifier as if a call to trace had been made with no file name supplied. If 
+identifier is omitted then the output is written to `System.out`.
+
+A caveat applies to the above descriptions for three special cases. If identifier is `null` or the 
+string “out”, then `trace` and `traceln` write to `System.out`. If identifier is the string “err”, 
+then `trace` and `traceln` write to `System.err`. `traceOpen` and `traceClose` always return 
+`false` immediately if identifier has any of these values. Calls to `trace(message)` and 
+`traceln(message)` which omit identifier are implemented by calling, respectively, 
+`trace(“out”, message)` and `traceln(“out”, message)`.
+
+=== Stack Management Operations
+
+==== Checking The Call Tree
+ 
+The rule engine provides a set built-in methods which can be used to check the caller stack at the 
+point where the rule was triggered. Obviously, the rule will only be triggered from a method which 
+matches the name in its `METHOD` clause. However, sometimes it is useful to be able to know which 
+method called the trigger rule. For example, the following rule will only fire when method 
+`MyClass.getData()` is called from method `handleIncoming` of class `MyOtherClass`:
+
+....
+RULE trace getData call under handleIncoming
+CLASS MyClass
+METHOD myGetData
+IF callerEquals("MyOtherClass.handleIncoming", true)
+DO traceStack("found the caller!\n", 10)
+ENDRULE
+....
+
+The API defined by the helper class is
+
+....
+public boolean callerEquals(String name)
+public boolean callerEquals(String name,
+                            int frameCount)
+public boolean callerEquals(String name,
+                            int startFrame,
+                            int frameCount)
+public boolean callerEquals(String name,
+                            boolean includeClass)
+public boolean callerEquals(String name,
+                            boolean includeClass,
+                            int frameCount)
+public boolean callerEquals(String name,
+                            boolean includeClass,
+                            int startFrame,
+                            int frameCount)
+public boolean callerEquals(String name,
+                            boolean includeClass,
+                            boolean includePackage)
+public boolean callerEquals(String name,
+                            boolean includeClass,
+                            boolean includePackage,
+                            int frameCount)
+public boolean callerEquals(String name,
+                            boolean includeClass,
+                            boolean includePackage,
+                            int startFrame,
+                            int frameCount)
+
+public boolean callerMatches(String regExp)
+public boolean callerMatches(String regExp,
+                             int frameCount)
+public boolean callerMatches(String regExp,
+                             int startFrame,
+                             int frameCount)
+public boolean callerMatches(String regExp,
+                             boolean includeClass)
+public boolean callerMatches(String regExp,
+                             boolean includeClass,
+                             int frameCount)
+public boolean callerMatches(String regExp,
+                             boolean includeClass,
+                             int startFrame,
+                             int frameCount)
+public boolean callerMatches(String regExp,
+                             boolean includeClass,
+                             boolean includePackage)
+public boolean callerMatches(String regExp,
+                             boolean includeClass,
+                             boolean includePackage,
+                             int frameCount)
+public boolean callerMatches(String regExp,
+                             boolean includeClass,
+                             int startFrame,
+                             int frameCount)
+
+public boolean callerCheck(String match, boolean isRegExp,
+                           boolean includeClass,
+                           boolean includePackage,
+                           int startFrame,
+                           int frameCount) 
+....
+
+The real action happens in method `callerCheck(String, boolean, boolean, boolean, int, int)`. 
+All the other methods call each other defaulting the various missing arguments until they bottom 
+out in a call to this method.
+
+`callerCheck` tests `frameCount` call frames starting from `startFrame` and returns `true` if any 
+of them matches match.
+
+`startFrame` defaults to 1 which identifies the stack frame for the caller of the trigger method 
+(0 can be used to identify the trigger method itself). `framecount` also defaults to 1 which means 
+that when `startFrame` and `frameCount` are defaulted the call only checks the frame for the 
+caller of the trigger method.
+
+`includeClass` and `includePackage` default to `false`. If `includeClass` is false then match is 
+compared against the bare name of the method associated with each selected stack frame. If 
+`includeClass` is true and `includePackage` is false then match is compared to the class qualified 
+method name. If both are `true` then match is compared against the full package and class qualified 
+method name.
+
+If `isRegExp` is true then match is compared as a regular expression compared using 
+`String.matches()` otherwise it compared using `String.equals()`. The `callerEquals` methods pass 
+this argument to `callerCheck` as false and the `callerMatches` methods pass this argument as true.
+
+==== Tracing the Caller Stack
+
+The rule engine provides a set built-in methods which can be used to obtain a string representation 
+of a stack trace or to print a stack trace to a trace file. The API defined by the helper class is
+
+....
+public void traceStack()
+public void traceStack(String prefix)
+public void traceStack(String prefix, Object key)
+public void traceStack(int maxFrames)
+public void traceStack(String prefix, int maxFrames)
+public void traceStack(String prefix,
+                       Object key,
+                       int maxFrames) 
+
+public String formatStack()
+public String formatStack(String prefix)
+public String formatStack(int maxFrames)
+public String formatStack(String prefix, int maxFrames)
+....
+
+The real action happens in methods `traceStack(String, Object, int)` and `formatStack(String, int)`. 
+All the other methods call each other defaulting the various missing arguments until they bottom 
+out in a call to one of these two methods.
+
+`formatStack(String prefix, int maxFrames)` constructs a printable String representation of the 
+stack starting from the trigger frame, including the fully qualified method name, file and line 
+number for each frame followed by a new line.
+
+If `prefix` is non-null it prepended to the generated text. It defaults to `null` resulting in the 
+prefix "`Stack trace for thread $$<$$_current_$$>$$\n`" being used as the prefix where $$<$$_current_$$>$$ 
+is substituted with the value of `Thread.currentThread().getName()`.
+
+If `maxFrames` is positive and less than the number of frames in the stack then it is used to 
+limit the number of frames printed and the text "`...\n`" is appended to the returned value. 
+Otherwise all frames in the stack are included. `maxFrames` defaults to 0.
+
+`traceStack(String prefix, Object key, int maxFrames)` constructs a stack trace by calling 
+`formatStack(key, maxFrames)`. It then prints this to a trace file by calling `trace(key, <value>)`. 
+As before, `prefix` defaults to `null` and `maxFrames` to 0. key defaults to "out" so this means 
+that where it is omitted the trace printout will go to `System.out`.
+
+==== Selective Stack Tracing Using a Regular Expression Filter
+
+It is useful to be able to selectively filter a stack trace, limiting it, say, to include only 
+frames from a given package or set of packages. The rule engine provides an alternative set of 
+built-in methods which can be used to obtain or print a string representation of some subset of 
+the stack filtered using a regular expression match. The API defined by the helper class is
+
+....
+public void traceStackMatching(String regExp)
+public void traceStackMatching(String regExp, String prefix)
+public void traceStackMatching(String regExp,
+                               String prefix,
+                               Object key)
+public void traceStackMatching(String regExp,
+                               boolean includeClass)
+public void traceStackMatching(String regExp,
+                               boolean includeClass,
+                               String prefix)
+public void traceStackMatching(String regExp,
+                               boolean includeClass,
+                               String prefix,
+                               Object key)
+public void traceStackMatching(String regExp,
+                               boolean includeClass,
+                               boolean includePackage)
+public void traceStackMatching(String regExp,
+                               boolean includeClass,
+                               boolean includePackage,
+                               String prefix)
+public void traceStackMatching(String regExp,
+                               boolean includeClass,
+                               boolean includePackage,
+                               String prefix,
+                               Object key)
+
+public void formatStackMatching(String regExp)
+public void formatStackMatching(String regExp, String prefix)
+public void formatStackMatching(String regExp,
+                                boolean includeClass)
+public void formatStackMatching(String regExp,
+                                boolean includeClass,
+                                String prefix)
+public void formatStackMatching(String regExp,
+                                boolean includeClass,
+                                boolean includePackage)
+public void formatStackMatching(String regExp,
+                                boolean includeClass,
+                                boolean includePackage,
+                                String prefix)
+....
+
+Once again the action happens in the methods with the full set of parameters and the others merely 
+call these methods defaulting the omitted arguments.
+
+`formatStackMatching(String regExp, boolean includeClass, boolean includePackage, String prefix)` 
+constructs a printable String representation of the stack prefixed by prefix as per `formatStack` 
+with the difference that frames are only included if they match the regular expression `regExp`. 
+`includeClass` and `includePackage` are defaulted and interpreted exactly as described in the 
+`callerMatches` API. If `prefix` is `null` (the default) then the string "`Stack trace for thread 
+$$<$$_current_$$>$$  matching regExp\n`" is used as the prefix where $$<$$_current_$$>$$ is 
+substituted with the value of `Thread.currentThread().getName()` and `regExp` is substituted with 
+the value of `regExp`. 
+
+`traceStackMatching(regExp, includeClass, includePackage, prefix, key)` calls `formatStackMatching` 
+to obtain a stack trace and then calls `trace(String, Object)` to print it to the trace stream 
+identified by `key`. `key` defaults as described in the `traceStack` API listed above.
+
+==== Stack Range Tracing
+
+Another option for selective stack tracing is to specify a matching expression to select the start 
+and end frame for the trace. The rule engine provides another set of built-in methods which can be 
+used to obtain or print a string representation of a segment of the stack in this manner. The API 
+defined by the helper class is
+
+....
+public void traceStackBetween(String from, String to)
+public void traceStackBetween(String from, String to,
+                              String prefix)
+public void traceStackBetween(String from, String to,
+                              String prefix, Object key)
+public void traceStackBetween(String from, String to,
+                              boolean includeClass)
+public void traceStackBetween(String from, String to,
+                              boolean includeClass,
+                              String prefix)
+public void traceStackBetween(String from, String to,
+                              boolean includeClass,
+                              String prefix, Object key)
+public void traceStackBetween(String from, String to,
+                              boolean includeClass,
+                              boolean includePackage)
+public void traceStackBetween(String from, String to,
+                              boolean includeClass,
+                              boolean includePackage,
+                              String prefix)
+public void traceStackBetween(String from, String to,
+                              boolean includeClass,
+                              boolean includePackage,
+                              String prefix, Object key)
+
+public void formatStackBetween(String from, String to)
+public void formatStackBetween(String from, String to,
+                               String prefix)
+public void formatStackBetween(String from, String to,
+                               boolean includeClass)
+public void formatStackBetween(String from, String to,
+                               boolean includeClass,
+                               String prefix)
+public void formatStackBetween(String from, String to,
+                               boolean includeClass,
+                               boolean includePackage)
+public void formatStackBetween(String from, String to,
+                               boolean includeClass,
+                               boolean includePackage,
+                               String prefix)
+
+public void traceStackBetweenMatches(String from, String to)
+public void traceStackBetweenMatches(String from, String to,
+                                     String prefix)
+public void traceStackBetweenMatches(String from,String to,
+                                     String prefix,
+                                     Object key)
+public void traceStackBetweenMatches(String from, String to,
+                                     boolean includeClass)
+public void traceStackBetweenMatches(String from, String to,
+                                     boolean includeClass,
+                                     String prefix)
+public void traceStackBetweenMatches(String from, String to,
+                                     boolean includeClass,
+                                     String prefix,
+                                     Object key)
+public void traceStackBetweenMatches(String from, String to,
+                                     boolean includeClass,
+                                     boolean includePackage)
+public void traceStackBetweenMatches(String from, String to,
+                                     boolean includeClass,
+                                     boolean includePackage,
+                                     String prefix)
+public void traceStackBetweenMatches(String from, String to,
+                                     boolean includeClass,
+                                     boolean includePackage,
+                                     String prefix,
+                                     Object key)
+
+public void formatStackBetweenMatches(String from, String to)
+public void formatStackBetweenMatches(String from, String to,
+                                      String prefix)
+public void formatStackBetweenMatches(String from, String to,
+                                      boolean includeClass)
+public void formatStackBetweenMatches(String from, String to,
+                                      boolean includeClass,
+                                      String prefix)
+public void formatStackBetweenMatches(String from, String to,
+                                      boolean includeClass,
+                                      boolean includePackage)
+public void formatStackBetweenMatches(String from, String to,
+                                      boolean includeClass,
+                                      boolean includePackage,
+                                      String prefix)
+
+public void traceStackRange(String from, String to,
+                            boolean isRegExp,
+                            boolean includeClass,
+                            boolean includePackage,
+                            String prefix, Object key) 
+public String formatStackRange(String from, String to,
+                            boolean isRegExp,
+                            boolean includeClass,
+                            boolean includePackage,
+                            String prefix)
+....
+
+Once again the action happens in the last two methods and all the other methods merely provide a 
+way of calling them with default values for various of the parameters. The `BetweenMatches` methods 
+pass `true` for parameter `isRegExp` whereas the plain Matches methods pass `false`.
+
+`formatStackRange` searches the stack starting from the trigger frame for a stack frame which 
+matches `from`. If no match is found then "" is returned. If `from` is `null` then the trigger 
+frame is taken to be the start frame. It then searches the frames above the start frame for a frame 
+which matches to. If no match is found or if to is null then all frames above the start frame are 
+selected. Details of each frame in the matching range are appended to the supplied prefix to 
+construct the return value. If `isRegExp` is `true` then the start and end frame are matched using 
+`String.matches()` otherwise `String.equals()` is used. `includeClass` and `includePackage` are 
+defaulted and interpreted as per method `formatStackMatching`. If `prefix` is `null` (the default) 
+then the string "`Stack trace (restricted) for thread $$<$$_current_$$>$$\n`" is used as the prefix 
+where $$<$$_current_$$>$$ is substituted with the value of `Thread.currentThread().getName()`. 
+
+`traceStackRange` calls  `formatStackRange` to obtain a trace of a stack range and then calls 
+`trace(Object, String)` to print it to a trace file. `key` defaults to "out" as for the other stack 
+trace APIs described above.
+
+==== Tracing Named Thread Stacks
+
+The default helper class also provides methods which can be used to trace or format the stack 
+frames of a specific, named thread:
+
+....
+public void traceThreadStack(String threadName)
+public void traceThreadStack(String threadName,
+                             String prefix)
+public void traceThreadStack(String threadName,
+                             String prefix,
+                             Object key)
+public void traceThreadStack(String threadName,
+                             int maxFrames)
+public void traceThreadStack(String threadName,
+                             String prefix,
+                             int maxFrames)
+public void traceThreadStack(String threadName,
+                             String prefix,
+                             Object key,
+                             int maxFrames)
+
+public void formatThreadStack(String threadName)
+public void formatThreadStack(String threadName,
+                             String prefix)
+
+public void traceThreadStack(String threadName,
+                             int maxFrames)
+public void traceThreadStack(String threadName,
+                             String prefix,
+                             int maxFrames)
+....
+
+or to trace or format the stacks of all threads in the runtime:
+
+....
+public void traceAllStacks()
+public void traceAllStacks(String prefix)
+public void traceAllStacks(String prefix, Object key)
+public void traceAllStacks(int maxFrames)
+public void traceAllStacks(String prefix, int maxFrames)
+public void traceAllStacks(String prefix, Object key, int maxFrames)
+public void formatAllStacks()
+public void formatAllStacks(String prefix)
+public void formatAllStacks(int maxFrames)
+public void formatAllStacks(String prefix , int maxFrames)
+....
+
+=== Default Helper Lifecycle Methods
+
+The default helper provides an implementation of the four helper lifecycle methods which generate 
+simple debug messages to `System.out`. So, with debug enabled you will see messages like the 
+following as rules are loaded and then unloaded:
+
+....
+Default helper activated
+Installed rule using default helper : my test rule
+. . .
+Installed rule using default helper : my second test rule
+. . .
+Uninstalled rule using default helper : my test rule
+Uninstalled rule using default helper : my second test rule
+Default helper deactivated
+....
+

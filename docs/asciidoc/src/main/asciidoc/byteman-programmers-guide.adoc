@@ -1,0 +1,44 @@
+= Byteman Programmer's Guide
+
+{doc-date} +
+{project-version}
+
+*Legal Notices* +
+The information contained in this documentation is subject to change without notice.
+Red Hat Middleware makes no warranty of any kind with regard to this material, including,
+but not limited to, the implied warranties of merchantability and fitness for a particular
+purpose. Red Hat Middleware shall not be liable for errors contained herein or for
+incidental or consequential damages in connection with the furnishing, performance, or
+use of this material.
+
+*Copyright* +
+JBoss, Home of Professional Open Source. Copyright 2008-2012, Red Hat and individual
+contributors by the @authors tag. See the copyright.txt in the distribution for a full listing of
+individual contributors.
+
+This copyrighted material is made available to anyone wishing to use, modify, copy, or
+redistribute it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation; either version 2.1 of the License, or (at your option) any
+later version.. This material is distributed in the hope that it will be useful, but WITHOUT A
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License along with
+this software; if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+Boston, MA 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+
+*Restricted Rights Legend* +
+Use, duplication, or disclosure is subject to restrictions as set forth in contract subdivision
+(c)(1)(ii) of the Rights in Technical Data and Computer Software clause 52.227-FAR14.
+
+<<< 
+
+include::chapters/Introduction.adoc[]
+
+include::chapters/Byteman-Rule-Language.adoc[]
+
+include::chapters/Byteman-Rule-Language-Standard-Built-Ins.adoc[]
+
+include::chapters/Using-Byteman.adoc[]
+
