@@ -303,7 +303,7 @@ public class MethodExpression extends Expression
                 Method method = bestMatchCandidate(candidates, expected);
 
                 if (method != null) {
-                    if (!Modifier.isPublic(method.getModifiers())) {
+                    if (!Modifier.isPublic(method.getModifiers()) || !Modifier.isPublic(method.getDeclaringClass().getModifiers())) {
                         // see if we can actually access this method
                         try {
                             method.setAccessible(true);
