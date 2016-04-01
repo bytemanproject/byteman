@@ -287,8 +287,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.5</version>
-                </plugin>
+w                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
@@ -440,7 +439,7 @@
                 <id>sonatype-releases-repository</id>
                 <username>NNNNNNNN</username>
                 <password>PPPPPPPP</password>
-              </server>
+              </server>M<
               <server>
                 <id>sonatype-snapshots-repository</id>
                 <username>NNNNNNNN</username>
@@ -456,6 +455,7 @@
                   <plugin>
                       <groupId>org.apache.maven.plugins</groupId>
                       <artifactId>maven-gpg-plugin</artifactId>
+                      <version>1.5</version>
                       <configuration>
                           <passphrase>${gpg.passphrase}</passphrase>
                           <useAgent>${gpg.useAgent}</useAgent>
