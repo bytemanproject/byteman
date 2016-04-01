@@ -597,8 +597,9 @@ public class MethodExpression extends Expression
      * return the method whose signature is the best fit for the call argument types. the selection
      * is made by counting the number of cases where the argument type matches the parameter type
      * exactly and then the number of cases where the argument type matches the parameter type without
-     * the need for type coersion (i.e. the parameter tyoe is a supertype of the argument type)
+     * the need for type coercion (i.e. the parameter tyoe is a supertype of the argument type)
      * @param candidates a list of methods all of whose signatures are assignable from the
+     * @param expected an expected type which may or may not constrain the method return type
      *
      * @return the best match if there is a unique one otherwise NULL
      */

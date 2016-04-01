@@ -121,6 +121,7 @@ public class Helper
     
     /**
      * punts to static call Helper.dotrace(identifier, message).
+     * @param identifier an identifier used subsequently to identify the trace output stream
      * @param message the message to be printed
      * @return true
      */
@@ -141,6 +142,7 @@ public class Helper
 
     /**
      * punts to static call dotraceln(identifier, message).
+     * @param identifier an identifier used subsequently to identify the trace output stream
      * @param message the message to be traced
      * @return true
      */
