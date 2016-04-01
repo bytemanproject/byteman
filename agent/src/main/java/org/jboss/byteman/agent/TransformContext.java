@@ -361,7 +361,7 @@ public class TransformContext
     /**
      * return a unique string key identifying a specific rule compiled against some class and method/signature in the
      * context of a specific class loader
-     * @return
+     * @return a unique string key
      */
     private String getRuleKey(String triggerMethodName, String triggerMethodDescriptor)
     {

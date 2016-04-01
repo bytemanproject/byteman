@@ -9,7 +9,7 @@ public interface ModuleSystem <CL extends ClassLoader>
     /**
      * dynamically load and return a generated helper adapter classes using a custom classloader derived from the
      * trigger class's loader
-     * @param helperLoader, the class loader of the trigger class which has been matched with this
+     * @param helperLoader the class loader of the trigger class which has been matched with this
      * helper class's rule
      * @param helperAdapterName the name of the helper adapter class to be loaded
      * @param helperBytes the byte array defining the class
