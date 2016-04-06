@@ -123,7 +123,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                          <forkCount>1</forkCount>
+                          <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/javaops/TestArithmetic.class</include>
                          </includes>
@@ -138,7 +139,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                          <forkCount>1</forkCount>
+                          <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/javaops/TestArray.class</include>
                          </includes>
@@ -153,7 +155,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/javaops/TestAssign.class</include>
                          </includes>
@@ -168,7 +171,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/javaops/TestComparison.class</include>
                          </includes>
@@ -183,7 +187,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/javaops/TestField.class</include>
                          </includes>
@@ -198,7 +203,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/javaops/TestLogical.class</include>
                          </includes>
@@ -213,7 +219,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/javaops/TestMethod.class</include>
                          </includes>
@@ -228,7 +235,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/javaops/TestNew.class</include>
                          </includes>
@@ -243,7 +251,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/javaops/TestClassLiteral.class</include>
                          </includes>
@@ -259,7 +268,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/location/TestAll.class</include>
                          </includes>
@@ -274,7 +284,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/location/TestCall.class</include>
                          </includes>
@@ -289,7 +300,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/location/TestEntry.class</include>
                          </includes>
@@ -304,7 +316,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/location/TestExit.class</include>
                          </includes>
@@ -319,7 +332,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/location/TestExceptionExit.class</include>
                          </includes>
@@ -335,7 +349,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/location/TestLine.class</include>
                          </includes>
@@ -350,7 +365,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/location/TestReadWrite.class</include>
                          </includes>
@@ -365,7 +381,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/location/TestReadWriteParams.class</include>
                          </includes>
@@ -380,7 +397,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/location/TestSynch.class</include>
                          </includes>
@@ -395,7 +413,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/location/TestThrow.class</include>
                          </includes>
@@ -411,7 +430,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/helpertests/TestCallerMatches.class</include>
                          </includes>
@@ -426,7 +446,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/helpertests/TestStackTrace.class</include>
                          </includes>
@@ -441,7 +462,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/helpertests/TestLinkMap.class</include>
                          </includes>
@@ -457,7 +479,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/misc/TestInterfaceInjection.class</include>
                          </includes>
@@ -472,7 +495,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/misc/TestInvokeParamBinding.class</include>
                          </includes>
@@ -487,7 +511,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/misc/TestOverridingInjection.class</include>
                          </includes>
@@ -502,7 +527,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/misc/TestOverridingInterfaceInjection.class</include>
                          </includes>
@@ -517,7 +543,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/misc/TestParamBinding.class</include>
                          </includes>
@@ -532,7 +559,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/misc/TestRecursiveTriggers.class</include>
                          </includes>
@@ -547,7 +575,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/misc/TestReturnBindingAssignment.class</include>
                          </includes>
@@ -562,7 +591,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/misc/TestReturnBinding.class</include>
                          </includes>
@@ -577,7 +607,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/misc/TestThrowBinding.class</include>
                          </includes>
@@ -592,7 +623,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/misc/TestTriggerClassMethodBinding.class</include>
                          </includes>
@@ -608,7 +640,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/misc/TestDowncast.class</include>
                          </includes>
@@ -625,7 +658,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestEmptySignature.class</include>
                          </includes>
@@ -640,7 +674,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestEnclosedSynchronizationPropagation.class</include>
                          </includes>
@@ -655,7 +690,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestInterfaceHierarchy.class</include>
                          </includes>
@@ -670,7 +706,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestMethodActualAgainstFormal.class</include>
                          </includes>
@@ -685,7 +722,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestMethodClauseReturnType.class</include>
                          </includes>
@@ -707,7 +745,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestMethodClauseReturnTypeDynamic.class</include>
                          </includes>
@@ -722,7 +761,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestMethodParamAssign.class</include>
                          </includes>
@@ -737,7 +777,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestMethodParamName.class</include>
                          </includes>
@@ -752,7 +793,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestMultiMethodMatch.class</include>
                          </includes>
@@ -767,7 +809,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestPromotePrimitiveToObject.class</include>
                          </includes>
@@ -782,7 +825,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestStringAsCharSequence.class</include>
                          </includes>
@@ -797,7 +841,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestThrowAction.class</include>
                          </includes>
@@ -812,7 +857,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestThrowError.class</include>
                          </includes>
@@ -827,7 +873,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestThrowRuleInjection.class</include>
                          </includes>
@@ -842,7 +889,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestWaitAfterSignalWakeMustMeet.class</include>
                          </includes>
@@ -857,7 +905,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestThrowRuntimeException.class</include>
                          </includes>
@@ -872,7 +921,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestAfterCallAssign.class</include>
                          </includes>
@@ -887,7 +937,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestAbstractInterfaceCall.class</include>
                          </includes>
@@ -902,7 +953,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestMaxStackComputation.class</include>
                          </includes>
@@ -917,7 +969,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestBooleanComparisons.class</include>
                          </includes>
@@ -932,7 +985,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestStackHeight.class</include>
                          </includes>
@@ -947,7 +1001,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestLocalUpdateType.class</include>
                          </includes>
@@ -962,7 +1017,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestRendezvousTimeout.class</include>
                          </includes>
@@ -977,7 +1033,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestJoinWaitTimeout.class</include>
                          </includes>
@@ -992,7 +1049,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestPlusExpressionCoerce.class</include>
                          </includes>
@@ -1007,7 +1065,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestArrayArgTypeCheck.class</include>
                          </includes>
@@ -1022,7 +1081,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestBooleanLocal.class</include>
                          </includes>
@@ -1037,7 +1097,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestDoubleEntryBookKeeping.class</include>
                          </includes>
@@ -1052,7 +1113,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestConstructorArgUpcast.class</include>
                          </includes>
@@ -1071,7 +1133,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/submit/TestSubmit.class</include>
                          </includes>
@@ -1088,7 +1151,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/javaops/TestArithmetic.class</include>
                             </includes>
@@ -1103,7 +1167,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/javaops/TestArray.class</include>
                             </includes>
@@ -1118,7 +1183,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/javaops/TestAssign.class</include>
                             </includes>
@@ -1133,7 +1199,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/javaops/TestComparison.class</include>
                             </includes>
@@ -1148,7 +1215,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/javaops/TestField.class</include>
                             </includes>
@@ -1163,7 +1231,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/javaops/TestLogical.class</include>
                             </includes>
@@ -1178,7 +1247,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/javaops/TestMethod.class</include>
                             </includes>
@@ -1193,7 +1263,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/javaops/TestNew.class</include>
                             </includes>
@@ -1208,7 +1279,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/javaops/TestClassLiteral.class</include>
                             </includes>
@@ -1224,7 +1296,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/location/TestAll.class</include>
                             </includes>
@@ -1239,7 +1312,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/location/TestCall.class</include>
                             </includes>
@@ -1254,7 +1328,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/location/TestEntry.class</include>
                             </includes>
@@ -1269,7 +1344,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/location/TestExit.class</include>
                             </includes>
@@ -1284,7 +1360,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/location/TestExceptionExit.class</include>
                             </includes>
@@ -1299,7 +1376,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/location/TestLine.class</include>
                             </includes>
@@ -1314,7 +1392,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/location/TestReadWrite.class</include>
                             </includes>
@@ -1329,7 +1408,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/location/TestReadWriteParams.class</include>
                             </includes>
@@ -1344,7 +1424,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/location/TestSynch.class</include>
                             </includes>
@@ -1359,7 +1440,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/location/TestThrow.class</include>
                             </includes>
@@ -1375,7 +1457,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/helpertests/TestCallerMatches.class</include>
                             </includes>
@@ -1390,7 +1473,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/helpertests/TestStackTrace.class</include>
                             </includes>
@@ -1405,7 +1489,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/helpertests/TestLinkMap.class</include>
                             </includes>
@@ -1421,7 +1506,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/misc/TestInterfaceInjection.class</include>
                             </includes>
@@ -1436,7 +1522,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/misc/TestInvokeParamBinding.class</include>
                             </includes>
@@ -1451,7 +1538,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/misc/TestOverridingInjection.class</include>
                             </includes>
@@ -1466,7 +1554,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/misc/TestOverridingInterfaceInjection.class</include>
                             </includes>
@@ -1481,7 +1570,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/misc/TestParamBinding.class</include>
                             </includes>
@@ -1496,7 +1586,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/misc/TestRecursiveTriggers.class</include>
                             </includes>
@@ -1511,7 +1602,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/misc/TestReturnBindingAssignment.class</include>
                             </includes>
@@ -1526,7 +1618,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/misc/TestReturnBinding.class</include>
                             </includes>
@@ -1541,7 +1634,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/misc/TestThrowBinding.class</include>
                             </includes>
@@ -1556,7 +1650,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/misc/TestTriggerClassMethodBinding.class</include>
                          </includes>
@@ -1571,7 +1666,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/misc/TestDowncast.class</include>
                          </includes>
@@ -1587,7 +1683,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestEmptySignature.class</include>
                             </includes>
@@ -1602,7 +1699,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestEnclosedSynchronizationPropagation.class</include>
                             </includes>
@@ -1617,7 +1715,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestInterfaceHierarchy.class</include>
                             </includes>
@@ -1632,7 +1731,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestMethodActualAgainstFormal.class</include>
                             </includes>
@@ -1647,7 +1747,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestMethodClauseReturnType.class</include>
                             </includes>
@@ -1662,7 +1763,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestMethodParamAssign.class</include>
                             </includes>
@@ -1677,7 +1779,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestMethodParamName.class</include>
                             </includes>
@@ -1692,7 +1795,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestMultiMethodMatch.class</include>
                             </includes>
@@ -1707,7 +1811,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestPromotePrimitiveToObject.class</include>
                             </includes>
@@ -1722,7 +1827,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestStringAsCharSequence.class</include>
                             </includes>
@@ -1737,7 +1843,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestThrowAction.class</include>
                             </includes>
@@ -1752,7 +1859,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestThrowError.class</include>
                             </includes>
@@ -1767,7 +1875,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestThrowRuleInjection.class</include>
                             </includes>
@@ -1782,7 +1891,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/bugfixes/TestWaitAfterSignalWakeMustMeet.class</include>
                             </includes>
@@ -1797,7 +1907,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestThrowRuntimeException.class</include>
                          </includes>
@@ -1812,7 +1923,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestAfterCallAssign.class</include>
                          </includes>
@@ -1827,7 +1939,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestAbstractInterfaceCall.class</include>
                          </includes>
@@ -1842,7 +1955,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestMaxStackComputation.class</include>
                          </includes>
@@ -1857,7 +1971,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestBooleanComparisons.class</include>
                          </includes>
@@ -1872,7 +1987,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestStackHeight.class</include>
                          </includes>
@@ -1887,7 +2003,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestLocalUpdateType.class</include>
                          </includes>
@@ -1902,7 +2019,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestRendezvousTimeout.class</include>
                          </includes>
@@ -1917,7 +2035,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestJoinWaitTimeout.class</include>
                          </includes>
@@ -1932,7 +2051,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestPlusExpressionCoerce.class</include>
                          </includes>
@@ -1947,7 +2067,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestArrayArgTypeCheck.class</include>
                          </includes>
@@ -1962,7 +2083,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestBooleanLocal.class</include>
                          </includes>
@@ -1977,7 +2099,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestDoubleEntryBookKeeping.class</include>
                          </includes>
@@ -1992,7 +2115,8 @@
                         <goal>verify</goal>
                       </goals>
                       <configuration>
-                         <forkMode>once</forkMode>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestConstructorArgUpcast.class</include>
                          </includes>
@@ -2011,7 +2135,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>once</forkMode>
+                            <forkCount>1</forkCount>
+                            <reuseForks>true</reuseForks>
                             <includes>
                                 <include>org/jboss/byteman/tests/submit/TestSubmit.class</include>
                             </includes>
@@ -2027,8 +2152,9 @@
                             <goal>verify</goal>
                         </goals>
 						<configuration>
-                            <forkMode>once</forkMode>
-							<test>TestRuleCheck</test>
+                            <forkCount>1</forkCount>
+                            <reuseForks>true</reuseForks>
+                            <test>TestRuleCheck</test>
                             <includes>
                                 <include>org/jboss/byteman/tests/check/TestRuleCheck.class</include>
                             </includes>

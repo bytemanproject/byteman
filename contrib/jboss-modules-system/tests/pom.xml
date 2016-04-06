@@ -189,7 +189,8 @@
 							<goal>verify</goal>
 						</goals>
 						<configuration>
-							<forkMode>always</forkMode>
+							<forkCount>1</forkCount>
+							<reuseForks>false</reuseForks>
 							<useSystemClassLoader>true</useSystemClassLoader>
 							<useManifestOnlyJar>false</useManifestOnlyJar>
 							<reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport_Local</reportsDirectory>
@@ -216,7 +217,8 @@
 							<goal>verify</goal>
 						</goals>
 						<configuration>
-							<forkMode>always</forkMode>
+							<forkCount>1</forkCount>
+							<reuseForks>false</reuseForks>
 							<useSystemClassLoader>true</useSystemClassLoader>
 							<useManifestOnlyJar>false</useManifestOnlyJar>
 							<reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport_Local-compiled</reportsDirectory>
@@ -243,7 +245,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>always</forkMode>
+							<forkCount>1</forkCount>
+							<reuseForks>false</reuseForks>
                             <useSystemClassLoader>true</useSystemClassLoader>
                             <useManifestOnlyJar>false</useManifestOnlyJar>
                             <reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport_Global</reportsDirectory>
@@ -270,7 +273,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>always</forkMode>
+							<forkCount>1</forkCount>
+							<reuseForks>false</reuseForks>
                             <useSystemClassLoader>true</useSystemClassLoader>
                             <useManifestOnlyJar>false</useManifestOnlyJar>
                             <reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport_Global-compiled</reportsDirectory>
@@ -297,7 +301,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>always</forkMode>
+							<forkCount>1</forkCount>
+							<reuseForks>false</reuseForks>
                             <useSystemClassLoader>true</useSystemClassLoader>
                             <useManifestOnlyJar>false</useManifestOnlyJar>
                             <reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport_Clearing</reportsDirectory>
@@ -324,7 +329,8 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <forkMode>always</forkMode>
+							<forkCount>1</forkCount>
+							<reuseForks>false</reuseForks>
                             <useSystemClassLoader>true</useSystemClassLoader>
                             <useManifestOnlyJar>false</useManifestOnlyJar>
                             <reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestImport_Clearing-compiled</reportsDirectory>
@@ -352,7 +358,8 @@
 							<goal>verify</goal>
 						</goals>
 						<configuration>
-							<forkMode>always</forkMode>
+							<forkCount>1</forkCount>
+							<reuseForks>false</reuseForks>
 							<useSystemClassLoader>true</useSystemClassLoader>
 							<useManifestOnlyJar>false</useManifestOnlyJar>
 							<reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestHelper</reportsDirectory>
@@ -377,7 +384,8 @@
 							<goal>verify</goal>
 						</goals>
 						<configuration>
-							<forkMode>always</forkMode>
+							<forkCount>1</forkCount>
+							<reuseForks>false</reuseForks>
 							<useSystemClassLoader>true</useSystemClassLoader>
 							<useManifestOnlyJar>false</useManifestOnlyJar>
 							<reportsDirectory>${project.build.directory}/failsafe-reports/jbossmodules.TestHelper-compiled</reportsDirectory>
