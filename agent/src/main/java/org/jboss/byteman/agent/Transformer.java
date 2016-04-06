@@ -325,9 +325,8 @@ public class Transformer implements ClassFileTransformer {
                     // when we have a class in the bootstrap loader
                     checker = getClassChecker(superName, originalLoader);
 
-                    if (checker == null || checker.hasOuterClass()) {
-                        // we don't transform inner classes for now
-                        // TODO -- see if we can match and transform inner classes via the outer class
+                    if (checker == null) {
+                        // we must have a super to continue
                         break;
                     }
 
