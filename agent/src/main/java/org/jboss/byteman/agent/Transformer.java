@@ -28,6 +28,7 @@ import org.jboss.byteman.agent.check.ClassChecker;
 import org.jboss.byteman.agent.check.LoadCache;
 import org.jboss.byteman.modules.ModuleSystem;
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.rule.helper.Helper;
 import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.rule.exception.ParseException;
 import org.jboss.byteman.rule.exception.TypeException;
@@ -43,6 +44,7 @@ import java.util.*;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.File;
+
 
 /**
  * byte code transformer used to introduce byteman events into JBoss code
@@ -824,8 +826,8 @@ public class Transformer implements ClassFileTransformer {
                     // with whatever other transforms succeed. we tarce the throwable to
                     // System.err just to ensure it can be seen.
 
-                    System.err.println("Transformer.transform : caught throwable " + th);
-                    th.printStackTrace(System.err);
+                    Helper.err("Transformer.transform : caught throwable " + th);
+                    Helper.errTraceException(th);
                 }
             }
         }
