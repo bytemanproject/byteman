@@ -154,7 +154,12 @@ public class Instrumentor
             String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_remotetrace_entry";
 
             RuleBuilder ruleBuilder = new RuleBuilder(ruleName);
-            ruleBuilder.onClass(className).inMethod(methodName).atEntry();
+            if(isInterface(className)) {
+                ruleBuilder.onInterface(className);
+            } else {
+                ruleBuilder.onClass(className);
+            }
+            ruleBuilder.inMethod(methodName).atEntry();
             ruleBuilder.usingHelper(BytemanTestHelper.class);
             ruleBuilder.doAction("setTriggering(false), debug(\"firing "+ruleName+"\", $0), remoteTrace(\""+className+"\", \""+methodName+"\", $*)");
             ruleScriptBuilder.append(ruleBuilder.toString());
@@ -198,7 +203,20 @@ public class Instrumentor
      */
     public void injectOnCall(Class clazz, String methodName, String action) throws Exception
     {
-        injectOnMethod(clazz, methodName, "true", action, "ENTRY");
+        injectOnCall(clazz.getCanonicalName(), methodName, action);
+    }
+
+    /**
+     * Inject an action to take place upon the invocation of the specified class.method
+     *
+     * @param className The name of the Class in which the injection point resides.
+     * @param methodName The method which should be intercepted.
+     * @param action The action that should take place upon invocation of the method.
+     * @throws Exception in case of failure.
+     */
+    public void injectOnCall(String className, String methodName, String action) throws Exception
+    {
+        injectOnMethod(className, methodName, "true", action, "ENTRY");
     }
 
     /**
@@ -211,7 +229,20 @@ public class Instrumentor
      */
     public void injectOnExit(Class clazz, String methodName, String action) throws Exception
     {
-        injectOnMethod(clazz, methodName, "true", action, "EXIT");
+        injectOnExit(clazz.getCanonicalName(), methodName, action);
+    }
+
+    /**
+     * Inject an action to take place upon exit of the specified class.method
+     *
+     * @param className The name of the Class in which the injection point resides.
+     * @param methodName The method which should be intercepted.
+     * @param action The action that should take place upon invocation of the method.
+     * @throws Exception in case of failure.
+     */
+    public void injectOnExit(String className, String methodName, String action) throws Exception
+    {
+        injectOnMethod(className, methodName, "true", action, "EXIT");
     }
 
     /**
@@ -224,14 +255,26 @@ public class Instrumentor
      * @param condition the rule condition
      * @throws Exception in case of failure.
      */
-    public void injectOnMethod(Class clazz, String methodName, String condition, String action, String where) throws Exception
+    public void injectOnMethod(Class clazz, String methodName, String condition, String action, String where) throws Exception {
+    	injectOnMethod(clazz.getCanonicalName(), methodName, condition, action, where);
+	}
+
+    /**
+     * Inject an action to take place at a given point within the specified class.method
+     *
+     * @param className The name of the Class in which the injection point resides.
+     * @param methodName The method which should be intercepted.
+     * @param action The action that should take place upon invocation of the method.
+     * @param where the injection point e.g. "ENTRY".
+     * @param condition the rule condition
+     * @throws Exception in case of failure.
+     */
+    public void injectOnMethod(String className, String methodName, String condition, String action, String where) throws Exception
     {
-        String className = clazz.getCanonicalName();
         String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_injectionat"+where;
 
         RuleBuilder ruleBuilder = new RuleBuilder(ruleName);
-        if(clazz.isInterface()) 
-        {
+        if(isInterface(className)) {
             ruleBuilder.onInterface(className);
         } else {
             ruleBuilder.onClass(className);
@@ -283,7 +326,12 @@ public class Instrumentor
         actionBuilder.append(")"+"\n");
 
         RuleBuilder ruleBuilder = new RuleBuilder(ruleName);
-        ruleBuilder.onClass(className).inMethod(methodName).atEntry();
+        if(isInterface(className)) {
+            ruleBuilder.onInterface(className);
+        } else {
+            ruleBuilder.onClass(className);
+        }
+        ruleBuilder.inMethod(methodName).atEntry();
         ruleBuilder.usingHelper(BytemanTestHelper.class);
         ruleBuilder.whenTrue().doAction(actionBuilder.toString());        
 
@@ -299,8 +347,7 @@ public class Instrumentor
      */
     public void crashAtMethodExit(Class clazz, String methodName) throws Exception
     {
-        String className = clazz.getCanonicalName();
-        crashAtMethod(className, methodName, "EXIT");
+        crashAtMethodExit(clazz.getCanonicalName(), methodName);
     }
 
     /**
@@ -324,8 +371,7 @@ public class Instrumentor
      */
     public void crashAtMethodEntry(Class clazz, String methodName) throws Exception
     {
-        String className = clazz.getCanonicalName();
-        crashAtMethod(className, methodName, "ENTRY");
+        crashAtMethodEntry(clazz.getCanonicalName(), methodName);
     }
 
     /**
@@ -355,7 +401,12 @@ public class Instrumentor
         String action = "debug(\"killing JVM\"), killJVM()";
 
         RuleBuilder ruleBuilder = new RuleBuilder(ruleName);
-        ruleBuilder.onClass(className).inMethod(methodName).at(where);
+        if(isInterface(className)) {
+            ruleBuilder.onInterface(className);
+        } else {
+            ruleBuilder.onClass(className);
+        }
+        ruleBuilder.inMethod(methodName).at(where);
         ruleBuilder.usingHelper(BytemanTestHelper.class);
         ruleBuilder.whenTrue().doAction(action);
         
@@ -474,5 +525,31 @@ public class Instrumentor
     {
         submit.deleteScripts(installedScripts);
         removeLocalState();
+    }
+
+    /**
+     * Trying to load a class and if successful then check if class is interface.
+     * If it's then returns true. In all other cases returns false.
+     */
+    private boolean isInterface(String className) {
+        Class clazz = null;
+        try {
+            clazz = Class.forName(className);
+        } catch (Exception e) {
+            // can't find class in the class loader
+        }
+        if(clazz == null) {
+            try {
+                clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+            } catch (Exception e) {
+                // can't find class in the TCCL
+            }
+        }
+
+        if(clazz != null) {
+            return clazz.isInterface();
+        } else {
+            return false;
+        }
     }
 }
