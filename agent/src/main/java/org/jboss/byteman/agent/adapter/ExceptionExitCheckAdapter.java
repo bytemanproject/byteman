@@ -76,6 +76,8 @@ public class ExceptionExitCheckAdapter extends RuleCheckAdapter
 
         public void visitEnd() {
             setTriggerPoint();
+
+            super.visitEnd();
         }
     }
 }
