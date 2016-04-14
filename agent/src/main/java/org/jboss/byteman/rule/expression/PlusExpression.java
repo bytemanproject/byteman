@@ -80,10 +80,10 @@ public class PlusExpression extends BinaryOperExpression
             return s1 + s2;
         } else {
             if (value1 instanceof Character) {
-                value1 = new Integer((Character)value1);
+                value1 = Integer.valueOf((Character)value1);
             }
             if (value2 instanceof Character) {
-                value2 = new Integer((Character)value2);
+                value2 = Integer.valueOf((Character)value2);
             }
             Number n1 = (Number)value1;
             Number n2 = (Number)value2;
@@ -91,37 +91,37 @@ public class PlusExpression extends BinaryOperExpression
                 byte b1 = n1.byteValue();
                 byte b2 = n2.byteValue();
                 byte result = (byte)(b1 + b2);
-                return new Byte(result);
+                return Byte.valueOf(result);
             } else if (type == Type.S) {
                 short s1 = n1.shortValue();
                 short s2 = n2.shortValue();
                 short result = (short)(s1 + s2);
-                return new Short(result);
+                return Short.valueOf(result);
             }  else if (type == Type.I) {
                 int i1 = n1.intValue();
                 int i2 = n2.intValue();
                 int result = (i1 + i2);
-                return new Integer(result);
+                return Integer.valueOf(result);
             }  else if (type == Type.J) {
                 long l1 = n1.longValue();
                 long l2 = n2.longValue();
                 long result = (l1 + l2);
-                return new Long(result);
+                return Long.valueOf(result);
             } else if (type == Type.F) {
                 float f1 = n1.floatValue();
                 float f2 = n2.floatValue();
                 float result = (f1 + f2);
-                return new Float(result);
+                return Float.valueOf(result);
             } else if (type == Type.D) {
                 double d1 = n1.doubleValue();
                 double d2 = n2.doubleValue();
                 double result = (d1 + d2);
-                return new Double(result);
+                return Double.valueOf(result);
             } else { // type == Type.C
                 char c1 = (char)n1.intValue();
                 char c2 = (char)n2.intValue();
                 char result = (char)(c1 + c2);
-                return new Character(result);
+                return Character.valueOf(result);
             }
         }
     }

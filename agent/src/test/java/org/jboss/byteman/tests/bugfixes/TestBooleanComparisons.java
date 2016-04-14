@@ -43,7 +43,7 @@ public class TestBooleanComparisons extends Test
 
         try {
             log("calling TestBooleanComparisons.triggerMethod");
-            triggerMethod(true, false, new Boolean(true), new Boolean(false));
+            triggerMethod(true, false, Boolean.valueOf(true), Boolean.valueOf(false));
             log("called TestBooleanComparisons.triggerMethod");
         } catch (Exception e) {
             log(e);

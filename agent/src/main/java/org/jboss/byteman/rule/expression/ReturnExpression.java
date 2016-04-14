@@ -119,42 +119,42 @@ public class ReturnExpression extends Expression
                 if (type == Type.C && subtype != Type.C) {
                     // ok, transform Number to a Character
                     int number = ((Number)value).intValue();
-                    value = new Character((char)number);
+                    value = Character.valueOf((char)number);
                 } else if (subtype == Type.C) {
                     // ok, transform Character to a boxed Numeric if necessary
                     char c = ((Character)value).charValue();
                     if (type == Type.B) {
-                        value = new Byte((byte)c);
+                        value = Byte.valueOf((byte)c);
                     } else if (type == Type.S) {
-                        value = new Short((short)c);
+                        value = Short.valueOf((short)c);
                     } else if (type == Type.I) {
-                        value = new Integer((int)c);
+                        value = Integer.valueOf((int)c);
                     } else if (type == Type.J) {
-                        value = new Long((int)c);
+                        value = Long.valueOf((int)c);
                     } else if (type == Type.F) {
-                        value = new Float((int)c);
+                        value = Float.valueOf((int)c);
                     } else if (type == Type.D) {
-                        value = new Double((int)c);
+                        value = Double.valueOf((int)c);
                     }
                 } else {
                     if (type == Type.B && subtype != Type.B) {
                         Number number = (Number)value;
-                        value = new Byte(number.byteValue());
+                        value = Byte.valueOf(number.byteValue());
                     } else if (type == Type.S && subtype != Type.S) {
                         Number number = (Number)value;
-                        value = new Short(number.shortValue());
+                        value = Short.valueOf(number.shortValue());
                     } else if (type == Type.I && subtype != Type.I) {
                         Number number = (Number)value;
-                        value = new Integer(number.intValue());
+                        value = Integer.valueOf(number.intValue());
                     } else if (type == Type.J && subtype != Type.J) {
                         Number number = (Number)value;
-                        value = new Long(number.longValue());
+                        value = Long.valueOf(number.longValue());
                     } else if (type == Type.F && subtype != Type.F) {
                         Number number = (Number)value;
-                        value = new Float(number.floatValue());
+                        value = Float.valueOf(number.floatValue());
                     } else if (type == Type.D && subtype != Type.D) {
                         Number number = (Number)value;
-                        value = new Double(number.doubleValue());
+                        value = Double.valueOf(number.doubleValue());
                     }
                 }
             }

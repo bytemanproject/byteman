@@ -57,7 +57,7 @@ public class MinusExpression extends UnaryOperExpression
             Object objValue = (Object)getOperand(0).interpret(helper);
             Number value;
             if (objValue instanceof Character) {
-                value = new Integer((Character)objValue);
+                value = Integer.valueOf((Character)objValue);
             } else {
                 value = (Number)objValue;
             }

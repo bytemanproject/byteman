@@ -1404,8 +1404,8 @@ public class Transformer implements ClassFileTransformer {
      * enabled
      */
     private static ThreadLocal<Integer> isEnabled = new ThreadLocal<Integer>();
-    private final static Integer DISABLED_USER = new Integer(0);
-    private final static Integer DISABLED = new Integer(1);
+    private final static Integer DISABLED_USER = Integer.valueOf(0);
+    private final static Integer DISABLED = Integer.valueOf(1);
     private final static Integer ENABLED = null;
 
 }

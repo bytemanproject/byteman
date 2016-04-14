@@ -66,12 +66,12 @@ public class ArithmeticExpression extends BinaryOperExpression
             Number value1;
             Number value2;
             if (objValue1 instanceof Character) {
-                value1 = new Integer((Character)objValue1);
+                value1 = Integer.valueOf((Character)objValue1);
             } else {
                 value1 = (Number)objValue1;
             }
             if (objValue2 instanceof Character) {
-                value2 = new Integer((Character)objValue2);
+                value2 = Integer.valueOf((Character)objValue2);
             } else {
                 value2 = (Number)objValue2;
             }
@@ -105,7 +105,7 @@ public class ArithmeticExpression extends BinaryOperExpression
                         result = 0;
                         break;
                 }
-                return new Byte(result);
+                return Byte.valueOf(result);
             } else if (type == type.S) {
                 short s1 = value1.shortValue();
                 short s2 = value2.shortValue();
@@ -131,7 +131,7 @@ public class ArithmeticExpression extends BinaryOperExpression
                         result = 0;
                         break;
                 }
-                return new Short(result);
+                return Short.valueOf(result);
             }  else if (type == type.I) {
                 int i1 = value1.intValue();
                 int i2 = value2.intValue();
@@ -157,7 +157,7 @@ public class ArithmeticExpression extends BinaryOperExpression
                         result = 0;
                         break;
                 }
-                return new Integer(result);
+                return Integer.valueOf(result);
             }  else if (type == type.J) {
                 long l1 = value1.longValue();
                 long l2 = value2.longValue();
@@ -183,7 +183,7 @@ public class ArithmeticExpression extends BinaryOperExpression
                         result = 0;
                         break;
                 }
-                return new Long(result);
+                return Long.valueOf(result);
             }  else if (type == type.F) {
                 float f1 = value1.floatValue();
                 float f2 = value2.floatValue();
@@ -209,7 +209,7 @@ public class ArithmeticExpression extends BinaryOperExpression
                         result = 0;
                         break;
                 }
-                return new Float(result);
+                return Float.valueOf(result);
             }  else if (type == type.D) {
                 double d1 = value1.doubleValue();
                 double d2 = value2.doubleValue();
@@ -235,7 +235,7 @@ public class ArithmeticExpression extends BinaryOperExpression
                         result = 0;
                         break;
                 }
-                return new Double(result);
+                return Double.valueOf(result);
             }  else { // (type == type.C)
                 // use integers here but be careful about conversions
                 int s1 = value1.intValue();
@@ -262,7 +262,7 @@ public class ArithmeticExpression extends BinaryOperExpression
                         result = 0;
                         break;
                 }
-                return new Integer(result);
+                return Integer.valueOf(result);
             }
         } catch (ExecuteException e) {
             throw e;

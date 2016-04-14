@@ -333,7 +333,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
         } else if (value >= Short.MIN_VALUE && value <= Short.MAX_VALUE) {
             visitIntInsn(Opcodes.SIPUSH, value);
         } else {
-            visitLdcInsn(new Integer(value));
+            visitLdcInsn(Integer.valueOf(value));
         }
     }
 
@@ -346,7 +346,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
         if (value == 0L || value == 1L) {
             visitInsn(Opcodes.LCONST_0 + (int) value);
         } else {
-            visitLdcInsn(new Long(value));
+            visitLdcInsn(Long.valueOf(value));
         }
     }
 
@@ -360,7 +360,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
         if (bits == 0L || bits == 0x3f800000 || bits == 0x40000000) { // 0..2
             visitInsn(Opcodes.FCONST_0 + (int) value);
         } else {
-            visitLdcInsn(new Float(value));
+            visitLdcInsn(Float.valueOf(value));
         }
     }
 
@@ -374,7 +374,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
         if (bits == 0L || bits == 0x3ff0000000000000L) { // +0.0d and 1.0d
             visitInsn(Opcodes.DCONST_0 + (int) value);
         } else {
-            visitLdcInsn(new Double(value));
+            visitLdcInsn(Double.valueOf(value));
         }
     }
 
