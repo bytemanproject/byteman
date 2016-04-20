@@ -5,7 +5,7 @@ with comment lines. Comments may occur within the body of a rule definition as w
 preceding or following a definition but must be on separate lines from the rule text.
 Comments are lines which begin with a # character:
 
-....
+----
   ######################################
   # Example Rule Set
   #
@@ -14,7 +14,7 @@ Comments are lines which begin with a # character:
   # comment line in rule body
   . . .
   ENDRULE
-....
+----
 
 === Rule Events
 
@@ -23,20 +23,18 @@ target class. Target methods can be either static or instance methods or constru
 detailed location is specified the default location is entry to the target method. So, the
 basic schema for a single rule is as follows:
 
-....
+----
   # rule skeleton
   RULE <rule name>
   CLASS <class name>
   METHOD <method name>
   BIND <bindings>
-  IF
-  <condition>
-  DO
-  <actions>
+  IF  <condition>
+  DO  <actions>
   ENDRULE
-....
+----
  
-The name of the rule following the RULE keyword can be any free form text with the
+The name of the rule following the `RULE` keyword can be any free form text with the
 restriction that it must include at least one non-white space character. Rule names do not
 have to be unique but it obviously helps when debugging rule scripts if they clearly identify
 the rule. The rule name is printed whenever an error is encountered during parsing, type
@@ -45,18 +43,17 @@ checking, compilation or execution.
 The class and method names following the `CLASS` and `METHOD` keywords must be on
 the same line. The class name can identify a class either with or without the package
 qualification. The method name can identify a method with or without an argument list or
-return type. A constructor method is identified using the special name `<init>`. For
+return type. A constructor method is identified using the special name `<init>` and a class initialization method is identified using the special name `<clinit>`. For
 example,
 
-....
+----
   # class and method example
   RULE any commit on any coordinator engine
   CLASS CoordinatorEngine
   METHOD commit
   . . .
   ENDRULE
-  matches the rule w 
-....
+----
 
 matches the rule with any class whose name is `CoordinatorEngine`, irrespective of the
 package it belongs to. When any class with this name is loaded then the agent will insert a
@@ -67,7 +64,7 @@ point inserted.
 More precise matches can be guaranteed by adding a signature comprising a parameter
 type list and, optionally, a return type. For example,
 
-....
+----
   # class and method example 2
   RULE commit with no arguments on wst11 coordinator engine
   CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
@@ -75,7 +72,7 @@ type list and, optionally, a return type. For example,
   AT LINE 324
   . . .
   ENDRULE
-....
+----
   
 This rule will only match the `CoordinatorEngine` class in package
 `com.arjuna.wst11.messaging.engines` and only match a method commit with no
@@ -87,7 +84,7 @@ line keyword must be able to be parsed to derive an integer line number. This di
 agent to insert the trigger call at the start of a particular line in the source code.
 Note:
 
-* The Byteman agent _will_ not transform any classes in package `java.lang` nor
+* The Byteman agent _will_ not normally transform any classes in package `java.lang` and will never transform
 classes in package `org.jboss.byteman`, the byteman package itself (it is
 possible to remove the first of these restrictions by setting a System property, but
 you need to be really sure you know what you are doing – see below for details).
@@ -101,14 +98,14 @@ Byteman rules can be attached to interfaces as well as classes. If the `CLASS` k
 replaced with the keyword `INTERFACE` then the rule applies to any class which
 implements the specified interface. For example, the following rule
 
-....
+----
   # interface rule example
   RULE commit with no arguments on any engine
   INTERFACE com.arjuna.wst11.messaging.engines.Engine
   METHOD commit()
   . . .
   ENDRULE
-....
+----
  
 is attached to method commit of interface `Engine`. If `Engine` is implemented by classes
 `CoordinatorEngine` and `ParticipantEngine` then the rule implies two trigger points,
@@ -122,39 +119,38 @@ Normally, Byteman only injects rule code into methods which are defined by the c
 identified in the `CLASS` clause. This is sometimes not very helpful. For example, the
 following rule is not much use: 
 
-....
+----
   RULE trace Object.finalize
   CLASS java.lang.Object
   METHOD finalize
   IF TRUE
-  DO System.out.println(“Finalizing “ + $0)
+  DO System.out.println("Finalizing " + $0)
   ENDRULE
-....
+----
 
 The print statement gets inserted into method `Object.finalize()`. However, the JVM
-only calls finalize when an object's class overrides `Object.finalize()`. But with this
-rule these overriding methods are not modified. So, the rule will not be triggered in the
-precise case where the trace would be useful (n.b. this is not quite the full story –
-overriding method implementations which call super.finalize() _will_ trigger the rule).
+only calls finalize when an object's class overrides `Object.finalize()`. So, this
+rule will not do what is intended because overriding methods will not be modified. (n.b. this is not quite the full story –
+method implementations which directly override Object.finalize _and_ call super.finalize() _will_ trigger the rule).
 There are many other situations where it might be desirable to inject code into overriding
 method implementations. For example, class `Socket` is specialised by various classes
 which provide their own implementation of methods bind, accept etc. So, a rule attached
 to `Socket.bind()` will not be triggered when the bind method of one of these subclasses
-is called (not unless the subclass method calls `super.bind()`).
+is called (unless the subclass method calls `super.bind()`).
 
 Of course, it is always possible to define a specific rule for each overriding class. However,
 this is tedious and may possibly miss some cases when the code base is changed. So,
 Byteman provides a simple bit of syntax for specifying that rules should also be injected
 into overriding implementations.
 
-....
+----
   RULE trace Object.finalize
   CLASS ^java.lang.Object
   METHOD finalize
   IF TRUE
-  DO System.out.println(“Finalizing “ + $0)
+  DO System.out.println("Finalizing " + $0)
   ENDRULE
-....
+----
 
 The `^` prefix attached to the class name tells the agent that the rule should apply to
 implementations of finalize defined either by class `Object` or by any class which
@@ -169,20 +165,20 @@ multiple triggerings of the rule. This is easily avoided by adding a condition t
 which checks the name of the caller method. So, for example, the rule above would be
 better rewritten as
 
-....
+----
   RULE trace Object.finalize at initial call
   CLASS ^java.lang.Object
   METHOD finalize
-  IF NOT callerEquals(“finalize”)
-  DO System.out.println(“Finalizing “ + $0)
+  IF NOT callerEquals("finalize")
+  DO System.out.println("Finalizing " + $0)
   ENDRULE
-....
+----
 
 This rule uses the built-in method `callerEquals` which can be called with a variety of
 alternative signatures (described in full below). This version calls `String.equals()`
 comparing the name of the method which called the trigger method to its String
 argument and returns the result. The condition negates this using the `NOT` operator
-(another way of writing the Java ! Operator). So, when an implementation of `finalize` is
+(another way of writing the Java `!` Operator). So, when an implementation of `finalize` is
 called via the finalizer thread's `runFinalizer()` method this condition evaluates to true
 and the rule fires. When it gets called via `super.finalize()` the condition evaluates to
 false and the rule does not fire.  
@@ -232,7 +228,7 @@ modifications to the code base can easily shift the line numbers of unmodified c
 invalidating test scripts unrelated to the edits. Luckily, there are several other ways of
 specifying where a trigger point should be inserted into a target method. For example,
 
-....
+----
   # location specifier example
   RULE countdown at commit
   CLASS CoordinatorEngine
@@ -240,13 +236,13 @@ specifying where a trigger point should be inserted into a target method. For ex
   AFTER WRITE $current
   . . .
   ENDRULE
-....
+----
 
 The name current prefixed with a `$` sign identifies a local variable,or possibly a method
 parameter. In this case, current happens to be a local variable declared and initialised at
 the start of method `CoordinatorEngine.commit` whose type is the enum `State`.
 
-....
+----
   public State commit()
   {
     final State current ;
@@ -255,7 +251,7 @@ the start of method `CoordinatorEngine.commit` whose type is the enum `State`.
       current = this.state ;
       if (current == State.STATE_PREPARED_SUCCESS) {
         . . .
-....
+----
 
 So, the trigger point will be inserted immediately after the first write operation in the
 bytecode (istore) which updates the stack location used to store current. This is
@@ -266,7 +262,7 @@ block.
 By contrast, the following rule would locate the trigger point after the first read from field
 recovered:
 
-....
+----
   # location specifier example 2
   RULE add countdown at recreate
   CLASS CoordinatorEngine
@@ -274,7 +270,7 @@ recovered:
   AT READ CoordinatorEngine.recovered
   . . .
   ENDRULE
-....
+----
 
 Note that in the last example the field type is qualified to ensure that the write is to the field
 belonging to an instance of class `CoordinatorEngine`. Without the type the rule would
@@ -298,6 +294,7 @@ The full set of location specifiers is as follows:
 `AT SYNCHRONIZE _[count_ | ALL _]_` +
 `AFTER SYNCHRONIZE _[count_ | ALL _]_` +
 `AT THROW _[count_ | ALL _]_` +
+`AT EXCEPTION EXIT`
 
 If a location specifier is provided it must immediately follow the `METHOD` specifier. If no
 location specifier is provided it defaults to `AT ENTRY`.
@@ -401,6 +398,25 @@ identifying the lexical type of the thrown exception. If a count N is supplied t
 location specifies the Nth textual occurrence of a throw. If the keyword ALL is specified in
 place of a count then the rule will be triggered at all matching occurrences of a throw.
 
+===== AT EXCEPTION EXIT
+
+An `AT EXCEPTION EXIT` specifier identifies the point where a method
+returns control back to its caller via unhandled exceptional control
+flow. This can happen either because the method itself has thrown an
+exception or because it has called out to some other method which has
+thrown an exception. It can also happen when the method executes
+certain operations in the Java language, for example dereferencing a
+null object value or indexing beyond the end of an array.
+
+A rule injected with this location is triggered at the point where the
+exception would normally propagate back to the caller. Once rule
+execution completes then normally the exception flow resumes. However,
+the rule may subvert this resumed flow by executing a RETURN. It may
+also explicitly rethrow the original exception or throw some newly
+created exception by executing a THROW (n.b. if the latter is a
+checked exception then it must be declared as a possible exception by
+the trigger method).
+
 n.b. when several rules specify the same location the order of injection of trigger calls
 usually follows the order of the rules in their respective scripts. The exception to this is
 AFTER locations where the the order of injection is the reverse to the order of occurrence.
@@ -420,18 +436,18 @@ The event specification includes a binding specification which computes values f
 variables which can subsequently be referenced in the rule body. These values will be
 computed each time the rule is triggered before testing the rule condition. For example,
 
-....
+----
   # binding example
   RULE countdown at commit
   CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
   METHOD commit
   AT READ state
   BIND engine:CoordinatorEngine = $0;
-  recovered:boolean = engine.isRecovered();
-  identifier:String = engine.getId()
+       recovered:boolean = engine.isRecovered();
+       identifier:String = engine.getId()
   . . .
   ENDRULE
-....
+----
 
 creates a variable called engine. This variable is bound to the recipient of the commit
 method call which triggered the rule, identified by the parameter reference `$0` (if commit
@@ -457,7 +473,7 @@ expressions found in plus a few extra special cases i.e.
 * references to previously bound variables
 * references to the trigger method recipient or parameters
 * references to the local variables in scope at the trigger point
-* references to special variables $!, $^, $#, $*, $@, $CLASS and $METHOD
+* references to special variables `$!`, `$^`, `$#`, `$*`, `$@`, `$CLASS` and `$METHOD`
 * static field references
 * primitive literals
 * array literals
@@ -484,7 +500,7 @@ actions (see below).
 * The trigger method recipient and parameters may be referred to by index using the
 symbols `$0` (invalid for a static method), `$1` etc. If the method has been compiled
 with the relevant debug options then symbolic references may also be used. So, for
-example, `$this` may be used as an alias for `$0` and $myArg may be used as an
+example, `$this` may be used as an alias for `$0` and `$myArg` may be used as an
 alias for `$1` if the method first parameter is declared with name `myArg`,
 * If the trigger method has been compiled with the relevant debug options then local
 variables may be referenced symbolically using the same syntax to method
@@ -498,8 +514,10 @@ such special variables:
 - `$!` is also valid in an `AFTER INVOKE` rule and is bound to the return value on the stack at 
   the point where the rule is triggered. Its type is the same as the invoked method return type. 
   The rule will fail to inject if the invoked method return type is void.
-- `$^` is only valid in an `AT THROW` rule and is bound to the throwable on the stack at the 
+- `$^` is valid in an `AT THROW` rule and is bound to the throwable on the stack at the 
   point where the rule is triggered. Its type is Throwable.
+-  `$^` is also valid in an `AT EXCEPTION EXIT` rule and is bound to the throwable being returned from the method via exceptional
+  control flow. Its type is Throwable.
 - `$#` has type int and identifies the number of parameters supplied to the trigger method.
 - `$*` is bound to an `Object[]` array containing the trigger method recipient, `$this`, in slot 0 
   and the trigger method parameter values, `$1`, `$2` etc in slots 1, 2 etc (for a static trigger 
@@ -522,39 +540,39 @@ such special variables:
   rule. However, the target method may omit the signature and return type. So there may be more 
   than one trigger method for any given target method.
 * Array literal expressions are a comma-separated sequence of expressions enclosed in braces such 
-  as `{}` , `{ “foo”, “bar” }`.  Array literals may only be used to define the initial value for 
+  as `{}` , `{ "foo", "bar" }`.  Array literals may only be used to define the initial value for 
   either: an array variable declared in the `BIND` clause  e.g. +
 	`x:int[] = {1, 2, 3};` + 
   or: an array created via a new expression e.g. + 
   `names = new Object[][] {{$0, $0.name()},{$1, $1.name()}};` + 
-  _n.b._ Byteman does not restrict the type of expressions embedded in the initializer to other 
-  literals (as you can see in the second example above). Indeed, Byteman also allows subordinate 
-  bracketed terms to have different numbers of items; it siply creates the relevant sub-array using 
+  _n.b._ Byteman does not restrict the type of expressions embedded in the initializer to other
+  literals. As you can see in the second example above embedded values can be computed using arbitrary Java expressions. Byteman also allows subordinate 
+  bracketed terms to have different numbers of items so long as the expressions are type compatible; it simply creates the relevant sub-array using 
   the number of values provided. +
   _n.b.b._ when an initializer with mixed value types is used to initialize an untyped variable in a 
   `BIND` clause the values must have a type uniform with that of the first element, which can be 
   used consistently to infer the corresponding array type e.g given the following binding
-	`x = { $1, “foo”,  $2 };` +
+	`x = { $1, "foo",  $2 };` +
   type `Object[]` will be inferred for `x` if `$1` is of type `Object,` type `String[]` will be 
   inferred if `$1` and `$2` are both of of type `String`. With any other types a type error will 
   occur.
-* Assignments may update the bindings for rule variables introduced in the `BINDS` clause, 
+* Assignments may update the bindings for rule variables introduced in the `BIND` clause, 
   parameter or local variables, instance fields, static fields or the return value special 
   variables `$!`. Assignments are not currently allowed to update any of the the other special 
   variables.
 * Assignments to parameter variables or local variables are visible on resumption of the trigger 
-  method. For example, assume that a rule includes an assignment  such as `$name = “Ernie”`, where 
+  method. For example, assume that a rule includes an assignment  such as `$name = "Ernie"`, where 
   name is either a parameter variable or a local variable in scope at the trigger point.  If name 
-  has value `“Bert”` when the rule is triggered and the assignment actually gets executed then on 
-  resumption of the trigger method name will have value `“Ernie”`. Note that assignments cannot be 
-  made to `$this` (or, equivalently, `$0`) as the recipient argument for an instance method is 
-  always final.
+  has value `"Bert"` when the rule is triggered and the assignment actually gets executed then on 
+  resumption of the trigger method `name` will have value `"Ernie"`. Note that assignments cannot be 
+  made to `$this` (or, equivalently, `$0`); the recipient argument for an instance method is 
+  always `final`.
 * Assignment to `$!` updates the return value on top of the stack at the trigger point, causing 
   the trigger method to return this updated value. The same effect can be achieved by executing a 
   `RETURN` expression.
 * Byteman provides the English language keywords listed below which can be used in place of the 
   related standard Java operators (in brackets): +
-  `OR (||)`, `AND (&&)`, `NOT (!)`, `LE (<=)`, `LT (<)`, `EQ (==)`, `NE (!=)`, `GE (>=)`, `GT (>)`, 
+  `OR (||)`, `AND (&&)`, `NOT (!)`, `LE (<` `=)`, `LT (<)`, `EQ (==)`, `NE (!=)`, `GE (>=)`, `GT (>)`, 
   `TIMES (*)`, `DIVIDE (/)`, `PLUS (+)`, `MINUS (-)`, `MOD (%)`,
   Keywords are recognised in either upper or lower (but not mixed) case. + 
   Keywords may clash with the same names where they they occur as legal Java identifiers in the 
@@ -564,53 +582,53 @@ such special variables:
 
 Rule conditions are nothing more than rule expressions with boolean type. For example,
 
-....
+----
   # condition example
   RULE countdown at commit
   CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
   METHOD commit
   AT READ state
-  BIND	engine:CoordinatorEngine = $this;
-   	recovered:boolean = engine.isRecovered();
-   	identifier:String = engine.getId()
-  IF	recovered
+  BIND engine:CoordinatorEngine = $this;
+       recovered:boolean = engine.isRecovered();
+       identifier:String = engine.getId()
+  IF recovered
   . . .
   ENDRULE
-....
+----
 
 merely tests the value of bound variable recovered. The same effect could be achieved by using the 
 following condition:
 
-....
+----
   # condition example 2
   RULE countdown at commit
   CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
   METHOD commit
   AT READ state
-  BIND	engine:CoordinatorEngine = $this,
-   	. . .
-  IF	engine.isRecovered()
+  BIND engine:CoordinatorEngine = $this,
+       . . .
+  IF engine.isRecovered()
   . . .
   ENDRULE
-....
+----
 
 Alternatively, if, say, the instance employed a public field, recovered, to store the boolean 
 value returned by method `isRecovered` then the same effect would be achieved by the following 
 condition.
 
-....
+----
   # condition example 3
   RULE countdown at commit
   CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
   METHOD commit
   AT READ state
-  BIND	engine:CoordinatorEngine = $this,
-   	. . .
-  IF	engine.recovered
+  BIND engine:CoordinatorEngine = $this,
+  . . .
+  IF engine.recovered
   . . .
   ENDRULE
-....
-Note that the boolean literal true is available for use in expressions so a rule which should 
+----
+Note that the boolean literal `true` is available for use in expressions so a rule which should 
 always fire can use this as the condition expression.
 
 === Rule Actions
@@ -626,17 +644,17 @@ type checker will ensure that it's type is assignable to the return type of the 
 So, for example, the following use of return is legitimate assuming method `commit` has return 
 type `boolean`:
 
-....
+----
   # return example
   RULE countdown at commit
   CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
   METHOD commit
   AT READ state
    	. . .
-  DO debug(“returning early with failure”);
+  DO debug("returning early with failure");
      return false
   ENDRULE
-....
+----
 
 A throw action is the `throw` keyword followed by an throwable constructor expression. A 
 throwable constructor expression is the keyword `new` followed by the class name of the throwable 
@@ -649,69 +667,74 @@ the new keyword may be omitted from the throwable constructor expression which f
 keyword.
 
 A throw action causes a throwable of the type named in the exception constructor to be created and 
-thrown from the _triggering_ method. In order for this to be valid the expression type must either 
-be assignable to `java.lang.RuntimeException` or `java.lang.Error` or be explicitly declared in 
+thrown from the _triggering_ method. In order for this to be valid the expression type must either
+be assignable to `java.lang.RuntimeException` or `java.lang.Error` or be explicitly declared as a checked exception in 
 the triggering method's throws list. The type checker will throw a type exception if either of 
 these conditions is not met. So, for example, the following use of throw is legitimate assuming 
 method `commit` includes `WrongStateException` in its throws list.
 
-....
+----
   # throw example
   RULE countdown at commit
   CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
   METHOD commit
   AT READ state
- 	  . . .
-  DO debug(“throwing wrong state”);
+  . . .
+  DO debug("throwing wrong state");
      throw new WrongStateException()
   ENDRULE
-....
+----
 
 An empty action list may be specified using the keyword `NOTHING`. 
 
 === Built-In Calls
 
-Built-in calls are written without a recipient as though they were invocations of a method on 
+Built-in calls are calls to a family of useful methods which implement a family operations that are often useful in rule conditions or actions.
+They are written without a recipient as though they were invocations of a method on 
 `this`. The rule engine identifies calls in this format and translates them to runtime invocations 
-of helper class instance methods. So, referring back to the last few examples, it is apparent that 
-the helper class implements a debugging method with signature 
+of instance methods of a helper class, by default the class Helper provided by Byteman itself. So, referring back to the last few examples, it is apparent that 
+the class Helper implements a debugging method with signature 
 
-....
+----
   boolean debug(String message)
-....
+----
 
-This method prints the supplied string to `System.out` and always returns true. It can be used in a 
-rule action to display a trace message, for example:
+This method prints the supplied string to `System.out` but only when
+property `org.jboss.byteman.debug` has been set. It can be used in a
+rule action to display a message when you wish to debug rule
+execution, for example:
 
-....
-  DO	debug(“killing JVM”), killJVM()
-....
+----
+  DO debug("killing JVM"), killJVM()
+----
 
-When the debug built-in is executed the rule engine calls the corresponding method of the current 
-helper instance passing it the string `“killing JVM”`. Method `killJVM` is another built-in 
-implemented by an instance method of the default helper class `Helper`.
+So, in this example when the `debug` built-in is executed the rule engine calls the corresponding method of the current 
+helper instance passing it the string `"killing JVM"`. Method `killJVM` is another built-in 
+implemented by the corresponding instance method of `Helper`. It can be used to perform an immediate halt of the JVM, simulating a JVM crash.
 
-Note that method debug has a boolean signature so that tracing can also be performed in rule 
-conditions. This would normally occur in combination with a test of some bound variable or method 
-parameter, for example:
+Note that method `debug` has a `boolean` return type. It always
+returns true. This is to allow tracing of rule IF clauses by `AND` ing a
+`debug` call with the rest of the condition. This would normally occur
+in combination with a test of some bound variable or method parameter,
+for example:
 
-....
-  IF debug(“checking for recovered participant”)
+----
+  IF debug("checking for recovered participant")
      AND
      participant.isRecovered()
      AND
-     debug(“recovered participant “ + participant.getId())
-....
+     debug("recovered participant " + participant.getId())
+----
 
 _n.b._ `AND` is an alternative token for the Java `&&` operator.
 
 The rule language implementation automatically exposes all public instance methods of class 
-`Helper` as built-in operations. So when the rule type checker encounters an invocation of debug 
-with no recipient supplied it identifies that debug is a method of  class Helper and automatically 
+`Helper` as built-in operations. So when the rule type checker encounters an invocation of `debug` 
+with no recipient supplied it verifies that `debug` is a method of class Helper and automatically 
 type checks the call against this method. At execution time the call is executed by invoking the 
-implementation of debug on the helper instance created under the rule trigger call.
+implementation of `debug` on a helper instance created when rule execution is triggered at the injection point.
 
-This feature allows additional built-ins to be added to the rule engine simply by adding new 
+This feature allows additional or alternative built-ins to be added to the rule engine simply by adding new 
 helper implementations. No changes are required to the parser, type checker and compiler in order 
 for this to work.
 
@@ -723,7 +746,7 @@ rule, class `FailureTester` is used as the helper class. Its boolean instance me
 `doWrongState(CoordinatorEngine)` is called from the condition to decide whether or not to throw a 
 `WrongStateException`.
 
-....
+----
   # helper example
   RULE help yourself
   CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
@@ -733,7 +756,7 @@ rule, class `FailureTester` is used as the helper class. Its boolean instance me
   IF doWrongState($0)
   DO throw new WrongStateException()
   ENDRULE
-....
+----
 
 A helper class does not need to implement any special interface or inherit from any pre-defined 
 class. It merely needs to provide instance methods to resolve the built-in calls which occur in the 
@@ -741,7 +764,7 @@ rule. By sub-classing the default helper it is possible to extend or override th
 methods. For example, the following rule employs a helper which adds emphasis to the debug messages 
 printed by the rule.
 
-....
+----
   # helper example 2
   RULE help yourself but rely on others
   CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
@@ -749,21 +772,21 @@ printed by the rule.
   HELPER HelperSub
   AT ENTRY
   IF NOT flagged($this)
-  DO debug(“throwing wrong state”);
+  DO debug("throwing wrong state");
      flag($this);
      throw new WrongStateException()
   ENDRULE
-....
+----
 
-....
+----
   class HelperSub extends Helper
   {
       public boolean debug(String message)
       {
-          super(“!!! IMPORTANT EVENT !!! “ + message);
+          super("!!! IMPORTANT EVENT !!! " + message);
       }
   }
-....
+----
 
 The rule  is still able to employ the built-in methods flag and flagged defined by the default 
 helper class.
@@ -773,7 +796,7 @@ It is also possible to reset the helper for all subsequent rules in a file by ad
 line outside of the scope of a rule. So, in the following example the first two rules use class 
 `HelperSub` while the third one uses class `YellowSub`.
 
-....
+----
   HELPER HelperSub
   # helper example 3
   RULE helping hand
@@ -784,7 +807,7 @@ line outside of the scope of a rule. So, in the following example the first two 
   CLASS . . .
   METHOD . . .
   HELPER YellowSub
-....
+----
 
 === The Rule Helper Lifecycle Methods
 
@@ -820,14 +843,14 @@ uninstall always generates an uninstall event before any associated deactivate e
 The helper class _H_ is notified of these events if it implements any of the corresponding static 
 methods:
 
-....
+----
   public static void activated()
   public static void installed(Rule rule)
   public static void installed(String ruleName)
   public static void uninstalled(Rule rule)
   public static void uninstalled(String ruleName)
   public static void deactivated()
-....
+----
 
 `activated()` is called when an activate event occurs. It can perform a one-off set up operation on 
 behalf of all rules employing the helper.
@@ -852,3 +875,221 @@ it will not generate activate or install events. If later this rule is unloaded 
 generate uninstall or deactivate events since it was never installed. It is also possible for a 
 valid rule to be loaded and unloaded without initiating lifecycle processing. For example, the rule 
 may never get injected because no matching trigger class has been loaded into the JVM.
+
+=== Rule Compilation
+
+By default rules are executed by Byteman's own interpreter which
+interprets the rule's parse tree.  However, it is also possible to
+translate a rule's bindings, condition and actions to bytecode which
+can then be executed directly by the JVM and, potentially, optimized
+by the JIT compiler. This is very useful when rule code is injected
+into a method which is called very frequently. The default execution
+mode can be switched from interpreted to compiled by setting system
+property org.jboss.byteman.compile.to.bytecode when the agent is
+loaded. However, resetting the default for all rules may not be
+helpful as it is nor always worth incurring the overhead of compiling
+rules which only get executed once. So, it is also possible to request
+compilation for a group of rules within a rule script or even for
+individual rules.
+
+The following rule uses a COMPILE clause to ensure that it is always
+translated to bytecode even when the default mode is interpreted.
+
+----
+  # this rule will always be compiled
+  RULE compile example
+  CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
+  METHOD prepare
+  COMPILE
+  AT ENTRY
+  . . .
+  ENDRULE
+----
+
+If you have reset the default to compiled and wish to disable
+compilation then a NOCOMPILE clause can be used. The same two clauses
+can also appear outside a rule at the top level in a script (just as
+with HELPER clauses). This resets the default for subsequent rules in
+the same script.
+
+----
+  # set default execute mode to compile
+  COMPILE
+  # this rule will be compiled
+  RULE compile example 2
+  CLASS com.arjuna.wst11.messaging.engines.Engine
+  METHOD prepare
+  AT ENTRY
+  . . .
+  ENDRULE
+  # this rule will never be compiled
+  RULE compile example 3
+  CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
+  METHOD prepare
+  NOCOMPILE
+  AT ENTRY
+  . . .
+  ENDRULE
+  # set default execute mode to interpreted
+  NOCOMPILE
+  # this rule will be interpreted
+  RULE compile example 4
+  CLASS com.arjuna.wst11.messaging.engines.ParticipantEngine
+  METHOD commit
+  AT ENTRY
+  . . .
+  ENDRULE
+----
+
+=== Module Imports
+
+[NOTE]
+This section documents an early-preview Byteman feature which is
+incomplete and may be subject to change.
+
+When a Byteman rule is injected into a method the injected code needs
+to be resolved aginst the values and types available in the injection
+context. For example, if the rule is injected into method `charAt` of
+class `String` then a mention of parameter variable `$1` is typed by
+checking the type signature of the trigger method and noting that it
+is an `int`. The injected code loads the integer value from slot 1 of
+the local area of a trigger method invocation and passes it to the
+rule execution engine.
+
+Similarly, a call to `Thread.currentThread()` is type checked by
+noting that the name preceding the method invocation is a reference to
+a class named `java.lang.Thread` and looking up first the class and
+then the method in order to identify that the return type is also of
+type `Thread`. The rule execution engine executes the resolved method
+in order to compute the value of this expression.
+
+Resolution of type names to classes requires a classloader lookup to
+see whether a class with the given name is `in scope'. Byteman
+interprets what it means for a name to be `in scope' by looking up
+class names using the classloader of the _trigger_ class i.e. the
+class which owns the method into which the rule is being injected.
+
+In normal Java SE deployments this normally presents no issues because
+application and JDK runtime classes are all visible via the classpath.
+So, in the following example, the code injected into application class
+`ThreadPool` can directly refer to application class `Logger` and
+invoke one of its static methods
+
+----
+  RULE call out to logging method
+  CLASS org.my.ThreadPool
+  METHOD schedule(Runnable)
+  BIND runnableKlazz = $1.getClass().getName()
+  IF TRUE
+  DO org.my.Logger.log(runnableKlazz, "scheduled: " + System.currentTimeMillis())
+----
+
+Since both classes are deployed on the classpath they will both be
+loaded by the system classloader. When Byteman tries to inject the
+rule into class `org.my.ThreadPool` it uses that loader to lookup
+class `org.my.Logger` and finds the desired class. Note that package
+and class privacy imposes no barriers to Byteman here. The rule could
+call Logger.log even if it were private.
+
+In Java EE deployments this sort of cross-jar or cross-deployment
+reference may not work. If the two classes above are deployed in
+separate war files then the classloader for `org.my.ThreadPool` may
+not be able to resolve references to class `org.my.Logger`. Indeed, if
+you employ a module system like JBoss Modules or OSGi then you ay not
+even be able to resolve references to classes on the system or
+bootstrap classpath when you are injecting to code which is deployed
+via a JBoss or OSGi module loader.
+
+Byteman provides a way to overcome this problem using an `IMPORT`
+declaration. Note that this declaration is _not_ to be confused with
+Java's `import` statement. `IMPORT` is only appropriate when injecting
+into a class which belongs to a module. Its purpose is to ensure that
+classes from other modules are `in scope' for rule code. Type
+references which are not visible from the target class's loader may
+still be resolved against types provided by the module whose name
+follows the `IMPORT` keyword.
+
+So, for example, let's assume class `org.my.ThreadPool` is deployed in
+a JBoss EE depoyment which does not have access to the transactions
+API. This is a reasonable assumption given that the thread pool has no
+reason to import the TX module nor to use any of the transaction
+annotations whcih would lead to the TX module being auto-imported.
+The following rule explicitly imports the JBoss Module bringing class
+`TransactionManager` into scope. This allows the trace call to include
+details of any active transaction in the record of schedule
+operations.
+
+----
+  RULE log thread schedule operations with details of current TX
+  CLASS org.my.ThreadPool
+  METHOD schedule(Runnable)
+  IMPORT javax.transaction.api
+  BIND runnableKlazz = $1.getClass().getName()
+  IF TRUE
+  DO traceln(runnableKlazz + "scheduled at " +
+             System.currentTimeMillis() + in TX " +
+             javax.Transaction.TransactionManager.getTransaction())
+----
+
+Note that the format of the module name following the IMPORT keyword
+is specific to the module system being used. In this case the name
+identifies the module used by JBoss EAP to deploy the Java EE
+Transactions API classes.
+
+It is possible to import more than one module by adding repeated
+`IMPORT` declarations. Also, when writing a script imports may be
+written at top level (outisdeof rule scope) accumulating a list of
+imports that apply to subsequent rules. An empty IMPORT statement at
+top level will clear the current accumulated imports list. An empty
+IMPORT statement in the body of a RULE will clear any script level
+imports just for that rule.
+
+----
+  # import the TX and JPA APIs
+  IMPORT javax.transaction.api
+  IMPORT javax.persistence.api
+
+  RULE resolve TX and JPA classes
+  CLASS . . .
+  METHOD . . .
+  AT ENTRY
+  IMPORT javax.transaction.api
+  . . .
+  ENDRULE
+
+  # cancel script level APIs and use hibernate APIs
+  RULE resolve Hibernate classes
+  CLASS  . . .
+  METHOD . . .
+  AT ENTRY
+  IMPORT
+  IMPORT org.hibernate
+  . . .
+  ENDRULE
+
+  # cancel all script level APIs
+  IMPORT
+
+  RULE resolve only trigger class scope
+  . . .
+  ENDRULE
+----
+
+
+In order for module imports to work Byteman has to be able to type
+check the rule using a class loader which looks up type by name first
+via the target class's loader and then via the classloaders for any
+imported modules. Since this is a module system-specific task it
+requires the use of a module system-specific extension jar.
+
+Byteman supports a plugin architecture to install an extension which
+will handle `IMPORT` declarations. You need to configure an appropiate
+module system plugin when you install the Byteman agent if you want to
+be able to use imports. Details of how to configure this plugin are
+provided in chapter _Using Byteman_ below.
+
+Currently, Byteman ships with only the one JBoss Modules plugin, for
+use with JBoss EAP and related products that use the JBoss Modules
+module system.  Eventually, Byteman will provide plugins for other
+module systems such as the most popular OSGi implementations and,
+perhaps, the JDK's own Jigsaw module system

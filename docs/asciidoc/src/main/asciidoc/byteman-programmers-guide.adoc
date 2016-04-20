@@ -1,6 +1,5 @@
-= Byteman Programmer's Guide {project-version}
+= Byteman Programmer's Guide, {project-version}, {doc-date} +
 
-{doc-date} +
 
 *Legal Notices* +
 The information contained in this documentation is subject to change without notice.

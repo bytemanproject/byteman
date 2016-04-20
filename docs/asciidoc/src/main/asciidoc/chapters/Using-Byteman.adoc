@@ -102,9 +102,9 @@ requires only one extra argument. This argument points the JVM at the agent code
 and at the script files containing your byteman rules. This is specified using the java command 
 flag
 
-....
+----
 -javaagent:agentlib=options
-....
+----
 
 This is a standard option for JDK 1.6 and upwards.
 
@@ -115,11 +115,11 @@ allows the JVM to identify the agent program entry point so everything else is s
 
 For example, setting
 
-....
+----
 export JAVA_OPTS="-javaagent:$BYTEMAN_HOME/lib/byteman.jar=
 script:$SCRIPT_HOME/HeuristicSaveAndRecover.btm,
 script:$SCRIPT_HOME/JBossTSTrace.btm"
-....
+----
 
 will cause the JVM to pick up the byteman jar file from the install root, `BYTEMAN_HOME` and inject 
 all rules found in the two scripts `HeuristicSaveAndRecover.btm` and `JBossTSTrace.btm` located in 
@@ -141,9 +141,9 @@ your application's JVM and install the agent. Once installed you can then use sc
 described below to upload or unload rules via the Byteman agent listener. The command line syntax 
 for the `bminstall` script is
 
-....
+----
 bminstall [-p port] [-h host] [-b] [-s] [-Dproperty[=value]]* pid
-....
+----
 
 where terms between _[_ and _]_ are optional and _*_ means zero or more repetitions.
 
@@ -211,11 +211,11 @@ manage loading and unloading of rules. The manager option allows you to provide 
 class to manage the Byteman agent's installed rule base. The plugin class implements an initialize 
 method with one of the following signatures:
 
-....
+----
 void initialize(org.jboss.byteman.agent.Retransfromer, String, int)
 
 void initialize(org.jboss.byteman.agent.Retransfromer)
-....
+----
 
 The first argument is the retransformer instance which regulates operation of the Byteman agent's 
 class file transformer. It provides methods for installing and deinstalling rules and for querying 
@@ -233,6 +233,39 @@ it requests the agent to use the standard Byteman manager class to manage the ag
 to the `Retransformer` then posts results back via the socket. If you wish to implement your own 
 manager then you should study class `TransformListener` in order to understand how the 
 `Retransformer` provides access to the agent rule base.
+
+[NOTE]
+The `-javaagent` `modules:` option is an early-preview Byteman feature
+which is incomplete and may be subject to change
+
+*modules:classname* where _classname_ is the full, package qualified
+name of a class which is to manage module imports. This option allows
+you to configure a plugin class to handle IMPORT statements and manage
+the associated class resolution in a modular runtime.
+
+Byteman ships a single plugin implementation for JBoss Modules, which
+is deployed as byteman-jboss-modules-plugin.jar. This is available in
+Byteman zip downloads under directory contrib/jboss-modules-system. It
+is also available from the Maven Central repo with coordinates: group
+`org.jboss.byteman`, artifact `jboss-modules-system` and version
+`3.0.4` or above. The manager class name for the JBoss Modules plugin
+is `org.jboss.byteman.modules.jbossmodules.JbossModulesSystem`.
+
+Note that when you configure this option you also need to ensure the
+jar containing the module plugin manager class is added to the system
+classpath of the JVM into which the agent is being installed (you can
+use the `sys:/path/to/plugin.jar` option for this purpose). It is not
+always possible to add this jar to the bootstrap classpath using the
+`boot:/plugin.jar` option because the module plugin manager needs to
+reference module system-specific code which will not itself be located
+in the bootstrap classpath. As a corollary this means it is not
+normally possible to inject into bootstrap classes when using a
+modules plugin.
+
+Note also that currently it is only possible to configure a module
+plugin from the Java command line using this -javaagent option. The
+bminstall and bnjava scripts do not yet provide command flags for this
+purpose. This may be rectified in later releases.
 
 *sys:jarfile* where _jarfile_ is a path to to a jar file to be added to the JVM _system_ class path. 
 This option makes classes contained in the jar file available for use when type checking, 
@@ -267,9 +300,9 @@ The installed `bin` directory contains a script `bmjava` which can be used to as
 passed to the byteman agent and combine them with other java options supplied on the java command 
 line. The command line syntax for this script is
 
-....
+----
 bmjava [-p port] [-h host] [ -l script|-b jar|-s jar|-nb|-nl|-nj ]* [--] javaargs
-....
+----
 
 where terms between [ ] are optional, terms separated by | are alternatives, * means zero or more 
 repetitions and
@@ -297,13 +330,13 @@ the bootstrap or system classpath.
 
 The command line syntax for the `bmsubmit` script is:
 
-....
+----
 submit [-p port] [-h host] [-l|-u] [script1 . . . scriptN]
 submit [-p port] [-h host] [-b|-s] jarfile1 . . .
 submit [-p port] [-h host] -c
 submit [-p port] [-h host] -y [prop1[=[value1]]. . .]
 submit [-p port] [-h host] -v
-....
+----
 
 Flags `-p` and `-h` can be used to supply the port and host address used to connect to the Byteman 
 agent listener. If not supplied they default to 9091 and localhost, respectively.
@@ -371,9 +404,9 @@ classes mentioned in the rules.
 
 The command line syntax for the `bmcheck` script is:
 
-....
+----
 bmcheck [-cp classpath] [-p package]* script1 [. . . scriptN]
-....
+----
 
 Flag `-cp` provides a single classpath element used to locate classes mentioned in the scripts. If 
 your code is located in several jars then you must supply `-cp` multiple times.

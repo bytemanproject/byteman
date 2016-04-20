@@ -16,7 +16,7 @@ threads wake them up. The wakeup can simply allow the suspended thread to resume
 rule which suspended it. Alternatively, it can force the waiting thread to exit from the triggering 
 method with an exception. The API defined by the helper class is
 
-....
+----
   public void waitFor(Object identifier)
   public void waitFor(Object identifier, long millisecsWait)
   public boolean waiting(Object identifier)
@@ -24,7 +24,7 @@ method with an exception. The API defined by the helper class is
   public boolean signalWake(Object identifier, boolean mustMeet)
   public boolean signalThrow(Object identifier)
   public boolean signalThrow(Object identifier, boolean mustMeet)
-....
+----
 
 As with CountDowns, Waiters are identified by an arbitrary object. Note that the wait operation is 
 not performed by invoking `Object.wait` on identifier. Doing so might interfere with locking and 
@@ -70,7 +70,7 @@ also provides a way of introducing asymmetry since it sorts threads by order of 
 returned from the rendezvous built-in can be checked to identify, say,  the first (or last) thread 
 to arrive and that thread can be the one whose action is triggered. 
 
-....
+----
   public boolean createRendezvous(Object identifier,
                                   int expected)
   public boolean createRendezvous(Object identifier,
@@ -81,7 +81,7 @@ to arrive and that thread can be the one whose action is triggered.
   public boolean isRendezvous(Object identifier, int expected)
   public int getRendezvous(Object identifier, int expected)
   public int deleteRendezvous(Object identifier, int expected)
-....
+----
 
 `createRendezvous` creates a rendezvous identified by `identifier`. `count` identifies the number 
 of threads which must meet at the rendezvous before any one of them is allowed to continue 
@@ -132,14 +132,14 @@ thread pool to be sure all activity has completed. This means the test needs to 
 accumulate a list of managed threads and then subsequently join them either from the manager 
 thread or from a test thread.
 
-....
+----
   public boolean createJoin(Object identifier, int expected)
   public boolean isJoin(Object identifier, int expected)
   public boolean joinEnlist(Object identifier, int expected)
   public boolean joinWait(Object identifier, int expected)
   public boolean joinWait(Object identifier,
                           int expected,long timeout)
-....
+----
 
 `createJoin` creates a Joiner which can subsequently be referenced by identifier. expected 
 identifies the number of threads which are to be joined. If a Joiner is created it returns `true`. 
@@ -171,11 +171,11 @@ timeout value means do not time out.
 The rule engine provides two built-ins for use in rule actions which allow execution of the 
 triggering method to be aborted. The API defined by the helper class is the following:
 
-....
+----
   public void killThread()
   public void killJVM()
   public void killJVM(int exitCode)
-....
+----
 
 `killThread` causes a runtime exception of type `ExecuteException` to be thrown from the triggering 
 method call frame. This will effectively kill the thread unless a catch-all exception handler is 
@@ -187,17 +187,73 @@ exitCode is not supplied it is defaulted to -1
 
 === Rule State Management Operations
 
+==== LinkMaps
+
+The rule engine provides LinkMaps which can be used to record
+information available when a rule fires for retrieval later on by
+other rules or, perhaps, at the end of a test run. A link map is
+basically a named `Map` which associates one `Object` with another.
+The API defined by the helper class is
+
+----
+boolean createLinkMap(Object mapName)
+boolean deleteLinkMap(Object mapName)
+Object link(Object mapName, Object name, Object value)
+Object linked(Object mapName, Object name)
+Object unlink(Object mapName, Object name)
+Object link(Object name, Object value)
+Object linked(Object name)
+Object unlink(Object name)
+----
+
+The API methods which omit a `mapName` parameter operate on the default
+map which is a predefined map labelled using the global `String` name
+`"default"`. However, you can have as many maps as you want, labelled
+using whatever `Object` is handy when a rule fires. When running a
+multi-threaded program it is often useful to use the current thread to
+name a LinkMap as this ensures that values saved by one thread do not
+get overwritten by other threads.
+
+`createLinkMap` can be used to create a LinkMap before using it.
+However, it is not really necessary to call this since the other API
+functions will create a map if needed where it does not already
+exist. It returns `true` if the map does not already exist or `false`
+otherwise.
+
+`deleteLinkMap` is used to delete a LinkMap. This is useful because it
+ensures all references to the objects linked in the map are
+removed. It returns `tru`e if a map with labelled by `mapName` was
+found and deleted or `false` otherwise.
+
+`link` is used to add a link from `name` to `value` to a map. The
+version with no `mapName` argument adds a link to the default map
+i.e. the one labelled with name `"default"`. The return value from the
+call is any previous value that was linked to `name` or null if no
+link was previously present in the map.
+
+`linked` is used to retrieve the value linked ot `name` from a map.
+The version with no `mapName` argument retrieves the value of the link
+from the default map i.e. the one labelled with name `"default"`. The
+return value from the call is whatever value is linked to `name` or
+null if no link is present in the map.
+
+`unlink` is used to remove any link from `name` from a map. The
+version with no `mapName` argument removes any link to the default map
+i.e. the one labelled with name `"default"`.The return value from the
+call is whatever value was linked to `name` or null if no link was
+present in the map.
+
 ==== CountDowns
 
 The rule engine provides CountDowns which can be used to ensure that firing of some given rule 
 will only occur after other rules have been triggered or fired a certain number of times. The API 
 defined by the helper class is
 
-....
+----
   public boolean createCountDown(Object identifier, int count)
   public boolean getCountDown(Object identifier)
   public boolean countDown(Object identifier)
-....
+----
 
 CountDowns are identified by an arbitrary object, allowing successive calls to the countdown API 
 to apply to the same or different cases. This identification can be made across different rule and 
@@ -206,7 +262,7 @@ rule might include condition `countDown($0)`. A CountDown created by the first r
 decremented if the second rule was triggered from a method call with the same value for this. 
 CountDowns created by invocations with distinct values for this would match up accordingly.  
 However, if the CountDown was identified using a common `String` literal (i.e. action and 
-condition were `createCountDown(“counter”, 1)` and `countDown(“counter”),` respectively), then the 
+condition were `createCountDown("counter", 1)` and `countDown("counter"),` respectively), then the 
 CountDown created by the first rule would be decremented by the next firing of the second rule 
 irrespective of whether the trigger method calls were on related instances.
 
@@ -233,11 +289,11 @@ one or more rule conditions can only have one winner.
 The rule engine provides a simple mechanism for setting, testing and clearing global flags. The 
 API defined by the helper class is
 
-....
+----
   public boolean flag(Object identifier)
   public boolean flagged(Object identifier)
   public boolean clear(Object identifier)
-....
+----
 
 As before, Flags are identified by an arbitrary object. All three methods are designed to be used 
 either in conditions or actions. 
@@ -263,7 +319,7 @@ and respond to the number of times various triggerings or firings have happened.
 CountDowns there are no special semantics associated with decrementing a Counter to zero. They may 
 even have negative values. The API defined by the helper class is
 
-....
+----
   public boolean createCounter(Object o)
   public boolean createCounter(Object o, int count)
   public boolean deleteCounter(Object o)
@@ -272,7 +328,7 @@ even have negative values. The API defined by the helper class is
   public int decrementCounter(Object o)
   public int readCounter(Object o)
   public int readCounter(Object o, boolean zero)
-....
+----
 
 As before, Counters are identified by an arbitrary object. All methods are designed to be used in 
 rule conditions or actions. 
@@ -304,12 +360,12 @@ Counter exists it will create one with value 0. If the optional flag argument `z
 The rule engine provides Timers which allow measurement of elapsed time between triggerings. 
 Timers can be created, read, reset and deleted via the following API
 
-....
+----
   public boolean createTimer(Object o)
   public long getElapsedTimeFromTimer(Object o)
   public long resetTimer(Object o)
   public boolean deleteTimer(Object o)
-....
+----
 
 As before, Timers are identified by an arbitrary object. All methods are designed to be used in 
 rule conditions or actions.
@@ -337,34 +393,34 @@ the rule execution engine. In some cases this may be desirable. However, in othe
 recursive entry may cause an infinite triggering chain and it is necessary to disable triggering 
 while the rule executes. For example, the following rule will fail because of this problem:
 
-....
+----
   RULE infinite triggering chain
   CLASS java.io.FileOutputStream
   METHOD open(String, int)
   AT EXIT
   BIND filename = $1
   IF TRUE
-  DO traceln(“openlog”, “Opened “ + $1 + “ for write”)
+  DO traceln("openlog", "Opened " + $1 + " for write")
   ENDRULE
-....
+----
 
 The problem is that on the first call to builtin method `traceln(Object, String)` the default helper 
-class attempts to open a trace file which it will then associate with key `“openlog”`. In doing so 
+class attempts to open a trace file which it will then associate with key `"openlog"`. In doing so 
 it calls `FileOutputStream.open` and retriggers the rule.
 
 One way round this is to specify a condition which will break the chain. The trace file will have 
-a name of the form “trace _NNN_.txt” so the following version of the rule works as desired:
+a name of the form "trace _NNN_.txt" so the following version of the rule works as desired:
 
-....
+----
   RULE infinite triggering chain broken using IF test
   CLASS java.io.FileOutputStream
   METHOD open(String, int)
   AT EXIT
   BIND filename = $1
-  IF !filename.matches(“trace.*”)
-  DO traceln(“openlog”, “Opened “ + $1 + “ for write”)
+  IF !filename.matches("trace.*")
+  DO traceln("openlog", "Opened " + $1 + " for write")
   ENDRULE
-....
+----
 
 With this version the rule is triggered recursively under the call to `traceln` but the condition 
 stops it being fired, breaking the recursion.
@@ -373,9 +429,9 @@ Of course in other cases it may not be so simple to come up with a condition whi
 recursive firing. So, the default helper provides the following method which allows triggering to 
 be disabled or re-enabled while the rule is executing
 
-....
+----
   public boolean setTriggering(boolean enabled)
-....
+----
 
 If enabled is `false` then triggering is disabled during execution of subsequent expressions in 
 the rule body. If it is `true` then triggering is re-enabled.
@@ -383,7 +439,7 @@ the rule body. If it is `true` then triggering is re-enabled.
 This can be used to implement the behaviour shown in the example above without the need to 
 identify a suitable conditional
 
-....
+----
   RULE infinite triggering chain broken using IF test
   CLASS java.io.FileOutputStream
   METHOD open(String, int)
@@ -391,9 +447,9 @@ identify a suitable conditional
   BIND filename = $1
   IF TRUE
   DO setTriggering(false);
-   traceln(“openlog”, “Opened “ + $1 + “ for write”)
+   traceln("openlog", "Opened " + $1 + " for write")
   ENDRULE
-....
+----
 
 Note that once execution of the rule has completed triggering is automatically re-enabled so, in 
 this case, there is no need to call `setTriggering(true)` at the end of the `DO` clause.
@@ -410,20 +466,20 @@ in the `IF` or `BIND` clause are evaluated.
 The rule engine provides a simple built-in dbug method to support conditional display of messages 
 during rule execution. The API defined by the helper class is
 
-....
+----
 public boolean debug(String message)
-....
+----
 
 `debug` prints the supplied message to `System.out`, prefixed with the name of the rule being 
-executed. It always returns true, allowing debug messages to be used in conditions by `AND`ing 
+executed. It always returns true, allowing debug messages to be used in conditions by `AND` ing 
 them with other boolean expressions.
 
 Generation of debug messages can be switched on by setting the following system property on the 
 JVM command line:
 
-....
+----
 org.jboss.byteman.debug
-....
+----
 
 ==== Tracing
 
@@ -431,7 +487,7 @@ The rule engine provides a set of built-in methods to support logging of trace m
 execution. Messages may be logged to `System.out`, `Sytem.err` or to a named file. The API defined 
 by the helper class is the following:
 
-....
+----
 public boolean traceOpen(Object identifier, String filename)
 public boolean traceOpen(Object identifier)
 public boolean traceClose(Object identifier)
@@ -439,7 +495,7 @@ public boolean trace(Object identifier, String message)
 public boolean traceln(Object identifier, String message)
 public boolean trace(String message)
 public boolean traceln(String message)
-....
+----
 
 `traceOpen` opens the file identified by `fileName` and associates it with identifier, returning 
 `true`. `filename` can be either a relative or absolute path. Relative file names are located 
@@ -462,11 +518,11 @@ associated with identifier as if a call to trace had been made with no file name
 identifier is omitted then the output is written to `System.out`.
 
 A caveat applies to the above descriptions for three special cases. If identifier is `null` or the 
-string “out”, then `trace` and `traceln` write to `System.out`. If identifier is the string “err”, 
+string "out", then `trace` and `traceln` write to `System.out`. If identifier is the string "err", 
 then `trace` and `traceln` write to `System.err`. `traceOpen` and `traceClose` always return 
 `false` immediately if identifier has any of these values. Calls to `trace(message)` and 
 `traceln(message)` which omit identifier are implemented by calling, respectively, 
-`trace(“out”, message)` and `traceln(“out”, message)`.
+`trace("out", message)` and `traceln("out", message)`.
 
 === Stack Management Operations
 
@@ -478,18 +534,18 @@ matches the name in its `METHOD` clause. However, sometimes it is useful to be a
 method called the trigger rule. For example, the following rule will only fire when method 
 `MyClass.getData()` is called from method `handleIncoming` of class `MyOtherClass`:
 
-....
+----
 RULE trace getData call under handleIncoming
 CLASS MyClass
 METHOD myGetData
 IF callerEquals("MyOtherClass.handleIncoming", true)
 DO traceStack("found the caller!\n", 10)
 ENDRULE
-....
+----
 
 The API defined by the helper class is
 
-....
+----
 public boolean callerEquals(String name)
 public boolean callerEquals(String name,
                             int frameCount)
@@ -550,7 +606,7 @@ public boolean callerCheck(String match, boolean isRegExp,
                            boolean includePackage,
                            int startFrame,
                            int frameCount) 
-....
+----
 
 The real action happens in method `callerCheck(String, boolean, boolean, boolean, int, int)`. 
 All the other methods call each other defaulting the various missing arguments until they bottom 
@@ -579,7 +635,7 @@ this argument to `callerCheck` as false and the `callerMatches` methods pass thi
 The rule engine provides a set built-in methods which can be used to obtain a string representation 
 of a stack trace or to print a stack trace to a trace file. The API defined by the helper class is
 
-....
+----
 public void traceStack()
 public void traceStack(String prefix)
 public void traceStack(String prefix, Object key)
@@ -593,7 +649,7 @@ public String formatStack()
 public String formatStack(String prefix)
 public String formatStack(int maxFrames)
 public String formatStack(String prefix, int maxFrames)
-....
+----
 
 The real action happens in methods `traceStack(String, Object, int)` and `formatStack(String, int)`. 
 All the other methods call each other defaulting the various missing arguments until they bottom 
@@ -623,7 +679,7 @@ frames from a given package or set of packages. The rule engine provides an alte
 built-in methods which can be used to obtain or print a string representation of some subset of 
 the stack filtered using a regular expression match. The API defined by the helper class is
 
-....
+----
 public void traceStackMatching(String regExp)
 public void traceStackMatching(String regExp, String prefix)
 public void traceStackMatching(String regExp,
@@ -665,7 +721,7 @@ public void formatStackMatching(String regExp,
                                 boolean includeClass,
                                 boolean includePackage,
                                 String prefix)
-....
+----
 
 Once again the action happens in the methods with the full set of parameters and the others merely 
 call these methods defaulting the omitted arguments.
@@ -690,7 +746,7 @@ and end frame for the trace. The rule engine provides another set of built-in me
 used to obtain or print a string representation of a segment of the stack in this manner. The API 
 defined by the helper class is
 
-....
+----
 public void traceStackBetween(String from, String to)
 public void traceStackBetween(String from, String to,
                               String prefix)
@@ -786,7 +842,7 @@ public String formatStackRange(String from, String to,
                             boolean includeClass,
                             boolean includePackage,
                             String prefix)
-....
+----
 
 Once again the action happens in the last two methods and all the other methods merely provide a 
 way of calling them with default values for various of the parameters. The `BetweenMatches` methods 
@@ -812,7 +868,7 @@ trace APIs described above.
 The default helper class also provides methods which can be used to trace or format the stack 
 frames of a specific, named thread:
 
-....
+----
 public void traceThreadStack(String threadName)
 public void traceThreadStack(String threadName,
                              String prefix)
@@ -838,11 +894,11 @@ public void traceThreadStack(String threadName,
 public void traceThreadStack(String threadName,
                              String prefix,
                              int maxFrames)
-....
+----
 
 or to trace or format the stacks of all threads in the runtime:
 
-....
+----
 public void traceAllStacks()
 public void traceAllStacks(String prefix)
 public void traceAllStacks(String prefix, Object key)
@@ -853,7 +909,7 @@ public void formatAllStacks()
 public void formatAllStacks(String prefix)
 public void formatAllStacks(int maxFrames)
 public void formatAllStacks(String prefix , int maxFrames)
-....
+----
 
 === Default Helper Lifecycle Methods
 
@@ -861,7 +917,7 @@ The default helper provides an implementation of the four helper lifecycle metho
 simple debug messages to `System.out`. So, with debug enabled you will see messages like the 
 following as rules are loaded and then unloaded:
 
-....
+----
 Default helper activated
 Installed rule using default helper : my test rule
 . . .
@@ -870,5 +926,4 @@ Installed rule using default helper : my second test rule
 Uninstalled rule using default helper : my test rule
 Uninstalled rule using default helper : my second test rule
 Default helper deactivated
-....
-
+----

@@ -405,6 +405,7 @@
         <module>contrib/jboss-modules-system</module>
         <module>sample</module>
         <module>download</module>
+        <module>docs</module>
     </modules>
 
     <profiles>
