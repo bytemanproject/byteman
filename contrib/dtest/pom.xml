@@ -36,9 +36,6 @@
         <version>3.0.7-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
-    <build>
-        <sourceDirectory>src</sourceDirectory>
-    </build>
     <dependencies>
         <!-- the dtest code depends on the submit and agent jars
         -->
