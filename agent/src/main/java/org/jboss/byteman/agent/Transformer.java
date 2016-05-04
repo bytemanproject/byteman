@@ -23,26 +23,26 @@
 */
 package org.jboss.byteman.agent;
 
-import org.jboss.byteman.agent.adapter.*;
-import org.jboss.byteman.agent.check.ClassChecker;
-import org.jboss.byteman.agent.check.LoadCache;
-import org.jboss.byteman.modules.ModuleSystem;
-import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.type.TypeHelper;
-import org.jboss.byteman.rule.exception.ParseException;
-import org.jboss.byteman.rule.exception.TypeException;
-import org.objectweb.asm.*;
-
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.security.Policy;
 import java.security.ProtectionDomain;
-import java.util.*;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.jboss.byteman.agent.check.ClassChecker;
+import org.jboss.byteman.agent.check.LoadCache;
+import org.jboss.byteman.modules.ModuleSystem;
+import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.rule.type.TypeHelper;
 
 /**
  * byte code transformer used to introduce byteman events into JBoss code
@@ -219,7 +219,7 @@ public class Transformer implements ClassFileTransformer {
             // but we exclude byteman classes and java.lang classes
             String internalName = TypeHelper.internalizeClass(className);
 
-            if (isBytemanClass(internalName) || !isTransformable(internalName)) {
+            if (isBytemanClass(internalName) || !isTransformable(internalName)  || !isIncluded(internalName) || isExcluded(internalName)) {
                 return null;
             }
 
@@ -1239,6 +1239,60 @@ public class Transformer implements ClassFileTransformer {
 
     private static boolean computeDisallowDowncast() {
         return (System.getProperty(DISALLOW_DOWNCAST) != null);
+    }
+
+    List<String> included = readCollectionProperty("byteman.included");
+
+    List<String> excluded = readCollectionProperty("byteman.excluded");
+
+    /**
+     * Read a comma separated system property
+     * 
+     * @param name  property name
+     *              
+     * @return  a List of String values
+     */
+    List<String> readCollectionProperty(String name) {
+        List<String> list = new ArrayList<String>();
+        for (String s : System.getProperty(name, "").split(",")) {
+            s = s.trim();
+            if (s.length() > 0) list.add(s);
+        }
+        return list;
+    }
+
+    /**
+     * Test if class has been configured as excluded
+     * 
+     * @param internalName  the class name to test
+     *                      
+     * @return  false if no exclusion is defined or classname not in exclusion list
+     */
+    private boolean isExcluded(String internalName) {
+        
+        // If no exclusion is configured, always return false
+        if (excluded.size() == 0) return false;
+        
+        // Iterate on exclusions
+        for (String s : excluded) {
+            if (internalName.contains(s)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Test if class has been configured as included
+     * 
+     * @param internalName  the class name to test
+     *                      
+     * @return  true if no inclusion configured or classname in inclusion list
+     */
+    private boolean isIncluded(String internalName) {
+        if (included.size() == 0) return true;
+        for (String s : included) {
+            if (internalName.contains(s)) return true;
+        }
+        return false;
     }
 
     private void checkConfiguration(String property)
