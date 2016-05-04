@@ -24,6 +24,8 @@
 package org.jboss.byteman.agent;
 
 
+import org.jboss.byteman.rule.helper.Helper;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -79,13 +81,13 @@ public class Main {
                     try {
                         port = Integer.valueOf(arg.substring(PORT_PREFIX.length(), arg.length()));
                         if (port <= 0) {
-                            System.err.println("Invalid port specified [" + port + "]");
+                            Helper.err("Invalid port specified [" + port + "]");
                             port = null;
                         } else if (managerClassName == null) {
                             managerClassName=MANAGER_NAME;
                         }
                     } catch (Exception e) {
-                        System.err.println("Invalid port specified [" + arg + "]. Cause: " + e);
+                        Helper.err("Invalid port specified [" + arg + "]. Cause: " + e);
                     }
                 } else if (arg.startsWith(SCRIPT_PREFIX)) {
                     scriptPaths.add(arg.substring(SCRIPT_PREFIX.length(), arg.length()));
@@ -128,7 +130,7 @@ public class Main {
                         System.out.println("Setting " + prop + "=" + value);
                         System.setProperty(prop, value);
                     } else {
-                        System.err.println("Invalid property : " +  prop);
+                        Helper.err("Invalid property : " +  prop);
                     }
                 } else if (arg.startsWith(POLICY_PREFIX)) {
                     String value = arg.substring(POLICY_PREFIX.length(), arg.length());
@@ -157,7 +159,7 @@ public class Main {
                     moduleSystemName = mod;
                     moduleSystemArgs = moduleArgs;
                 } else {
-                    System.err.println("org.jboss.byteman.agent.Main:\n" +
+                    Helper.err("org.jboss.byteman.agent.Main:\n" +
                             "  illegal agent argument : " + arg + "\n" +
                             "  valid arguments are boot:<path-to-jar>, sys:<path-to-jar>, script:<path-to-script> or listener:<true-or-false>");
                 }
@@ -171,7 +173,7 @@ public class Main {
                 JarFile jarfile = new JarFile(new File(bootJarPath));
                 inst.appendToBootstrapClassLoaderSearch(jarfile);
             } catch (IOException ioe) {
-                System.err.println("org.jboss.byteman.agent.Main: unable to open boot jar file : " + bootJarPath);
+                Helper.err("org.jboss.byteman.agent.Main: unable to open boot jar file : " + bootJarPath);
                 throw ioe;
             }
         }
@@ -183,7 +185,7 @@ public class Main {
                 JarFile jarfile = new JarFile(new File(sysJarPath));
                 inst.appendToSystemClassLoaderSearch(jarfile);
             } catch (IOException ioe) {
-                System.err.println("org.jboss.byteman.agent.Main: unable to open system jar file : " + sysJarPath);
+                Helper.err("org.jboss.byteman.agent.Main: unable to open system jar file : " + sysJarPath);
                 throw ioe;
             }
         }
@@ -203,7 +205,7 @@ public class Main {
                 String ruleScript = new String(bytes);
                 scripts.add(ruleScript);
             } catch (IOException ioe) {
-                System.err.println("org.jboss.byteman.agent.Main: unable to read rule script file : " + scriptPath);
+                Helper.err("org.jboss.byteman.agent.Main: unable to read rule script file : " + scriptPath);
                 throw ioe;
             } finally {
                 if (fis != null)
@@ -226,7 +228,7 @@ public class Main {
                 // merge the resource and file script paths into one list
                 scriptPaths.add(scriptPath);
             } catch (IOException ioe) {
-                System.err.println("org.jboss.byteman.agent.Main: error reading rule script resource file : " + scriptPath);
+                Helper.err("org.jboss.byteman.agent.Main: error reading rule script resource file : " + scriptPath);
                 throw ioe;
             }
         }

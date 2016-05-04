@@ -23,6 +23,8 @@
 */
 package org.jboss.byteman.check;
 
+import org.jboss.byteman.rule.helper.Helper;
+
 /**
  * utility which parses and typechecks all rules in a rule script.
  *
@@ -81,18 +83,19 @@ public class TestScript
             int typeWarningCount = result.getTypeWarningCount();
             int warningCount = result.getWarningCount() + typeWarningCount;
             int errorCount = result.getErrorCount() + parseErrorCount + typeErrorCount + typeWarningCount;
-            System.out.println("TestScript: " + errorCount + " total errors");
-            System.err.println("            " + warningCount + " total warnings");
-            System.err.println("            " + parseErrorCount + " parse errors");
-            System.err.println("            " + typeErrorCount + " type errors");
-            System.err.println("            " + typeWarningCount + " type warnings");
+            Helper.err("TestScript: " + errorCount + " total errors");
+            Helper.err("            " + warningCount + " total warnings");
+            Helper.err("            " + parseErrorCount + " parse errors");
+            Helper.err("            " + typeErrorCount + " type errors");
+            Helper.err("            " + typeWarningCount + " type warnings");
         } else if (result.hasWarning()) {
             int typeWarningCount = result.getTypeWarningCount();
             int warningCount = result.getWarningCount() + typeWarningCount;
-            System.out.println("TestScript: " + warningCount + " total warnings");
-            System.err.println("            " + typeWarningCount + " type warnings");
+            Helper.err("TestScript: " + warningCount + " total warnings");
+            Helper.err("            " + typeWarningCount + " type warnings");
         } else {
-            System.err.println("TestScript: no errors");
+            //As it mean, there is no errors, the better stdout is Helper.out
+            System.out.println("TestScript: no errors");
         }
     }
 

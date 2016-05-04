@@ -24,6 +24,8 @@
  */
 package org.jboss.byteman.agent;
 
+import org.jboss.byteman.rule.helper.Helper;
+
 import java.util.*;
 import java.lang.reflect.Method;
 
@@ -234,7 +236,7 @@ public class ScriptRepository
         // sanity check override rule setting and print warning if necessary
 
         if (skipOverrideRules && script.isOverride()) {
-            System.err.println("ScriptRepository.addScript : injection into overriding methods disabled but found override rule " + script.getName());
+            Helper.err("ScriptRepository.addScript : injection into overriding methods disabled but found override rules " + script.getName());
         }
 
         // insert the script by name, invalidating any old script

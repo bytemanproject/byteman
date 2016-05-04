@@ -1,5 +1,6 @@
 package org.jboss.byteman.modules;
 
+import org.jboss.byteman.rule.helper.Helper;
 
 public class NonModuleSystem implements ModuleSystem<ClassbyteClassLoader>
 {
@@ -7,7 +8,7 @@ public class NonModuleSystem implements ModuleSystem<ClassbyteClassLoader>
     public void initialize(String args)
     {
         if (!args.isEmpty())
-            System.err.println("Unexpcted module system arguments: " + args);
+            Helper.err("Unexpcted module system arguments: " + args);
     }
 
     public ClassbyteClassLoader createLoader(ClassLoader triggerClassLoader, String[] imports)
