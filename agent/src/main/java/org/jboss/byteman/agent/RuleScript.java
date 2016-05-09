@@ -63,7 +63,9 @@ public class RuleScript
      * case of an interface rule, by the class directly implementing the target interface
      */
     private boolean isOverride;
-    
+    /**
+     * true if the target class should be matched with specified prefix
+     */
     private boolean isPrefixSearch;
     
     /**
