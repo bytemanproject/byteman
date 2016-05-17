@@ -75,11 +75,11 @@ public class ThreadHistoryMonitorHelper extends Helper
     public static void activated() {
         DEBUG = Boolean.getBoolean("org.jboss.byteman.sample.helper.debug");
         if(DEBUG)
-            System.err.println("ThreadHistoryMonitorHelper.activated, ");
+            Helper.out("ThreadHistoryMonitorHelper.activated, ");
     }
     public static void installed(Rule rule) {
         if(DEBUG)
-            System.err.println("ThreadHistoryMonitorHelper.installed, "+rule);
+            Helper.out("ThreadHistoryMonitorHelper.installed, "+rule);
     }
     protected ThreadHistoryMonitorHelper(Rule rule) {
         super(rule);
@@ -160,7 +160,7 @@ public class ThreadHistoryMonitorHelper extends Helper
      * @throws IOException if an io error occurs
      */
     public void writeAllEventsToFile(String path) throws IOException {
-        System.err.println("writeAllEventsToFile: "+path);
+        Helper.out("writeAllEventsToFile: "+path);
         writeAllEventsToFile(path, 0);
     }
 
@@ -223,7 +223,7 @@ public class ThreadHistoryMonitorHelper extends Helper
         writeEvents(format, "Thread.exit", exitMap.values());
         writeEvents(format, "Runable.run", runMap.values());
         fw.close();
-        System.err.println("Wrote events to: "+path);
+        Helper.out("Wrote events to: "+path);
     }
     private void writeEvents(Formatter fw, String title, Collection<ThreadMonitorEvent> events) {
         int count = 0;

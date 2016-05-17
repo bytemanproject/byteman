@@ -272,6 +272,9 @@ public class RuleCheck {
                     } catch (CompileException ce) {
                         typeError("ERROR : Failed to compile rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine() + (methodName == null ? "" : " against method " + methodName), ce);
                         continue;
+                    } catch (Throwable th) {
+                        typeError("ERROR : Failed to check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine() + (methodName == null ? "" : " against method " + methodName), th);
+                        continue;
                     }
 
                     if (script.isOverride()) {
@@ -399,6 +402,9 @@ public class RuleCheck {
                             typeError("ERROR : Failed to compile rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine(), ce);
                             System.out.println(ce);
                             System.out.println();
+                            return;
+                        } catch (Throwable th) {
+                            error("ERROR : Failed to process rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine(), th);
                             return;
                         }
                         if (script.isInterface()) {
