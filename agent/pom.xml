@@ -1121,6 +1121,22 @@
                          <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/bugfixes/TestConstructorArgUpcast.btm</argLine>
                       </configuration>
                     </execution>
+                    <execution>
+                      <id>javaops.TestInnerClasses</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                          <forkCount>1</forkCount>
+                          <reuseForks>true</reuseForks>
+                         <includes>
+                           <include>org/jboss/byteman/tests/bugfixes/TestInnerClasses.class</include>
+                         </includes>
+                         <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/bugfixes/TestInnerClasses.btm</argLine>
+                      </configuration>
+                    </execution>
                     <!-- dynamic rule submission
                         n.b. submit test does not use a script on the command line
                         instead it sets listener true and uplaods the rules from the test program
@@ -2121,6 +2137,22 @@
                            <include>org/jboss/byteman/tests/bugfixes/TestConstructorArgUpcast.class</include>
                          </includes>
                          <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/bugfixes/TestConstructorArgUpcast.btm</argLine>
+                      </configuration>
+                    </execution>
+                    <execution>
+                      <id>javaops.TestInnerClasses.compiled</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                          <forkCount>1</forkCount>
+                          <reuseForks>true</reuseForks>
+                         <includes>
+                           <include>org/jboss/byteman/tests/bugfixes/TestInnerClasses.class</include>
+                         </includes>
+                         <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/bugfixes/TestInnerClasses.btm</argLine>
                       </configuration>
                     </execution>
                     <!-- dynamic rule submission compiled

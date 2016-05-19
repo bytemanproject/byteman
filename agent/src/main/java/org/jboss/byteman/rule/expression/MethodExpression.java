@@ -219,6 +219,7 @@ public class MethodExpression extends Expression
         TypeGroup typeGroup =  getTypeGroup();
         Class<?> clazz = rootType.getTargetClass();
         boolean isStatic = (recipient == null);
+        boolean isInterface = clazz.isInterface();
 
         int arity = arguments.size();
         LinkedList<Class<?>> clazzes = new LinkedList<Class<?>>();
@@ -251,6 +252,10 @@ public class MethodExpression extends Expression
                 // move on to the next class
                 clazz = clazz.getSuperclass();
             }
+        }
+        // for an interface don't forget to include methods of Object
+        if (isInterface) {
+            clazzes.add(Object.class);
         }
         // now check for a matching method in each class or interface in order
         while (!clazzes.isEmpty()) {
@@ -303,7 +308,8 @@ public class MethodExpression extends Expression
                 Method method = bestMatchCandidate(candidates, expected);
 
                 if (method != null) {
-                    if (!Modifier.isPublic(method.getModifiers())) {
+                    if (!Modifier.isPublic(method.getModifiers()) ||
+                            !Modifier.isPublic(method.getDeclaringClass().getModifiers())) {
                         // see if we can actually access this method
                         try {
                             method.setAccessible(true);

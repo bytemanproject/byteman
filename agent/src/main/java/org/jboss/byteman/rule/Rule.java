@@ -47,6 +47,7 @@ import org.jboss.byteman.rule.compiler.Compiler;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -535,7 +536,12 @@ public class Rule
             // ensure that the type group includes the exception types
             typeGroup.addExceptionTypes(triggerExceptions);
         }
-        
+
+        // ensure the trigger class is in the type group
+
+        if (typeGroup.lookup(triggerClass) == null) {
+            typeGroup.create(triggerClass);
+        }
         // try to resolve all types in the type group to classes
 
         typeGroup.resolveTypes();
@@ -566,26 +572,80 @@ public class Rule
     public void compile()
             throws CompileException
     {
-        boolean compileToBytecode = isCompileToBytecode();
+        boolean doCompileToBytecode = doCompileToBytecode();
         String[] imports = ruleScript.getImports();
 
-        if (helperClass == Helper.class && !compileToBytecode && imports.length == 0) {
+        if (helperClass == Helper.class && !doCompileToBytecode && imports.length == 0) {
             // we can use the builtin interpreted helper adapter for class Helper
            helperImplementationClass = InterpretedHelper.class;
         } else {
             // we need to generate a helper adapter class which either interprets or compiles
 
-            helperImplementationClass = Compiler.getHelperAdapter(this, helperClass, compileToBytecode);
+            helperImplementationClass = Compiler.getHelperAdapter(this, helperClass, doCompileToBytecode);
         }
     }
 
     /**
-     * should rules be compiled to bytecode
-     * @return true if rules should be compiled to bytecode otherwise false
+     * is this rule marked for compilation to bytecode
+     * @return true if this rule is marked for compilation to bytecode otherwise false
      */
     private boolean isCompileToBytecode()
     {
         return ruleScript.isCompileToBytecode();
+    }
+
+    /**
+     * should this rule actually be compiled to bytecode
+     * @return true if this rule should actually be compiled to bytecode otherwise false
+     *
+     * this method allows compilation to be overridden when
+     * the trigger class is an inner class, avoiding the most
+     * common case where trying to use bytecode will result in
+     * a verify error. it only applies for overriding or interface
+     * rules because asking for direct injection into an inner
+     * class with compilation enabled is a mistake which deserves
+     * to be punished with failure
+     */
+    private boolean doCompileToBytecode()
+    {
+        boolean compile = ruleScript.isCompileToBytecode();
+
+        if (compile) {
+            // disable compilation if the rule is for an interface
+            // or injects down a hierarchy and the target class
+            // is a non-public 'enclosed' class. compilation will lead
+            // to verify errors because the rule bytecode cannot
+            // access an enclosed class. in these cases interpretation
+            // still works fine because it relies on reflection.
+            //
+            // this is needed to cope with the situation where it may
+            // be legitimate to compile some implementations but not
+            // others. if we don't give the failing cases a free pass
+            // then compilation for the good cases will not be an option.
+            //
+            // n.b. we might reject cases where the trigger CLASS is
+            // the target named in the rule but actually it is
+            // possible to have a non-public (e.g. protected) inner
+            // parent class with public inner subclasses so this is
+            // also potentially a legitimate case
+
+            if (ruleScript.isInterface() || ruleScript.isOverride()) {
+                // yes, we need to check the trigger class
+                Class<?> triggerClazz = typeGroup.lookup(triggerClass).getTargetClass();
+                if (triggerClazz != null && triggerClazz.getEnclosingClass() != null) {
+                    // yes it's not a top level class so it needs to be public to be compiled
+
+                    if((triggerClazz.getModifiers() & Modifier.PUBLIC) == 0) {
+                        compile = false;
+                        if(Transformer.isVerbose()) {
+                            System.out.println("Rule.isCompileToBytecode : disabling compilation for rule " + getName() + " injecting into non-public enclosed class " + triggerClass);
+                        }
+                    }
+                }
+            }
+        }
+
+        return compile;
     }
 
     private void installParameters(boolean isStatic, String className)

@@ -476,8 +476,17 @@ public class FieldExpression extends AssignableExpression
     {
         try {
             Field field = ownerClazz.getField(fieldName);
-            isPublicField = true;
-            return field;
+            // the owner class has to be public for us to be able to use reflection
+            if (Modifier.isPublic(field.getDeclaringClass().getModifiers())) {
+                isPublicField = true;
+                return field;
+            } else {
+                isPublicField = false;
+                field.setAccessible(true);
+                // register the field with the rule so we can access it later
+                fieldIndex = rule.addAccessibleField(field);
+                return field;
+            }
         } catch (NoSuchFieldException nsfe) {
             // look for a protected or private field with the desired name
             Class<?> nextClass = ownerClazz;

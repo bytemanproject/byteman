@@ -1,0 +1,86 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2016, Red Hat and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+# Test for partial fix to BYTEMAN-288 where injection into private static
+# inner classes is made to work for overriding rules and interface rules
+#
+# n.b. the rules also check access to public fields of private classes
+# for both instance and static fields
+
+RULE test interface injection into public method of inner class
+INTERFACE TestInnerInterface
+METHOD testPublic()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("interface injection into " + $0.getClass().getSimpleName() + ".testPublic");
+ENDRULE
+
+RULE test interface injection into private method of inner class
+INTERFACE TestInnerInterface
+METHOD testPrivate()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : Test = $0.getTest()
+IF TRUE
+DO test.log("interface injection into " + $0.getClass().getSimpleName() + ".testPrivate");
+ENDRULE
+
+RULE test overriding injection into public method of inner class
+CLASS ^TestInnerAbstract
+METHOD testPublic()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : Test = org.jboss.byteman.tests.auxiliary.TestInnerAuxiliary$PublicStaticInner.statictest
+IF TRUE
+DO test.log("overriding injection into " + $0.getClass().getSimpleName() + ".testPublic");
+ENDRULE
+
+RULE test overriding injection into private method of inner class
+CLASS ^TestInnerAbstract
+METHOD testPrivate()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT ENTRY
+BIND test : Test = org.jboss.byteman.tests.auxiliary.TestInnerAuxiliary$PrivateStaticInner.statictest
+IF TRUE
+DO test.log("overriding injection into " + $0.getClass().getSimpleName() + ".testPrivate");
+ENDRULE
+
+RULE test access for public instance field of private inner class
+CLASS TestInnerAuxiliary$PrivateStaticInner
+METHOD testPublic()
+AT ENTRY
+BIND test : Test = $0.test
+IF TRUE
+DO test.log("accessed public instance field of private class " + $0.getClass().getSimpleName());
+ENDRULE
+
+RULE test access for public static field of private inner class
+CLASS TestInnerAuxiliary$PrivateStaticInner
+METHOD testPrivate()
+AT ENTRY
+BIND test : Test = org.jboss.byteman.tests.auxiliary.TestInnerAuxiliary$PublicStaticInner.statictest
+IF TRUE
+DO test.log("accessed public static field of private class " + $0.getClass().getSimpleName());
+ENDRULE
