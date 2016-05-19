@@ -79,6 +79,11 @@ public class RuleCheck {
     {
         verbose = true;
     }
+    
+    public void addRule(String name, String text) {
+        ruleFiles.add(name);
+        ruleTexts.add(text);
+    }
 
     public boolean addRuleFile(String file) {
         try {
