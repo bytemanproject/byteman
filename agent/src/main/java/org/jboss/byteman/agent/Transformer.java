@@ -790,16 +790,28 @@ public class Transformer implements ClassFileTransformer {
 
     private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, String key, boolean isInterface, boolean isOverride)
     {
-        List<RuleScript> ruleScripts;
+        List<RuleScript> ruleScripts = new ArrayList<RuleScript>();
+        List<RuleScript> normalRuleScripts;
+        List<RuleScript> prefixRuleScripts;
 
         if (isInterface) {
-            ruleScripts = scriptRepository.scriptsForInterfaceName(key);
+        	normalRuleScripts = scriptRepository.scriptsForInterfaceName(key);
+        	prefixRuleScripts = scriptRepository.scriptsForPrefixInterfaceName(key);
         } else {
-            ruleScripts = scriptRepository.scriptsForClassName(key);
+        	normalRuleScripts = scriptRepository.scriptsForClassName(key);
+        	prefixRuleScripts = scriptRepository.scriptsForPrefixClassName(key);
         }
+        
+        if (normalRuleScripts != null) {
+        	ruleScripts.addAll(normalRuleScripts);
+        }
+        if (prefixRuleScripts != null) {
+        	ruleScripts.addAll(prefixRuleScripts);
+        }
+        
         byte[] newBuffer = buffer;
-
-        if (ruleScripts != null) {
+        
+        //if (ruleScripts != null) {
 //            if (isVerbose()) {
 //                System.out.println("tryTransform : " + name + " for " + key);
 //            }
@@ -829,7 +841,7 @@ public class Transformer implements ClassFileTransformer {
                     Helper.errTraceException(th);
                 }
             }
-        }
+        //}
         return newBuffer;
     }
 
@@ -842,10 +854,14 @@ public class Transformer implements ClassFileTransformer {
         }
         System.out.println("RULE " + ruleScript.getName());
         if (ruleScript.isInterface()) {
-            System.out.println("INTERFACE " + ruleScript.getTargetClass());
+            System.out.print("INTERFACE " + ruleScript.getTargetClass());
         } else {
-            System.out.println("CLASS " + ruleScript.getTargetClass());
+            System.out.print("CLASS " + ruleScript.getTargetClass());
         }
+        if (ruleScript.isPrefixSearch()) {
+        	System.out.print("*");
+        }
+       	System.out.println();
         System.out.println("METHOD " + ruleScript.getTargetMethod());
         if (ruleScript.getTargetHelper() != null) {
             System.out.println("HELPER " + ruleScript.getTargetHelper());
@@ -862,13 +878,25 @@ public class Transformer implements ClassFileTransformer {
         }
 
         boolean found = false;
-        List<RuleScript> scripts;
+        List<RuleScript> scripts = new ArrayList<RuleScript>();
+        List<RuleScript> normalScripts;
+        List<RuleScript> prefixScripts;
+        
         if (isInterface) {
-            scripts = scriptRepository.scriptsForInterfaceName(name);
+        	normalScripts = scriptRepository.scriptsForInterfaceName(name);
+        	prefixScripts = scriptRepository.scriptsForPrefixInterfaceName(name);
         } else {
-            scripts = scriptRepository.scriptsForClassName(name);
+        	normalScripts = scriptRepository.scriptsForClassName(name);
+        	prefixScripts = scriptRepository.scriptsForPrefixClassName(name);
         }
-        if (scripts != null) {
+        
+        if (normalScripts != null) {
+        	scripts.addAll(normalScripts);
+        }
+        if (prefixScripts != null) {
+        	scripts.addAll(prefixScripts);
+        }
+        //if (scripts != null) {
             for (RuleScript script : scripts) {
                 if (!script.hasTransform(clazz)) {
                     found = true;
@@ -878,7 +906,7 @@ public class Transformer implements ClassFileTransformer {
                     break;
                 }
             }
-        }
+        //}
 
         return found;
     }
