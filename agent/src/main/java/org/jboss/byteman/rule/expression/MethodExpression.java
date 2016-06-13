@@ -58,10 +58,9 @@ public class MethodExpression extends Expression
         try {
             setTriggeringMethod = Helper.class.getMethod("setTriggering", boolean.class);
         } catch (NoSuchMethodException e) {
-            if (Transformer.isVerbose()) {
-                System.out.println("MethodExpression: failed to lookup Helper.setTriggering(boolean) " + e);
-                e.printStackTrace();
-            }
+            Helper.verbose("MethodExpression: failed to lookup Helper.setTriggering(boolean) " + e);
+            Helper.verboseTraceException(e);
+
             setTriggeringMethod = null;
         }
     }

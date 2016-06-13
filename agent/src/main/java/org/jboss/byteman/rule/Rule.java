@@ -497,7 +497,7 @@ public class Rule
                     writer.println("Rule.ensureTypeCheckedCompiled : warning type checking rule " + getName());
                     te.printStackTrace(writer);
                     detail = stringWriter.toString();
-                    System.out.println(detail);
+                    Helper.out(detail);
                 }
             } catch (TypeException te) {
                 checkFailed = true;
@@ -637,9 +637,8 @@ public class Rule
 
                     if((triggerClazz.getModifiers() & Modifier.PUBLIC) == 0) {
                         compile = false;
-                        if(Transformer.isVerbose()) {
-                            System.out.println("Rule.isCompileToBytecode : disabling compilation for rule " + getName() + " injecting into non-public enclosed class " + triggerClass);
-                        }
+                        Helper.verbose("Rule.isCompileToBytecode : disabling compilation for rule " + getName() + " injecting into non-public enclosed class " + triggerClass);
+
                     }
                 }
             }
@@ -731,15 +730,12 @@ public class Rule
 
         try {
         Rule rule = ruleKeyMap.get(key);
-        if (Transformer.isVerbose()) {
-            System.out.println("Rule.execute called for " + key);
-        }
+        Helper.verbose("Rule.execute called for " + key);
+
 
         // if the key is no longer present it just means the rule has been decommissioned so return
         if (rule == null) {
-            if (Transformer.isVerbose()) {
-                System.out.println("Rule.execute for decommissioned key " + key);
-            }
+            Helper.verbose("Rule.execute for decommissioned key " + key);
             return;
         }
 
@@ -777,35 +773,35 @@ public class Rule
                 helper.execute(recipient, args);
             } catch (NoSuchMethodException e) {
                 // should not happen!!!
-                System.out.println("cannot find constructor " + helperImplementationClass.getCanonicalName() + "(Rule) for helper class");
-                e.printStackTrace(System.out);
+                Helper.err("cannot find constructor " + helperImplementationClass.getCanonicalName() + "(Rule) for helper class");
+                Helper.errTraceException(e);
                 return;
             } catch (InvocationTargetException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                Helper.errTraceException(e);  //To change body of catch statement use File | Settings | File Templates.
             } catch (InstantiationException e) {
                 // should not happen
-                System.out.println("cannot create instance of " + helperImplementationClass.getCanonicalName());
-                e.printStackTrace(System.out);
+                Helper.err("cannot create instance of " + helperImplementationClass.getCanonicalName());
+                Helper.errTraceException(e);
                 return;
             } catch (IllegalAccessException e) {
                 // should not happen
-                System.out.println("cannot access " + helperImplementationClass.getCanonicalName());
-                e.printStackTrace(System.out);
+                Helper.err("cannot access " + helperImplementationClass.getCanonicalName());
+                Helper.errTraceException(e);
                 return;
             } catch (ClassCastException e) {
                 // should not happen
-                System.out.println("cast exception " + helperImplementationClass.getCanonicalName());
-                e.printStackTrace(System.out);
+                Helper.err("cast exception " + helperImplementationClass.getCanonicalName());
+                Helper.errTraceException(e);
                 return;
             } catch (EarlyReturnException e) {
                 throw e;
             } catch (ThrowException e) {
                 throw e;
             } catch (ExecuteException e) {
-                System.out.println(getName() + " : " + e);
+                Helper.err(getName() + " : " + e);
                 throw e;
             } catch (Throwable throwable) {
-                System.out.println(getName() + " : " + throwable);
+                Helper.err(getName() + " : " + throwable);
                 throw new ExecuteException(getName() + "  : caught " + throwable, throwable);
             }
         }

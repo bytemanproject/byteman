@@ -196,7 +196,7 @@ public class JBossModulesSystem implements ModuleSystem<ClassbyteClassLoader>
     {
         if (!warningEmitted.getAndSet(true)) {
             Helper.err(message);
-            e.printStackTrace(System.err);
+            Helper.errTraceException(e);
         }
         return createModularLoader(triggerClassLoader, imports);
     }

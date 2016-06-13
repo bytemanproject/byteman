@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.jar.JarFile;
 
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.rule.helper.Helper;
 
 /**
  * a socket based listener class which reads scripts from stdin and installs them in the current runtime
@@ -78,12 +79,11 @@ public class TransformListener extends Thread
                 }
                 theServerSocket = new ServerSocket();
                 theServerSocket.bind(new InetSocketAddress(hostname, port.intValue()));
-                if (Transformer.isVerbose()) {
-                    System.out.println("TransformListener() : accepting requests on " + hostname + ":" + port);
-                }
+                Helper.verbose("TransformListener() : accepting requests on " + hostname + ":" + port);
+
             } catch (IOException e) {
-                System.out.println("TransformListener() : unexpected exception opening server socket " + e);
-                e.printStackTrace();
+                Helper.err("TransformListener() : unexpected exception opening server socket " + e);
+                Helper.errTraceException(e);
                 return false;
             }
 
@@ -105,9 +105,8 @@ public class TransformListener extends Thread
         if (theTransformListener != null) {
             try {
                 theServerSocket.close();
-                if (Transformer.isVerbose()) {
-                    System.out.println("TransformListener() :  closing port " + DEFAULT_PORT);
-                }
+                Helper.verbose("TransformListener() :  closing port " + DEFAULT_PORT);
+
             } catch (IOException e) {
                 // ignore -- the thread should exit anyway
             }
@@ -145,19 +144,18 @@ public class TransformListener extends Thread
                 socket = theServerSocket.accept();
             } catch (IOException e) {
                 if (!theServerSocket.isClosed()) {
-                    System.out.println("TransformListener.run : exception from server socket accept " + e);
-                    e.printStackTrace();
+                    Helper.err("TransformListener.run : exception from server socket accept " + e);
+                    Helper.errTraceException(e);
                 }
                 return;
             }
 
-            if (Transformer.isVerbose()) {
-                System.out.println("TransformListener() : handling connection on port " + socket.getLocalPort());
-            }
+            Helper.verbose("TransformListener() : handling connection on port " + socket.getLocalPort());
+
             try {
                 handleConnection(socket);
             } catch (Exception e) {
-                System.out.println("TransformListener() : error handling connection on port " + socket.getLocalPort());
+                Helper.err("TransformListener() : error handling connection on port " + socket.getLocalPort());
                 try {
                     socket.close();
                 } catch (IOException e1) {
@@ -174,13 +172,14 @@ public class TransformListener extends Thread
             is = socket.getInputStream();
         } catch (IOException e) {
             // oops. cannot handle this
-            System.out.println("TransformListener.run : error opening socket input stream " + e);
-            e.printStackTrace();
+            Helper.err("TransformListener.run : error opening socket input stream " + e);
+            Helper.errTraceException(e);
+
             try {
                 socket.close();
             } catch (IOException e1) {
-                System.out.println("TransformListener.run : exception closing socket after failed input stream open" + e1);
-                e1.printStackTrace();
+                Helper.err("TransformListener.run : exception closing socket after failed input stream open" + e1);
+                Helper.errTraceException(e1);
             }
             return;
         }
@@ -190,13 +189,14 @@ public class TransformListener extends Thread
             os = socket.getOutputStream();
         } catch (IOException e) {
             // oops. cannot handle this
-            System.out.println("TransformListener.run : error opening socket output stream " + e);
-            e.printStackTrace();
+            Helper.err("TransformListener.run : error opening socket output stream " + e);
+            Helper.errTraceException(e);
+
             try {
                 socket.close();
             } catch (IOException e1) {
-                System.out.println("TransformListener.run : exception closing socket after failed output stream open" + e1);
-                e1.printStackTrace();
+                Helper.err("TransformListener.run : exception closing socket after failed output stream open" + e1);
+                Helper.errTraceException(e1);
             }
             return;
         }
@@ -208,8 +208,8 @@ public class TransformListener extends Thread
         try {
             line = in.readLine();
         } catch (IOException e) {
-            System.out.println("TransformListener.run : exception " + e + " while reading command");
-            e.printStackTrace();
+            Helper.err("TransformListener.run : exception " + e + " while reading command");
+            Helper.errTraceException(e);
         }
 
         try {
@@ -246,13 +246,13 @@ public class TransformListener extends Thread
                 out.flush();
             }
         } catch (Exception e) {
-            System.out.println("TransformListener.run : exception " + e + " processing command " + line);
-            e.printStackTrace();
+            Helper.err("TransformListener.run : exception " + e + " processing command " + line);
+            Helper.errTraceException(e);
             try {
                 socket.close();
             } catch (IOException e1) {
-                System.out.println("TransformListener.run : exception closing socket " + e1);
-                e.printStackTrace();
+                Helper.err("TransformListener.run : exception closing socket " + e1);
+                Helper.errTraceException(e1);
             }
         }
     }

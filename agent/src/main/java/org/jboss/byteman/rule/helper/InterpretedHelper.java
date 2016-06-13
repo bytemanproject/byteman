@@ -72,9 +72,8 @@ public class InterpretedHelper extends Helper implements HelperAdapter
     public void execute(Object recipient, Object[] args)
             throws ExecuteException
     {
-        if (Transformer.isVerbose()) {
-            System.out.println(rule.getName() + " execute");
-        }
+        Helper.verbose(rule.getName() + " execute");
+
         Bindings bindings = rule.getBindings();
         Iterator<Binding> iterator = bindings.iterator();
         while (iterator.hasNext()) {

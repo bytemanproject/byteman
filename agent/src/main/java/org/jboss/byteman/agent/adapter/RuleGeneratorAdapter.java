@@ -58,6 +58,7 @@ import java.util.List;
 
 import org.jboss.byteman.agent.TransformContext;
 import org.jboss.byteman.rule.Rule;
+import org.jboss.byteman.rule.helper.Helper;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.Method;
 import org.objectweb.asm.commons.TableSwitchGenerator;
@@ -1615,7 +1616,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
             dumpType(buffer, stack[i]);
             sepr=",\n    ";
         }
-        System.out.println(buffer.toString());
+        Helper.out(buffer.toString());
     }
 
     private void dumpType(StringBuffer buffer, Object t)

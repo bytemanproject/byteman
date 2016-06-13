@@ -33,6 +33,7 @@ import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.exception.ParseException;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.TypeWarningException;
+import org.jboss.byteman.rule.helper.Helper;
 import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.rule.Rule;
@@ -81,15 +82,11 @@ public class TransformContext
         try {
             parseRule();
         } catch (ParseException pe) {
-            if (Transformer.isVerbose()) {
-                System.out.println("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + "\n" + pe);
-            }
+            Helper.verbose("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + "\n" + pe);
             recordFailedTransform(pe);
             return targetClassBytes;
         } catch (Throwable th) {
-            if (Transformer.isVerbose()) {
-                System.out.println("org.jboss.byteman.agent.Transformer : unexpected error parsing rule " + ruleName + "\n" + th);
-            }
+            Helper.verbose("org.jboss.byteman.agent.Transformer : unexpected error parsing rule " + ruleName + "\n" + th);
             recordFailedTransform(th);
             return targetClassBytes;
         }
@@ -124,10 +121,9 @@ public class TransformContext
             return targetClassBytes;
         } catch (Throwable th) {
             // hmm, unexpected error
-            if (Transformer.isVerbose()) {
-                System.out.println("org.jboss.byteman.agent.Transformer : unexpected error applying rule " + ruleScript.getName() + " to class " + triggerClassName + "\n" + th);
-                th.printStackTrace(System.out);
-            }
+            Helper.verbose("org.jboss.byteman.agent.Transformer : unexpected error applying rule " + ruleScript.getName() + " to class " + triggerClassName + "\n" + th);
+            Helper.verboseTraceException(th);
+
             recordFailedTransform(th);
             return targetClassBytes;
         }
@@ -137,9 +133,8 @@ public class TransformContext
             return targetClassBytes;
         }
 
-        if (Transformer.isVerbose()) {
-            System.out.println("org.jboss.byteman.agent.Transformer : possible trigger for rule " + ruleScript.getName() + " in class " + triggerClassName);
-        }
+        Helper.verbose("org.jboss.byteman.agent.Transformer : possible trigger for rule " + ruleScript.getName() + " in class " + triggerClassName);
+
         cr = new ClassReader(targetClassBytes);
         ClassWriter cw = getNonLoadingClassWriter(ClassWriter.COMPUTE_MAXS|ClassWriter.COMPUTE_FRAMES);
         RuleTriggerAdapter adapter = handlerLocation.getRuleAdapter(cw, this);
@@ -152,17 +147,15 @@ public class TransformContext
             // will already be notified
             return targetClassBytes;
         } catch (Throwable th) {
-            if (Transformer.isVerbose()) {
-                System.out.println("org.jboss.byteman.agent.Transformer : unexpected error injecting trigger for rule " + ruleScript.getName() + " into class " + triggerClassName + "\n" +  th);
-                th.printStackTrace(System.out);
-            }
+            Helper.verbose("org.jboss.byteman.agent.Transformer : unexpected error injecting trigger for rule " + ruleScript.getName() + " into class " + triggerClassName + "\n" +  th);
+            Helper.verboseTraceException(th);
+
             recordFailedTransform(th);
             return targetClassBytes;
         }
         // hand back the transformed byte code
-        if (Transformer.isVerbose()) {
-            System.out.println("org.jboss.byteman.agent.Transformer : inserted trigger for " + ruleScript.getName() + " in class " + triggerClassName);
-        }
+        Helper.verbose("org.jboss.byteman.agent.Transformer : inserted trigger for " + ruleScript.getName() + " in class " + triggerClassName);
+
 
         // record all successfully transformed rules
 

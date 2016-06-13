@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.jar.JarFile;
 
 import org.jboss.byteman.modules.ModuleSystem;
+import org.jboss.byteman.rule.helper.Helper;
 
 /**
  * byte code transformer used to introduce byteman events into JBoss code
@@ -137,17 +138,15 @@ public class Retransformer extends Transformer {
         if (!transformed.isEmpty()) {
             Class<?>[] transformedArray = new Class<?>[transformed.size()];
             transformed.toArray(transformedArray);
-            if (Transformer.isVerbose()) {
-                for (int i = 0; i < transformed.size(); i++) {
-                    System.out.println("retransforming " + transformedArray[i].getName());
-                }
+            for (int i = 0; i < transformed.size(); i++) {
+                Helper.verbose("retransforming " + transformedArray[i].getName());
             }
             synchronized(this) {
                 try {
                     inst.retransformClasses(transformedArray);
                 } catch(VerifyError ve) {
-                    System.out.println("Retransformer : VerifyError during retransformation : some rules may not have been correctly injected or uninjected!");
-                    ve.printStackTrace();
+                    Helper.err("Retransformer : VerifyError during retransformation : some rules may not have been correctly injected or uninjected!");
+                    Helper.errTraceException(ve);
                     out.println("VerifyError during retransformation : some rules may not have been correctly injected or uninjected!");
                     ve.printStackTrace(out);
                 }
@@ -289,16 +288,14 @@ public class Retransformer extends Transformer {
         if (!transformed.isEmpty()) {
             Class<?>[] transformedArray = new Class<?>[transformed.size()];
             transformed.toArray(transformedArray);
-            if (Transformer.isVerbose()) {
-                for (int i = 0; i < transformed.size(); i++) {
-                    System.out.println("retransforming " + transformedArray[i].getName());
-                }
+            for (int i = 0; i < transformed.size(); i++) {
+                Helper.verbose("retransforming " + transformedArray[i].getName());
             }
             try {
                 inst.retransformClasses(transformedArray);
             } catch(VerifyError ve) {
-                System.out.println("Retransformer : VerifyError during retransformation : some rules may not have been correctly uninjected!");
-                ve.printStackTrace();
+                Helper.err("Retransformer : VerifyError during retransformation : some rules may not have been correctly uninjected!");
+                Helper.errTraceException(ve);
                 out.println("VerifyError during retransformation : some rules may not have been correctly uninjected!");
                 ve.printStackTrace(out);
             }
