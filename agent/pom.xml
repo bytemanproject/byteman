@@ -2234,6 +2234,7 @@
                     <groupId>org.ow2.asm</groupId>
                     <artifactId>asm-all</artifactId>
                     <scope>compile</scope>
+                    <version>6.0_ALPHA</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -2300,8 +2301,8 @@
               <dependency>
                 <groupId>org.ow2.asm</groupId>
                 <artifactId>asm-debug-all</artifactId>
-                <version>5.0.3</version>
                 <scope>compile</scope>
+                <version>6.0_ALPHA</version>
               </dependency>
             </dependencies>
         </profile>
