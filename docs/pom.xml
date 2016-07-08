@@ -14,8 +14,10 @@
   <name>Byteman Documentation</name>
   <packaging>pom</packaging>
 
+  <!--
   <modules>
     <module>asciidoc</module>
   </modules>
+  -->
 
 </project>
