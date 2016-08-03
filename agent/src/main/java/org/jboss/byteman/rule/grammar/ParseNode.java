@@ -336,7 +336,7 @@ public abstract class ParseNode
                 case ARRAY_INIT:
                     return "{}";
                 default:
-                    Helper.out("NullaryNode.getText() : Unexpected tag " + tag);
+                    Helper.err("NullaryNode.getText() : Unexpected tag " + tag);
                     return "???";
             }
         }
@@ -408,7 +408,7 @@ public abstract class ParseNode
                 case ARRAY_INIT:
                     return ("{" + ((ParseNode)child0).getText() + "}");
                 default:
-                    Helper.out("UnaryNode.getText() : Unexpected tag " + tag);
+                    Helper.err("UnaryNode.getText() : Unexpected tag " + tag);
                     return "???";
             }            
         }
@@ -507,7 +507,7 @@ public abstract class ParseNode
                 case UNOP:
                     return ((ParseNode)child0).getText();
                 default:
-                    Helper.out("BinaryNode.getText() : Unexpected tag " + tag);
+                    Helper.err("BinaryNode.getText() : Unexpected tag " + tag);
                     return "???";
 }
         }
@@ -572,7 +572,7 @@ public abstract class ParseNode
                 case TERNOP:
                     return "?";
                 default:
-                    Helper.out("TernaryNode.getText() : Unexpected tag " + tag);
+                    Helper.err("TernaryNode.getText() : Unexpected tag " + tag);
                     return "???";
             }
         }
@@ -635,7 +635,7 @@ public abstract class ParseNode
             int tag = getTag();
             switch(tag) {
                 default:
-                    Helper.out("QuaternaryNode.getText() : Unexpected tag " + tag);
+                    Helper.err("QuaternaryNode.getText() : Unexpected tag " + tag);
                     return "???";
             }
         }

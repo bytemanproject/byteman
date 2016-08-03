@@ -83,10 +83,12 @@ public class TransformContext
             parseRule();
         } catch (ParseException pe) {
             Helper.verbose("org.jboss.byteman.agent.Transformer : error parsing rule " + ruleName + "\n" + pe);
+            Helper.verboseTraceException(pe);
             recordFailedTransform(pe);
             return targetClassBytes;
         } catch (Throwable th) {
             Helper.verbose("org.jboss.byteman.agent.Transformer : unexpected error parsing rule " + ruleName + "\n" + th);
+            Helper.verboseTraceException(th);
             recordFailedTransform(th);
             return targetClassBytes;
         }

@@ -103,7 +103,7 @@ public class HelperManager
             LifecycleDetails details;
             details = getDetails(helperClass, false);
             if (details == null) {
-                Helper.out("HelperManager.uninstalled : shouldn't happen! uninstall failed to locate helper details for " + helperClass.getName());
+                Helper.err("HelperManager.uninstalled : shouldn't happen! uninstall failed to locate helper details for " + helperClass.getName());
                 return;
             }
             details.installCount--;
@@ -148,7 +148,7 @@ public class HelperManager
     public long getObjectSize(Object o)
     {
         if (inst == null) {
-            Helper.out("Cannot calculate object size since a Byteman agent has not been installed");
+            Helper.err("Cannot calculate object size since a Byteman agent has not been installed");
             return -1;
         }
         return this.inst.getObjectSize(o);

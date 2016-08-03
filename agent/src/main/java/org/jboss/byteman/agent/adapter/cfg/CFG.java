@@ -732,11 +732,11 @@ public class CFG
         BBlock block = open.getBlock();
         int instructionIdx = open.getInstructionIdx();
         if (instructionIdx <= 0) {
-            Helper.out("getSavedMonitorIdx : unexpected! close pair has invalid index " + instructionIdx + " in method " + methodName);
+            Helper.err("getSavedMonitorIdx : unexpected! close pair has invalid index " + instructionIdx + " in method " + methodName);
         }
         int instruction = block.getInstruction(instructionIdx);
         if (instruction != Opcodes.MONITORENTER) {
-            Helper.out("getSavedMonitorIdx : unexpected! close pair instruction " + instruction + " is not MONITOREXIT in method " + methodName);
+            Helper.err("getSavedMonitorIdx : unexpected! close pair instruction " + instruction + " is not MONITOREXIT in method " + methodName);
         }
         instructionIdx--;
         instruction = block.getInstruction(instructionIdx );
@@ -753,12 +753,12 @@ public class CFG
             }
         }
         if (instruction != Opcodes.ASTORE) {
-            Helper.out("getSavedMonitorIdx : unexpected! close pair preceding instruction " + instruction + " is not ASTORE in method " + methodName);
+            Helper.err("getSavedMonitorIdx : unexpected! close pair preceding instruction " + instruction + " is not ASTORE in method " + methodName);
             return -1;
         }
         int varIdx = block.getInstructionArg(instructionIdx, 0);
         if (varIdx < 0) {
-            Helper.out("getSavedMonitorIdx : unexpected! close pair preceding ASTORE instruction has invalid index " + varIdx + " in method " + methodName);
+            Helper.err("getSavedMonitorIdx : unexpected! close pair preceding ASTORE instruction has invalid index " + varIdx + " in method " + methodName);
         }
         return varIdx;
     }

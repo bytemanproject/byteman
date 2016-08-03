@@ -1011,6 +1011,7 @@ public class Transformer implements ClassFileTransformer {
                 clazz.newInstance();
             } catch (Throwable th) {
                 Helper.err("Transformer:verifyTransformedBytes " + th);
+                Helper.errTraceException(th);
                 return null;
             }
             return bytes;
@@ -1355,7 +1356,7 @@ public class Transformer implements ClassFileTransformer {
             String prefix = (dotIdx > 0 ? File.separator + fullName.substring(0, dotIdx) : "");
             String dir = getDumpGeneratedClassesDir() + prefix.replace('.', File.separatorChar);
             if (!ensureDumpDirectory(dir)) {
-                Helper.out("org.jboss.byteman.agent.Transformer : Cannot dump transformed bytes to directory " + dir + File.separator + prefix);
+                Helper.err("org.jboss.byteman.agent.Transformer : Cannot dump transformed bytes to directory " + dir + File.separator + prefix);
                 return;
             }
             String newname;

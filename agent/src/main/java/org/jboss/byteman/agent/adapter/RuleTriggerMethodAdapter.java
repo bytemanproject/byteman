@@ -955,7 +955,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
 
                 // if we get here the return and throw handlers labels should be null
                 if (details.getEarlyReturnHandler() != null || details.getThrowHandler() != null) {
-                    Helper.out("unexpected : trigger region with open monitorenters has subtype handler!");
+                    Helper.err("unexpected : trigger region with open monitorenters has subtype handler!");
                 }
 
                 // generate rethrow code and mark the handler as a try catch block for all

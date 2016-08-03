@@ -491,14 +491,12 @@ public class Rule
                 installed();
             } catch (TypeWarningException te) {
                 checkFailed = true;
-                if (Transformer.isVerbose()) {
-                    StringWriter stringWriter = new StringWriter();
-                    PrintWriter writer = new PrintWriter(stringWriter);
-                    writer.println("Rule.ensureTypeCheckedCompiled : warning type checking rule " + getName());
-                    te.printStackTrace(writer);
-                    detail = stringWriter.toString();
-                    Helper.out(detail);
-                }
+                StringWriter stringWriter = new StringWriter();
+                PrintWriter writer = new PrintWriter(stringWriter);
+                writer.println("Rule.ensureTypeCheckedCompiled : warning type checking rule " + getName());
+                te.printStackTrace(writer);
+                detail = stringWriter.toString();
+                Helper.verbose(detail);
             } catch (TypeException te) {
                 checkFailed = true;
                 StringWriter stringWriter = new StringWriter();
@@ -506,7 +504,7 @@ public class Rule
                 writer.println("Rule.ensureTypeCheckedCompiled : error type checking rule " + getName());
                 te.printStackTrace(writer);
                 detail = stringWriter.toString();
-                System.out.println(detail);
+                Helper.err(detail);
             } catch (CompileException ce) {
                 checkFailed = true;
                 StringWriter stringWriter = new StringWriter();
@@ -514,7 +512,7 @@ public class Rule
                 writer.println("Rule.ensureTypeCheckedCompiled : error compiling rule " + getName());
                 ce.printStackTrace(writer);
                 detail = stringWriter.toString();
-                System.out.println(detail);
+                Helper.err(detail);
             }
 
             // this uses the original class loader for matching
