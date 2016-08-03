@@ -23,6 +23,8 @@
 */
 package org.jboss.byteman.rule.grammar;
 
+import org.jboss.byteman.rule.helper.Helper;
+
 /**
  * Class used by the JavaCUP parser to construct a parse tree.
  */
@@ -334,7 +336,7 @@ public abstract class ParseNode
                 case ARRAY_INIT:
                     return "{}";
                 default:
-                    System.out.println("NullaryNode.getText() : Unexpected tag " + tag);
+                    Helper.out("NullaryNode.getText() : Unexpected tag " + tag);
                     return "???";
             }
         }
@@ -406,7 +408,7 @@ public abstract class ParseNode
                 case ARRAY_INIT:
                     return ("{" + ((ParseNode)child0).getText() + "}");
                 default:
-                    System.out.println("UnaryNode.getText() : Unexpected tag " + tag);
+                    Helper.out("UnaryNode.getText() : Unexpected tag " + tag);
                     return "???";
             }            
         }
@@ -505,7 +507,7 @@ public abstract class ParseNode
                 case UNOP:
                     return ((ParseNode)child0).getText();
                 default:
-                    System.out.println("BinaryNode.getText() : Unexpected tag " + tag);
+                    Helper.out("BinaryNode.getText() : Unexpected tag " + tag);
                     return "???";
 }
         }
@@ -570,7 +572,7 @@ public abstract class ParseNode
                 case TERNOP:
                     return "?";
                 default:
-                    System.out.println("TernaryNode.getText() : Unexpected tag " + tag);
+                    Helper.out("TernaryNode.getText() : Unexpected tag " + tag);
                     return "???";
             }
         }
@@ -633,7 +635,7 @@ public abstract class ParseNode
             int tag = getTag();
             switch(tag) {
                 default:
-                    System.out.println("QuaternaryNode.getText() : Unexpected tag " + tag);
+                    Helper.out("QuaternaryNode.getText() : Unexpected tag " + tag);
                     return "???";
             }
         }

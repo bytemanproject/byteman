@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.agent.adapter;
 
+import org.jboss.byteman.rule.helper.Helper;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
@@ -82,18 +83,16 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
             Binding binding = bindingIter.next();
             if (binding.isRecipient()) {
                 if ((access & Opcodes.ACC_STATIC) != 0) {
-                    if (Transformer.isVerbose()) {
-                        System.out.println("RuleCheckMethodAdapter.checkBindings : found invalid recipient binding " + binding + " checking static method " + name + descriptor);
-                    }
+                    Helper.verbose("RuleCheckMethodAdapter.checkBindings : found invalid recipient binding " + binding + " checking static method " + name + descriptor);
+
                     transformContext.warn(name, descriptor, "found invalid recipient binding " + binding + " injecting into static method");
                 }
             } else if (binding.isParam()) {
                 int idx = binding.getIndex();
                 if (idx > parameterCount) {
                     // parameter out of range
-                    if (Transformer.isVerbose()) {
-                        System.out.println("RuleCheckMethodAdapter.checkBindings : found out of range parameter binding " + binding + " checking method " + name + descriptor);
-                    }
+                    Helper.verbose("RuleCheckMethodAdapter.checkBindings : found out of range parameter binding " + binding + " checking method " + name + descriptor);
+
                     transformContext.warn(name, descriptor, "found out of range parameter binding " + binding);
                 } else {
                     binding.setDescriptor(parameterTypenames.get(idx - 1));
@@ -104,31 +103,27 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                 LocationType locationType = rule.getTargetLocation().getLocationType();
                 if (locationType == LocationType.EXIT) {
                     if ("void".equals(getReturnBindingType())) {
-                        if (Transformer.isVerbose()) {
-                            System.out.println("RuleCheckMethodAdapter.checkBindings : found return value binding " + binding + " checking void trigger method " + name + descriptor + " in AT EXIT rule " + rule);
-                        }
+                        Helper.verbose("RuleCheckMethodAdapter.checkBindings : found return value binding " + binding + " checking void trigger method " + name + descriptor + " in AT EXIT rule " + rule);
+
                         transformContext.warn(name, descriptor, "found return value binding " + binding + " checking void trigger method in AT EXIT rule");
                     }
                 } else if (locationType == LocationType.INVOKE_COMPLETED) {
                     if ("void".equals(getReturnBindingType())) {
-                        if (Transformer.isVerbose()) {
-                            System.out.println("RuleCheckMethodAdapter.checkBindings : found return value binding " + binding + " checking void called method in AFTER INVOKE rule  " + rule.getName());
-                        }
+                        Helper.verbose("RuleCheckMethodAdapter.checkBindings : found return value binding " + binding + " checking void called method in AFTER INVOKE rule  " + rule.getName());
+
                         transformContext.warn(name, descriptor, "found return value binding " + binding + " checking void called method in AFTER INVOKE rule");
                     }
                 } else {
-                    if (Transformer.isVerbose()) {
-                        System.out.println("RuleCheckMethodAdapter.checkBindings : found return value binding " + binding + " in rule which is neither AT EXIT nor AFTER INVOKE " + rule.getName());
-                    }
+                    Helper.verbose("RuleCheckMethodAdapter.checkBindings : found return value binding " + binding + " in rule which is neither AT EXIT nor AFTER INVOKE " + rule.getName());
+
                     transformContext.warn(name, descriptor, "found return value binding " + binding + " in rule which is neither AT EXIT nor AFTER INVOKE");
                 }
             } else if (binding.isThrowable()) {
                 // we can only allow reference to the current throwable in an AT THROW rule
                 LocationType locationType = rule.getTargetLocation().getLocationType();
                 if (locationType != LocationType.THROW && locationType != LocationType.EXCEPTION_EXIT) {
-                    if (Transformer.isVerbose()) {
-                        System.out.println("RuleCheckMethodAdapter.checkBindings : found throwable value binding " + binding + " in rule which is neither AT THROW nor AT EXCEPTION EXIT" + rule.getName());
-                    }
+                    Helper.verbose("RuleCheckMethodAdapter.checkBindings : found throwable value binding " + binding + " in rule which is neither AT THROW nor AT EXCEPTION EXIT" + rule.getName());
+
                     transformContext.warn(name, descriptor, "found throwable value binding " + binding + " in rule which is not AT THROW");
                 }
                 // we will need to set the descriptor at some point
@@ -139,9 +134,8 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
             } else if (binding.isInvokeParamArray()) {
                 // we can only allow reference to the invoked method parameters in an AT INVOKE rule
                 if (rule.getTargetLocation().getLocationType() != LocationType.INVOKE) {
-                    if (Transformer.isVerbose()) {
-                        System.out.println("RuleCheckMethodAdapter.checkBindings : found invoke parameter array binding $@ in non-AT INVOKE rule " + rule.getName());
-                    }
+                    Helper.verbose("RuleCheckMethodAdapter.checkBindings : found invoke parameter array binding $@ in non-AT INVOKE rule " + rule.getName());
+
                     transformContext.warn(name, descriptor, "found throwable value binding " + binding + " in rule which is not AT THROW");
                 }
             } else if (binding.isTriggerClass() || binding.isTriggerMethod()) {
@@ -152,9 +146,8 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                 List<LocalVar> localVars = lookup(localVarName);
 
                 if (localVars == null || localVars.isEmpty()) {
-                    if (Transformer.isVerbose()) {
-                        System.out.println("RuleCheckMethodAdapter.checkBindings : unsatisfiable local variable binding " + binding + " checking method " + name + descriptor);
-                    }
+                    Helper.verbose("RuleCheckMethodAdapter.checkBindings : unsatisfiable local variable binding " + binding + " checking method " + name + descriptor);
+
                     transformContext.warn(name, descriptor, "unknown local variable " + binding);
                 } else {
                     String localDescriptor = null;
@@ -183,9 +176,8 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                         }
                         // if there was no variable for this trigger point then fail
                         if (!found) {
-                            if (Transformer.isVerbose()) {
-                                System.out.println("RuleCheckMethodAdapter.checkBindings : invalid local variable binding " + binding + " checking method " + name + descriptor);
-                            }
+                            Helper.verbose("RuleCheckMethodAdapter.checkBindings : invalid local variable binding " + binding + " checking method " + name + descriptor);
+
                             transformContext.warn(name, descriptor, "invalid local variable binding " + binding);
                             // ok no point checking any further
                             break;

@@ -27,6 +27,7 @@ package org.jboss.byteman.agent;
 
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.modules.ModuleSystem;
+import org.jboss.byteman.rule.helper.Helper;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
@@ -55,29 +56,27 @@ public class HelperManager
     public void installed(Rule rule)
     {
         Class helperClass = rule.getHelperClass();
-        if (Transformer.isVerbose()) {
-            System.out.println("HelperManager.install for helper class " + helperClass.getName());
-        }
+
+        Helper.verbose("HelperManager.install for helper class " + helperClass.getName());
+
         // synchronize on the lifecycle class to ensure it is not uninstalled
         // while we are deciding whether or not to install it
         synchronized (helperClass) {
             LifecycleDetails details;
             details = getDetails(helperClass, true);
             if (details.installCount == 0 && details.activated != null) {
-                if (Transformer.isVerbose()) {
-                    System.out.println("calling activated() for helper class " + helperClass.getName());
-                }
+                Helper.verbose("calling activated() for helper class " + helperClass.getName());
+
                 try {
                     details.activated.invoke(null);
                 } catch (Exception e) {
-                    System.out.println("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".activate() : " + e);
-                    e.printStackTrace();
+                    Helper.err("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".activate() : " + e);
+                    Helper.errTraceException(e);
                 }
             }
             if (details.installed != null) {
-                if (Transformer.isVerbose()) {
-                    System.out.println("calling installed(" + rule.getName() + ") for helper class" + helperClass.getName());
-                }
+                Helper.verbose("calling installed(" + rule.getName() + ") for helper class" + helperClass.getName());
+
                 try {
                     if (details.installedTakesRule) {
                         details.installed.invoke(null, rule);
@@ -85,8 +84,8 @@ public class HelperManager
                         details.installed.invoke(null, rule.getName());
                     }
                 } catch (Exception e) {
-                    System.out.println("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".installed(String) : " + e);
-                    e.printStackTrace();
+                    Helper.err("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".installed(String) : " + e);
+                    Helper.errTraceException(e);
                 }
             }
             details.installCount++;
@@ -96,23 +95,21 @@ public class HelperManager
     public void uninstalled(Rule rule)
     {
         Class helperClass = rule.getHelperClass();
-        if (Transformer.isVerbose()) {
-            System.out.println("HelperManager.uninstall for helper class " + helperClass.getName());
-        }
+        Helper.verbose("HelperManager.uninstall for helper class " + helperClass.getName());
+
         // synchronize on the lifecycle class to ensure it is not uninstalled
         // while we are deciding whether or not to install it
         synchronized (helperClass) {
             LifecycleDetails details;
             details = getDetails(helperClass, false);
             if (details == null) {
-                System.out.println("HelperManager.uninstalled : shouldn't happen! uninstall failed to locate helper details for " + helperClass.getName());
+                Helper.out("HelperManager.uninstalled : shouldn't happen! uninstall failed to locate helper details for " + helperClass.getName());
                 return;
             }
             details.installCount--;
             if (details.uninstalled != null) {
-                if (Transformer.isVerbose()) {
-                    System.out.println("calling uninstalled(" + rule.getName() + ") for helper class " + helperClass.getName());
-                }
+                Helper.verbose("calling uninstalled(" + rule.getName() + ") for helper class " + helperClass.getName());
+
                 try {
                     if (details.uninstalledTakesRule) {
                         details.uninstalled.invoke(null, rule);
@@ -120,19 +117,18 @@ public class HelperManager
                         details.uninstalled.invoke(null, rule.getName());
                     }
                 } catch (Exception e) {
-                    System.out.println("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".uninstalled(String) : " + e);
-                    e.printStackTrace();
+                    Helper.err("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".uninstalled(String) : " + e);
+                    Helper.errTraceException(e);
                 }
             }
             if (details.installCount == 0 && details.deactivated != null) {
-                if (Transformer.isVerbose()) {
-                    System.out.println("calling deactivated() for helper class" + helperClass.getName());
-                }
+                Helper.verbose("calling deactivated() for helper class" + helperClass.getName());
+
                 try {
                     details.deactivated.invoke(null);
                 } catch (Exception e) {
-                    System.out.println("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".deactivate() : " + e);
-                    e.printStackTrace();
+                    Helper.err("HelperManager.installed : unexpected exception from " + helperClass.getName() + ".deactivate() : " + e);
+                    Helper.errTraceException(e);
                 }
             }
             if (details.installCount == 0) {
@@ -152,7 +148,7 @@ public class HelperManager
     public long getObjectSize(Object o)
     {
         if (inst == null) {
-            System.out.println("Cannot calculate object size since a Byteman agent has not been installed");
+            Helper.out("Cannot calculate object size since a Byteman agent has not been installed");
             return -1;
         }
         return this.inst.getObjectSize(o);
