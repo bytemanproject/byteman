@@ -222,7 +222,7 @@ otherwise.
 
 `deleteLinkMap` is used to delete a LinkMap. This is useful because it
 ensures all references to the objects linked in the map are
-removed. It returns `tru`e if a map with labelled by `mapName` was
+removed. It returns `true` if a map with labelled by `mapName` was
 found and deleted or `false` otherwise.
 
 `link` is used to add a link from `name` to `value` to a map. The
@@ -231,7 +231,7 @@ i.e. the one labelled with name `"default"`. The return value from the
 call is any previous value that was linked to `name` or null if no
 link was previously present in the map.
 
-`linked` is used to retrieve the value linked ot `name` from a map.
+`linked` is used to retrieve the value linked of `name` from a map.
 The version with no `mapName` argument retrieves the value of the link
 from the default map i.e. the one labelled with name `"default"`. The
 return value from the call is whatever value is linked to `name` or
@@ -456,7 +456,7 @@ this case, there is no need to call `setTriggering(true)` at the end of the `DO`
 
 Method `setTriggering` always returns boolean value `true`, allowing it to be ANDed into the 
 condition of an `IF` clause or used to initialise a rule variable declared in a `BIND` clause. 
-This is sometimes necessary to ensure that triggering is disabled early, before orther expressions 
+This is sometimes necessary to ensure that triggering is disabled early, before other expressions
 in the `IF` or `BIND` clause are evaluated.
 
 === Trace and Debug Operations

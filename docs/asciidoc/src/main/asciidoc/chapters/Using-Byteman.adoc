@@ -202,7 +202,7 @@ n.b. this option is actually an alias for option manager (see below)
 agent listener when opening a server socket to listen on. If not supplied the port defaults to 9091. 
 Supplying this option defaults the listener option to `true`.
 
-*address:host* where _host_ is a host name. This option selects the address used by the agent 
+*address:host* where _host_ is a host name. This option selects the address used by the agent
 listener when opening a server socket to listen on. If not supplied the address defaults to 9091. 
 Supplying this option defaults the listener option to `true`.
 
@@ -264,7 +264,7 @@ modules plugin.
 
 Note also that currently it is only possible to configure a module
 plugin from the Java command line using this -javaagent option. The
-bminstall and bnjava scripts do not yet provide command flags for this
+bminstall and bmjava scripts do not yet provide command flags for this
 purpose. This may be rectified in later releases.
 
 *sys:jarfile* where _jarfile_ is a path to to a jar file to be added to the JVM _system_ class path. 
@@ -281,7 +281,7 @@ rules try to inject code into JVM classes which are loaded by the bootstrap clas
 a parent of the system loader).
 
 *policy:boolean* where _boolean_ is either `true` or `false`. When set to `true` this option 
-causes the agent toi install an access all areas security policy for the Byteman agent code. This 
+causes the agent to install an access all areas security policy for the Byteman agent code. This
 may be necessary when the JVM is running an application employing a security manager which imposes 
 access restrictions (this includes recent versions of JBoss Wildfly/EAP).
 
