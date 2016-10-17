@@ -40,7 +40,7 @@ public class TestDowncast extends Test
 
     public void test()
     {
-        List<String> names = new ArrayList<String>();
+        List<Object> names = new ArrayList<Object>();
 
         names.add("Andrew");
         
@@ -55,7 +55,7 @@ public class TestDowncast extends Test
         checkOutput(true);
     }
 
-    public void triggerMethod(List<String> names)
+    public void triggerMethod(List<Object> names)
     {
         log("inside TestDowncast.triggerMethod()");
     }

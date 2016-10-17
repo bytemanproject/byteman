@@ -29,22 +29,18 @@ import org.jboss.byteman.agent.adapter.BMLocalScopeAdapter;
 import org.jboss.byteman.agent.adapter.RuleCheckAdapter;
 import org.jboss.byteman.agent.adapter.RuleTriggerAdapter;
 import org.jboss.byteman.agent.check.ClassChecker;
-import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.rule.exception.ParseException;
 import org.jboss.byteman.rule.exception.TypeException;
 import org.jboss.byteman.rule.exception.TypeWarningException;
 import org.jboss.byteman.rule.helper.Helper;
-import org.jboss.byteman.rule.type.Type;
 import org.jboss.byteman.rule.type.TypeHelper;
 import org.jboss.byteman.rule.Rule;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Class used to localise the context information employed when creating a rule from a rule script and
@@ -52,7 +48,7 @@ import java.util.List;
  */
 public class TransformContext
 {
-    public TransformContext(Transformer transformer, RuleScript ruleScript, String triggerClassName, ClassLoader loader, HelperManager helperManager)
+    public TransformContext(Transformer transformer, RuleScript ruleScript, String triggerClassName, ClassLoader loader, HelperManager helperManager, AccessEnabler accessEnabler)
     {
         // the target method spec may just be a bare method name or it may optionally include a
         // parameter type list and a return type. With Java syntax the return type appears before
@@ -70,6 +66,7 @@ public class TransformContext
         this.helperManager = helperManager;
         this.ruleMap = new HashMap<String, Rule>();
         this.firstRule = null;
+        this.accessEnabler = accessEnabler;
 
 
     }
@@ -170,7 +167,7 @@ public class TransformContext
     }
 
     public void parseRule() throws Exception {
-        Rule rule = Rule.create(ruleScript, loader, helperManager);
+        Rule rule = Rule.create(ruleScript, loader, helperManager, accessEnabler);
         // stash this rule away under the class name so we can reuse it for the first matching method
         ruleMap.put(triggerClassName, rule);
         // keep a handle on the first rule
@@ -209,7 +206,7 @@ public class TransformContext
 
         if (rule == null) {
             try {
-                rule = Rule.create(ruleScript, loader, helperManager);
+                rule = Rule.create(ruleScript, loader, helperManager, accessEnabler);
             } catch(Throwable th) {
                 //  will not happen
             }
@@ -607,6 +604,7 @@ public class TransformContext
     private String targetDescriptor;
     private ClassLoader loader;
     private HelperManager helperManager;
+    private AccessEnabler accessEnabler;
 
     /**
      * a hashmap indexing Rule instances using key classname.methodnameandsig@loaderhashcode. rules are

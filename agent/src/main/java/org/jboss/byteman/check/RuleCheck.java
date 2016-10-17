@@ -35,6 +35,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.jboss.byteman.agent.AccessEnabler;
+import org.jboss.byteman.agent.AccessManager;
 import org.jboss.byteman.agent.HelperManager;
 import org.jboss.byteman.agent.LocationType;
 import org.jboss.byteman.agent.RuleScript;
@@ -68,6 +70,7 @@ public class RuleCheck {
         output = null;
         verbose = false;
         helperManager = new HelperManager(null, new RuleCheckModuleSystem());
+        accessEnabler = AccessManager.init(null);
     }
 
     public void setPrintStream(PrintStream printStream)
@@ -292,7 +295,7 @@ public class RuleCheck {
                 // ok, not necessarily a surprise - let's see if we can create a rule and parse/type check it
                 final Rule rule;
                 try {
-                    rule = Rule.create(script, loader, helperManager);
+                    rule = Rule.create(script, loader, helperManager, accessEnabler);
                 } catch (ParseException pe) {
                     parseError("ERROR : Failed to type check rule \"" + script.getName() + "\" loaded from " + script.getFile() + " line " + script.getLine(), pe);
                     continue;
@@ -364,7 +367,7 @@ public class RuleCheck {
                         // we need a new copy of the rule
 
                         try {
-                            rule = Rule.create(script, loader, helperManager);
+                            rule = Rule.create(script, loader, helperManager, accessEnabler);
                         } catch (ParseException e) {
                             // will not happen
                         } catch (TypeException e) {
@@ -578,6 +581,7 @@ public class RuleCheck {
     PrintStream output;
     private boolean verbose;
     private HelperManager helperManager;
+    private AccessEnabler accessEnabler;
 
     
     class RuleCheckModuleSystem extends NonModuleSystem

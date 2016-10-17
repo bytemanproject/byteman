@@ -30,7 +30,6 @@ import org.jboss.byteman.tests.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,7 +84,7 @@ public class TestMethodClauseReturnTypeDynamic extends Test
 
     public String getRuleText()
     {
-        File file = new File("target/test-classes/scripts/bugfixes/TestMethodClauseReturnTypeDynamic.btm");
+        File file = new File("../agent/target/test-classes/scripts/bugfixes/TestMethodClauseReturnTypeDynamic.btm");
         try {
             FileInputStream fis = new FileInputStream(file);
             int expected = fis.available();

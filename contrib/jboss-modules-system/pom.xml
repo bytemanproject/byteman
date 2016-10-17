@@ -28,13 +28,16 @@
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-root</artifactId>
-        <version>4.0.0-ALPHA</version>
+        <version>4.0.0-BETA0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <modules>
         <module>plugin</module>
+		<!-- cannot run tests until jboss modules is fixed ot work on latest jigsaw-jdk9
+             it fails trying to access a protected java.base package
         <module>tests</module>
+        -->
     </modules>
 
 	<dependencyManagement>

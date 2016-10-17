@@ -19,13 +19,14 @@
 	<parent>
 		<groupId>org.jboss.byteman</groupId>
 		<artifactId>byteman-jboss-modules</artifactId>
-		<version>4.0.0-ALPHA</version>
+		<version>4.0.0-BETA0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<properties>
 		<!-- <debug.options>-agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=y</debug.options> -->
         <debug.options></debug.options>
+		<skip.tests>true</skip.tests>
 	</properties>
 
 	<build>
@@ -413,6 +414,7 @@
 				<artifactId>maven-verifier-plugin</artifactId>
 				<configuration>
 					<verificationFile>verification.xml</verificationFile>
+					<failOnError>false</failOnError>
 				</configuration>
 				<executions>
 					<execution>

@@ -41,7 +41,13 @@ public class TestRuleCheck extends Test
     public void test()
     {
         RuleCheck checker = new RuleCheck();
-        addBtmScript(checker, new File("src/test/resources/scripts"));
+        // don't include access tests as they will fail
+        // when we don't have the jigsaw access enabler
+        addBtmScript(checker, new File("src/test/resources/scripts/bugfixes"));
+        addBtmScript(checker, new File("src/test/resources/scripts/helpertests"));
+        addBtmScript(checker, new File("src/test/resources/scripts/javaops"));
+        addBtmScript(checker, new File("src/test/resources/scripts/location"));
+        addBtmScript(checker, new File("src/test/resources/scripts/misc"));
         checker.addPackage("org.jboss.byteman.tests.auxiliary");
         checker.addPackage("org.jboss.byteman.tests.bugfixes");
         checker.addPackage("org.jboss.byteman.tests.javaops");

@@ -33,7 +33,7 @@
         into Java application and JVM runtime methods. Its primary purpose is to support execution tracing and fault
         injection testing.
     </description>
-    <version>4.0.0-ALPHA</version>
+    <version>4.0.0-BETA0</version>
     <name>byteman-root</name>
     <url>http://www.jboss.org/byteman</url>
 
@@ -133,6 +133,45 @@
                  <version>${project.version}</version>
                  <classifier>javadoc</classifier>
              </dependency>
+            <dependency>
+                <groupId>org.jboss.byteman</groupId>
+                <artifactId>byteman-agent</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.byteman</groupId>
+                <artifactId>byteman-agent</artifactId>
+                <version>${project.version}</version>
+                <classifier>sources</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.byteman</groupId>
+                <artifactId>byteman-agent</artifactId>
+                <version>${project.version}</version>
+                <classifier>javadoc</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.byteman</groupId>
+                <artifactId>byteman-jigsaw</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.byteman</groupId>
+                <artifactId>byteman-jigsaw</artifactId>
+                <version>${project.version}</version>
+                <classifier>sources</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.byteman</groupId>
+                <artifactId>byteman-layer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.byteman</groupId>
+                <artifactId>byteman-layer</artifactId>
+                <version>${project.version}</version>
+                <classifier>sources</classifier>
+            </dependency>
              <dependency>
                  <groupId>org.jboss.byteman</groupId>
                  <artifactId>byteman-submit</artifactId>
@@ -303,6 +342,11 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>2.4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>2.6</version>
                     <dependencies>
@@ -398,6 +442,10 @@
     <modules>
         <module>submit</module>
         <module>agent</module>
+        <module>byteman</module>
+        <module>tests</module>
+        <module>layer</module>
+        <module>jigsaw</module>
         <module>install</module>
         <module>contrib/bmunit</module>
         <module>contrib/dtest</module>
