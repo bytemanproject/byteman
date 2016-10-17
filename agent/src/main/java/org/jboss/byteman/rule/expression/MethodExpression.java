@@ -307,16 +307,7 @@ public class MethodExpression extends Expression
                 Method method = bestMatchCandidate(candidates, expected);
 
                 if (method != null) {
-                    if (!Modifier.isPublic(method.getModifiers()) ||
-                            !Modifier.isPublic(method.getDeclaringClass().getModifiers())) {
-                        // see if we can actually access this method
-                        try {
-                            method.setAccessible(true);
-                        } catch (SecurityException e) {
-                            // hmm, maybe try the next super
-                            continue;
-                        }
-                        // we need to remember that this is not public
+                    if (rule.requiresAccess(method)) {
                         isPublicMethod  = false;
                         // save the method so we can use it from the compiled code
                         methodIndex = rule.addAccessibleMethod(method);
@@ -493,7 +484,9 @@ public class MethodExpression extends Expression
                 // compile code to stack argument and type convert/box if necessary
                 argument.compile(mv, compileContext);
                 compileTypeConversion(argType, paramType, mv, compileContext);
-                compileBox(paramType, mv, compileContext);
+                if (paramType.isPrimitive()) {
+                    compileBox(Type.boxType(paramType), mv, compileContext);
+                }
                 // that's 3 extra words which now get removed
                 mv.visitInsn(Opcodes.AASTORE);
                 compileContext.addStackCount(-3);

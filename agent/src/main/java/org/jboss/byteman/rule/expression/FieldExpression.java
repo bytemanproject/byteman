@@ -476,13 +476,12 @@ public class FieldExpression extends AssignableExpression
     {
         try {
             Field field = ownerClazz.getField(fieldName);
-            // the owner class has to be public for us to be able to use reflection
-            if (Modifier.isPublic(field.getDeclaringClass().getModifiers())) {
+            // ask rule to check whether we need to use reflection
+            if (!rule.requiresAccess(field)) {
                 isPublicField = true;
                 return field;
             } else {
                 isPublicField = false;
-                field.setAccessible(true);
                 // register the field with the rule so we can access it later
                 fieldIndex = rule.addAccessibleField(field);
                 return field;
@@ -494,7 +493,6 @@ public class FieldExpression extends AssignableExpression
                 try {
                     field = nextClass.getDeclaredField(fieldName);
                     isPublicField = false;
-                    field.setAccessible(true);
                     // register the field with the rule so we can access it later
                     fieldIndex = rule.addAccessibleField(field);
                     return field;

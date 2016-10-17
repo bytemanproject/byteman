@@ -23,16 +23,12 @@
 */
 package org.jboss.byteman.agent;
 
-import org.jboss.byteman.agent.adapter.*;
 import org.jboss.byteman.agent.check.ClassChecker;
 import org.jboss.byteman.agent.check.LoadCache;
 import org.jboss.byteman.modules.ModuleSystem;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
 import org.jboss.byteman.rule.type.TypeHelper;
-import org.jboss.byteman.rule.exception.ParseException;
-import org.jboss.byteman.rule.exception.TypeException;
-import org.objectweb.asm.*;
 
 import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
@@ -44,7 +40,6 @@ import java.util.*;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.File;
-
 
 /**
  * byte code transformer used to introduce byteman events into JBoss code
@@ -99,6 +94,8 @@ public class Transformer implements ClassFileTransformer {
                 }
             }
         }
+
+        accessEnabler = AccessManager.init(inst);
     }
 
     /**
@@ -743,7 +740,7 @@ public class Transformer implements ClassFileTransformer {
      */
     public byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, byte[] targetClassBytes)
     {
-        TransformContext transformContext = new TransformContext(this, ruleScript, className, loader, helperManager);
+        TransformContext transformContext = new TransformContext(this, ruleScript, className, loader, helperManager, accessEnabler);
 
         return transformContext.transform(targetClassBytes);
     }
@@ -1068,6 +1065,11 @@ public class Transformer implements ClassFileTransformer {
      * the instrumentation interface to the JVM
      */
     protected final Instrumentation inst;
+
+    /**
+     * an object we use to enable access to reflective fields where needed
+     */
+    AccessEnabler accessEnabler;
 
     /**
      * true if the instrumentor allows redefinition

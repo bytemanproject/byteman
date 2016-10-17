@@ -24,6 +24,8 @@
 package org.jboss.byteman.rule;
 
 import java.io.PrintWriter;
+
+import org.jboss.byteman.agent.AccessEnabler;
 import org.jboss.byteman.agent.HelperManager;
 import org.jboss.byteman.modules.ModuleSystem;
 import org.jboss.byteman.rule.type.TypeGroup;
@@ -47,6 +49,7 @@ import org.jboss.byteman.rule.compiler.Compiler;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Member;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.lang.reflect.Constructor;
@@ -158,6 +161,12 @@ public class Rule
      * lifecycle event manager for rule helpers
      */
     private HelperManager helperManager;
+
+    /**
+     * auxiliary to manage access to normally inaccessible fields
+     */
+    private AccessEnabler accessEnabler;
+
     /**
      * a list of field objects used by compiled code to enable rule code to access non-public fields
      */
@@ -168,7 +177,7 @@ public class Rule
      */
     private List<Method> accessibleMethods;
 
-    private Rule(RuleScript ruleScript, ClassLoader loader, HelperManager helperManager)
+    private Rule(RuleScript ruleScript, ClassLoader loader, HelperManager helperManager, AccessEnabler accessEnabler)
             throws ParseException, TypeException, CompileException
     {
         ParseNode ruleTree;
@@ -188,6 +197,7 @@ public class Rule
         accessibleMethods = null;
         // this is only set when the rule is created via a real installed transformer
         this.helperManager =  helperManager;
+        this.accessEnabler = accessEnabler;
 
         ECAGrammarParser parser = null;
         try {
@@ -350,10 +360,10 @@ public class Rule
         return helperLoader;
     }
 
-    public static Rule create(RuleScript ruleScript, ClassLoader loader, HelperManager helperManager)
+    public static Rule create(RuleScript ruleScript, ClassLoader loader, HelperManager helperManager, AccessEnabler accessEnabler)
             throws ParseException, TypeException, CompileException
     {
-            return new Rule(ruleScript, loader, helperManager);
+            return new Rule(ruleScript, loader, helperManager, accessEnabler);
     }
 
     public void setEvent(String eventSpec) throws ParseException, TypeException
@@ -979,12 +989,23 @@ public class Rule
         helperManager.uninstalled(this);
     }
 
+    public boolean requiresAccess(Field field)
+    {
+        return accessEnabler.requiresAccess(field);
+    }
+
+    public boolean requiresAccess(Method method)
+    {
+        return accessEnabler.requiresAccess(method);
+    }
+
     public int addAccessibleField(Field field) {
         if (accessibleFields == null) {
             accessibleFields = new ArrayList<Field>();
         }
         int index = accessibleFields.size();
         accessibleFields.add(field);
+        accessEnabler.ensureAccess(field);
         return index;
     }
     
@@ -994,6 +1015,7 @@ public class Rule
         }
         int index = accessibleMethods.size();
         accessibleMethods.add(method);
+        accessEnabler.ensureAccess(method);
         return index;
     }
 

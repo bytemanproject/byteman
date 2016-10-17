@@ -1,0 +1,122 @@
+<!--
+  ~ JBoss, Home of Professional Open Source
+  ~ Copyright 2016, Red Hat and individual contributors
+  ~ by the @authors tag. See the copyright.txt in the distribution for a
+  ~ full listing of individual contributors.
+  ~
+  ~ This is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU Lesser General Public License as
+  ~ published by the Free Software Foundation; either version 2.1 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This software is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this software; if not, write to the Free
+  ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  ~
+  ~ @authors Andrew Dinn
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>byteman-jigsaw</artifactId>
+    <packaging>jar</packaging>
+    <description>
+        The Byteman jigsaw jar provides support for Byteman
+        operation in JDK9+. It implements a JDK9 variant of
+        the AccessEnabler class which is used to ensure that
+        members of non-exported or non-public, exported classes
+        can be accessed reflectively. This variant relies on a
+        module created dynamically using the byteman-layer API to
+        manage accessibility. This JDK9 code is bundled into the
+        main byteman jar
+    </description>
+    <name>byteman-jigsaw</name>
+    <parent>
+        <groupId>org.jboss.byteman</groupId>
+        <artifactId>byteman-root</artifactId>
+        <version>4.0.0-BETA0</version>
+    </parent>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>9</source>
+                    <target>9</target>
+                    <verbose>true</verbose>
+                    <!-- don't compile classes which populate the
+                         Byteman jigsaw module as they are generated
+                         at runtime -->
+                    <excludes>
+                        <exclude>org/jboss/byteman/jigsaw/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <!-- we need to map the ASM class references in class
+                 AccessManager into the byteman package space as
+                 that is where the byteman-agent jar bundles them
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.objectweb.asm</pattern>
+                                    <shadedPattern>org.jboss.byteman.objectweb.asm</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-all</artifactId>
+            <scope>provided</scope>
+            <version>6.0_ALPHA</version>
+        </dependency>
+        <!-- we need the byteman agent jar so we can
+             reuse interface AccessEnabler and override
+             class AccessManager
+             -->
+        <dependency>
+            <groupId>org.jboss.byteman</groupId>
+            <artifactId>byteman-agent</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- we need the byteman layer jar so we can
+             create the dynamic module in which we
+             need to install class JigsawAccessEnabler
+             -->
+        <dependency>
+            <groupId>org.jboss.byteman</groupId>
+            <artifactId>byteman-layer</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>
