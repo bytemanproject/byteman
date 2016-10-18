@@ -55,11 +55,6 @@ public class LayerFactory
      * @param classMapper a mapper provided by the caller to populate the module with
      * classes which accepts a class name and returns the corresponding class file format
      * byte array. The name will be presented in the format "x/y/z/MyClass.class".
-     * </p>Ideally this parameter should be a Function<String, byte[]> but that precludes use
-     * of this class from JDK6 clients so instead a Map is accepted. If the classes required
-     * are capable of being predefined then a simple HasMap can be supplied populated with
-     * the required class definitions. If not then a class implementing Map can be supplied
-     * whose get method can construct the required classes on demand.
      *
      * @return the module classloader.
      */

@@ -43,6 +43,14 @@
         <artifactId>byteman-root</artifactId>
         <version>4.0.0-BETA0</version>
     </parent>
+    <properties>
+        <!-- don't install or deploy this jar, instead use it to
+             build the byteman jar which needs to include JDK9 code
+             that deals with modules
+        -->
+        <maven.install.skip>true</maven.install.skip>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
     <build>
         <plugins>
             <plugin>
@@ -83,13 +91,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -25,7 +25,8 @@
     <name>tests</name>
 
     <properties>
-        <maven.install.skip>false</maven.install.skip>
+        <maven.install.skip>true</maven.install.skip>
+        <maven.deploy.skip>true</maven.deploy.skip>
         <debug.args>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</debug.args>
     </properties>
 
