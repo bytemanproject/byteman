@@ -28,7 +28,7 @@
     <description>
         The Byteman layer jar provides support for agents
         to create a Jigsaw module layer at runtime, install
-        a module in the layer and populatte the layer with
+        a module in the layer and populate the layer with
         classes defined via byte arrays in class file
         format.
     </description>
@@ -47,13 +47,6 @@
                     <source>9</source>
                     <target>9</target>
                     <verbose>true</verbose>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>
