@@ -21,34 +21,31 @@
 package org.jboss.byteman.contrib.dtest;
 
 /**
- * <p>
  * Provides a fluent API for creating Byteman rules without needing
  *  to mess around with String concatenation.
- * <p>
- * Example:
- * <p>
- * <code>
- * RuleBuilder rb = new RuleBuilder("myRule");<br>
- * rb.onClass("org.jboss.byteman.ExampleClass")<br>
- *   .inMethod("doInterestingStuff")<br>
- *   .whenTrue().doAction("myAction()");<br>
- *  System.out.println(rb);
- * </code>
- * <p>
- * will print:
- * <p>
- * <code>
- *   RULE myRule<br>
- *   CLASS org.jboss.byteman.ExampleClass<br>
- *   METHOD doInterestingStuffv
- *   AT ENTRY<br>
- *   IF true<br>
- *   DO myAction()<br>
- *   ENDRULE
- * </code>
  *
+ * Example:
+ *
+ * RuleBuilder rb = new RuleBuilder("myRule");
+ * rb.onClass("org.jboss.byteman.ExampleClass")
+ *   .inMethod("doInterestingStuff")
+ *   .whenTrue().doAction("myAction()");
+ *  System.out.println(rb);
+ *
+ * will print:
+ *
+ *   RULE myRule
+ *   CLASS org.jboss.byteman.ExampleClass
+ *   METHOD doInterestingStuff
+ *   AT ENTRY
+ *   IF true
+ *   DO myAction()
+ *   ENDRULE
+ *
+ * @deprecated use {@link RuleConstructor}
  * @author Jonathan Halliday (jonathan.halliday@redhat.com) 2010-05
  */
+@Deprecated
 public class RuleBuilder
 {
     public static void main(String[] args) {

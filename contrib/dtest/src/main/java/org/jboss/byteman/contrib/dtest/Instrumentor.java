@@ -22,7 +22,6 @@ package org.jboss.byteman.contrib.dtest;
 
 import org.jboss.byteman.agent.submit.ScriptText;
 import org.jboss.byteman.agent.submit.Submit;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
@@ -48,6 +47,7 @@ public class Instrumentor
     private final Map<String, InstrumentedClass> instrumentedClasses = new HashMap<String, InstrumentedClass>();
     private final List<ScriptText> installedScripts = new LinkedList<ScriptText>();
     private File redirectedSubmissionsFile;
+    private Class<?> helperClass = BytemanTestHelper.class;
 
     public Instrumentor(Submit submit, int rmiRegistryPort) throws RemoteException
     {
@@ -70,6 +70,49 @@ public class Instrumentor
     {
         this(new Submit(address, port), rmiPort);
     }
+
+    /**
+     * Returns the file to which Rule submission is currently redirected
+     *
+     * @return a file, or null if no redirection is in effect.
+     */
+    public File getRedirectedSubmissionsFile()
+    {
+        return redirectedSubmissionsFile;
+    }
+
+    /**
+     * Sets the file to which Rule submissions should be redirected.
+     *
+     * @param redirectedSubmissionsFile a file, or null to cancel any existing redirection.
+     */
+    public void setRedirectedSubmissionsFile(File redirectedSubmissionsFile)
+    {
+        this.redirectedSubmissionsFile = redirectedSubmissionsFile;
+    }
+
+    /**
+     * Returns a helper class which this {@link Instrumentor} instance defines
+     * as parameter of <code>HELPER</code> clause.
+     */
+    public Class<?> getHelperClass() {
+        return this.helperClass;
+    }
+
+    /**
+     * <p>
+     * Redefine a helper class which is used as parameter of <code>HELPER</code> clause
+     * by this instance of {@link Instrumentor}
+     * <p>
+     * When setting you will probably create your own byteman helper class which extends the default
+     * one {@link BytemanTestHelper}.<br>
+     * You need to know what you are doing when setting this parameter different from default helper
+     * implementation as it provides core functionality for <code>dtest</code> library.
+     */
+    public void setHelperClass(Class<?> helperClass) {
+        this.helperClass = helperClass;
+    }
+
 
     /**
      * Add the specified jar to the remote app's system classpath.
@@ -115,10 +158,10 @@ public class Instrumentor
         Set<String> methodNamesToInstrument = new HashSet<String>();
 
         for(Method method : clazz.getDeclaredMethods()) {
-        	String declaredMethodName = method.getName();
-        	if(methodNames == null || methodNames.contains(declaredMethodName)) {
-        		methodNamesToInstrument.add(declaredMethodName);
-        	}
+            String declaredMethodName = method.getName();
+            if(methodNames == null || methodNames.contains(declaredMethodName)) {
+                methodNamesToInstrument.add(declaredMethodName);
+            }
         }
 
         return instrumentClass(className, methodNamesToInstrument);
@@ -136,9 +179,9 @@ public class Instrumentor
      */
     public InstrumentedClass instrumentClass(String className, Set<String> methodNames) throws Exception
     {
-    	if(methodNames == null) {
-    		throw new NullPointerException("methodNames");
-    	}
+        if(methodNames == null) {
+            throw new NullPointerException("methodNames");
+        }
 
         Set<String> instrumentedMethods = new HashSet<String>();
 
@@ -153,17 +196,19 @@ public class Instrumentor
 
             String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_remotetrace_entry";
 
-            RuleBuilder ruleBuilder = new RuleBuilder(ruleName);
-            if(isInterface(className)) {
-                ruleBuilder.onInterface(className);
-            } else {
-                ruleBuilder.onClass(className);
-            }
-            ruleBuilder.inMethod(methodName).atEntry();
-            ruleBuilder.usingHelper(BytemanTestHelper.class);
-            ruleBuilder.doAction("setTriggering(false), debug(\"firing "+ruleName+"\", $0), remoteTrace(\""+className+"\", \""+methodName+"\", $*)");
-            ruleScriptBuilder.append(ruleBuilder.toString());
-            
+            RuleConstructor.ClassClause builderClassClause = RuleConstructor.createRule(ruleName);
+            RuleConstructor.MethodClause builderMethodClause =
+                    isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
+
+                RuleConstructor builder = builderMethodClause
+                    .inMethod(methodName)
+                    .atEntry()
+                    .helper(helperClass)
+                    .ifTrue()
+                    .doAction("setTriggering(false), debug(\"firing "+ruleName+"\", $0), remoteTrace(\""+className+"\", \""+methodName+"\", $*)");
+
+            ruleScriptBuilder.append(builder.build());
+
             instrumentedMethods.add(methodName);
         }
 
@@ -171,26 +216,6 @@ public class Instrumentor
         installScript(className+".instrumentationScript", scriptString);
 
         return publish(className);
-    }
-
-    /**
-     * Returns the file to which Rule submission is currently redirected
-     *
-     * @return a file, or null if no redirection is in effect.
-     */
-    public File getRedirectedSubmissionsFile()
-    {
-        return redirectedSubmissionsFile;
-    }
-
-    /**
-     * Sets the file to which Rule submissions should be redirected.
-     *
-     * @param redirectedSubmissionsFile a file, or null to cancel any existing redirection.
-     */
-    public void setRedirectedSubmissionsFile(File redirectedSubmissionsFile)
-    {
-        this.redirectedSubmissionsFile = redirectedSubmissionsFile;
     }
 
     /**
@@ -251,13 +276,13 @@ public class Instrumentor
      * @param clazz The Class in which the injection point resides.
      * @param methodName The method which should be intercepted.
      * @param action The action that should take place upon invocation of the method.
-     * @param where the injection point e.g. "ENTRY".
+     * @param atInjection the injection point e.g. "ENTRY".
      * @param condition the rule condition
      * @throws Exception in case of failure.
      */
-    public void injectOnMethod(Class clazz, String methodName, String condition, String action, String where) throws Exception {
-    	injectOnMethod(clazz.getCanonicalName(), methodName, condition, action, where);
-	}
+    public void injectOnMethod(Class clazz, String methodName, String condition, String action, String atInjection) throws Exception {
+        injectOnMethod(clazz.getCanonicalName(), methodName, condition, action, atInjection);
+    }
 
     /**
      * Inject an action to take place at a given point within the specified class.method
@@ -265,26 +290,79 @@ public class Instrumentor
      * @param className The name of the Class in which the injection point resides.
      * @param methodName The method which should be intercepted.
      * @param action The action that should take place upon invocation of the method.
-     * @param where the injection point e.g. "ENTRY".
+     * @param atInjection the injection point e.g. "ENTRY".
      * @param condition the rule condition
      * @throws Exception in case of failure.
      */
-    public void injectOnMethod(String className, String methodName, String condition, String action, String where) throws Exception
+    public void injectOnMethod(String className, String methodName, String condition, String action, String atInjection) throws Exception
+    {
+        String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_injectionat"+atInjection;
+
+        RuleConstructor.ClassClause builderClassClause = RuleConstructor.createRule(ruleName);
+        RuleConstructor.MethodClause builderMethodClause =
+                isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
+
+            RuleConstructor builder = builderMethodClause
+                .inMethod(methodName)
+                .at(atInjection)
+                .helper(helperClass)
+                .ifCondition(condition)
+                .doAction(action);
+
+        installScript("onCall"+className+"."+methodName+"."+atInjection, builder.build());
+    }
+
+
+    /**
+     * <p>
+     * Inject an action to take place at a given point within the specified class.method
+     * <p>
+     * Difference to {@link #injectOnMethod(Class, String, String, String, String)} resides at
+     * injection definition. The prior one expects "AT" injection point. This one expects the whole
+     * location qualifier.
+     *
+     * @param clazz The Class in which the injection point resides.
+     * @param methodName The method which should be intercepted.
+     * @param action The action that should take place upon invocation of the method.
+     * @param where the injection definition e.g. "AT ENTRY" or "AFTER SYNCHRONIZATION".
+     * @param condition the rule condition
+     * @throws Exception in case of failure.
+     */
+    public void injectOnMethodWhere(Class clazz, String methodName, String condition, String action, String where) throws Exception {
+        injectOnMethodWhere(clazz.getCanonicalName(), methodName, condition, action, where);
+    }
+
+    /**
+     * <p>
+     * Inject an action to take place at a given point within the specified class.method
+     * <p>
+     * Difference to {@link #injectOnMethod(String, String, String, String, String)} resides at
+     * injection definition. The prior one expects "AT" injection point. This one expects the whole
+     * location qualifier.
+     *
+     * @param className The name of the Class in which the injection point resides.
+     * @param methodName The method which should be intercepted.
+     * @param action The action that should take place upon invocation of the method.
+     * @param where the injection definition e.g. "AT ENTRY" or "AFTER SYNCHRONIZATION".
+     * @param condition the rule condition
+     * @throws Exception in case of failure.
+     */
+    public void injectOnMethodWhere(String className, String methodName, String condition, String action, String where) throws Exception
     {
         String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_injectionat"+where;
 
-        RuleBuilder ruleBuilder = new RuleBuilder(ruleName);
-        if(isInterface(className)) {
-            ruleBuilder.onInterface(className);
-        } else {
-            ruleBuilder.onClass(className);
-        }
-        ruleBuilder.inMethod(methodName).at(where);
-        ruleBuilder.usingHelper(BytemanTestHelper.class);
-        ruleBuilder.when(condition).doAction(action);
+        RuleConstructor.ClassClause builderClassClause = RuleConstructor.createRule(ruleName);
+        RuleConstructor.MethodClause builderMethodClause =
+                isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
 
-        String ruleText = ruleBuilder.toString();
-        installScript("onCall"+className+"."+methodName+"."+where, ruleText);
+            RuleConstructor builder = builderMethodClause
+                .inMethod(methodName)
+                .where(where)
+                .helper(helperClass)
+                .ifCondition(condition)
+                .doAction(action);
+
+        installScript("onCall"+className+"."+methodName+"."+where, builder.build());
     }
 
     /**
@@ -325,17 +403,18 @@ public class Instrumentor
         }
         actionBuilder.append(")"+"\n");
 
-        RuleBuilder ruleBuilder = new RuleBuilder(ruleName);
-        if(isInterface(className)) {
-            ruleBuilder.onInterface(className);
-        } else {
-            ruleBuilder.onClass(className);
-        }
-        ruleBuilder.inMethod(methodName).atEntry();
-        ruleBuilder.usingHelper(BytemanTestHelper.class);
-        ruleBuilder.whenTrue().doAction(actionBuilder.toString());        
+        RuleConstructor.ClassClause builderClassClause = RuleConstructor.createRule(ruleName);
+        RuleConstructor.MethodClause builderMethodClause =
+                isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
 
-        installScript("fault"+className+"."+methodName, ruleBuilder.toString());
+            RuleConstructor builder = builderMethodClause
+                .inMethod(methodName)
+                .atEntry()
+                .helper(helperClass)
+                .ifTrue()
+                .doAction(actionBuilder.toString());
+
+        installScript("fault"+className+"."+methodName, builder.build());
     }
 
     /**
@@ -391,26 +470,27 @@ public class Instrumentor
      *
      * @param className The name of the Class in which the injection point resides.
      * @param methodName The method which should be intercepted.
-     * @param where the injection point e.g. "ENTRY".
+     * @param atInjection the injection point e.g. "ENTRY".
      * @throws Exception in case of failure.
      */
-    public void crashAtMethod(String className, String methodName, String where) throws Exception
+    public void crashAtMethod(String className, String methodName, String atInjection) throws Exception
     {
-        String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_crashat"+where;
+        String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_crashat"+atInjection;
 
         String action = "debug(\"killing JVM\"), killJVM()";
 
-        RuleBuilder ruleBuilder = new RuleBuilder(ruleName);
-        if(isInterface(className)) {
-            ruleBuilder.onInterface(className);
-        } else {
-            ruleBuilder.onClass(className);
-        }
-        ruleBuilder.inMethod(methodName).at(where);
-        ruleBuilder.usingHelper(BytemanTestHelper.class);
-        ruleBuilder.whenTrue().doAction(action);
-        
-        installScript("crash"+className+"."+methodName+"."+where, ruleBuilder.toString());
+        RuleConstructor.ClassClause builderClassClause = RuleConstructor.createRule(ruleName);
+        RuleConstructor.MethodClause builderMethodClause =
+                isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
+
+            RuleConstructor builder = builderMethodClause
+                .inMethod(methodName)
+                .at(atInjection)
+                .helper(helperClass)
+                .ifTrue()
+                .doAction(action);
+
+        installScript("crash"+className+"."+methodName+"."+atInjection, builder.build());
     }
 
     /**
@@ -422,9 +502,7 @@ public class Instrumentor
      * @param scriptString The text of the script i.e. one or more Rules.
      * @throws Exception in case of failure.
      */
-    public void installScript(String scriptName, String scriptString)
-            throws Exception
-    {
+    public void installScript(String scriptName, String scriptString) throws Exception {
         System.out.println("installing: "+scriptString);
 
         if(scriptString.length() > 0) {
@@ -453,6 +531,64 @@ public class Instrumentor
             }
         }
     }
+
+    /**
+     * Installing rule based on definition available by building {@link RuleConstructor}.
+     *
+     * @param builder  rule builder with a rule definition to be installed as script
+     * @return  name of script that rule was installed under
+     * @throws Exception  in case of failure
+     */
+    public String installRule(RuleConstructor builder) throws Exception {
+        String scriptName = builder.getRuleName();
+        installScript(scriptName, builder.build());
+        return scriptName;
+    }
+
+
+    /**
+     * Removing particular script from the remote byteman agent.
+     *
+     * @param scriptName  name of script that should be removed
+     * @throws Exception in case that script can't be removed
+     */
+    public void removeScript(String scriptName) throws Exception {
+        ScriptText script = findInstalledScript(scriptName);
+        if(script == null) {
+            throw new IllegalStateException("Script name " + scriptName + " can't be removed as "
+                    + "was not found in list of installed scripts");
+        }
+        submit.deleteScripts(Arrays.asList(script));
+        installedScripts.remove(script);
+    }
+
+    /**
+     * Flush the local cache of scripts and proxies to remote instrumented classes.
+     * Useful to reset local state when a remote JVM is crashed and hence reset.
+     *
+     * @throws Exception in case of failure.
+     */
+    public synchronized void removeLocalState() throws Exception
+    {
+        for(String instrumentedClassName : instrumentedClasses.keySet())
+        {
+            unpublish(instrumentedClassName);
+        }
+        instrumentedClasses.clear();
+        installedScripts.clear();
+    }
+
+    /**
+     * Flush any instrumentation for the given class in the remote system and clean up the local cache.
+     *
+     * @throws Exception in case of failure.
+     */
+    public void removeAllInstrumentation() throws Exception
+    {
+        submit.deleteScripts(installedScripts);
+        removeLocalState();
+    }
+
 
     /**
      * Write the given text to the end of the file.
@@ -501,33 +637,6 @@ public class Instrumentor
     }
 
     /**
-     * Flush the local cache of scripts and proxies to remote instrumented classes.
-     * Useful to reset local state when a remote JVM is crashed and hence reset.
-     *
-     * @throws Exception in case of failure.
-     */
-    public synchronized void removeLocalState() throws Exception
-    {
-        for(String instrumentedClassName : instrumentedClasses.keySet())
-        {
-            unpublish(instrumentedClassName);
-        }
-        instrumentedClasses.clear();
-        installedScripts.clear();
-    }
-
-    /**
-     * Flush any instrumentation for the given class in the remote system and clean up the local cache.
-     *
-     * @throws Exception in case of failure.
-     */
-    public void removeAllInstrumentation() throws Exception
-    {
-        submit.deleteScripts(installedScripts);
-        removeLocalState();
-    }
-
-    /**
      * Trying to load a class and if successful then check if class is interface.
      * If it's then returns true. In all other cases returns false.
      */
@@ -551,5 +660,16 @@ public class Instrumentor
         } else {
             return false;
         }
+    }
+
+    /**
+     * Looping through installed scripts and checking if scriptName
+     * is there. If so returns it otherwise returns null.
+     */
+    private ScriptText findInstalledScript(String scriptName) {
+        for(ScriptText installedScript: installedScripts) {
+            if(installedScript.getFileName().equals(scriptName)) return installedScript;
+        }
+        return null;
     }
 }
