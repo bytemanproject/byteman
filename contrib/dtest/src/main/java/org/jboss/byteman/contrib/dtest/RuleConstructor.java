@@ -334,7 +334,7 @@ public final class RuleConstructor {
          */
         public RuleConstructor.LocationClause inClassInitMethod(String... argTypes) {
             return inMethod(CLASS_CONSTRUCTOR, argTypes);
-        }   
+        }
     }
 
     public final class LocationClause {
@@ -546,7 +546,7 @@ public final class RuleConstructor {
         public RuleConstructor.ConditionClause afterInvoke(String method, int occurencePosition) {
             return after("INVOKE " + method + " " + occurencePosition);
         }
-        
+
         /**
          * <p>
          * Rule is invoked at entry of synchronization block in the target method.
@@ -558,7 +558,7 @@ public final class RuleConstructor {
         public RuleConstructor.ConditionClause atSynchronize() {
             return at("SYNCHRONIZE");
         }
-        
+
         /**
          * <p>
          * Rule is invoked at point of invocation of method within the trigger method
@@ -573,7 +573,7 @@ public final class RuleConstructor {
         public RuleConstructor.ConditionClause atSynchronize(int occurencePosition) {
             return at("SYNCHRONIZE " + occurencePosition);
         }
-        
+
         /**
          * Rule is invoked after invocation of method within the trigger method.<br>
          * Location specifier is set as <code>AFTER SYNCHRONIZE</code>.
@@ -583,7 +583,7 @@ public final class RuleConstructor {
         public RuleConstructor.ConditionClause afterSynchronize() {
             return after("SYNCHRONIZE");
         }
-        
+
         /**
          * <p>
          * Rule is invoked after invocation of method within the trigger method

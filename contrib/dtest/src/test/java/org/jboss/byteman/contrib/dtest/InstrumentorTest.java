@@ -101,7 +101,7 @@ public class InstrumentorTest {
         instrumentor.setRedirectedSubmissionsFile(ruleFile);
 
         instrumentor.crashAtMethodEntry(clazzName, method);
-        
+
         String ruleString = readFileToString(ruleFile);
 
         Pattern pattern = new RegexRuleBuilder()
@@ -214,7 +214,7 @@ public class InstrumentorTest {
         Class exception = NullPointerException.class;
         Object[] args = {"hello"};
         instrumentor.injectFault(clazz, method, exception, args);
-        
+
         String ruleString = readFileToString(ruleFile);
 
         Pattern pattern = new RegexRuleBuilder()
@@ -258,7 +258,7 @@ public class InstrumentorTest {
         Scanner in = null;
         try {
             in = new Scanner(file);
-    
+
             StringBuffer buffer = new StringBuffer();
             while (in.hasNext()) {
                 buffer.append(in.nextLine() + lineSeparator);

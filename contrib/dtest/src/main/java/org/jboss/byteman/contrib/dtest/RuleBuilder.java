@@ -84,7 +84,7 @@ public class RuleBuilder
     }
 
     public RuleBuilder onInterface(String className) {
-        return onSpecifier(className, true);        
+        return onSpecifier(className, true);
     }
 
     private RuleBuilder onSpecifier(String className, boolean isInterface) {

@@ -187,18 +187,18 @@ public class Instrumentor
 
         StringBuilder ruleScriptBuilder = new StringBuilder();
         for(String methodName : methodNames) {
-            
+
             if(instrumentedMethods.contains(methodName)) {
-              // do not add two identical rules for methods which differ by parameters
-              continue;
+                // do not add two identical rules for methods which differ by parameters
+                continue;
             }
-            
+
 
             String ruleName = this.getClass().getCanonicalName()+"_"+className+"_"+methodName+"_remotetrace_entry";
 
             RuleConstructor.ClassClause builderClassClause = RuleConstructor.createRule(ruleName);
             RuleConstructor.MethodClause builderMethodClause =
-                    isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
+                isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
 
                 RuleConstructor builder = builderMethodClause
                     .inMethod(methodName)
@@ -207,9 +207,9 @@ public class Instrumentor
                     .ifTrue()
                     .doAction("setTriggering(false), debug(\"firing "+ruleName+"\", $0), remoteTrace(\""+className+"\", \""+methodName+"\", $*)");
 
-            ruleScriptBuilder.append(builder.build());
+                ruleScriptBuilder.append(builder.build());
 
-            instrumentedMethods.add(methodName);
+                instrumentedMethods.add(methodName);
         }
 
         String scriptString = ruleScriptBuilder.toString();
@@ -300,14 +300,14 @@ public class Instrumentor
 
         RuleConstructor.ClassClause builderClassClause = RuleConstructor.createRule(ruleName);
         RuleConstructor.MethodClause builderMethodClause =
-                isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
+            isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
 
-            RuleConstructor builder = builderMethodClause
-                .inMethod(methodName)
-                .at(atInjection)
-                .helper(helperClass)
-                .ifCondition(condition)
-                .doAction(action);
+        RuleConstructor builder = builderMethodClause
+            .inMethod(methodName)
+            .at(atInjection)
+            .helper(helperClass)
+            .ifCondition(condition)
+            .doAction(action);
 
         installScript("onCall"+className+"."+methodName+"."+atInjection, builder.build());
     }
@@ -353,14 +353,14 @@ public class Instrumentor
 
         RuleConstructor.ClassClause builderClassClause = RuleConstructor.createRule(ruleName);
         RuleConstructor.MethodClause builderMethodClause =
-                isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
+            isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
 
-            RuleConstructor builder = builderMethodClause
-                .inMethod(methodName)
-                .where(where)
-                .helper(helperClass)
-                .ifCondition(condition)
-                .doAction(action);
+        RuleConstructor builder = builderMethodClause
+            .inMethod(methodName)
+            .where(where)
+            .helper(helperClass)
+            .ifCondition(condition)
+            .doAction(action);
 
         installScript("onCall"+className+"."+methodName+"."+where, builder.build());
     }
@@ -405,14 +405,14 @@ public class Instrumentor
 
         RuleConstructor.ClassClause builderClassClause = RuleConstructor.createRule(ruleName);
         RuleConstructor.MethodClause builderMethodClause =
-                isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
+            isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
 
-            RuleConstructor builder = builderMethodClause
-                .inMethod(methodName)
-                .atEntry()
-                .helper(helperClass)
-                .ifTrue()
-                .doAction(actionBuilder.toString());
+        RuleConstructor builder = builderMethodClause
+            .inMethod(methodName)
+            .atEntry()
+            .helper(helperClass)
+            .ifTrue()
+            .doAction(actionBuilder.toString());
 
         installScript("fault"+className+"."+methodName, builder.build());
     }
@@ -481,14 +481,14 @@ public class Instrumentor
 
         RuleConstructor.ClassClause builderClassClause = RuleConstructor.createRule(ruleName);
         RuleConstructor.MethodClause builderMethodClause =
-                isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
+            isInterface(className) ? builderClassClause.onInterface(className) : builderClassClause.onClass(className);
 
-            RuleConstructor builder = builderMethodClause
-                .inMethod(methodName)
-                .at(atInjection)
-                .helper(helperClass)
-                .ifTrue()
-                .doAction(action);
+        RuleConstructor builder = builderMethodClause
+            .inMethod(methodName)
+            .at(atInjection)
+            .helper(helperClass)
+            .ifTrue()
+            .doAction(action);
 
         installScript("crash"+className+"."+methodName+"."+atInjection, builder.build());
     }
@@ -556,7 +556,7 @@ public class Instrumentor
         ScriptText script = findInstalledScript(scriptName);
         if(script == null) {
             throw new IllegalStateException("Script name " + scriptName + " can't be removed as "
-                    + "was not found in list of installed scripts");
+                + "was not found in list of installed scripts");
         }
         submit.deleteScripts(Arrays.asList(script));
         installedScripts.remove(script);

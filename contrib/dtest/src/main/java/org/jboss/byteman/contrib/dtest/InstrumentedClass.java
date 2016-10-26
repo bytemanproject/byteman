@@ -93,7 +93,7 @@ public class InstrumentedClass implements RemoteInterface
      * Sum number of method calls on all instrumented instances
      * belonging to this instrumented class.
      * It's sum of all method calls for all known instrumented instances.
-     * 
+     *
      * @param methodName  name of method which we are interested in how many times was called
      * @return number of method calls on the class (sum of method calls of all instances)
      */
@@ -144,7 +144,7 @@ public class InstrumentedClass implements RemoteInterface
     {
         assertMethodCallCount(message, methodName, new CallCount(callCount, callCount));
     }
-    
+
     /**
      * Checks that the number of known invocations of the given method is specified count.
      *
@@ -184,7 +184,7 @@ public class InstrumentedClass implements RemoteInterface
     }
 
     /**
-     * Checks that the given method has not been seen to be called on any known instance of the class. 
+     * Checks that the given method has not been seen to be called on any known instance of the class.
      * Uses junit internally, hence expect the normal exception throwing in case of failure.
      *
      * @param methodName the method name to look for.
