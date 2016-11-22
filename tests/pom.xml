@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-root</artifactId>
-        <version>4.0.0-BETA0</version>
+        <version>4.0.0-BETA1</version>
     </parent>
 
     <description>
@@ -210,7 +210,7 @@
                          <includes>
                            <include>org/jboss/byteman/tests/javaops/TestMethod.class</include>
                          </includes>
-                         <argLine>-javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/javaops/TestMethod.btm</argLine>
+                         <argLine>${debug.args} -javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/javaops/TestMethod.btm</argLine>
                       </configuration>
                     </execution>
                     <execution>
@@ -1056,7 +1056,7 @@
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestArrayArgTypeCheck.class</include>
                          </includes>
-                         <argLine>-javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/bugfixes/TestArrayArgTypeCheck.btm</argLine>
+                         <argLine>${debug.args} -javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/bugfixes/TestArrayArgTypeCheck.btm</argLine>
                       </configuration>
                     </execution>
                     <execution>

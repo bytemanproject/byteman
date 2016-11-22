@@ -74,7 +74,7 @@ public class StaticExpression extends AssignableExpression
     }
 
     public Type typeCheck(Type expected) throws TypeException {
-        typeCheckAny();
+        typeCheckAny(false);
 
         if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
             throw new TypeException("StaticExpression.typeCheck : invalid expected return type " + expected.getName() + getPos());
@@ -83,7 +83,7 @@ public class StaticExpression extends AssignableExpression
     }
 
     public Type typeCheckAssign(Type expected) throws TypeException {
-        typeCheckAny();
+        typeCheckAny(true);
 
         if (Type.dereference(expected).isDefined() && !type.isAssignableFrom(expected)) {
             throw new TypeException("StaticExpression.typeCheck : invalid value type " + expected.getName() + " for static field assignment " + getPos());
@@ -91,7 +91,7 @@ public class StaticExpression extends AssignableExpression
         return type;
     }
 
-    public void typeCheckAny() throws TypeException {
+    public void typeCheckAny(boolean isAssign) throws TypeException {
 
         // look for a class whose name matches some initial segment of pathList
         TypeGroup typeGroup = getTypeGroup();
@@ -102,7 +102,7 @@ public class StaticExpression extends AssignableExpression
 
         Class clazz = ownerType.getTargetClass();
         try {
-            field  = lookupField(clazz);
+            field  = lookupField(clazz, isAssign);
         } catch (NoSuchFieldException e) {
                 // oops
             throw new TypeException("StaticExpression.typeCheck : invalid field name " + fieldName + getPos());
@@ -119,7 +119,11 @@ public class StaticExpression extends AssignableExpression
 
     public Object interpret(HelperAdapter helper) throws ExecuteException {
         try {
-            return field.get(null);
+            if (isPublicField) {
+                return field.get(null);
+            } else {
+                return rule.getAccessibleField(null, fieldIndex);
+            }
         } catch (ExecuteException e) {
             throw e;
         } catch (IllegalAccessException e) {
@@ -187,7 +191,11 @@ public class StaticExpression extends AssignableExpression
     public Object interpretAssign(HelperAdapter helperAdapter, Object value) throws ExecuteException
     {
         try {
-            field.set(null, value);
+            if (isPublicField) {
+                field.set(null, value);
+            } else {
+                rule.setAccessibleField(null, value, fieldIndex);
+            }
             return value;
         } catch (ExecuteException e) {
             throw e;
@@ -259,7 +267,7 @@ public class StaticExpression extends AssignableExpression
         }
     }
 
-    private Field lookupField(Class<?> ownerClazz) throws NoSuchFieldException
+    private Field lookupField(Class<?> ownerClazz, boolean isAssign) throws NoSuchFieldException
     {
         try {
             Field field = ownerClazz.getField(fieldName);
@@ -270,7 +278,11 @@ public class StaticExpression extends AssignableExpression
             } else {
                 isPublicField = false;
                 // register the field with the rule so we can access it later
-                fieldIndex = rule.addAccessibleField(field);
+                if (isAssign) {
+                    fieldIndex = rule.addAccessibleFieldSetter(field);
+                } else {
+                    fieldIndex = rule.addAccessibleFieldGetter(field);
+                }
                 return field;
             }
         } catch (NoSuchFieldException nsfe) {
@@ -281,7 +293,11 @@ public class StaticExpression extends AssignableExpression
                     field = nextClass.getDeclaredField(fieldName);
                     isPublicField = false;
                     // register the field with the rule so we can access it later
-                    fieldIndex = rule.addAccessibleField(field);
+                    if (isAssign) {
+                        fieldIndex = rule.addAccessibleFieldSetter(field);
+                    } else {
+                        fieldIndex = rule.addAccessibleFieldGetter(field);
+                    }
                     return field;
                 } catch (NoSuchFieldException e) {
                     // continue

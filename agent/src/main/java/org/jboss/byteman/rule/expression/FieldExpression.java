@@ -107,7 +107,7 @@ public class FieldExpression extends AssignableExpression
             // this is really a static field reference pointed to by owner so get it to type check
             type = Type.dereference(indirectStatic.typeCheck(expected));
         } else {
-            typeCheckAny();
+            typeCheckAny(false);
 
             if (Type.dereference(expected).isDefined() && !expected.isAssignableFrom(type)) {
                 throw new TypeException("FieldExpresssion.typeCheck : invalid expected type " + expected.getName() + getPos());
@@ -123,7 +123,7 @@ public class FieldExpression extends AssignableExpression
             type = Type.dereference(indirectStatic.typeCheckAssign(expected));
             return type;
         } else {
-            typeCheckAny();
+            typeCheckAny(true);
 
             // we cannot accept an array length access in this position
             if (isArrayLength) {
@@ -176,7 +176,7 @@ public class FieldExpression extends AssignableExpression
         }
     }
 
-    private void typeCheckAny() throws TypeException {
+    private void typeCheckAny(boolean isAssign) throws TypeException {
 
         // ok, type check the owner and then use it to derive the field type
 
@@ -198,7 +198,7 @@ public class FieldExpression extends AssignableExpression
             }
         } else {
             try {
-                field  = lookupField(ownerClazz);
+                field  = lookupField(ownerClazz, isAssign);
             } catch (NoSuchFieldException e) {
                 throw new TypeException("FieldExpresssion.typeCheck : invalid field reference " + ownerType.getName() + " ." + fieldName + getPos());
             }
@@ -235,7 +235,11 @@ public class FieldExpression extends AssignableExpression
                     throw new ExecuteException("FieldExpression.interpret : attempted field indirection through null value " + owner + getPos());
                 }
 
-                return field.get(value);
+                if (isPublicField) {
+                    return field.get(value);
+                } else {
+                    return rule.getAccessibleField(value, fieldIndex);
+                }
             } catch (ExecuteException e) {
                 throw e;
             } catch (IllegalAccessException e) {
@@ -380,7 +384,11 @@ public class FieldExpression extends AssignableExpression
                     throw new ExecuteException("FieldExpression.interpret : attempted field indirection through null value " + owner + getPos());
                 }
 
-                field.set(ownerInstance, value);
+                if (isPublicField) {
+                    field.set(ownerInstance, value);
+                } else {
+                    rule.setAccessibleField(ownerInstance, value, fieldIndex);
+                }
                 return value;
             } catch (ExecuteException e) {
                 throw e;
@@ -472,7 +480,7 @@ public class FieldExpression extends AssignableExpression
         }
     }
     
-    private Field lookupField(Class<?> ownerClazz) throws NoSuchFieldException
+    private Field lookupField(Class<?> ownerClazz, boolean isAssign) throws NoSuchFieldException
     {
         try {
             Field field = ownerClazz.getField(fieldName);
@@ -483,7 +491,11 @@ public class FieldExpression extends AssignableExpression
             } else {
                 isPublicField = false;
                 // register the field with the rule so we can access it later
-                fieldIndex = rule.addAccessibleField(field);
+                if (!isAssign) {
+                    fieldIndex = rule.addAccessibleFieldGetter(field);
+                } else {
+                    fieldIndex = rule.addAccessibleFieldSetter(field);
+                }
                 return field;
             }
         } catch (NoSuchFieldException nsfe) {
@@ -494,7 +506,11 @@ public class FieldExpression extends AssignableExpression
                     field = nextClass.getDeclaredField(fieldName);
                     isPublicField = false;
                     // register the field with the rule so we can access it later
-                    fieldIndex = rule.addAccessibleField(field);
+                    if (!isAssign) {
+                        fieldIndex = rule.addAccessibleFieldGetter(field);
+                    } else {
+                        fieldIndex = rule.addAccessibleFieldSetter(field);
+                    }
                     return field;
                 } catch (NoSuchFieldException e) {
                     // continue

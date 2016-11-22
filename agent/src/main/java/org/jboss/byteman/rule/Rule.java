@@ -26,6 +26,10 @@ package org.jboss.byteman.rule;
 import java.io.PrintWriter;
 
 import org.jboss.byteman.agent.AccessEnabler;
+import org.jboss.byteman.agent.AccessibleConstructorInvoker;
+import org.jboss.byteman.agent.AccessibleFieldGetter;
+import org.jboss.byteman.agent.AccessibleFieldSetter;
+import org.jboss.byteman.agent.AccessibleMethodInvoker;
 import org.jboss.byteman.agent.HelperManager;
 import org.jboss.byteman.modules.ModuleSystem;
 import org.jboss.byteman.rule.type.TypeGroup;
@@ -49,7 +53,6 @@ import org.jboss.byteman.rule.compiler.Compiler;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Member;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.lang.reflect.Constructor;
@@ -168,14 +171,24 @@ public class Rule
     private AccessEnabler accessEnabler;
 
     /**
-     * a list of field objects used by compiled code to enable rule code to access non-public fields
+     * a list of field getter objects used to enable rule code to read non-public fields
      */
-    private List<Field> accessibleFields;
+    private List<AccessibleFieldGetter> accessibleFieldGetters;
 
     /**
-     * a list of method objects used by compiled code to enable rule code to access non-public methods
+     * a list of field setter objects used by to enable rule code to write non-public fields
      */
-    private List<Method> accessibleMethods;
+    private List<AccessibleFieldSetter> accessibleFieldSetters;
+
+    /**
+     * a list of method invoker objects used to enable rule code to invoke non-public methods
+     */
+    private List<AccessibleMethodInvoker> accessibleMethodInvokers;
+
+    /**
+     * a list of constructor invoker objects used to enable rule code to invoke non-public constructors
+     */
+    private List<AccessibleConstructorInvoker> accessibleConstructorInvokers;
 
     private Rule(RuleScript ruleScript, ClassLoader loader, HelperManager helperManager, AccessEnabler accessEnabler)
             throws ParseException, TypeException, CompileException
@@ -193,8 +206,10 @@ public class Rule
         triggerDescriptor = null;
         triggerAccess = 0;
         returnType = null;
-        accessibleFields =  null;
-        accessibleMethods = null;
+        accessibleFieldGetters =  null;
+        accessibleFieldSetters =  null;
+        accessibleMethodInvokers = null;
+        accessibleConstructorInvokers = null;
         // this is only set when the rule is created via a real installed transformer
         this.helperManager =  helperManager;
         this.accessEnabler = accessEnabler;
@@ -999,31 +1014,51 @@ public class Rule
         return accessEnabler.requiresAccess(method);
     }
 
-    public int addAccessibleField(Field field) {
-        if (accessibleFields == null) {
-            accessibleFields = new ArrayList<Field>();
+    public int addAccessibleFieldGetter(Field field) {
+        if (accessibleFieldGetters == null) {
+            accessibleFieldGetters = new ArrayList<AccessibleFieldGetter>();
         }
-        int index = accessibleFields.size();
-        accessibleFields.add(field);
-        accessEnabler.ensureAccess(field);
+        int index = accessibleFieldGetters.size();
+        AccessibleFieldGetter getter = accessEnabler.createFieldGetter(field);
+        accessibleFieldGetters.add(getter);
         return index;
     }
-    
-    public int addAccessibleMethod(Method method) {
-        if (accessibleMethods == null) {
-            accessibleMethods = new ArrayList<Method>();
+
+    public int addAccessibleFieldSetter(Field field) {
+        if (accessibleFieldSetters == null) {
+            accessibleFieldSetters = new ArrayList<AccessibleFieldSetter>();
         }
-        int index = accessibleMethods.size();
-        accessibleMethods.add(method);
-        accessEnabler.ensureAccess(method);
+        int index = accessibleFieldSetters.size();
+        AccessibleFieldSetter setter = accessEnabler.createFieldSetter(field);
+        accessibleFieldSetters.add(setter);
+        return index;
+    }
+
+    public int addAccessibleMethodInvoker(Method method) {
+        if (accessibleMethodInvokers == null) {
+            accessibleMethodInvokers = new ArrayList<AccessibleMethodInvoker>();
+        }
+        int index = accessibleMethodInvokers.size();
+        AccessibleMethodInvoker invoker = accessEnabler.createMethodInvoker(method);
+        accessibleMethodInvokers.add(invoker);
+        return index;
+    }
+
+    public int addAccessibleConstructorInvoker(Constructor constructor) {
+        if (accessibleConstructorInvokers == null) {
+            accessibleConstructorInvokers = new ArrayList<AccessibleConstructorInvoker>();
+        }
+        int index = accessibleConstructorInvokers.size();
+        AccessibleConstructorInvoker invoker = accessEnabler.createConstructorInvoker(constructor);
+        accessibleConstructorInvokers.add(invoker);
         return index;
     }
 
     public Object getAccessibleField(Object owner, int fieldIndex) throws ExecuteException
     {
         try {
-            Field field = accessibleFields.get(fieldIndex);
-            return field.get(owner);
+            AccessibleFieldGetter getter = accessibleFieldGetters.get(fieldIndex);
+            return getter.get(owner);
         } catch (Exception e) {
             throw new  ExecuteException("Rule.getAccessibleField : unexpected error getting non-public field in rule " + getName(), e);
         }
@@ -1032,8 +1067,8 @@ public class Rule
     public void setAccessibleField(Object owner, Object value, int fieldIndex) throws ExecuteException
     {
         try {
-            Field field = accessibleFields.get(fieldIndex);
-            field.set(owner, value);
+            AccessibleFieldSetter setter = accessibleFieldSetters.get(fieldIndex);
+            setter.set(owner, value);
         } catch (Exception e) {
             throw new  ExecuteException("Rule.setAccessibleField : unexpected error setting non-public field in rule " + getName(), e);
         }
@@ -1042,8 +1077,18 @@ public class Rule
     public Object invokeAccessibleMethod(Object target, Object[] args, int methodIndex)
     {
         try {
-            Method method = accessibleMethods.get(methodIndex);
-            return method.invoke(target, args);
+            AccessibleMethodInvoker invoker = accessibleMethodInvokers.get(methodIndex);
+            return invoker.invoke(target, args);
+        } catch (Exception e) {
+            throw new  ExecuteException("Rule.invokeAccessibleMethod : unexpected error invoking non-public method in rule " + getName(), e);
+        }
+    }
+
+    public void invokeAccessibleConstructor(Object[] args, int methodIndex)
+    {
+        try {
+            AccessibleConstructorInvoker invoker = accessibleConstructorInvokers.get(methodIndex);
+            invoker.invoke(args);
         } catch (Exception e) {
             throw new  ExecuteException("Rule.invokeAccessibleMethod : unexpected error invoking non-public method in rule " + getName(), e);
         }

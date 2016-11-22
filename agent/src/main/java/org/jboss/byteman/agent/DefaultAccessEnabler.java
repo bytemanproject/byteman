@@ -25,9 +25,14 @@
 package org.jboss.byteman.agent;
 
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import org.jboss.byteman.rule.exception.ExecuteException;
 import org.jboss.byteman.rule.helper.Helper;
 
 /**
@@ -93,5 +98,134 @@ public class DefaultAccessEnabler implements AccessEnabler
             Helper.verbose("DefaultAccessEnabler.ensureAccess: error enabling access for member " + e);
             Helper.verboseTraceException(e);
         }
+    }
+
+    private static class DefaultAccessibleMethodInvoker implements AccessibleMethodInvoker
+    {
+        private Method method;
+
+        public DefaultAccessibleMethodInvoker(Method method)
+        {
+            this.method = method;
+        }
+        @Override
+        public Object invoke(Object receiver, Object[] args)
+        {
+            try {
+                return method.invoke(receiver, args);
+            } catch (Exception e) {
+                throw new ExecuteException("DefaultAccessibleMethodInvoker.invoke : exception invoking method " + method, e);
+            }
+        }
+    }
+
+    private static class DefaultAccessibleConstructorInvoker implements AccessibleConstructorInvoker
+    {
+        private Constructor constructor;
+
+        public DefaultAccessibleConstructorInvoker(Constructor constructor)
+        {
+            this.constructor = constructor;
+        }
+        @Override
+        public Object invoke(Object[] args)
+        {
+            try {
+                return constructor.newInstance(args);
+            } catch (Exception e) {
+                throw new ExecuteException("DefaultAccessibleConstructorInvoker.invoke : exception invoking constructor " + constructor, e);
+            }
+        }
+    }
+
+    private static class DefaultAccessibleFieldGetter implements AccessibleFieldGetter
+    {
+        private Field field;
+
+        public DefaultAccessibleFieldGetter(Field field)
+        {
+            this.field = field;
+        }
+        @Override
+        public Object get(Object owner)
+        {
+            try {
+                return field.get(owner);
+            } catch (Exception e) {
+                throw new ExecuteException("DefaultAccessibleFieldGetter.get : exception reading field " + field, e);
+            }
+        }
+    }
+
+    private static class DefaultAccessibleFieldSetter implements AccessibleFieldSetter
+    {
+        private Field field;
+
+        public DefaultAccessibleFieldSetter(Field field)
+        {
+            this.field = field;
+        }
+        @Override
+        public void set(Object owner, Object value)
+        {
+            try {
+                field.set(owner, value);
+            } catch (Exception e) {
+                throw new ExecuteException("DefaultAccessibleFieldGetter.get : exception writing field " + field, e);
+            }
+        }
+    }
+
+
+    @Override
+    public AccessibleMethodInvoker createMethodInvoker(Method method)
+    {
+        // make the method usable
+        try {
+            method.setAccessible(true);
+        } catch (Exception e) {
+            Helper.verbose("DefaultAccessEnabler.createMethodInvoker: error enabling access for method " + e);
+            Helper.verboseTraceException(e);
+        }
+        return new DefaultAccessibleMethodInvoker(method);
+    }
+
+    @Override
+    public AccessibleConstructorInvoker createConstructorInvoker(Constructor constructor)
+    {
+        // make the constructor usable
+        try {
+            constructor.setAccessible(true);
+        } catch (Exception e) {
+            Helper.verbose("DefaultAccessEnabler.createConstructorInvoker: error enabling access for constructor " + e);
+            Helper.verboseTraceException(e);
+        }
+        return new DefaultAccessibleConstructorInvoker(constructor);
+    }
+
+    @Override
+    public AccessibleFieldGetter createFieldGetter(Field field)
+    {
+        // make the constructor usable
+        try {
+            field.setAccessible(true);
+        } catch (Exception e) {
+            Helper.verbose("DefaultAccessEnabler.createFieldGetter: error enabling access for field " + e);
+            Helper.verboseTraceException(e);
+        }
+        return new DefaultAccessibleFieldGetter(field);
+    }
+
+    @Override
+    public AccessibleFieldSetter createFieldSetter(Field field)
+    {
+        // make the constructor usable
+        try {
+            field.setAccessible(true);
+        } catch (Exception e) {
+            Helper.verbose("DefaultAccessEnabler.createFieldGetter: error enabling access for field " + e);
+            Helper.verboseTraceException(e);
+        }
+        return new DefaultAccessibleFieldSetter(field);
     }
 }

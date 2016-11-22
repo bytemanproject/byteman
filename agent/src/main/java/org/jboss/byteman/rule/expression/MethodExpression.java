@@ -310,7 +310,7 @@ public class MethodExpression extends Expression
                     if (rule.requiresAccess(method)) {
                         isPublicMethod  = false;
                         // save the method so we can use it from the compiled code
-                        methodIndex = rule.addAccessibleMethod(method);
+                        methodIndex = rule.addAccessibleMethodInvoker(method);
                     } else {
                         isPublicMethod =  true;
                     }
@@ -357,11 +357,15 @@ public class MethodExpression extends Expression
                 }
                 return true;
             }
-            // we have to enable triggers whenever we call out to a method in case it contians a trigger point
+            // we have to enable triggers whenever we call out to a method in case it contains a trigger point
             // TODO - do we do this if the method is a built-in? i.e. if the target is an instance of the helper class
             // TODO - this breaks the user disable option so fix it!
             Rule.enableTriggersInternal();
-            return method.invoke(recipientValue, argValues);
+            if (isPublicMethod) {
+                return method.invoke(recipientValue, argValues);
+            } else {
+                return rule.invokeAccessibleMethod(recipientValue, argValues, methodIndex);
+            }
         } catch (InvocationTargetException e) {
             Throwable th = e.getCause();
             if (th instanceof ExecuteException) {

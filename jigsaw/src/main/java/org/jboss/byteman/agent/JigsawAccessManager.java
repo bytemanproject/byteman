@@ -24,6 +24,7 @@
 
 package org.jboss.byteman.agent;
 import java.lang.instrument.Instrumentation;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Module;
 import java.util.HashMap;
@@ -69,10 +70,7 @@ public class JigsawAccessManager
                                                             @Override
                                                             public byte[] apply(String s)
                                                             {
-                                                                if(s.equals("org/jboss/byteman/jigsaw/JigsawAccessEnabler.class")) {
-                                                                    return JigsawAccessEnablerGenerator.getJigsawAccessEnablerClassBytes();
-                                                                }
-                                                                return null;
+                                                                return JigsawAccessEnablerGenerator.getJigsawClassBytes(s);
                                                             }
                                                         });
 

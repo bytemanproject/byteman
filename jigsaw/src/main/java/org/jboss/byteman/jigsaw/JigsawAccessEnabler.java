@@ -25,10 +25,21 @@
 package org.jboss.byteman.jigsaw;
 
 import org.jboss.byteman.agent.AccessEnabler;
+import org.jboss.byteman.agent.AccessibleConstructorInvoker;
+import org.jboss.byteman.agent.AccessibleFieldGetter;
+import org.jboss.byteman.agent.AccessibleFieldSetter;
+import org.jboss.byteman.agent.AccessibleMethodInvoker;
+import org.jboss.byteman.rule.exception.ExecuteException;
 
 import java.lang.instrument.Instrumentation;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Module;
 import java.util.Map;
@@ -77,6 +88,8 @@ public class JigsawAccessEnabler implements AccessEnabler
      */
     private Instrumentation inst;
 
+    private Lookup theLookup;
+
     /**
      * create an AccessEnabler that is capable of ensuring access when
      * running inside a Jigsaw enabled JDK.
@@ -105,6 +118,20 @@ public class JigsawAccessEnabler implements AccessEnabler
         }
 
         this.inst = inst;
+
+        // make sure we can access java.lang.invoke.MethodHandles.Lookup.IMPL_LOOKUP
+
+        Module baseModule = java.lang.invoke.MethodHandles.Lookup.class.getModule();
+        String pkg = "java.lang.invoke";
+        Map<String, Set<Module>> extraPrivateExports = Map.of(pkg, THIS_MODULE_SET);
+        inst.redefineModule(baseModule, EMPTY_READS_SET, EMPTY_EXPORTS_MAP, extraPrivateExports, EMPTY_USES_SET, EMPTY_PROVIDES_MAP);
+        try {
+            Field lookupField = Lookup.class.getDeclaredField("IMPL_LOOKUP");
+            lookupField.setAccessible(true);
+            this.theLookup = (Lookup)lookupField.get(null);
+        } catch (Exception e) {
+            throw new RuntimeException("JigsawAccessEnabler : cannot access Lookup.IMPL_LOOKUP", e);
+        }
     }
 
     /*
@@ -167,7 +194,7 @@ public class JigsawAccessEnabler implements AccessEnabler
      * ensure that accessible can be accessed from the unnamed module
      * using reflection
      *
-     * @param accessible
+     * @param accessible this must be a Member
      */
     public void ensureAccess(AccessibleObject accessible)
     {
@@ -177,6 +204,29 @@ public class JigsawAccessEnabler implements AccessEnabler
         accessible.setAccessible(true);
     }
 
+    @Override
+    public AccessibleMethodInvoker createMethodInvoker(Method method)
+    {
+        return new JigsawAccessibleMethodInvoker(theLookup, method);
+    }
+
+    @Override
+    public AccessibleConstructorInvoker createConstructorInvoker(Constructor constructor)
+    {
+        return new JigsawAccessibleConstructorInvoker(theLookup, constructor);
+    }
+
+    @Override
+    public AccessibleFieldGetter createFieldGetter(Field field)
+    {
+        return new JigsawAccessibleFieldGetter(theLookup, field);
+    }
+
+    @Override
+    public AccessibleFieldSetter createFieldSetter(Field field)
+    {
+        return new JigsawAccessibleFieldSetter(theLookup, field);
+    }
 
     /**
      * check whether the accessible's owning class resides in a non-default module and

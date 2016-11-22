@@ -24,6 +24,9 @@
 
 package org.jboss.byteman.agent;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 /**
  * interface encapsulating behaviour required both to check
  * for the need to access a member reflectively and to ensure
@@ -47,4 +50,9 @@ public interface AccessEnabler
      * @param accessible this must be a Member
      */
     public void ensureAccess(AccessibleObject accessible);
+
+    public AccessibleMethodInvoker createMethodInvoker(Method method);
+    public AccessibleConstructorInvoker createConstructorInvoker(Constructor constructor);
+    public AccessibleFieldGetter createFieldGetter(Field field);
+    public AccessibleFieldSetter createFieldSetter(Field field);
 }
