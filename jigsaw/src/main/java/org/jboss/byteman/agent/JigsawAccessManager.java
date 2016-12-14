@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
 import java.util.function.Function;
 
 import org.jboss.byteman.layer.LayerFactory;
@@ -86,14 +87,14 @@ public class JigsawAccessManager
         Map<String, Set<Module>> extraExports = Map.of();
         Map<String, Set<Module>> extraExportsPrivate = extraExports;
         Set<Class<?>> extraUses = Set.of();
-        Map<Class<?>, Set<Class<?>>> extraProvides = Map.of();
+        Map<Class<?>, List<Class<?>>> extraProvides = Map.of();
         */
         Set<Module> extraReads = new HashSet<Module>();
         extraReads.add(AccessEnabler.class.getModule());
         Map<String, Set<Module>> extraExports = new HashMap<String, Set<Module>>();
         Map<String, Set<Module>> extraExportsPrivate = extraExports;
         Set<Class<?>> extraUses = new HashSet<Class<?>>();
-        Map<Class<?>, Set<Class<?>>> extraProvides = new HashMap<Class<?>, Set<Class<?>>>();
+        Map<Class<?>, List<Class<?>>> extraProvides = new HashMap<Class<?>, List<Class<?>>>();
 
         inst.redefineModule(module, extraReads, extraExports, extraExportsPrivate, extraUses, extraProvides);
 

@@ -44,6 +44,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Module;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
 
 /**
  * Implementation of AccessEnabler for use in a
@@ -81,7 +82,7 @@ public class JigsawAccessEnabler implements AccessEnabler
     /**
      * empty provides map passed to an addExports call
      */
-    private Map<Class<?>, Set<Class<?>>> EMPTY_PROVIDES_MAP = Map.of();
+    private Map<Class<?>, List<Class<?>>> EMPTY_PROVIDES_MAP = Map.of();
 
     /**
      * the Instrumentation instance that allows addExports to be called
@@ -183,7 +184,7 @@ public class JigsawAccessEnabler implements AccessEnabler
         // if the package is already exported to the target module
         // then we don't need to enable access
 
-        if (module.isExportedPrivate(pkg, THIS_MODULE)) {
+        if (module.isOpen(pkg, THIS_MODULE)) {
             return false;
         }
 
@@ -252,7 +253,7 @@ public class JigsawAccessEnabler implements AccessEnabler
         // then we don't need to enable access otherwise
         // we arrange for it to be exported
 
-        if (!module.isExportedPrivate(pkg, THIS_MODULE)) {
+        if (!module.isOpen(pkg, THIS_MODULE)) {
             // ok, export it then
             Map<String, Set<Module>> extraPrivateExports = Map.of(pkg, THIS_MODULE_SET);
             inst.redefineModule(module, EMPTY_READS_SET, EMPTY_EXPORTS_MAP, extraPrivateExports, EMPTY_USES_SET, EMPTY_PROVIDES_MAP);

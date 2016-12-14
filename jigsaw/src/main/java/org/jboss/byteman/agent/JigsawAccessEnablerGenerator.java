@@ -105,8 +105,8 @@ public class JigsawAccessEnablerGenerator
             fv.visitEnd();
         }
         {
-            // private Map<Class<?>,Set<Class?>>> EMPTY_PROVIDES_MAP = Map.of();
-            fv = cw.visitField(ACC_PRIVATE, "EMPTY_PROVIDES_MAP", "Ljava/util/Map;", "Ljava/util/Map<Ljava/lang/Class<*>;Ljava/util/Set<Ljava/lang/Class<*>;>;>;", null);
+            // private Map<Class<?>,List<Class?>>> EMPTY_PROVIDES_MAP = Map.of();
+            fv = cw.visitField(Opcodes.ACC_PRIVATE, "EMPTY_PROVIDES_MAP", "Ljava/util/Map;", "Ljava/util/Map<Ljava/lang/Class<*>;Ljava/util/List<Ljava/lang/Class<*>;>;>;", null);
             fv.visitEnd();
         }
         {
@@ -330,15 +330,15 @@ public class JigsawAccessEnablerGenerator
             // endif
             mv.visitLabel(l3);
             // String pkg = clazz.getPackageName();
-            mv.visitVarInsn(ALOAD, 3);
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getPackageName", "()Ljava/lang/String;", false);
-            mv.visitVarInsn(ASTORE, 5);
-            // if (module.isExportedPrivate(pkg, this.THIS_MODULE))
-            mv.visitVarInsn(ALOAD, 4);
-            mv.visitVarInsn(ALOAD, 5);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "THIS_MODULE", "Ljava/lang/reflect/Module;");
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/reflect/Module", "isExportedPrivate", "(Ljava/lang/String;Ljava/lang/reflect/Module;)Z", false);
+            mv.visitVarInsn(Opcodes.ALOAD, 3);
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getPackageName", "()Ljava/lang/String;", false);
+            mv.visitVarInsn(Opcodes.ASTORE, 5);
+            // if (module.isOpen(pkg, this.THIS_MODULE))
+            mv.visitVarInsn(Opcodes.ALOAD, 4);
+            mv.visitVarInsn(Opcodes.ALOAD, 5);
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            mv.visitFieldInsn(Opcodes.GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "THIS_MODULE", "Ljava/lang/reflect/Module;");
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/reflect/Module", "isOpen", "(Ljava/lang/String;Ljava/lang/reflect/Module;)Z", false);
             Label l4 = new Label();
             mv.visitJumpInsn(IFEQ, l4);
             // then
@@ -452,67 +452,15 @@ public class JigsawAccessEnablerGenerator
             // }
             mv.visitLabel(l0);
             // String pkg = clazz.getPackageName();
-            mv.visitVarInsn(ALOAD, 3);
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getPackageName", "()Ljava/lang/String;", false);
-            mv.visitVarInsn(ASTORE, 5);
-            // if (!module.isExportedPrivate(pkg, THIS_MODULE)) {
-            mv.visitVarInsn(ALOAD, 4);
-            mv.visitVarInsn(ALOAD, 5);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "THIS_MODULE", "Ljava/lang/reflect/Module;");
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/reflect/Module", "isExportedPrivate", "(Ljava/lang/String;Ljava/lang/reflect/Module;)Z", false);
-            Label l1 = new Label();
-            mv.visitJumpInsn(IFNE, l1);
-            // Map<String, Set<Module>> extraPrivateExports = Map.of(pkg, THIS_MODULE_SET);
-            mv.visitVarInsn(ALOAD, 5);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "THIS_MODULE_SET", "Ljava/util/Set;");
-            mv.visitMethodInsn(INVOKESTATIC, "java/util/Map", "of", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/util/Map;", true);
-            mv.visitVarInsn(ASTORE, 6);
-            // inst.redefineModule(module, EMPTY_READS_SET, EMPTY_EXPORTS_MAP, extraPrivateExports, EMPTY_USES_SET, EMPTY_PROVIDES_MAP);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "inst", "Ljava/lang/instrument/Instrumentation;");
-            mv.visitVarInsn(ALOAD, 4);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "EMPTY_READS_SET", "Ljava/util/Set;");
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "EMPTY_EXPORTS_MAP", "Ljava/util/Map;");
-            mv.visitVarInsn(ALOAD, 6);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "EMPTY_USES_SET", "Ljava/util/Set;");
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "EMPTY_PROVIDES_MAP", "Ljava/util/Map;");
-            mv.visitMethodInsn(INVOKEINTERFACE, "java/lang/instrument/Instrumentation", "redefineModule", "(Ljava/lang/reflect/Module;Ljava/util/Set;Ljava/util/Map;Ljava/util/Map;Ljava/util/Set;Ljava/util/Map;)V", true);
-            mv.visitLabel(l1);
-            // }
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(7, 7);
-            mv.visitEnd();
-        }
-        cw.visitEnd();
-
-        return cw.toByteArray();
-    }
-
-    private static byte[] getJigsawAccessibleConstructorInvokerClassBytes()
-    {
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-        FieldVisitor fv;
-        MethodVisitor mv;
-
-        cw.visit(V1_9, ACC_PUBLIC + ACC_SUPER, "org/jboss/byteman/jigsaw/JigsawAccessibleConstructorInvoker", null, "java/lang/Object", new String[] { "org/jboss/byteman/agent/AccessibleConstructorInvoker" });
-
-        cw.visitInnerClass("java/lang/invoke/MethodHandles$Lookup", "java/lang/invoke/MethodHandles", "Lookup", ACC_PUBLIC + ACC_FINAL + ACC_STATIC);
-
-        {
-            fv = cw.visitField(ACC_PRIVATE, "handle", "Ljava/lang/invoke/MethodHandle;", null, null);
-            fv.visitEnd();
-        }
-        {
-            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/reflect/Constructor;)V", null, null);
-            mv.visitCode();
-            Label l0 = new Label();
-            Label l1 = new Label();
+            mv.visitVarInsn(Opcodes.ALOAD, 3);
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getPackageName", "()Ljava/lang/String;", false);
+            mv.visitVarInsn(Opcodes.ASTORE, 5);
+            // if (!module.isOpen(pkg, this.THIS_MODULE))
+            mv.visitVarInsn(Opcodes.ALOAD, 4);
+            mv.visitVarInsn(Opcodes.ALOAD, 5);
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            mv.visitFieldInsn(Opcodes.GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "THIS_MODULE", "Ljava/lang/reflect/Module;");
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/reflect/Module", "isOpen", "(Ljava/lang/String;Ljava/lang/reflect/Module;)Z", false);
             Label l2 = new Label();
             mv.visitTryCatchBlock(l0, l1, l2, "java/lang/Exception");
             mv.visitVarInsn(ALOAD, 0);
