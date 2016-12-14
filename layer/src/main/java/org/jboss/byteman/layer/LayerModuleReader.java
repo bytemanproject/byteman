@@ -30,6 +30,7 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Created by adinn on 25/07/16.
@@ -66,6 +67,11 @@ public class LayerModuleReader implements ModuleReader
             return Optional.of(byteBuffer);
         }
         return Optional.empty();
+    }
+    @Override
+    public Stream<String> list() throws IOException
+    {
+        return Stream.empty();
     }
 
     @Override

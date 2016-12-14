@@ -6,11 +6,11 @@
   <parent>
     <groupId>org.jboss.byteman</groupId>
     <artifactId>byteman-root</artifactId>
-    <version>4.0.0-BETA0</version>
+    <version>4.0.0-BETA1</version>
   </parent>
     
   <artifactId>byteman-docs</artifactId>
-  <version>4.0.0-BETA0</version>
+  <version>4.0.0-BETA1</version>
   <name>Byteman Documentation</name>
   <packaging>pom</packaging>
 
