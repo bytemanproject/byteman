@@ -63,7 +63,7 @@ The source tree is structured as a maven project..
 === Building Byteman from the sources
 
 Byteman can be built by executing command mvn package in the top level directory of the source tree. 
-The build process should produce binary, source and javadoc jars in the target directory of each of 
+The build process should produce binary, source and javadoc jars in the `target` directory of each of 
 the dependent sub-modules (`agent/target`, `submit/target`, etc.) and assemble these into both a 
 binary and a full release zip file in subdirectory `download/target`.
 
@@ -134,7 +134,7 @@ into a valid `-javaagent` argument.
 === Installing Byteman in a Running JVM using Script bminstall
 
 If your Java application is already running you may still be able to install the Byteman agent into 
-the JVM. The installed bin directory contains a script `bminstall` footnote:[There is a Windows 
+the JVM. The installed `bin` directory contains a script `bminstall` footnote:[There is a Windows 
 script called `bminstall.bat` which you can execute using the command `bminstall`. The Linux script is 
 called `bminstall.sh` and you must supply this full name to execute it.] which can be used to contact 
 your application's JVM and install the agent. Once installed you can then use script `bmsubmit` 
@@ -244,12 +244,12 @@ you to configure a plugin class to handle IMPORT statements and manage
 the associated class resolution in a modular runtime.
 
 Byteman ships a single plugin implementation for JBoss Modules, which
-is deployed as byteman-jboss-modules-plugin.jar. This is available in
-Byteman zip downloads under directory contrib/jboss-modules-system. It
+is deployed as `byteman-jboss-modules-plugin.jar`. This is available in
+Byteman zip downloads under directory `contrib/jboss-modules-system`. It
 is also available from the Maven Central repo with coordinates: group
-`org.jboss.byteman`, artifact `jboss-modules-system` and version
+`org.jboss.byteman`, artifact `byteman-jboss-modules-plugin` and version
 `3.0.4` or above. The manager class name for the JBoss Modules plugin
-is `org.jboss.byteman.modules.jbossmodules.JbossModulesSystem`.
+is `org.jboss.byteman.modules.jbossmodules.JBossModulesSystem`.
 
 Note that when you configure this option you also need to ensure the
 jar containing the module plugin manager class is added to the system
@@ -319,7 +319,7 @@ repetitions and
 
 === Submitting Rules Dynamically Using Script bmsubmit
 
-The installed bin directory contains a script called `bmsubmit` which can be used to communicate 
+The installed `bin` directory contains a script called `bmsubmit` which can be used to communicate 
 with the agent listener started up when option `listener:true` is passed as an option to the 
 Byteman agent (recall that this option is always enabled by the `bminstall` and `bmjava` scripts). 
 
@@ -396,7 +396,7 @@ update must be enabled when the agent is started by setting system property
 
 === Checking Rules Offline Using Script bmcheck
 
-The installed bin directory contains a script called `bmcheck` which should be used to parse and 
+The installed `bin` directory contains a script called `bmcheck` which should be used to parse and 
 typecheck your Byteman rules offline before attempting to inject them into your application. This 
 script uses environment variable `BYTEMAN_HOME` to locate the byteman jars needed to type check 
 the rules. However, it still needs to be supplied with a classpath locating any application 
