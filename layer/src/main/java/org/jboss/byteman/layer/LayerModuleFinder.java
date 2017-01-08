@@ -89,7 +89,7 @@ public class LayerModuleFinder implements ModuleFinder
         ModuleDescriptor desc = builder.build();
 
         final ModuleReader reader = new LayerModuleReader(classMapper);
-        ModuleReference reference = new ModuleReference(desc, uri, new Supplier<ModuleReader>() {
+        ModuleReference reference = new LayerModuleReference(desc, uri, new Supplier<ModuleReader>() {
             @Override
             public ModuleReader get()
             {
