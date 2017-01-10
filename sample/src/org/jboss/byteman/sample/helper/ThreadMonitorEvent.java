@@ -22,7 +22,6 @@
 */
 package org.jboss.byteman.sample.helper;
 
-import java.beans.ConstructorProperties;
 import java.io.Serializable;
 import java.util.Collection;
 
@@ -33,34 +32,25 @@ import java.util.Collection;
 public class ThreadMonitorEvent implements Serializable {
     private static final long serialVersionUID = 1;
 
-    private String event;
-    private String threadName;
-    private String runnableClass;
+    private ThreadMonitored monitoredThread;
+    private ThreadMonitorEventType eventType;;
     private String[] stack;
     private String fullStack;
-
-    @ConstructorProperties({"event", "threadName", "stack"})
-    public ThreadMonitorEvent(String event, String threadName, Collection<String> stack, String fullStack) {
-        this.event = event;
-        this.threadName = threadName;
+    
+    public ThreadMonitorEvent(ThreadMonitored monitoredThread, ThreadMonitorEventType eventType, Collection<String> stack, String fullStack) {
+        this.eventType = eventType;
+        this.monitoredThread = monitoredThread;
         this.stack = new String[stack.size()];
         stack.toArray(this.stack);
         this.fullStack = fullStack;
     }
 
-    public String getEvent() {
-        return event;
+    public ThreadMonitorEventType getEventType() {
+        return eventType;
     }
-
-    public String getThreadName() {
-        return threadName;
-    }
-
-    public String getRunnableClass() {
-        return runnableClass;
-    }
-    public void setRunnableClass(String runnableClass) {
-        this.runnableClass = runnableClass;
+   
+    public ThreadMonitored getMonitoredThread() {
+        return monitoredThread;
     }
 
     public String[] getStack() {
@@ -69,5 +59,5 @@ public class ThreadMonitorEvent implements Serializable {
 
     public String getFullStack() {
         return fullStack;
-    }
+     }
 }

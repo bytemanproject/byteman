@@ -332,7 +332,7 @@ specified then the getField instruction will only be matched if the named field 
 by a class whose name matches the supplied type. If a count N is supplied then the Nth
 matching getField will be used as the trigger point. Note that the count identifies to the
 Nth textual occurence of the field access, not the Nth field access in a particular execution
-path at runtime. If the keyword ALL is specified in place of a count then the rule wlil be
+path at runtime. If the keyword ALL is specified in place of a count then the rule will be
 triggered at all matching getField calls.
 
 An `AT READ` specifier followed by a $-prefixed local variable name, method parameter
@@ -713,7 +713,7 @@ helper instance passing it the string `"killing JVM"`. Method `killJVM` is anoth
 implemented by the corresponding instance method of `Helper`. It can be used to perform an immediate halt of the JVM, simulating a JVM crash.
 
 Note that method `debug` has a `boolean` return type. It always
-returns true. This is to allow tracing of rule IF clauses by `AND` ing a
+returns true. This is to allow tracing of rule IF clauses by `AND` in a
 `debug` call with the rest of the condition. This would normally occur
 in combination with a test of some bound variable or method parameter,
 for example:
@@ -948,7 +948,7 @@ This section documents an early-preview Byteman feature which is
 incomplete and may be subject to change.
 
 When a Byteman rule is injected into a method the injected code needs
-to be resolved aginst the values and types available in the injection
+to be resolved against the values and types available in the injection
 context. For example, if the rule is injected into method `charAt` of
 class `String` then a mention of parameter variable `$1` is typed by
 checking the type signature of the trigger method and noting that it
@@ -995,7 +995,7 @@ In Java EE deployments this sort of cross-jar or cross-deployment
 reference may not work. If the two classes above are deployed in
 separate war files then the classloader for `org.my.ThreadPool` may
 not be able to resolve references to class `org.my.Logger`. Indeed, if
-you employ a module system like JBoss Modules or OSGi then you ay not
+you employ a module system like JBoss Modules or OSGi then you may not
 even be able to resolve references to classes on the system or
 bootstrap classpath when you are injecting to code which is deployed
 via a JBoss or OSGi module loader.
@@ -1013,7 +1013,7 @@ So, for example, let's assume class `org.my.ThreadPool` is deployed in
 a JBoss EE depoyment which does not have access to the transactions
 API. This is a reasonable assumption given that the thread pool has no
 reason to import the TX module nor to use any of the transaction
-annotations whcih would lead to the TX module being auto-imported.
+annotations which would lead to the TX module being auto-imported.
 The following rule explicitly imports the JBoss Module bringing class
 `TransactionManager` into scope. This allows the trace call to include
 details of any active transaction in the record of schedule
@@ -1038,7 +1038,7 @@ Transactions API classes.
 
 It is possible to import more than one module by adding repeated
 `IMPORT` declarations. Also, when writing a script imports may be
-written at top level (outisdeof rule scope) accumulating a list of
+written at top level (outside of rule scope) accumulating a list of
 imports that apply to subsequent rules. An empty IMPORT statement at
 top level will clear the current accumulated imports list. An empty
 IMPORT statement in the body of a RULE will clear any script level

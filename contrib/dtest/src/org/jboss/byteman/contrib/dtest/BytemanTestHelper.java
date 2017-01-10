@@ -78,26 +78,34 @@ public class BytemanTestHelper extends Helper
      */
     public void remoteTrace(String className, String methodName, Object[] dollarStar) throws Exception
     {
-        Map<Object, Integer> knownInstancesOfType = targetInstances.get(className);
-        if(knownInstancesOfType == null)
+        Integer objectId;
+        Map<Object, Integer> knownInstancesOfType = null;
+        synchronized (targetInstances)
         {
-            knownInstancesOfType = new HashMap<Object, Integer>();
-            targetInstances.put(className, knownInstancesOfType);
+            knownInstancesOfType = targetInstances.get(className);
+            if(knownInstancesOfType == null)
+            {
+                knownInstancesOfType = new HashMap<Object, Integer>();
+                targetInstances.put(className, knownInstancesOfType);
+            }
         }
 
-        Object targetObject = dollarStar[0];
-
-        Integer objectId = knownInstancesOfType.get(targetObject);
-        if(objectId == null)
+        synchronized (knownInstancesOfType)
         {
-            objectId = knownInstancesOfType.size();
-            knownInstancesOfType.put(targetObject, objectId);
+            Object targetObject = dollarStar[0];
+
+            objectId = knownInstancesOfType.get(targetObject);
+            if(objectId == null)
+            {
+                objectId = knownInstancesOfType.size();
+                knownInstancesOfType.put(targetObject, objectId);
+            }
         }
 
         Object[] args = convertForRemoting(dollarStar);
         args[0] = objectId;
 
-        RemoteInterface server = (RemoteInterface)registry.lookup(className);
+        RemoteInterface server = (RemoteInterface) registry.lookup(className);
         server.trace(methodName, args);
     }
 

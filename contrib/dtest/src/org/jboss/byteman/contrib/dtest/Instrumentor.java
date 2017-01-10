@@ -455,7 +455,7 @@ public class Instrumentor
      *
      * @throws Exception in case of failure.
      */
-    public void removeLocalState() throws Exception
+    public synchronized void removeLocalState() throws Exception
     {
         for(String instrumentedClassName : instrumentedClasses.keySet())
         {
