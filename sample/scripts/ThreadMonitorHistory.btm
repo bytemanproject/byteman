@@ -56,7 +56,7 @@
 #
 
 RULE ThreadMonitor trace create
-CLASS ^java.lang.Thread
+CLASS java.lang.Thread
 METHOD <init>
 HELPER org.jboss.byteman.sample.helper.ThreadHistoryMonitorHelper
 AT EXIT
@@ -140,4 +140,14 @@ HELPER org.jboss.byteman.sample.helper.ThreadHistoryMonitorHelper
 AT EXIT
 IF TRUE
 do writeAllEventsToFile("/tmp/thread-events.txt")
+ENDRULE
+
+# A rule to trigger a flush of the events on System.exit
+RULE write ThreadHistoryMonitorHelper to a file manu
+CLASS java.lang.System
+METHOD exit
+HELPER org.jboss.byteman.sample.helper.ThreadHistoryMonitorHelper
+AT ENTRY
+IF TRUE
+do writeAllEventsToFile("/tmp/thread-system-exit.txt")
 ENDRULE
