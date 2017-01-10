@@ -990,7 +990,7 @@ public class BMUnitConfigState
             }
         }
         int l = dir.length();
-        if (l > 0 && dir.charAt(l) != '/') {
+        if (l > 0 && dir.charAt(l - 1) != '/') {
             dir = dir + "/";
         }
         return dir;

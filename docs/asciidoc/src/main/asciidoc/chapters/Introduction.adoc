@@ -325,7 +325,7 @@ execution of the trigger call. Note that in cases where the event specification 
 a rule may type check successfully against one trigger point but not against another. Rule
 execution is only disabled for cases where the type check fails.
 
-=== Intrepreted or Compiled Execution
+=== Interpreted or Compiled Execution
 
 In the basic operating mode, trigger calls execute a rule by interpreting the rule parse tree.
 It is also possible to translate a rule's bindings, condition and
