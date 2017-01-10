@@ -22,6 +22,7 @@ package org.jboss.byteman.contrib.dtest;
 
 import java.rmi.RemoteException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.Assert.assertEquals;
 
@@ -41,7 +42,7 @@ public class InstrumentedClass implements RemoteInterface
     private static final Integer STATIC_INSTANCE_ID = new Integer(-1);
 
     private final String className;
-    private final Map<Integer, InstrumentedInstance> instrumentedInstances = new HashMap<Integer, InstrumentedInstance>();
+    private final Map<Integer, InstrumentedInstance> instrumentedInstances = new ConcurrentHashMap<Integer, InstrumentedInstance>();
 
     InstrumentedClass(String className)
     {
@@ -59,16 +60,16 @@ public class InstrumentedClass implements RemoteInterface
     @Override
     public void trace(String methodName, Object[] args) throws RemoteException
     {
-        Integer objectId = (Integer)args[0];
+        Integer objectId = (Integer) args[0];
         if(objectId == null)
         {
             objectId = STATIC_INSTANCE_ID;
         }
-        InstrumentedInstance instrumentedInstance = instrumentedInstances.get(objectId);
-        if(instrumentedInstance == null)
-        {
-            instrumentedInstance = new InstrumentedInstance(className, objectId);
-            instrumentedInstances.put(objectId, instrumentedInstance);
+
+        InstrumentedInstance createdInstrumentedInstance = new InstrumentedInstance(className, objectId);
+        InstrumentedInstance instrumentedInstance = instrumentedInstances.putIfAbsent(objectId, createdInstrumentedInstance);
+        if(instrumentedInstance == null) {
+            instrumentedInstance = createdInstrumentedInstance;
         }
 
         Object[] innerArgs = new Object[args.length-1];
