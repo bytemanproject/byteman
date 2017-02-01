@@ -97,7 +97,7 @@ public class MinusExpression extends UnaryOperExpression
 
         // compile code to execute the value then negate it
         oper.compile(mv, compileContext);
-        compileTypeConversion(operType, type, mv, compileContext);
+        compileContext.compileTypeConversion(operType, type);
 
         // ok, now negate the value
         if (type == Type.B || type == Type.S || type == Type.I) {

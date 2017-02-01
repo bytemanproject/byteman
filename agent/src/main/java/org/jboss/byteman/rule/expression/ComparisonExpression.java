@@ -328,9 +328,9 @@ public class ComparisonExpression extends BooleanExpression
 
         // evaluate the operands and ensure the reuslt is of the correct type for comparison adds 2
         oper0.compile(mv, compileContext);
-        compileTypeConversion(oper0.getType(), comparisonType, mv, compileContext);
+        compileContext.compileTypeConversion(oper0.getType(), comparisonType);
         oper1.compile(mv, compileContext);
-        compileTypeConversion(oper1.getType(), comparisonType, mv, compileContext);
+        compileContext.compileTypeConversion(oper1.getType(), comparisonType);
 
         // now do the appropriate type of comparison
         if (comparisonType == type.B || comparisonType == type.S || comparisonType == type.S || comparisonType == type.I) {

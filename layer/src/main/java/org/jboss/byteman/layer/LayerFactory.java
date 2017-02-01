@@ -42,7 +42,7 @@ import java.util.function.Function;
 public class LayerFactory
 {
     /**
-     * Create z module Layer above the boot Layer and install a module into it returning
+     * Create a module Layer above the boot Layer and install a module into it returning
      * a classloader which can be used to drive installation of classes into the module.
      * The class laoder does not install classes from a jar file located on disk. Instead
      * the caller supplies a class mapper which is used to map class names which appear

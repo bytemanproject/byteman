@@ -600,11 +600,12 @@ public class Rule
 
         if (helperClass == Helper.class && !doCompileToBytecode && imports.length == 0) {
             // we can use the builtin interpreted helper adapter for class Helper
-           helperImplementationClass = InterpretedHelper.class;
+            helperImplementationClass = InterpretedHelper.class;
+            helperImplementationClassName  = Type.internalName(helperImplementationClass, true);
         } else {
             // we need to generate a helper adapter class which either interprets or compiles
-
-            helperImplementationClass = Compiler.getHelperAdapter(this, helperClass, doCompileToBytecode);
+            helperImplementationClassName  = Compiler.getHelperAdapterName(helperClass, doCompileToBytecode);
+            helperImplementationClass = Compiler.getHelperAdapter(this, helperClass, helperImplementationClassName, doCompileToBytecode);
         }
     }
 
@@ -659,14 +660,13 @@ public class Rule
                     // yes it's not a top level class so it needs to be public to be compiled
 
                     if((triggerClazz.getModifiers() & Modifier.PUBLIC) == 0) {
-                        compile = false;
-                        Helper.verbose("Rule.isCompileToBytecode : disabling compilation for rule " + getName() + " injecting into non-public enclosed class " + triggerClass);
+                        // compile = false;
+                        // Helper.verbose("Rule.isCompileToBytecode : disabling compilation for rule " + getName() + " injecting into non-public enclosed class " + triggerClass);
 
                     }
                 }
             }
         }
-
         return compile;
     }
 
@@ -971,6 +971,12 @@ public class Rule
     private Class helperImplementationClass;
 
     /**
+     * the name of the helper implementation class in internal format
+     */
+
+    private String helperImplementationClassName;
+
+    /**
      * a getter allowing the helper class for the rule to be identified
      * 
      * @return the helper
@@ -978,6 +984,16 @@ public class Rule
     public Class getHelperClass()
     {
         return helperClass;
+    }
+
+    /**
+     * a getter allowing the helper implementation class name for the rule to be identified
+     *
+     * @return the helper
+     */
+    public String getHelperImplementationClassName()
+    {
+        return helperImplementationClassName;
     }
 
     /**
@@ -1002,6 +1018,11 @@ public class Rule
     private void uninstalled()
     {
         helperManager.uninstalled(this);
+    }
+
+    public boolean requiresAccess(Type type)
+    {
+        return accessEnabler.requiresAccess(type.getTargetClass());
     }
 
     public boolean requiresAccess(Field field)

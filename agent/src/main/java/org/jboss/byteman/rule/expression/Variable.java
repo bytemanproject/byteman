@@ -47,11 +47,13 @@ public class Variable extends AssignableExpression
     public Variable(Rule rule, Type type, ParseNode token) {
         super(rule, type, token);
         this.name = token.getText();
+        this.binding = null;
     }
 
     public Variable(Rule rule, Type type, ParseNode token, String name) {
         super(rule, type, token);
         this.name = name;
+        this.binding = null;
     }
 
     /**
@@ -83,7 +85,7 @@ public class Variable extends AssignableExpression
     {
         // ensure that there is a binding with this name
 
-        Binding binding = getBindings().lookup(name);
+        binding = getBindings().lookup(name);
 
         if (binding == null) {
             throw new TypeException("Variable.bind : unbound variable " + name + getPos());
@@ -142,25 +144,16 @@ public class Variable extends AssignableExpression
         // make sure we are at the right source line
         compileContext.notifySourceLine(line);
 
-        // stack the current helper
-        // stack the name for the variable
-        // call the getBinding method
-        mv.visitVarInsn(Opcodes.ALOAD, 0);
-        mv.visitLdcInsn(name);
-        mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "getBinding", "(Ljava/lang/String;)Ljava/lang/Object;");
-        // ok, we added 2 to the stack and then popped them leaving 1
-        compileContext.addStackCount(2);
-        compileContext.addStackCount(-1);
-        // perform any necessary type conversion
-        if (type.isPrimitive()) {
-            // cast down to the boxed type then do an unbox
-            Type boxType = Type.boxType(type);
-            compileObjectConversion(Type.OBJECT, boxType, mv, compileContext);
-            compileUnbox(boxType, type,  mv, compileContext);
-        } else {
-            // cast down to the required type
-            compileObjectConversion(Type.OBJECT, type, mv, compileContext);
+        String ivarName = binding.getIVarName();
+        Type type = this.type;
+        if (rule.requiresAccess(type)) {
+            type = Type.OBJECT;
         }
+        int expected = ((type.getNBytes() > 4) ? 2 : 1);
+        // plant a getfield
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitFieldInsn(Opcodes.GETFIELD, rule.getHelperImplementationClassName(), ivarName, type.getInternalName(true, true));
+        compileContext.addStackCount(expected);
     }
 
     @Override
@@ -176,10 +169,15 @@ public class Variable extends AssignableExpression
         // make sure we are at the right source line
         compileContext.notifySourceLine(line);
 
-        int currentStack = compileContext.getStackCount();
+        String ivarName = binding.getIVarName();
+        Type type = this.type;
+        if (rule.requiresAccess(type)) {
+            type = Type.OBJECT;
+        }
         int size = ((type.getNBytes() > 4) ? 2 : 1);
+        int currentStack = compileContext.getStackCount();
         int max;
-
+        // plant a putfield but leave a copy of the original value on the stack
         // value to be assigned is TOS and will already be coerced to the correct value type
         // copy it so we leave it as a a return value on the stack
         if (size == 2) {
@@ -189,49 +187,28 @@ public class Variable extends AssignableExpression
             // [... val ==> ... val val]
             mv.visitInsn(Opcodes.DUP);
         }
+        compileContext.addStackCount(size);
+
         // stack the current helper then insert it below the value
         mv.visitVarInsn(Opcodes.ALOAD, 0);
+        compileContext.addStackCount(1);
         if (size == 2) {
             // use a DUP_X2 to push a copy below the value then pop the redundant value
             // [... val1 val2 val1 val2 helper ==> ... val1 val2 helper val1 val2 helper]
             mv.visitInsn(Opcodes.DUP_X2);
+            compileContext.addStackCount(1);
             // [... val1 val2 helper val1 val2 helper ==> ... val1 val2 helper val1 val2]
             mv.visitInsn(Opcodes.POP);
+            compileContext.addStackCount(-1);
         } else {
             // we can just swap the two values
             // [... val val helper ==> ... val helper val]
             mv.visitInsn(Opcodes.SWAP);
         }
-        // stack the name for the variable and swap below the value
-        mv.visitLdcInsn(name);
-        if (size == 2) {
-            // use a DUP_X2 to push a copy below the value then pop the redundant value
-            // [... val1 val2 helper val1 val2 name ==> [... val1 val2 helper name val1 val2 name]
-            mv.visitInsn(Opcodes.DUP_X2);
-            // this is the high water mark
-            compileContext.addStackCount(5);
-            // [... val1 val2 helper name val1 val2 name ==> [... val1 val2 helper name val1 val2]
-            mv.visitInsn(Opcodes.POP);
-            compileContext.addStackCount(-1);
-            // and now we have the desired arrangement for the call[.. val1 val2 helper name val1 val2]
-        } else {
-            // this is the high water mark
-            // at this point the stack has gone from [ .. val]  to [.. val helper val name]
-            compileContext.addStackCount(3);
-            // we can just swap the two values
-            // [... val helper val name ==> ... val helper name val]
-            mv.visitInsn(Opcodes.SWAP);
-            // and now we have the desired arrangement for the call[.. val helper name val]
-        }
-
-        // ensure we have an object
-        compileObjectConversion(type, Type.OBJECT, mv, compileContext);
-
-        // call the setBinding method
-        mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V");
+        mv.visitFieldInsn(Opcodes.PUTFIELD, rule.getHelperImplementationClassName(), ivarName, type.getInternalName(true, true));
 
         // the call will remove 3 from the stack height
-        compileContext.addStackCount(-3);
+        compileContext.addStackCount(-1 - size);
 
         // ok, the stack height should be as it was
         if (compileContext.getStackCount() != currentStack) {
@@ -244,4 +221,6 @@ public class Variable extends AssignableExpression
     }
 
     private String name;
+
+    private Binding binding;
 }

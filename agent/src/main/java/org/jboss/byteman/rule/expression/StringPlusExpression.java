@@ -72,6 +72,14 @@ public class StringPlusExpression extends BinaryOperExpression
 
         Expression oper0 = getOperand(0);
         Expression oper1 = getOperand(1);
+        Type oper0Type = oper0.getType();
+        Type oper1Type = oper1.getType();
+        if (rule.requiresAccess(oper0Type)) {
+            oper0Type = Type.OBJECT;
+        }
+        if (rule.requiresAccess(oper1Type)) {
+            oper1Type = Type.OBJECT;
+        }
 
         int currentStack = compileContext.getStackCount();
         int expected = 1;
@@ -80,9 +88,9 @@ public class StringPlusExpression extends BinaryOperExpression
         // null operands are replaced with "null"
         
         oper0.compile(mv, compileContext);
-        compileTypeConversion(oper0.getType(), type, mv, compileContext);
+        compileContext.compileTypeConversion(oper0Type, type);
         oper1.compile(mv, compileContext);
-        compileTypeConversion(oper1.getType(), type, mv, compileContext);
+        compileContext.compileTypeConversion(oper1Type, type);
 
         // ok, we could optimize this for the case where the left or right operand is a String plus expression
         // by employing a StringBuffer but for now we will just evaluate the left and right operand and

@@ -100,13 +100,30 @@ public class AssignExpression extends BinaryOperExpression
         // accordingly and we don't add anything more so there is no need to check the stack heights here
 
         oper1.compile(mv, compileContext);
-        compileTypeConversion(oper1.getType(), type, mv, compileContext);
+
+        // one or other of the lhs and rhs may be inaccessible
+        // and hence treated simply as an Object. if not then
+        // we may need to perform a type conversion.
+        // if the rhs is inaccessible it can be treated as an Object
+        // if the rhs is inaccessible then it can also be treated as an object
+        Type rhsType = oper1.getType();
+        Type lhsType = type;
+        if (!rule.requiresAccess(lhsType)) {
+            // we are assigning into a non-generic slot
+            // if the rhs has been treated generically
+            // then it needs casting from OBJECT
+            // otherwise convert using its type
+            if(rule.requiresAccess(rhsType)) {
+                rhsType = Type.OBJECT;
+            }
+            compileContext.compileTypeConversion(rhsType, lhsType);
+        }
 
         // now get the LHS expression to compile in the appropriate assignment code
 
         lhs.compileAssign(mv, compileContext);
 
-        // ok, the stack height should be increased by the expecdted bytecount
+        // ok, the stack height should be increased by the expected bytecount
         if (compileContext.getStackCount() != currentStack + expected) {
             throw new CompileException("AssignExpression.compileAssignment : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
         }

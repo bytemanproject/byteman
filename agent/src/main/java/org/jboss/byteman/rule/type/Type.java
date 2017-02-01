@@ -133,7 +133,7 @@ public class Type {
             Class targetClass = aliasFor.getTargetClass();
             Class enclosingClass = targetClass.getEnclosingClass();
             String name;
-            if (enclosingClass != null && !forDescriptor) {
+            if (enclosingClass != null) {
                 // retain the $ separator for inner classes and local/anon classes
                 name = targetClass.getName();
             } else {

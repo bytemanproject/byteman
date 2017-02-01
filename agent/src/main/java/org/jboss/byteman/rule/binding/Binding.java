@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.rule.binding;
 
+import com.sun.org.apache.bcel.internal.generic.PUTFIELD;
 import org.jboss.byteman.agent.Transformer;
 import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.expression.ArrayInitExpression;
@@ -200,9 +201,18 @@ public class Binding extends RuleElement
                             resolveUnknownAgainstDerived(valueType);
                         } else if (!type.isAssignableFrom(valueType)) {
                             // if this is a downcast we need to check whether downcasts are disabled
-                            if (valueType == Type.VOID || !valueType.isAssignableFrom(type)) {
+                            if(valueType == Type.VOID || !valueType.isAssignableFrom(type)) {
                                 throw new TypeException("Binding.typecheck : incompatible type for binding expression " + valueType + value.getPos());
+                            } else if (!rule.requiresAccess(type)) {
+                                // we need an explicit downcast here
+                                // n.b. we can omit the downcast for types
+                                // needing access because they are stored
+                                // generically and handled by reflection
+                                doCheckCast = true;
                             }
+                        } else if (type == Type.STRING && valueType != Type.STRING) {
+                            // special case -- we actually use a string conversion
+                            doCheckCast = true;
                         }
                     }
                 }
@@ -295,7 +305,10 @@ public class Binding extends RuleElement
                 // if the assigment involves a type conversion then we need to rebox the value
                 result = rebox(value.getType(), type, result);
             } else if (doCheckCast) {
-                if (type.getTargetClass().isInstance(result)) {
+                if (type == Type.STRING) {
+                    // force conversion to String
+                    result = result.toString();
+                } else if (type.getTargetClass().isInstance(result)) {
                     throw new ClassCastException("Cannot cast " + result + " to class " + type);
                 }
             }
@@ -312,28 +325,43 @@ public class Binding extends RuleElement
         } else if (isBindVar()) {
             // push the current helper instance i.e. this -- adds 1 to stack height
             mv.visitVarInsn(Opcodes.ALOAD, 0);
-            // push the variable name -- adds 1 to stack height
-            mv.visitLdcInsn(name);
             // increment stack count
-            compileContext.addStackCount(2);
+            compileContext.addStackCount(1);
             // compile the rhs expression for the binding -- adds 1 to stack height
             value.compile(mv, compileContext);
-            // make sure value is boxed if necessary
-            if (type.isPrimitive()) {
-                compileTypeConversion(value.getType(), type, mv, compileContext);
-                compileBox(Type.boxType(type), mv, compileContext);
-            } else if (doCheckCast) {
-                mv.visitTypeInsn(Opcodes.CHECKCAST, type.getInternalName());
+            // plant check cast if required
+            if (doCheckCast) {
+                compileContext.compileTypeConversion(value.getType(), type);
             }
-            // compile a setBinding call pops 3 from stack height
-            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V");
-            compileContext.addStackCount(-3);
+            Type type = this.type;
+            if (rule.requiresAccess(type)) {
+                type = Type.OBJECT;
+            }
+            int size = (type.getNBytes() > 4 ? 2 : 1);
+            String ivarName = getIVarName();
+            mv.visitFieldInsn(Opcodes.PUTFIELD, rule.getHelperImplementationClassName(), ivarName, type.getInternalName(true, true));
+            compileContext.addStackCount(-1 - size);
         }
     }
 
     public String getName()
     {
         return name;
+    }
+
+    public String getIVarName()
+    {
+        if (isLocalVar()) {
+            return "$local_" + name;
+        } else if (isParam()) {
+            return "$param_" + name;
+        } else if (isBindVar()) {
+            return "$bind_" + name;
+        } else if (isRecipient()) {
+            return "$param_" + name;
+        } else {
+            return name;
+        }
     }
 
     public Expression getValue()

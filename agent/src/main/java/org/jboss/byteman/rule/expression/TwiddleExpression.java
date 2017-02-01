@@ -91,7 +91,7 @@ public class TwiddleExpression extends UnaryOperExpression
 
         oper.compile(mv, compileContext);
         compileContext.addStackCount((operType.getNBytes() > 4 ? 2 : 1));
-        compileTypeConversion(operType, type, mv, compileContext);
+        compileContext.compileTypeConversion(operType, type);
         if (type == Type.B) {
             expected = 1;
             mv.visitInsn(Opcodes.ICONST_1);

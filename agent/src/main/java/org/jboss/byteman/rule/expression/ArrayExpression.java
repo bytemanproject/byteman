@@ -155,7 +155,7 @@ public class ArrayExpression extends AssignableExpression
             // compile expression index -- adds 1 to height
             idxExpr.compile(mv, compileContext);
             // make sure the index is an integer
-            compileTypeConversion(idxExpr.getType(), Type.I, mv, compileContext);
+            compileContext.compileTypeConversion(idxExpr.getType(), Type.I);
 
             if (valueType.isObject() || valueType.isArray()) {
                 // compile load object - pops 2 and adds 1
@@ -289,7 +289,7 @@ public class ArrayExpression extends AssignableExpression
                 // compile expression index -- adds 1 to height
                 idxExpr.compile(mv, compileContext);
                 // make sure the index is an integer
-                compileTypeConversion(idxExpr.getType(), Type.I, mv, compileContext);
+                compileContext.compileTypeConversion(idxExpr.getType(), Type.I);
                 // fetch embedded array pop 2 and add 1
                 mv.visitInsn(Opcodes.AALOAD);
                 compileContext.addStackCount(-1);
@@ -308,7 +308,7 @@ public class ArrayExpression extends AssignableExpression
                 // compile expression index -- adds 1 to height
                 idxExpr.compile(mv, compileContext);
                 // make sure the index is an integer
-                compileTypeConversion(idxExpr.getType(), Type.I, mv, compileContext);
+                compileContext.compileTypeConversion(idxExpr.getType(), Type.I);
                 if (isTwoWords) {
                     // stack is [..., val1, val2, aref, val1, val2, idx] and we want [..., val1, val2, aref, idx, val1, val2 ]
                     mv.visitInsn(Opcodes.DUP_X2);     // ==> [..., val1, val2, aref, idx, val1, val2, idx]

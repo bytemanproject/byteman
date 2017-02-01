@@ -29,8 +29,10 @@ import org.jboss.byteman.rule.binding.Binding;
 import org.jboss.byteman.rule.binding.Bindings;
 import org.jboss.byteman.rule.exception.CompileException;
 import org.jboss.byteman.agent.Transformer;
+import org.jboss.byteman.rule.type.*;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.*;
+import org.objectweb.asm.Type;
 
 import java.lang.reflect.Constructor;
 import java.util.Iterator;
@@ -41,7 +43,18 @@ import java.util.Iterator;
  */
 public class Compiler implements Opcodes
 {
-    public static Class getHelperAdapter(Rule rule, Class helperClass, boolean compileToBytecode) throws CompileException
+    public static String getHelperAdapterName(Class helperClass, boolean compileToBytecode)
+    {
+        String helperName = Type.getInternalName(helperClass);
+
+        if (compileToBytecode) {
+            return helperName + "_HelperAdapter_Compiled_" + nextId();
+        } else {
+            return helperName + "_HelperAdapter_Interpreted_" + nextId();
+        }
+    }
+
+    public static Class getHelperAdapter(Rule rule, Class helperClass, String compiledHelperName, boolean compileToBytecode) throws CompileException
     {
         // ok we have to create the adapter class
 
@@ -51,15 +64,6 @@ public class Compiler implements Opcodes
 
         try {
             String helperName = Type.getInternalName(helperClass);
-            String compiledHelperName;
-
-            // we put the helper in the
-            if (compileToBytecode) {
-                compiledHelperName = helperName + "_HelperAdapter_Compiled_" + nextId();
-            } else {
-                compiledHelperName = helperName + "_HelperAdapter_Interpreted_" + nextId();
-            }
-
             byte[] classBytes = compileBytes(rule, helperClass, helperName, compiledHelperName, compileToBytecode);
             String externalName = compiledHelperName.replace('/', '.');
             // dump the compiled class bytes if required
@@ -81,10 +85,11 @@ public class Compiler implements Opcodes
 
     private static byte[] compileBytes(Rule rule, Class helperClass, String helperName, String compiledHelperName, boolean compileToBytecode) throws Exception
     {
-        ClassWriter cw = new ClassWriter(0);
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         FieldVisitor fv;
         MethodVisitor mv;
-        AnnotationVisitor av0;
+        CompileContext cc;
+
         // create the class as a subclass of the rule helper class, appending Compiled to the front
         // of the class name and a unique number to the end of the class helperName
         // also ensure it implements the HelperAdapter interface
@@ -101,12 +106,30 @@ public class Compiler implements Opcodes
         cw.visitSource(basicFileName, debug);
         }
         {
-        // we need a Hashmap field to hold the bindings
-        //
-        // private HashMap<String, Object> bindingMap;
+            // create instance fields in the Helper for each input binding
 
-        fv = cw.visitField(ACC_PRIVATE, "bindingMap", "Ljava/util/HashMap;", "Ljava/util/HashMap<Ljava/lang/String;Ljava/lang/Object;>;", null);
-        fv.visitEnd();
+            Bindings bindings = rule.getBindings();
+            Iterator<Binding> iterator = bindings.iterator();
+
+            while (iterator.hasNext()) {
+                Binding binding = iterator.next();
+                String name = binding.getIVarName();
+                if(binding.isAlias()) {
+                    // lookups and updates will use the aliased name
+                    continue;
+                }
+                if(binding.isHelper()) {
+                    // nothing to do
+                } else {
+                    // all other bindings need a field of the relevant type
+                    org.jboss.byteman.rule.type.Type type = binding.getType();
+                    if (rule.requiresAccess(type)) {
+                        type = org.jboss.byteman.rule.type.Type.OBJECT;
+                    }
+                    fv = cw.visitField(ACC_PRIVATE, name, type.getInternalName(true, true), null, null);
+                    fv.visitEnd();
+                }
+            }
         }
         {
         // and a rule field to hold the rule
@@ -142,6 +165,8 @@ public class Compiler implements Opcodes
         //
         //  public Compiled<helper>_<NNN>()Rule rule)
         mv = cw.visitMethod(ACC_PUBLIC, "<init>", "(Lorg/jboss/byteman/rule/Rule;)V", null, null);
+        cc = new CompileContext(mv);
+        cc.addLocalCount(2);
         mv.visitCode();
         // super();
         //
@@ -151,24 +176,24 @@ public class Compiler implements Opcodes
         if (superWantsRule) {
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
+            cc.addStackCount(2);
             mv.visitMethodInsn(INVOKESPECIAL, helperName, "<init>", "(Lorg/jboss/byteman/rule/Rule;)V");
+            cc.addStackCount(-2);
         } else {
             mv.visitVarInsn(ALOAD, 0);
+            cc.addStackCount(1);
             mv.visitMethodInsn(INVOKESPECIAL, helperName, "<init>", "()V");
+            cc.addStackCount(-1);
         }
-        // bindingMap = new HashMap<String, Object);
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitTypeInsn(NEW, "java/util/HashMap");
-        mv.visitInsn(DUP);
-        mv.visitMethodInsn(INVOKESPECIAL, "java/util/HashMap", "<init>", "()V");
-        mv.visitFieldInsn(PUTFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
         // this.rule = rule
         mv.visitVarInsn(ALOAD, 0);
         mv.visitVarInsn(ALOAD, 1);
+        cc.addStackCount(2);
         mv.visitFieldInsn(PUTFIELD, compiledHelperName, "rule", "Lorg/jboss/byteman/rule/Rule;");
+        cc.addStackCount(-2);
         // return;
         mv.visitInsn(RETURN);
-        mv.visitMaxs(3, 2);
+        mv.visitMaxs(cc.getStackMax(), cc.getLocalMax());
         mv.visitEnd();
         }
         {
@@ -176,26 +201,42 @@ public class Compiler implements Opcodes
             //
             // public void execute(Bindings bindings, Object recipient, Object[] args) throws ExecuteException
             mv = cw.visitMethod(ACC_PUBLIC, "execute", "(Ljava/lang/Object;[Ljava/lang/Object;)V", null, new String[] { "org/jboss/byteman/rule/exception/ExecuteException" });
+            cc = new CompileContext(mv);
+            cc.addLocalCount(3);
             mv.visitCode();
             // if (Transformer.isVerbose())
             mv.visitMethodInsn(INVOKESTATIC, "org/jboss/byteman/agent/Transformer", "isVerbose", "()Z");
+            cc.addStackCount(1);
             Label l0 = new Label();
             mv.visitJumpInsn(IFEQ, l0);
+            cc.addStackCount(-1);
             // then
             // System.out.println(rule.getName() + " execute");
             mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+            cc.addStackCount(1);
             mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+            cc.addStackCount(1);
             mv.visitInsn(DUP);
+            cc.addStackCount(1);
             mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V");
+            cc.addStackCount(-1);
             mv.visitVarInsn(ALOAD, 0);
+            cc.addStackCount(1);
             mv.visitFieldInsn(GETFIELD, compiledHelperName, "rule", "Lorg/jboss/byteman/rule/Rule;");
             mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/rule/Rule", "getName", "()Ljava/lang/String;");
             mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            cc.addStackCount(-1);
             mv.visitLdcInsn(" execute()");
+            cc.addStackCount(1);
             mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+            cc.addStackCount(-1);
             mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;");
             mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+            cc.addStackCount(-2);
             // end if
+            if (cc.getStackCount() != 0) {
+                throw new RuntimeException("Compiler.compileBytes: unexpected stack count " + cc.getStackCount());
+            }
             mv.visitLabel(l0);
 
             Bindings bindings = rule.getBindings();
@@ -203,45 +244,60 @@ public class Compiler implements Opcodes
 
             while (iterator.hasNext()) {
                 Binding binding = iterator.next();
-                String name = binding.getName();
                 if (binding.isAlias()) {
                     // lookups and updates will use the aliased name
                     continue;
                 }
+                String name = binding.getIVarName();
                 if (binding.isHelper()) {
-                    // bindingMap.put(name, this);
-                    mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
-                    mv.visitLdcInsn(name);
-                    mv.visitVarInsn(ALOAD, 0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-                    mv.visitInsn(POP);
+                    // nothing to do
                 } else if (binding.isRecipient()) {
-                    // bindingMap.put(name, recipient);
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
-                    mv.visitLdcInsn(name);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-                    mv.visitInsn(POP);
+                    cc.addStackCount(2);
+                    org.jboss.byteman.rule.type.Type type = binding.getType();
+                    if (rule.requiresAccess(type)) {
+                        // treat inaccessible classes generically
+                        type = org.jboss.byteman.rule.type.Type.OBJECT;
+                    } else {
+                        cc.compileTypeConversion(org.jboss.byteman.rule.type.Type.OBJECT, type);
+                    }
+                    mv.visitFieldInsn(PUTFIELD, compiledHelperName, name, type.getInternalName(true, true));
+                    cc.addStackCount(-2);
                 // } else if (binding.isParam() || binding.isLocalVar() || binding.isReturn() ||
                 //             binding.isThrowable() || binding.isParamCount() || binding.isParamArray()) {
                 } else if (!binding.isBindVar()) {
+                    // refer to local vars using dollar prefix
                     // bindingMap.put(name, args[binding.getCallArrayIndex()]);
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
-                    mv.visitLdcInsn(name);
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitLdcInsn(binding.getCallArrayIndex());
+                    cc.addStackCount(3);
                     mv.visitInsn(AALOAD);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-                    mv.visitInsn(POP);
+                    cc.addStackCount(-1);
+                    org.jboss.byteman.rule.type.Type type = binding.getType();
+                    if (rule.requiresAccess(type)) {
+                        // treat inaccessible classes generically
+                        type = org.jboss.byteman.rule.type.Type.OBJECT;
+                    } else {
+                        cc.compileTypeConversion(org.jboss.byteman.rule.type.Type.OBJECT, type);
+                    }
+                    mv.visitFieldInsn(PUTFIELD, compiledHelperName, name, type.getInternalName(true, true));
+                    if (type.getNBytes() > 4) {
+                        cc.addStackCount(-3);
+                    } else {
+                        cc.addStackCount(-2);
+                    }
+                }
+                if (cc.getStackCount() != 0) {
+                    throw new RuntimeException("Compiler.compileBytes: unexpected stack count " + cc.getStackCount());
                 }
             }
-
             // execute0()
             mv.visitVarInsn(ALOAD, 0);
+            cc.addStackCount(1);
             mv.visitMethodInsn(INVOKEVIRTUAL, compiledHelperName, "execute0", "()V");
+            cc.addStackCount(-1);
 
             // now restore update bindings
 
@@ -252,63 +308,171 @@ public class Compiler implements Opcodes
                 if (binding.isAlias()) {
                     continue;
                 }
-                String name = binding.getName();
+                String name = binding.getIVarName();
 
                 if (binding.isUpdated()) {
                     // if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
                     if (!binding.isBindVar()) {
+                        // refer to local vars using dollar prefix
                         int idx = binding.getCallArrayIndex();
                         // Object value = bindingMap.get(name);
                         // args[idx] = value;
                         mv.visitVarInsn(ALOAD, 2); // args
                         mv.visitLdcInsn(idx);
                         mv.visitVarInsn(ALOAD, 0);
-                        mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
-                        mv.visitLdcInsn(name);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+                        cc.addStackCount(3);
+                        org.jboss.byteman.rule.type.Type type = binding.getType();
+                        if (rule.requiresAccess(type)) {
+                            // treat inaccessible classes generically
+                            type = org.jboss.byteman.rule.type.Type.OBJECT;
+                        }
+                        mv.visitFieldInsn(GETFIELD, compiledHelperName, name, type.getInternalName(true, true));
+                        if (type.getNBytes() > 4) {
+                            cc.addStackCount(1);
+                        }
+                        cc.compileTypeConversion(type, org.jboss.byteman.rule.type.Type.OBJECT);
                         mv.visitInsn(AASTORE);
+                        cc.addStackCount(-3);
                     }
                 }
+                if (cc.getStackCount() != 0) {
+                    throw new RuntimeException("Compiler.compileBytes: unexpected stack count " + cc.getStackCount());
+                }
             }
-
             // return
             mv.visitInsn(RETURN);
-            mv.visitMaxs(4, 3);
+            mv.visitMaxs(cc.getStackMax(), cc.getLocalMax());
             mv.visitEnd();
         }
         {
         // create the setBinding method
         //
         // public void setBinding(String name, Object value)
-        mv = cw.visitMethod(ACC_PUBLIC, "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V", null, null);
-        mv.visitCode();
-        //  bindingMap.put(name, value);
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
-        mv.visitVarInsn(ALOAD, 1);
-        mv.visitVarInsn(ALOAD, 2);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        mv.visitInsn(POP);
-        // return
-        mv.visitInsn(RETURN);
-        mv.visitMaxs(3, 3);
-        mv.visitEnd();
+            mv = cw.visitMethod(ACC_PUBLIC, "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V", null, null);
+            cc = new CompileContext(mv);
+            cc.addLocalCount(3);
+            mv.visitCode();
+
+            Bindings bindings = rule.getBindings();
+            Iterator<Binding> iterator = bindings.iterator();
+
+            while (iterator.hasNext()) {
+                Binding binding = iterator.next();
+                if (binding.isAlias()) {
+                    continue;
+                }
+                String name = binding.getName();
+                String ivarname = binding.getIVarName();
+                if(binding.isHelper() || binding.isAlias()) {
+                    // nothing to do
+                } else {
+                    Label skip = new Label();
+                    mv.visitLdcInsn(name);
+                    mv.visitVarInsn(ALOAD, 1);
+                    cc.addStackCount(2);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "equals", "(Ljava/lang/Object;)Z", false);
+                    cc.addStackCount(-1);
+                    mv.visitJumpInsn(IFEQ, skip);
+                    cc.addStackCount(-1);
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitVarInsn(ALOAD, 2);
+                    cc.addStackCount(2);
+                    org.jboss.byteman.rule.type.Type type = binding.getType();
+                    if (rule.requiresAccess(type)) {
+                        // treat inaccessible classes generically
+                        type = org.jboss.byteman.rule.type.Type.OBJECT;
+                    } else {
+                        cc.compileTypeConversion(org.jboss.byteman.rule.type.Type.OBJECT, type);
+                    }
+                    mv.visitFieldInsn(PUTFIELD, compiledHelperName, ivarname, type.getInternalName(true, true));
+                    if (type.getNBytes() > 4) {
+                        cc.addStackCount(-3);
+                    } else {
+                        cc.addStackCount(-2);
+                    }
+                    mv.visitLabel(skip);
+                }
+                if (cc.getStackCount() != 0) {
+                    throw new RuntimeException("Compiler.compileBytes: unexpected stack count " + cc.getStackCount());
+                }
+            }
+            // return
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(cc.getStackMax(), cc.getLocalMax());
+            mv.visitEnd();
         }
         {
-        // create the getBinding method
-        //
-        // public Object getBinding(String name)
-        mv = cw.visitMethod(ACC_PUBLIC, "getBinding", "(Ljava/lang/String;)Ljava/lang/Object;", null, null);
-        mv.visitCode();
-        // {TOS} <== bindingMap.get(name);
-        mv.visitVarInsn(ALOAD, 0);
-        mv.visitFieldInsn(GETFIELD, compiledHelperName, "bindingMap", "Ljava/util/HashMap;");
-        mv.visitVarInsn(ALOAD, 1);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
-        // return {TOS}
-        mv.visitInsn(ARETURN);
-        mv.visitMaxs(2, 2);
-        mv.visitEnd();
+            // create the getBinding method
+            //
+            // public Object getBinding(String name)
+            mv = cw.visitMethod(ACC_PUBLIC, "getBinding", "(Ljava/lang/String;)Ljava/lang/Object;", null, null);
+            cc = new CompileContext(mv);
+            cc.addLocalCount(2);
+            mv.visitCode();
+            Bindings bindings = rule.getBindings();
+            Iterator<Binding> iterator = bindings.iterator();
+
+            while (iterator.hasNext()) {
+                Binding binding = iterator.next();
+                String name = binding.getName();
+                String ivarname = binding.getIVarName();
+                if(binding.isAlias()) {
+                    // lookups and updates will use the aliased name
+                    continue;
+                }
+                if(binding.isHelper()) {
+                    Label skip = new Label();
+                    mv.visitLdcInsn(name);
+                    mv.visitVarInsn(ALOAD, 1);
+                    cc.addStackCount(2);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "equals", "(Ljava/lang/Object;)Z", false);
+                    cc.addStackCount(-1);
+                    mv.visitJumpInsn(IFEQ, skip);
+                    cc.addStackCount(-1);
+                    mv.visitVarInsn(ALOAD, 0);
+                    cc.addStackCount(1);
+                    mv.visitInsn(ARETURN);
+                    cc.addStackCount(-1);
+                    mv.visitLabel(skip);
+                } else {
+                    Label skip = new Label();
+                    mv.visitLdcInsn(name);
+                    mv.visitVarInsn(ALOAD, 1);
+                    cc.addStackCount(2);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "equals", "(Ljava/lang/Object;)Z", false);
+                    cc.addStackCount(-1);
+                    mv.visitJumpInsn(IFEQ, skip);
+                    cc.addStackCount(-1);
+                    mv.visitVarInsn(ALOAD, 0);
+                    cc.addStackCount(1);
+                    org.jboss.byteman.rule.type.Type type =  binding.getType();
+                    if (rule.requiresAccess(type)) {
+                        // treat inaccessible classes generically
+                        type = org.jboss.byteman.rule.type.Type.OBJECT;
+                    }
+                    mv.visitFieldInsn(GETFIELD, compiledHelperName, ivarname, type.getInternalName(true, true));
+                    if (type.getNBytes() > 4) {
+                        cc.addStackCount(1);
+                    }
+                    cc.compileTypeConversion(type, org.jboss.byteman.rule.type.Type.OBJECT);
+                    mv.visitInsn(ARETURN);
+                    cc.addStackCount(-1);
+                    mv.visitLabel(skip);
+                }
+                if (cc.getStackCount() != 0) {
+                    throw new RuntimeException("Compiler.compileBytes: unexpected stack count " + cc.getStackCount());
+                }
+            }
+            // return
+            mv.visitInsn(ACONST_NULL);
+            cc.addStackCount(1);
+            mv.visitInsn(ARETURN);
+            cc.addStackCount(-1);
+            if (cc.getStackCount() != 0) {
+                throw new RuntimeException("Compiler.compileBytes: unexpected stack count " + cc.getStackCount());
+            }
+            mv.visitMaxs(cc.getStackMax(), cc.getLocalMax());
+            mv.visitEnd();
         }
         {
         // create the getName method
@@ -393,28 +557,28 @@ public class Compiler implements Opcodes
             // private void execute0()
             mv = cw.visitMethod(ACC_PRIVATE, "execute0", "()V", null, new String[] { "org/jboss/byteman/rule/exception/ExecuteException" });
             mv.visitCode();
-            CompileContext compileContext = new CompileContext(mv);
+            cc = new CompileContext(mv);
             // make sure we set the first line number before generating any code
-            compileContext.notifySourceLine(rule.getLine());
-            compileContext.addLocalCount(3); // for this and 2 object args
+            cc.notifySourceLine(rule.getLine());
+            cc.addLocalCount(3); // for this and 2 object args
             // bind();
-            rule.getEvent().compile(mv, compileContext);
+            rule.getEvent().compile(mv, cc);
             // if (test())
-            rule.getCondition().compile(mv, compileContext);
+            rule.getCondition().compile(mv, cc);
             Label l0 = new Label();
             mv.visitJumpInsn(IFEQ, l0);
-            compileContext.addStackCount(-1);
+            cc.addStackCount(-1);
             // then
-            rule.getAction().compile(mv, compileContext);
+            rule.getAction().compile(mv, cc);
             // fire();
             // end if
             mv.visitLabel(l0);
             // this will match the ENDRULE line
-            compileContext.notifySourceEnd();
+            cc.notifySourceEnd();
             // return
             mv.visitInsn(RETURN);
             // need to specify correct Maxs values
-            mv.visitMaxs(compileContext.getStackMax(), compileContext.getLocalMax());
+            mv.visitMaxs(cc.getStackMax(), cc.getLocalMax());
             mv.visitEnd();
             }
         } else {

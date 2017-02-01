@@ -171,9 +171,9 @@ public class ShiftExpression extends BinaryOperExpression
         Expression oper1 = getOperand(1);
         // compile the operands and make sure the first result is our target type and the second is int
         oper0.compile(mv, compileContext);
-        compileTypeConversion(oper0.getType(), type, mv, compileContext);
+        compileContext.compileTypeConversion(oper0.getType(), type);
         oper1.compile(mv, compileContext);
-        compileTypeConversion(oper1.getType(), Type.I, mv, compileContext);
+        compileContext.compileTypeConversion(oper1.getType(), Type.I);
 
         if (type == Type.B || type == Type.S || type == Type.I) {
             switch (oper)

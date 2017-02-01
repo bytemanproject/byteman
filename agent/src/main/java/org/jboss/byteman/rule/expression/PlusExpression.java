@@ -139,9 +139,9 @@ public class PlusExpression extends BinaryOperExpression
 
         // compile and type convert each operand -- adds 2 or 4 depending upon type
         oper0.compile(mv, compileContext);
-        compileTypeConversion(oper0.getType(), type, mv, compileContext);
+        compileContext.compileTypeConversion(oper0.getType(), type);
         oper1.compile(mv, compileContext);
-        compileTypeConversion(oper1.getType(), type, mv, compileContext);
+        compileContext.compileTypeConversion(oper1.getType(), type);
 
         if (type == Type.STRING) {
             // ok, we could optimize this for the case where the left or right operand is a String plus expression

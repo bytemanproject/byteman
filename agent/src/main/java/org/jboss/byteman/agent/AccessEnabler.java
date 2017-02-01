@@ -35,17 +35,29 @@ import java.lang.reflect.Method;
 public interface AccessEnabler
 {
     /**
-     * test whether access to the accessible from the unnamed module
-     * requires the use of reflection and possibly module jiggery-pokery.
+     * test whether reference to the class from a classpath
+     * class requires the use of reflection or a method handle
+     * and possibly also module jiggery-pokery.
+     *
+     * @param klazz the clas to be checked
+     * @return  true if reference to the class from a classpath
+     * class requires the use of reflection or a method handle
+     * and possibly module jiggery-pokery otherwise false.
+     */
+    public boolean requiresAccess(Class<?> klazz);
+    /**
+     * test whether access to the accessible from a classpath
+     * class requires the use of reflection or a method handle
+     * and possibly also module jiggery-pokery.
      *
      * @param accessible this must be a Member
-     * @return  true if access requires reflection and
-     * possibly module jiggery-pokery otherwise false
+     * @return  true if access requires reflection or a method handle and
+     * possibly also module jiggery-pokery otherwise false.
      */
     public boolean requiresAccess(AccessibleObject accessible);
     /**
-     * ensure that accessible can be accessed from the unnamed module
-     * using reflection
+     * ensure that accessible can be accessed using reflection
+     * or a method handle
      *
      * @param accessible this must be a Member
      */

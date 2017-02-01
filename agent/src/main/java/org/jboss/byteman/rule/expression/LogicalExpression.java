@@ -79,7 +79,7 @@ public class LogicalExpression extends BooleanExpression
         // compile the first expression and make sure it is a boolean -- adds 1 to stack height
         oper0.compile(mv, compileContext);
         if (oper0.getType() == Type.BOOLEAN) {
-            compileBooleanConversion(Type.BOOLEAN, type.Z, mv, compileContext);
+            compileContext.compileBooleanConversion(Type.BOOLEAN, type.Z);
         }
         // plant a test and branch
         Label nextLabel = new Label();
@@ -103,7 +103,7 @@ public class LogicalExpression extends BooleanExpression
         mv.visitLabel(nextLabel);
         oper1.compile(mv, compileContext);
         if (oper0.getType() == Type.BOOLEAN) {
-            compileBooleanConversion(Type.BOOLEAN, type.Z, mv, compileContext);
+            compileContext.compileBooleanConversion(Type.BOOLEAN, type.Z);
         }
         // the final result is the result of the second oper which is on the stack already
         // This is the end, my beau-tiful friend

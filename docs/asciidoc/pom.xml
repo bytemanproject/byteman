@@ -6,11 +6,11 @@
   <parent>
     <groupId>org.jboss.byteman</groupId>
     <artifactId>byteman-docs</artifactId>
-    <version>4.0.0-BETA2</version>
+    <version>4.0.0-BETA3</version>
   </parent>
     
   <artifactId>byteman-asciidoc</artifactId>
-  <version>4.0.0-BETA2</version>
+  <version>4.0.0-BETA3</version>
   <name>Byteman AsciiDoc Documentation</name>
 
   <properties>

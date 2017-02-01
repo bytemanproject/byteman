@@ -95,11 +95,23 @@ public class ConditionalEvalExpression extends TernaryOperExpression
 
         int currentStack = compileContext.getStackCount();
         int expected = (type.getNBytes() > 4 ? 2 : 1);
+        Type oper1Type = oper1.getType();
+        Type oper2Type = oper2.getType();
+        Type resultType = type;
+        if (rule.requiresAccess(oper1Type)) {
+            oper1Type = Type.OBJECT;
+        }
+        if (rule.requiresAccess(oper2Type)) {
+            oper2Type = Type.OBJECT;
+        }
+        if (rule.requiresAccess(resultType)) {
+            resultType = Type.OBJECT;
+        }
 
         // compile the first operand to a boolean and ensure it is primitive -- adds 1 to stack
         oper0.compile(mv, compileContext);
         if (oper0.getType() == Type.BOOLEAN) {
-            compileBooleanConversion(Type.BOOLEAN, Type.Z, mv, compileContext);
+            compileContext.compileBooleanConversion(Type.BOOLEAN, Type.Z);
         }
         // plant the test -- consumes 1 word
         Label elseLabel = new Label();
@@ -109,7 +121,7 @@ public class ConditionalEvalExpression extends TernaryOperExpression
         // compile the if branch
         oper1.compile(mv, compileContext);
         // make sure we type convert to our result type so that either branch stacks the same thing
-        compileTypeConversion(oper1.getType(), type,  mv, compileContext);
+        compileContext.compileTypeConversion(oper1Type, resultType);
         // plant a goto skipping over the else expression
         mv.visitJumpInsn(Opcodes.GOTO, endLabel);
         // check the stack height is what we expect, either 1 or 2 words depending upon the result type
@@ -123,7 +135,7 @@ public class ConditionalEvalExpression extends TernaryOperExpression
         // compile the else branch
         oper2.compile(mv, compileContext);
         // make sure we type convert to our result type so that either branch stacks the same thing
-        compileTypeConversion(oper2.getType(), type,  mv, compileContext);
+        compileContext.compileTypeConversion(oper2Type, resultType);
         // the end is nigh
         mv.visitLabel(endLabel);
 

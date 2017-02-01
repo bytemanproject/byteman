@@ -34,7 +34,7 @@
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-root</artifactId>
-        <version>4.0.0-BETA2</version>
+        <version>4.0.0-BETA3</version>
     </parent>
 
     <properties>
@@ -361,7 +361,6 @@
                          <includes>
                            <include>org/jboss/byteman/tests/location/TestExceptionExit.class</include>
                          </includes>
-                         <!-- -Dorg.jboss.byteman.verbose -Dorg.jboss.byteman.debug  -->
                          <argLine>-javaagent:${project.build.directory}/byteman-agent-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/location/TestExceptionExit.btm</argLine>
                       </configuration>
                     </execution>

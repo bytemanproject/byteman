@@ -172,6 +172,10 @@ public class ReturnExpression extends Expression
         Type valueType = (returnValue == null ? Type.VOID : returnValue.getType());
         int currentStack = compileContext.getStackCount();
         int expected = 1;
+        // if value type is inaccessible then treat it as an Object
+        if (rule.requiresAccess(valueType)) {
+            valueType = Type.OBJECT;
+        }
 
         // ok, we need to create the EarlyReturnException instance and then
         // initialise it using the appropriate return value or null if no
@@ -195,11 +199,11 @@ public class ReturnExpression extends Expression
             returnValue.compile(mv, compileContext);
             // we may need to convert from the value type to the return type
             if (valueType != type) {
-                compileTypeConversion(valueType, type,  mv, compileContext);
+                compileContext.compileTypeConversion(valueType, type);
             }
             if (type.isPrimitive()) {
                 // we need an object not a primitive
-                compileBox(Type.boxType(type), mv, compileContext);
+                compileContext.compileBox(Type.boxType(type));
             }
         } else {
             // just push null

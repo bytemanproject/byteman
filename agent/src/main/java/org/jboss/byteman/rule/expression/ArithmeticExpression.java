@@ -285,11 +285,11 @@ public class ArithmeticExpression extends BinaryOperExpression
         // compile lhs -- it adds 1 or 2 to the stack height
         operand0.compile(mv, compileContext);
         // do any required type conversion
-        compileTypeConversion(type0, type, mv, compileContext);
+        compileContext.compileTypeConversion(type0, type);
         // compile rhs -- it adds 1 or 2 to the stack height
         operand1.compile(mv, compileContext);
         // do any required type conversion
-        compileTypeConversion(type1, type, mv, compileContext);
+        compileContext.compileTypeConversion(type1, type);
 
         try {
 // n.b. be careful with characters here

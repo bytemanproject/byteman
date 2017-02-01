@@ -29,10 +29,12 @@ import org.jboss.byteman.agent.AccessibleConstructorInvoker;
 import org.jboss.byteman.agent.AccessibleFieldGetter;
 import org.jboss.byteman.agent.AccessibleFieldSetter;
 import org.jboss.byteman.agent.AccessibleMethodInvoker;
+import org.jboss.byteman.agent.DefaultAccessEnabler;
 import org.jboss.byteman.rule.exception.ExecuteException;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.AccessibleObject;
@@ -58,11 +60,20 @@ import java.util.List;
 public class JigsawAccessEnabler implements AccessEnabler
 {
     /**
+     * flag to allow debug trace to be generated
+     */
+    public boolean DEBUG = false;
+
     /**
      * the single Byteman module to which reflective access
      * is granted by exporting packages as necessary
      */
     private Module THIS_MODULE = this.getClass().getModule();
+    /**
+     * the module to which the rest of the Byteman code belongs
+     * which should be the system or bootstrap unnamed module
+     */
+    private Module UNPRIVILEGED_MODULE = AccessEnabler.class.getModule();
     /**
      * singleton set passed to specify the single target module for an addExports call
      */
@@ -75,6 +86,10 @@ public class JigsawAccessEnabler implements AccessEnabler
      * empty exports set passed to an addExports call
      */
     private Map<String, Set<Module>> EMPTY_EXPORTS_MAP = Map.of();
+    /**
+     * empty opens set passed to an addExports call
+     */
+    private Map<String, Set<Module>> EMPTY_OPENS_MAP = Map.of();
     /**
      * empty uses set passed to an addExports call
      */
@@ -107,7 +122,7 @@ public class JigsawAccessEnabler implements AccessEnabler
         // since we don't want to provide access to the unnamed module
 
         if (!THIS_MODULE.isNamed()) {
-            throw new RuntimeException("JigsawAccessEnabler : can only enable Jigsaw access from a named module not " + THIS_MODULE);
+            throw new RuntimeException("JigsawAccessEnabler : can only enable Jigsaw access from a named module " + THIS_MODULE);
         }
 
         // effectively this means only an agent can create one of these
@@ -120,27 +135,68 @@ public class JigsawAccessEnabler implements AccessEnabler
 
         this.inst = inst;
 
-        // make sure we can access java.lang.invoke.MethodHandles.Lookup.IMPL_LOOKUP
-
-        Module baseModule = java.lang.invoke.MethodHandles.Lookup.class.getModule();
-        String pkg = "java.lang.invoke";
-        Map<String, Set<Module>> extraPrivateExports = Map.of(pkg, THIS_MODULE_SET);
-        inst.redefineModule(baseModule, EMPTY_READS_SET, EMPTY_EXPORTS_MAP, extraPrivateExports, EMPTY_USES_SET, EMPTY_PROVIDES_MAP);
         try {
-            Field lookupField = Lookup.class.getDeclaredField("IMPL_LOOKUP");
-            lookupField.setAccessible(true);
-            this.theLookup = (Lookup)lookupField.get(null);
+            this.theLookup = MethodHandles.lookup();
         } catch (Exception e) {
-            throw new RuntimeException("JigsawAccessEnabler : cannot access Lookup.IMPL_LOOKUP", e);
+            throw new RuntimeException("JigsawAccessEnabler : cannot obtain lookup from Byteman module", e);
         }
+        debug("created JigsawAccessEnabler");
     }
+    /**
+     * test whether reference to the class from a classpath
+     * class requires the use of reflection or a method handle
+     * and possibly also module jiggery-pokery.
+     *
+     * @param klazz the clas to be checked
+     * @return  true if reference to the class from a classpath
+     * class requires the use of reflection or a method handle
+     * and possibly module jiggery-pokery otherwise false.
+     */
+    public boolean requiresAccess(Class<?> klazz)
+    {
+        debug("JigsawAccessEnabler.requiresAccess( klazz == ", klazz.getName(), ")");
 
+        // we need to handle private or protected classes with kid gloves.
+        // public classes in an unexported package also need special access.
+        // public classes in an exported package are fine so long as they
+        // are not embedded in inaccessible packages.
+        while (Modifier.isPublic(klazz.getModifiers())) {
+            Module module = klazz.getModule();
+            if (module.isNamed()) {
+                debug(" module == ", module.getName());
+                Package pkg = klazz.getPackage();
+                if (pkg == null) {
+                    debug ("  (pkg == null) ==> false");
+                    return false;
+                }
+                if (!module.isExported(pkg.getName())) {
+                    debug (" !module.isExported(pkg.getName()) ==> true");
+                    return true;
+                }
+            }
+            if (!klazz.isMemberClass()) {
+                debug(" !klazz.isMemberClass() ==> false") ;
+                return false;
+            }
+            try {
+                klazz = klazz.getDeclaringClass();
+                debug(" klazz == ", klazz.getName());
+            } catch (SecurityException se) {
+                debug ("SecurityException ==> true");
+                return true;
+            }
+        }
+        debug ("  ==> true" );
+        return true;
+    }
     /*
-     * test whether access to the accessible from the unnamed module
-     * requires the use of reflection and possibly module jiggery-pokery.
+     * test whether access to the accessible from a classpath
+     * class requires the use of reflection or a method handle
+     * and possibly also module jiggery-pokery.
      *
      * @param accessible this must be a Member
-     * @return  true if it can be so accessed false if not
+     * @return  true if access requires reflection or a method handle and
+     * possibly also module jiggery-pokery otherwise false.
      */
     public boolean requiresAccess(AccessibleObject accessible)
     {
@@ -148,8 +204,11 @@ public class JigsawAccessEnabler implements AccessEnabler
         // the accessible has to be a field, method or constructor
         Member member = (Member)accessible;
 
+        debug("JigsawAccessEnabler.requiresAccess( accessible == ", member.getDeclaringClass().getName(), ".", member.getName(), ")");
+
         // we need to use reflection to access non-public members
         if (!Modifier.isPublic(member.getModifiers())) {
+            debug ("!Modifier.isPublic(member.getModifiers()) ==> true");
             return true;
         }
 
@@ -159,13 +218,16 @@ public class JigsawAccessEnabler implements AccessEnabler
         // we need to use reflection to access non-public classes
         // (n.b. it won't be in the Byteman package space)
         if (!Modifier.isPublic(clazz.getModifiers())) {
+            debug("!Modifier.isPublic(clazz.getModifiers()) ==> true");
             return true;
         }
 
         // we need to repeat the same check for outer classes
         while (clazz.isMemberClass()) {
             clazz = clazz.getEnclosingClass();
+            debug("klazz == ", clazz.getName());
             if (!Modifier.isPublic(clazz.getModifiers())) {
+                debug("!Modifier.isPublic(clazz.getModifiers()) ==> true");
                 return true;
             }
         }
@@ -175,25 +237,31 @@ public class JigsawAccessEnabler implements AccessEnabler
 
         // we can always access classes in the unnamed module
         if (!module.isNamed()) {
+            debug ("!module.isNamed() ==> false");
             return false;
         }
 
+        debug("module == ", module.getName());
         // check the exports for the owner class's package
         String pkg = clazz.getPackageName();
 
-        // if the package is already exported to the target module
+        debug("pkg == ", pkg);
+
+        // if the package is already exported to normal Byteman code
         // then we don't need to enable access
 
-        if (module.isOpen(pkg, THIS_MODULE)) {
+        if (module.isExported(pkg, UNPRIVILEGED_MODULE)) {
+            debug ("module.isExported(pkg, UNPRIVILEGED_MODULE) ==> false");
             return false;
         }
 
+        debug(" ==> true");
         return true;
     }
 
     /**
-     * ensure that accessible can be accessed from the unnamed module
-     * using reflection
+     * ensure that accessible can be accessed using reflection
+     * or a method handle
      *
      * @param accessible this must be a Member
      */
@@ -208,25 +276,53 @@ public class JigsawAccessEnabler implements AccessEnabler
     @Override
     public AccessibleMethodInvoker createMethodInvoker(Method method)
     {
-        return new JigsawAccessibleMethodInvoker(theLookup, method);
+        ensureModuleAccess(method);
+        Lookup privateLookup = null;
+        try {
+            privateLookup = MethodHandles.privateLookupIn(method.getDeclaringClass(), theLookup);
+        } catch (IllegalAccessException e) {
+            // this should never happen
+        }
+        return new JigsawAccessibleMethodInvoker(privateLookup, method);
     }
 
     @Override
     public AccessibleConstructorInvoker createConstructorInvoker(Constructor constructor)
     {
-        return new JigsawAccessibleConstructorInvoker(theLookup, constructor);
+        ensureModuleAccess(constructor);
+        Lookup privateLookup = null;
+        try {
+            privateLookup = MethodHandles.privateLookupIn(constructor.getDeclaringClass(), theLookup);
+        } catch (IllegalAccessException e) {
+            // this should never happen
+        }
+        return new JigsawAccessibleConstructorInvoker(privateLookup, constructor);
     }
 
     @Override
     public AccessibleFieldGetter createFieldGetter(Field field)
     {
-        return new JigsawAccessibleFieldGetter(theLookup, field);
+        ensureModuleAccess(field);
+        Lookup privateLookup = null;
+        try {
+            privateLookup = MethodHandles.privateLookupIn(field.getDeclaringClass(), theLookup);
+        } catch (IllegalAccessException e) {
+            // this should never happen
+        }
+        return new JigsawAccessibleFieldGetter(privateLookup, field);
     }
 
     @Override
     public AccessibleFieldSetter createFieldSetter(Field field)
     {
-        return new JigsawAccessibleFieldSetter(theLookup, field);
+        ensureModuleAccess(field);
+        Lookup privateLookup = null;
+        try {
+            privateLookup = MethodHandles.privateLookupIn(field.getDeclaringClass(), theLookup);
+        } catch (IllegalAccessException e) {
+            // this should never happen
+        }
+        return new JigsawAccessibleFieldSetter(privateLookup, field);
     }
 
     /**
@@ -255,8 +351,21 @@ public class JigsawAccessEnabler implements AccessEnabler
 
         if (!module.isOpen(pkg, THIS_MODULE)) {
             // ok, export it then
-            Map<String, Set<Module>> extraPrivateExports = Map.of(pkg, THIS_MODULE_SET);
-            inst.redefineModule(module, EMPTY_READS_SET, EMPTY_EXPORTS_MAP, extraPrivateExports, EMPTY_USES_SET, EMPTY_PROVIDES_MAP);
+            Map<String, Set<Module>> extraOpens = Map.of(pkg, THIS_MODULE_SET);
+            inst.redefineModule(module, EMPTY_READS_SET, EMPTY_EXPORTS_MAP, extraOpens, EMPTY_USES_SET, EMPTY_PROVIDES_MAP);
+            inst.redefineModule(THIS_MODULE, Set.of(module), EMPTY_EXPORTS_MAP, EMPTY_OPENS_MAP, EMPTY_USES_SET, EMPTY_PROVIDES_MAP);
         }
+    }
+
+    private void debug(String ... args)
+    {
+        if (!DEBUG) {
+            return;
+        }
+        StringBuilder builder = new StringBuilder();
+        for (String s : args) {
+            builder.append(s);
+        }
+        System.out.println(builder.toString());
     }
 }

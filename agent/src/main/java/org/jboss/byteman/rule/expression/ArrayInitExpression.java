@@ -163,7 +163,7 @@ public class ArrayInitExpression extends Expression
             // compile value -- adds one or two words to height
             element.compile(mv, compileContext);
             // ensure we have the correct value type
-            compileTypeConversion(element.type, baseType, mv, compileContext);
+            compileContext.compileTypeConversion(element.type, baseType);
             // now we can do the array store
             if (baseType.isObject() || baseType.isArray()) {
                 // compile load object - pops 3

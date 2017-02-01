@@ -367,7 +367,7 @@ public class NewExpression extends Expression
                 // track extra storage used after type conversion
                 extraParams += (paramCount);
                 arguments.get(i).compile(mv, compileContext);
-                compileTypeConversion(argType, paramType, mv, compileContext);
+                compileContext.compileTypeConversion(argType, paramType);
             }
 
             // construct the exception

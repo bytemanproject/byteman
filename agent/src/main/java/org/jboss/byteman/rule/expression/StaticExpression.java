@@ -164,8 +164,10 @@ public class StaticExpression extends AssignableExpression
                     "(Ljava/lang/Object;I)Ljava/lang/Object;");
             // we popped three words and added one object as result
             compileContext.addStackCount(-2);
-            // convert Object to primitive or cast to subtype if required
-            compileTypeConversion(Type.OBJECT, type, mv, compileContext);
+            if (!rule.requiresAccess(type)) {
+                // convert Object to primitive or cast to subtype if required
+                compileContext.compileTypeConversion(Type.OBJECT, type);
+            }
         }
     }
 
@@ -238,7 +240,7 @@ public class StaticExpression extends AssignableExpression
             // box the value to an object if necessary
             // [.. val(s) val(s) ==> val(s) valObj]
             if (type.isPrimitive()) {
-                compileBox(Type.boxType(type), mv, compileContext);
+                compileContext.compileBox(Type.boxType(type));
             }
             // stack the helper and then swap it so it goes under the value
             // [.. val(s) valObj ==> val(s) valObj helper ==> val(s) helper valObj]

@@ -70,7 +70,7 @@ public class NotExpression extends UnaryOperExpression
 
         // compile code to execute the operand -- adds 1
         oper.compile(mv, compileContext);
-        compileTypeConversion(operType, type, mv, compileContext);
+        compileContext.compileTypeConversion(operType, type);
 
         // the boolean expression will leave 0 or 1 on the stack so we can negate negate this to get
         // 0 or -1 and then add 1 to get 1 or 0

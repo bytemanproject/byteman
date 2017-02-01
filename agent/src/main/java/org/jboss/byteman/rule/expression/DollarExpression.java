@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.rule.expression;
 
+import com.sun.org.apache.bcel.internal.generic.GETFIELD;
 import org.jboss.byteman.rule.binding.Binding;
 import org.jboss.byteman.rule.binding.Bindings;
 import org.jboss.byteman.rule.compiler.CompileContext;
@@ -139,6 +140,12 @@ public class DollarExpression extends AssignableExpression
         if (name.equals("$@")){
             throw new TypeException("invalid assignment to invoke param array variable " + name + getPos());
         }
+        if (name.equals("$CLASS")){
+            throw new TypeException("invalid assignment to invoke param array variable " + name + getPos());
+        }
+        if (name.equals("$METHOD")){
+            throw new TypeException("invalid assignment to invoke param array variable " + name + getPos());
+        }
         bind(true);
     }
 
@@ -207,39 +214,29 @@ public class DollarExpression extends AssignableExpression
         int currentStack = compileContext.getStackCount();
         int expected = (type.getNBytes() > 4 ? 2 : 1);
 
-        // TODO
-        // optimise compile of trigger class and trigger method just to push the required String literal
-        // ditto for $# or any other binding which is known in advance
         if (index == HELPER_IDX) {
             // reference to the current helper so just stack this
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             compileContext.addStackCount(1);
         } else {
-            // stack the current helper
-            // stack the name for the variable
-            // call the getBinding method
-            mv.visitVarInsn(Opcodes.ALOAD, 0);
-            mv.visitLdcInsn(targetName);
-            compileContext.addStackCount(2);
-            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "getBinding", "(Ljava/lang/String;)Ljava/lang/Object;");
-            compileContext.addStackCount(-1);
-            // perform any necessary type conversion
-            if (type.isPrimitive()) {
-                // cast down to the boxed type then do an unbox
-                Type boxType = Type.boxType(type);
-                compileObjectConversion(Type.OBJECT, boxType, mv, compileContext);
-                compileUnbox(boxType, type,  mv, compileContext);
-            } else {
-                // cast down to the required type
-                compileObjectConversion(Type.OBJECT, type, mv, compileContext);
+            // plant a getfield
+            Type type = binding.getType();
+            if (rule.requiresAccess(type)) {
+                // leave inaccessible types as plain objects
+                // either to be consumed via reflection or
+                // cast to an accessible type by the consumer
+                type = Type.OBJECT;
             }
+            String iVarName = binding.getIVarName();
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            mv.visitFieldInsn(Opcodes.GETFIELD, rule.getHelperImplementationClassName(), iVarName, type.getInternalName(true, true));
+            compileContext.addStackCount(expected);
         }
 
         // ensure we have only increased the stack by the return value size
         if (compileContext.getStackCount() != currentStack + expected) {
             throw new CompileException("DollarExpression.compile : invalid stack height " + compileContext.getStackCount() + " expecting " + (currentStack + expected));
         }
-
     }
 
     @Override
@@ -255,7 +252,7 @@ public class DollarExpression extends AssignableExpression
         // make sure we are at the right source line
         compileContext.notifySourceLine(line);
 
-        String targetName = binding.getName();
+        String ivarName = binding.getIVarName();
 
         int currentStack = compileContext.getStackCount();
         int size = ((type.getNBytes() > 4) ? 2 : 1);
@@ -264,6 +261,7 @@ public class DollarExpression extends AssignableExpression
             // not allowed to reassign the helper binding
             throw new CompileException("DollarExpression.compileAssign : invalid assignment to helper binding $$");
         } else {
+            // plant a putfield but leave a copy of the original value on the stack
             // value to be assigned is TOS and will already be coerced to the correct value type
             // copy it so we leave it as a a return value on the stack
             if (size == 2) {
@@ -271,41 +269,26 @@ public class DollarExpression extends AssignableExpression
             } else {
                 mv.visitInsn(Opcodes.DUP);
             }
+            compileContext.addStackCount(size);
             // stack the current helper then insert it below the value
             mv.visitVarInsn(Opcodes.ALOAD, 0);
+            compileContext.addStackCount(1);
             if (size == 2) {
                 // use a DUP_X2 to push a copy below the value then pop the redundant value
                 mv.visitInsn(Opcodes.DUP_X2);
-                mv.visitInsn(Opcodes.POP);
-            } else {
-                // we can just swap the two values
-                mv.visitInsn(Opcodes.SWAP);
-            }
-            // stack the name for the variable and swap below the value
-            mv.visitLdcInsn(targetName);
-            if (size == 2) {
-                // use a DUP_X2 to push a copy below the value then pop the redundant value
-                mv.visitInsn(Opcodes.DUP_X2);
-                // this is the high water mark
-                // at this point the stack has gone from [ .. val1 val2]  to [.. val1 val2 helper name val1 val2 name]
-                compileContext.addStackCount(5);
+                compileContext.addStackCount(1);
                 mv.visitInsn(Opcodes.POP);
                 compileContext.addStackCount(-1);
             } else {
-                // this is the high water mark
-                // at this point the stack has gone from [ .. val]  to [.. val helper val name]
-                compileContext.addStackCount(3);
                 // we can just swap the two values
                 mv.visitInsn(Opcodes.SWAP);
             }
-            // ensure we have an object
-            compileObjectConversion(type, Type.OBJECT, mv, compileContext);
-
-            // call the setBinding method
-            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V");
-
-            // the call will remove 3 from the stack height
-            compileContext.addStackCount(-3);
+            Type type = this.type;
+            if (rule.requiresAccess(type)) {
+                type = Type.OBJECT;
+            }
+            mv.visitFieldInsn(Opcodes.PUTFIELD, rule.getHelperImplementationClassName(), ivarName, type.getInternalName(true, true));
+            compileContext.addStackCount(-1 - size);
 
             // ok, the stack height should be as it was
             if (compileContext.getStackCount() != currentStack) {

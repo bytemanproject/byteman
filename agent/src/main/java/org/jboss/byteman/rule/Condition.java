@@ -101,7 +101,7 @@ public class Condition extends RuleElement
         condition.compile(mv, compileContext);
         // unbox if necessary
         if (condition.getType() == Type.BOOLEAN) {
-            compileUnbox(Type.BOOLEAN, Type.Z, mv, compileContext);
+            compileContext.compileUnbox(Type.BOOLEAN, Type.Z);
         }
 
         // check stack heights

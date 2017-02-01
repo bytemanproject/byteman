@@ -307,7 +307,8 @@ public class MethodExpression extends Expression
                 Method method = bestMatchCandidate(candidates, expected);
 
                 if (method != null) {
-                    if (rule.requiresAccess(method)) {
+                    Type declaringType = getTypeGroup().ensureType(method.getDeclaringClass());
+                    if (rule.requiresAccess(declaringType) || rule.requiresAccess(method)) {
                         isPublicMethod  = false;
                         // save the method so we can use it from the compiled code
                         methodIndex = rule.addAccessibleMethodInvoker(method);
@@ -420,7 +421,7 @@ public class MethodExpression extends Expression
                 Type paramType = paramTypes.get(i);
                 // compile code to stack argument and type convert if necessary
                 argument.compile(mv, compileContext);
-                compileTypeConversion(argType, paramType, mv, compileContext);
+                compileContext.compileTypeConversion(argType, paramType);
                 // allow for stacked paramType value
                 extraParams += (paramType.getNBytes() > 4 ? 2 : 1);
             }
@@ -484,12 +485,25 @@ public class MethodExpression extends Expression
                 compileContext.addStackCount(2);
                 Expression argument = arguments.get(i);
                 Type argType = argumentTypes.get(i);
+                // if the argument type is inaccessible then we can treat it as an object
+                // for the purposes of type conversion
+                if (rule.requiresAccess(argType)) {
+                    argType = Type.OBJECT;
+                }
+                // if the parameter type is inaccessible then we can treat it as an object
+                // for the purposes of type conversion
                 Type paramType = paramTypes.get(i);
+                if (rule.requiresAccess(paramType)) {
+                    paramType = Type.OBJECT;
+                }
                 // compile code to stack argument and type convert/box if necessary
+                // n.b. even though we are simply assembling an Object array we
+                // don't simply convert direct to Object because the conversion step
+                // may need to perform a numeric or toString coercion.
                 argument.compile(mv, compileContext);
-                compileTypeConversion(argType, paramType, mv, compileContext);
+                compileContext.compileTypeConversion(argType, paramType);
                 if (paramType.isPrimitive()) {
-                    compileBox(Type.boxType(paramType), mv, compileContext);
+                    compileContext.compileBox(Type.boxType(paramType));
                 }
                 // that's 3 extra words which now get removed
                 mv.visitInsn(Opcodes.AASTORE);
@@ -520,7 +534,11 @@ public class MethodExpression extends Expression
                 compileContext.addStackCount(-1);
             } else {
                 // do any necessary casting and/or unboxing
-                compileTypeConversion(Type.OBJECT, type, mv, compileContext);
+                if (!rule.requiresAccess(type)) {
+                    // only convert if the result type is accessible
+                    // if not leave it as Object for the consumer
+                    compileContext.compileTypeConversion(Type.OBJECT, type);
+                }
             }
 
             // now disable triggering again
