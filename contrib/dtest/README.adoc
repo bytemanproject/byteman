@@ -1,0 +1,171 @@
+= Dtest library
+Jonathan Halliday (jonathan.halliday@redhat.com) 2010-05
+Ondra Chaloupka (ochaloup@redhat.com) 2017-02
+
+README for Byteman contrib dtest, a distributed test helper.
+
+
+== Summary
+
+Dtest library provides Java API to simplify generating Byteman rules
+and adding utilities to get rules submitted to a remote JVM.
+
+On top of that it offers way to track usage of classes and methods by your interest.
+This capability is useful in distributed testing for gathering information from
+multiple JVMs and analysing it to determine the test outcome.
+
+
+== User Guide
+
+Design of Dtest library first requires connecting to a remote JVM where Byteman
+agent is running. Then you can define rules to be submitted or specify classes to be tracked.
+
+=== To connect to the remote JVM
+
+To get started you need to have created the `org.jboss.byteman.contrib.dtest.Instrumentor`
+class which encapsulate all the functionality.
+Instantiation of the `Instrumentor` provides connecting to the remote JVM where all commands
+will be executed against. Moreover creation of `Instrumentor` causes Dtest library
+locally binds a port (by default _1099_). Dtest uses it to communicate back from the remote JVM
+which is needed when you want to benefit from gathering of tracking information.
+
+Note: in current version Dtest library is *not* capable to communicate back with
+remote JVM on different machine. Its tracing capability are limited to be used on localhost.
+
+```
+// instrumentor class created to a JVM on localhost where agent listen to port 9091
+// and dtest binds itself to port 1099
+Instrumentor instrumentor = new Instrumentor("localhost", 9091, 1099);
+```
+
+=== How to create a rule
+
+Dtest library provides a rule builder and utility classes which ease your life when
+creating a Byteman rule. That rule can be later submitted by Dtest to a remote JVM.
+
+==== Rule constructor (builder)
+
+Class `RuleConstructor` provides a builder for rule construction.
+
+```
+String rule = RuleConstructor.createRule("throw exception on XAResource rollback")
+    .onClass("javax.transaction.xa.XAResource")
+    .includeSubclases()
+    .inMethod("rollback")
+    .atExit()
+    .ifCondition("NOT flagged(\"commitFlag\")")
+    .doAction("throw new javax.transdoAction.xa.XAResource(100)")
+    .build();
+```
+
+==== Intrumentor utility methods
+
+`Instrumentor` class puts to your hand utility methods for creating
+and submitting rules to a remote JVM.
+
+Those by your interest could be these
+
+* `injectOnCall` - defines and submits rule which accepts definition of an action
+                   to be triggered at entry of defined method
+* `injectOnExit` - defines and submits rule which accepts definition of an action
+                   to be triggered at exit of defined method
+* `injectOnMethod` - defines and submits rule which accepts definition of an action
+                     to be triggered at specified location
+* `injectFault` - defines and submits rule where an exception will be thrown at entry of defined method
+* `crashAtMethod` - defines and submits rule where JVM will be crashed at defined place
+
+=== How to submit a rule to a remote JVM
+
+Communication with remote JVM is arranged by `Insrumentor` class (there is used
+`org.jboss.byteman.agent.submit.Submit` in the background).
+
+* for creating and submitting rules you can use an util method referred in the previous section
+* you can submit a rule using methods `installScript`/`installRule` which accept
+  `String`/`RuleConstructor`
+* you can remove a script from remote JVM with `removeScript`/`removeRule`
+* you can install a helper jar with `installHelperJar`
+
+=== How to use of tracing capabilities
+
+Remote JVMs must be started with the Byteman agent installed and configured to listen on a TCP/IP socket.
+The Dtest `Instrumentor` connects to this listener and dynamically injects Byteman Rules for each point of interest.
+Upon triggering, these Rules pass information back to the `Instrumentor` via. an RMI connection.
+The log of the usage is stored in the `InstrumentedClass` instance and can be queried to verify expected behaviour.
+
+Following example verifies that `MyBusinessClass.doSomeBusinessLogic` was called in remote JVM.
+
+```
+// Instrumentor class creation
+Instrumentor dtestInstrumentor = new Instrumentor(host, port);
+// inject tracing capability
+InstrumentedClass myRemoteBusinessLogic = dtestInstrumentor.instrumentClass(MyBusinessClass.class);
+// call to remote jvm to invoke behavior that will be observed in the next step
+makeClientInvocation();
+// verification that an expected method was invoked
+myRemoteBusinessLogic.assertMethodCalled("doSomeBusinessLogic");
+```
+
+This allows for expressing the logic for distributed tests in much the same manner as unit tests.
+It reduces the amount of boilerplate code needed for test distribution and makes tests easier to
+both write and read.
+
+=== Rule redirection to a file
+
+We have been describing working with a fact that a rule is submitted to a remote JVM.
+There is another option to generate rules in string representation to a file.
+By calling method `Instrumentor#setRedirectedSubmissionsFile(File)`
+behaviour of `Instrumentor` changed and all submitted rules will be put to a file.
+
+Such file could be easily used with `--javaagent` then.
+
+```
+// file definition and command Instrumentor to put rules to it
+File ruleFile = new File("/tmp/crash.btm");
+instrumentor.setRedirectedSubmissionsFile(ruleFile);
+instrumentor.crashAtMethodExit("XAResource", "commit");
+
+// file filled with the rule could be used during start of a JVM
+JAVA_OPTS="-javaagent:/$BYTEMAN_HOME/lib/byteman.jar=script:/tmp/crash.btm"
+```
+
+
+== Notes
+
+For an existing project using Dtest library check Narayana transaction bridge tests at
+
+https://github.com/jbosstm/narayana/tree/master/txbridge/src/test
+
+
+
+== Future plans
+
+Over time more methods may be added to the framework as required. For example, the tracing currently
+encompasses only method names but in future may allow for method parameters to be verified also, e.g.
+
+```
+myRemoteBusinessLogic.assertMethodCalled("doSomeBusinessLogic(5)")
+```
+
+Likewise tracking of distinct remote object instances may be possible:
+
+```
+InstrumentedInstance remoteInstance = myRemoveBusinesLogic.getInstance(id);
+remoteInstance.assertMethodCalled("doSomeBusinessLogic");
+```
+
+With bytecode manipulation techniques the client API may be made cleaner and typesafe, resulting in
+a Mockito like syntax for distributed tests e.g:
+
+```
+MyBusinessLogic mockLogic = myRemoveBusinesLogic.getInstance(id);
+assert( mockLogic.doSomeBusinessLogic().wasCalled() );
+
+mockLogic.doSomeBusinessLogic().thenReturn(someValue);
+
+mockMessageParser.parseMessage(xml).thenThrowException(StructureException.class);
+```
+
+Clearly the need for remote communication places some limitation on the capabilities that can be
+achieved, particularly for instrumentation of code that uses non-serializable parameters and such.
+
+Nevertheless, Dtest has the possibility to significantly ease the pain of writing distributed tests.
