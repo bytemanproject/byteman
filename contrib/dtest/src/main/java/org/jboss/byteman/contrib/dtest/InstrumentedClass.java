@@ -163,7 +163,7 @@ public class InstrumentedClass implements RemoteInterface
      * against all know instances. The other method query each instance to be called
      * by the specific number times.
      *
-     * @param methodName the method name to look for
+     * @param method the method name to look for
      * @param callCount the expected number of the invocation count summed on all instances
      */
     public void assertSumMethodCallCount(String method, int callCount)

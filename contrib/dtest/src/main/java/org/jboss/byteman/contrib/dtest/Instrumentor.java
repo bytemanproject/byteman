@@ -94,6 +94,7 @@ public class Instrumentor
     /**
      * Returns a helper class which this {@link Instrumentor} instance defines
      * as parameter of <code>HELPER</code> clause.
+     * @return the helper class
      */
     public Class<?> getHelperClass() {
         return this.helperClass;
@@ -108,6 +109,7 @@ public class Instrumentor
      * one {@link BytemanTestHelper}.<br>
      * You need to know what you are doing when setting this parameter different from default helper
      * implementation as it provides core functionality for <code>dtest</code> library.
+     * @param helperClass the new helper class
      */
     public void setHelperClass(Class<?> helperClass) {
         this.helperClass = helperClass;

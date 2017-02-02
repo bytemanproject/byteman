@@ -79,6 +79,7 @@ public final class RuleConstructor {
      * <code>Byteman</code> rule builder initialization method.
      *
      * @param ruleName  name of rule is required to construct any rule
+     * @return a rule constructor ready to have its class or interface specified
      */
     public static final RuleConstructor.ClassClause createRule(String ruleName) {
         return new RuleConstructor(ruleName).new ClassClause();
