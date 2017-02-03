@@ -333,18 +333,18 @@ public class Install
 
         File bmHomeFile = new File(bmHome);
         if (!bmHomeFile.isDirectory()) {
-            throw new FileNotFoundException("Install : ${" + BYTEMAN_HOME_ENV_VAR + "} does not identify a directory");
+            throw new FileNotFoundException("Install : " + bmHome + " does not identify a directory");
         }
 
         File bmLibFile = new File(bmHome + "/lib");
         if (!bmLibFile.isDirectory()) {
-            throw new FileNotFoundException("Install : ${" + BYTEMAN_HOME_ENV_VAR + "}/lib does not identify a directory");
+            throw new FileNotFoundException("Install : " + bmHome + "/lib does not identify a directory");
         }
 
         try {
             JarFile bytemanJarFile = new JarFile(bmHome + "/lib/byteman.jar");
         } catch (IOException e) {
-            throw new IOException("Install : ${" + BYTEMAN_HOME_ENV_VAR + "}/lib/byteman.jar is not a valid jar file");
+            throw new IOException("Install : " + bmHome + "/lib/byteman.jar is not a valid jar file", e);
         }
 
         agentJar = bmHome + "/lib/byteman.jar";
