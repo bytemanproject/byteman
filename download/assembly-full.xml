@@ -135,7 +135,7 @@
             <lineEnding>keep</lineEnding>
         </file>
         <file>
-            <source>../docs/ProgrammersGuide.pdf</source>
+            <source>../docs/asciidoc/target/generated-docs/byteman-programmers-guide.pdf</source>
             <outputDirectory>docs</outputDirectory>
             <lineEnding>keep</lineEnding>
         </file>
