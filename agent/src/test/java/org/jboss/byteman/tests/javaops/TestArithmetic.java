@@ -43,7 +43,9 @@ public class TestArithmetic extends Test
         char cres;
         short sres;
         byte bres;
-	float fres;
+        float fres;
+        long lres;
+        double dres;
 
         runNumber = 1;
         try {
@@ -99,6 +101,28 @@ public class TestArithmetic extends Test
         }
 
         checkOutput(true);
+
+        runNumber = 6;
+        try {
+            log("calling TestArithmetic.triggerMethod6");
+            lres = triggerMethod6(3 << 8,  16L, 24.0F, 24.0D);
+            log("called TestArithmetic.triggerMethod6 : result == " + lres);
+        } catch (Exception e) {
+            log(e);
+        }
+
+        checkOutput(true);
+
+        runNumber = 7;
+        try {
+            log("calling TestArithmetic.triggerMethod7");
+            dres = triggerMethod7(3 << 8,  16L, 24.0F, 24.0D);
+            log("called TestArithmetic.triggerMethod7 : result == " + dres);
+        } catch (Exception e) {
+            log(e);
+        }
+
+        checkOutput(true);
     }
 
     public int triggerMethod1(int i, char c, short s, byte b)
@@ -131,10 +155,16 @@ public class TestArithmetic extends Test
         return (float)0;
     }
 
-    public double triggerMethod6(int i, char c, short s, byte b, long j, float f, double d)
+    public long triggerMethod6(int i, long j, float f, double d)
     {
         log("inside TestArithmetic.triggerMethod6");
-        return (double)0;
+        return 0L;
+    }
+
+    public double triggerMethod7(int i, long j, float f, double d)
+    {
+        log("inside TestArithmetic.triggerMethod7");
+        return 0D;
     }
 
     @Override
@@ -236,6 +266,37 @@ public class TestArithmetic extends Test
 
                 logExpected("called TestArithmetic.triggerMethod5 : result == " + 0.0);
             }
+            break;
+            case 6:
+            {
+                logExpected("calling TestArithmetic.triggerMethod6");
+                logExpected("inside TestArithmetic.triggerMethod6");
+
+                long l_lit = 5000000000L;
+                logExpected("triggerMethod6 : l_lit == " + l_lit);
+                logExpected("triggerMethod6 : i + l_lit == " + ((3 << 8) + l_lit));
+                logExpected("triggerMethod6 : j + l_lit == " + (16L + l_lit));
+                logExpected("triggerMethod6 : f + l_lit == " + (24.0F + l_lit));
+                logExpected("triggerMethod6 : d + l_lit == " + (24.0D + l_lit));
+
+                logExpected("called TestArithmetic.triggerMethod6 : result == " + l_lit);
+            }
+            break;
+            case 7:
+            {
+                logExpected("calling TestArithmetic.triggerMethod7");
+                logExpected("inside TestArithmetic.triggerMethod7");
+
+                double d_lit = 1.23456E-73;
+                logExpected("triggerMethod7 : d_lit == " + d_lit);
+                logExpected("triggerMethod7 : i + d_lit == " + ((3 << 8) + d_lit));
+                logExpected("triggerMethod7 : j + d_lit == " + (16L + d_lit));
+                logExpected("triggerMethod7 : f + d_lit == " + (24.0F + d_lit));
+                logExpected("triggerMethod7 : d + d_lit == " + (24.0D + d_lit));
+
+                logExpected("called TestArithmetic.triggerMethod7 : result == " + d_lit);
+            }
+            break;
         }
 
         return super.getExpected();

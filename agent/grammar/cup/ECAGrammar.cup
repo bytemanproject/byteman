@@ -263,7 +263,11 @@ terminal	NULL_LITERAL;
 
 terminal	Float FLOAT_LITERAL;
 
+terminal	Double DOUBLE_LITERAL;
+
 terminal	Integer INTEGER_LITERAL;
+
+terminal	Long LONG_LITERAL;
 
 terminal	Boolean BOOLEAN_LITERAL;
 
@@ -702,8 +706,12 @@ array_dim
 simple_expr
 	::=	INTEGER_LITERAL:i
 		{: RESULT =  node(ParseNode.INTEGER_LITERAL, ileft, iright, i); :}
-	|	FLOAT_LITERAL:f
+	|	LONG_LITERAL:l
+        {: RESULT =  node(ParseNode.INTEGER_LITERAL, lleft, lright, l); :}
+    |	FLOAT_LITERAL:f
 		{: RESULT =  node(ParseNode.FLOAT_LITERAL, fleft, fright, f); :}
+    |	DOUBLE_LITERAL:d
+		{: RESULT =  node(ParseNode.FLOAT_LITERAL, dleft, dright, d); :}
 	|	BOOLEAN_LITERAL:b
 		{: RESULT =  node(ParseNode.BOOLEAN_LITERAL, bleft, bright, b); :}
 	|	STRING_LITERAL:s

@@ -165,13 +165,13 @@ public class ExpressionHelper
             }
             break;
             case INTEGER_LITERAL:
-            {
-                expr = new NumericLiteral(rule, Type.I, exprTree);
-            }
-            break;
             case FLOAT_LITERAL:
             {
-                expr = new NumericLiteral(rule, Type.F, exprTree);
+                // value will be an Integer, Long, Float or Double
+                Object value = exprTree.getChild(0);
+                // we want to use it as an int, long, float or double
+                Type t = Type.boxType(value.getClass());
+                expr = new NumericLiteral(rule, t, exprTree);
             }
             break;
             case STRING_LITERAL:

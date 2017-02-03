@@ -36,6 +36,9 @@
         <artifactId>byteman-root</artifactId>
         <version>3.0.7-SNAPSHOT</version>
     </parent>
+    <properties>
+        <debug.args>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</debug.args>
+    </properties>
     <build>
         <plugins>
             <plugin>
@@ -128,7 +131,7 @@
                          <includes>
                            <include>org/jboss/byteman/tests/javaops/TestArithmetic.class</include>
                          </includes>
-                         <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/javaops/TestArithmetic.btm</argLine>
+                         <argLine>${debug.args} -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/javaops/TestArithmetic.btm</argLine>
                       </configuration>
                     </execution>
                     <execution>
