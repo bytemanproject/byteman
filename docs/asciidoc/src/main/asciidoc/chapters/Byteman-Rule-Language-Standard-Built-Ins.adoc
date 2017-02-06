@@ -135,7 +135,7 @@ thread or from a test thread.
 ----
   public boolean createJoin(Object identifier, int expected)
   public boolean isJoin(Object identifier, int expected)
-  public boolean joinEnlist(Object identifier, int expected)
+  public boolean joinEnlist(Object identifier)
   public boolean joinWait(Object identifier, int expected)
   public boolean joinWait(Object identifier,
                           int expected,long timeout)
@@ -150,10 +150,9 @@ with the given expected count is currently identified by `identifier` it returns
 it returns `false`.
 
 `joinEnlist` adds the calling thread to the list of threads associated with a Joiner and returns 
-`true`, allowing the thread to proceed towards exit. If `identifier` does not identify a Joiner or 
-identifies a Joiner with the wrong expected count it returns `false`. It also returns `false` if 
+`true`, allowing the thread to proceed towards exit. If `identifier` does not identify a Joiner it returns `false`. It also returns `false` if 
 the calling thread is already contained in the Joiner's thread list or if the number of threads 
-added to the list has reached the `expected` count.
+added to the list has reached the `expected` count provided when the Joiner was created.
 
 `joinWait` suspends the calling thread until the number of threads in the list associated with the 
 Joiner reaches the expected count. It then joins each thread in the list and returns `true`. If 

@@ -36,9 +36,6 @@
         <version>4.0.0-BETA3</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
-    <build>
-        <sourceDirectory>src</sourceDirectory>
-    </build>
     <dependencies>
         <!-- the dtest code depends on the submit and agent jars
         -->

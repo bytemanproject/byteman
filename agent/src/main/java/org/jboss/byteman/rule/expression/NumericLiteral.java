@@ -78,7 +78,7 @@ public class NumericLiteral extends Expression
         if (type == Type.I) {
             int val = value.intValue();
             // compile code to stack int value
-            if (val >= -1 && val <= 5) {
+            if(val >= -1 && val <= 5) {
                 // we can use an iconst instruction
                 mv.visitInsn(Opcodes.ICONST_0 + val);
             } else {
@@ -88,7 +88,7 @@ public class NumericLiteral extends Expression
             // we have only added 1 to the stack height
 
             compileContext.addStackCount(1);
-        } else { // type = type.F
+        } else if (type == Type.F) {
             float val = value.floatValue();
             if (val == 0.0) {
                 // we can use an fconst instruction
@@ -107,6 +107,35 @@ public class NumericLiteral extends Expression
             // we have only added 1 to the stack height
 
             compileContext.addStackCount(1);
+        } else if (type == Type.J) {
+            long val = value.longValue();
+            // compile code to stack int value
+            if(val == 0L || val == 1L) {
+                // we can use an iconst instruction
+                mv.visitInsn(Opcodes.LCONST_0 + (int)val);
+            } else {
+                // we have to add an integer constant to the constants pool
+                mv.visitLdcInsn(value);
+            }
+            // we added 2 to the stack height
+
+            compileContext.addStackCount(2);
+        } else { // type = type.D
+            double val = value.doubleValue();
+            if (val == 0.0D) {
+                // we can use an fconst instruction
+                mv.visitInsn(Opcodes.DCONST_0);
+            } else if (val == 1.0D) {
+                    // we can use an fconst instruction
+                    mv.visitInsn(Opcodes.DCONST_1);
+            } else {
+                // we have to add a long constant to the constants pool
+                mv.visitLdcInsn(value);
+            }
+
+            // we added 2 to the stack height
+
+            compileContext.addStackCount(2);
         }
     }
 

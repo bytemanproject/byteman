@@ -89,13 +89,32 @@ public class InstrumentedClass implements RemoteInterface
     }
 
     /**
+     * Returns number of method calls for the class.<br>
+     * Sum number of method calls on all instrumented instances
+     * belonging to this instrumented class.
+     * It's sum of all method calls for all known instrumented instances.
+     *
+     * @param methodName  name of method which we are interested in how many times was called
+     * @return number of method calls on the class (sum of method calls of all instances)
+     */
+    public int getInvocationCount(String methodName)
+    {
+        int invocationCount = 0;
+        for(InstrumentedInstance instance: getInstances()) {
+            invocationCount += instance.getInvocationCount(methodName);
+        }
+        return invocationCount;
+    }
+
+    /**
      * Checks that the number of known, distinct object instances of this class is as stated.
      *
      * @param count the expected number of instances of the class.
      */
     public void assertKnownInstances(int count)
     {
-        assertEquals(null, count, instrumentedInstances.size());
+        assertEquals("Number of known instances of " + className + " does not match",
+                count, instrumentedInstances.size());
     }
 
     /**
@@ -123,9 +142,9 @@ public class InstrumentedClass implements RemoteInterface
      */
     public void assertMethodCallCount(String message, String methodName, int callCount)
     {
-    	assertMethodCallCount(message, methodName, new CallCount(callCount, callCount));
+        assertMethodCallCount(message, methodName, new CallCount(callCount, callCount));
     }
-    
+
     /**
      * Checks that the number of known invocations of the given method is specified count.
      *
@@ -134,7 +153,23 @@ public class InstrumentedClass implements RemoteInterface
      */
     public void assertMethodCallCount(String methodName, int callCount)
     {
-    	assertMethodCallCount(null, methodName, new CallCount(callCount, callCount));
+        assertMethodCallCount(null, methodName, new CallCount(callCount, callCount));
+    }
+
+    /**
+     * Check that number of known invocations of the given method of all known instances
+     * is specified count.<br>
+     * Difference against {@link #assertMethodCallCount(String, int)} is that here we query
+     * against all know instances. The other method query each instance to be called
+     * by the specific number times.
+     *
+     * @param method the method name to look for
+     * @param callCount the expected number of the invocation count summed on all instances
+     */
+    public void assertSumMethodCallCount(String method, int callCount)
+    {
+        assertEquals("Method " + className + "#" + method + " was not called " + callCount + " times",
+                callCount, getInvocationCount(method));
     }
 
     /**
@@ -149,7 +184,7 @@ public class InstrumentedClass implements RemoteInterface
     }
 
     /**
-     * Checks that the given method has not been seen to be called on any known instance of the class. 
+     * Checks that the given method has not been seen to be called on any known instance of the class.
      * Uses junit internally, hence expect the normal exception throwing in case of failure.
      *
      * @param methodName the method name to look for.

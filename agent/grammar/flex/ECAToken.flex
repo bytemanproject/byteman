@@ -81,9 +81,13 @@ ExpTrailing = {Exp} {Sign}? {PosInteger}
 FloatTrailing = {ExpTrailing} | {DotTrailing} {ExpTrailing}?
 PosFloat = {PosInteger} {FloatTrailing}
 
+Long = {Sign}? {PosInteger} L
+
+Double = {Sign}? {PosFloat} D
+
 Integer = {Sign}? {PosInteger}
 
-Float = {Sign}? {PosFloat}
+Float = {Sign}? {PosFloat} F?
 
 %state STRING
 
@@ -264,9 +268,11 @@ Float = {Sign}? {PosFloat}
 
 /* numbers */
 
+{Long}          { return symbol(sym.LONG_LITERAL, Long.valueOf(yytext().substring(0, yytext().length() - 1))); }
 {Integer}		{ return symbol(sym.INTEGER_LITERAL, Integer.valueOf(yytext())); }
 
-{Float}		{ return symbol(sym.FLOAT_LITERAL, Float.valueOf(yytext())); }
+{Double}		{ return symbol(sym.DOUBLE_LITERAL, Double.valueOf(yytext().substring(0, yytext().length() - 1))); }
+{Float}         { return symbol(sym.FLOAT_LITERAL, Float.valueOf(yytext())); }
 
 /* strings */
 

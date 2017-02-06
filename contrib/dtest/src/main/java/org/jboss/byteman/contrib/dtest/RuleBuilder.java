@@ -42,8 +42,10 @@ package org.jboss.byteman.contrib.dtest;
  *   DO myAction()
  *   ENDRULE
  *
+ * @deprecated use {@link RuleConstructor}
  * @author Jonathan Halliday (jonathan.halliday@redhat.com) 2010-05
  */
+@Deprecated
 public class RuleBuilder
 {
     public static void main(String[] args) {
@@ -82,7 +84,7 @@ public class RuleBuilder
     }
 
     public RuleBuilder onInterface(String className) {
-        return onSpecifier(className, true);        
+        return onSpecifier(className, true);
     }
 
     private RuleBuilder onSpecifier(String className, boolean isInterface) {

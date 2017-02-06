@@ -1106,6 +1106,7 @@ public class Type {
         builtinTypes.put(INTEGER.getTargetClass().getName(), INTEGER);
         builtinTypes.put(LONG.getTargetClass().getName(), LONG);
         builtinTypes.put(FLOAT.getTargetClass().getName(), FLOAT);
+        builtinTypes.put(DOUBLE.getTargetClass().getName(), DOUBLE);
         builtinTypes.put(STRING.getTargetClass().getName(), STRING);
         builtinTypes.put(VOID.getTargetClass().getName(), VOID);
         builtinTypes.put(NUMBER.getTargetClass().getName(), NUMBER);
@@ -1119,6 +1120,7 @@ public class Type {
         builtinTypes.put("Integer", INTEGER);
         builtinTypes.put("Long", LONG);
         builtinTypes.put("Float", FLOAT);
+        builtinTypes.put("Double", DOUBLE);
         builtinTypes.put("String", STRING);
         builtinTypes.put("Number", NUMBER);
         builtinTypes.put("Object", OBJECT);

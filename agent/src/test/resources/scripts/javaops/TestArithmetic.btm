@@ -151,3 +151,43 @@ DO test.log("triggerMethod5 : i == " + i);
    test.log("triggerMethod5 : f >>> 3 == " + (f >>> 3));
    test.log("triggerMethod5 : d >>> 3 == " + (d >>> 3));
 ENDRULE
+
+RULE test long literals
+CLASS TestArithmetic
+METHOD triggerMethod6(int,long,float,double)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER CALL log
+BIND test : Test = $0;
+     l_lit : long = 5000000000L;
+     i : int = $1;
+     j : long = $2;
+     f : float = $3;
+     d : double = $4
+IF TRUE
+DO test.log("triggerMethod6 : l_lit == " + l_lit);
+   test.log("triggerMethod6 : i + l_lit == " + (i + l_lit));
+   test.log("triggerMethod6 : j + l_lit == " + (j + l_lit));
+   test.log("triggerMethod6 : f + l_lit == " + (f + l_lit));
+   test.log("triggerMethod6 : d + l_lit == " + (d + l_lit));
+   return l_lit;
+ENDRULE
+
+RULE test double literals
+CLASS TestArithmetic
+METHOD triggerMethod7(int,long,float,double)
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER CALL log
+BIND test : Test = $0;
+     d_lit : double = 1.23456E-73D;
+     i : int = $1;
+     j : long = $2;
+     f : float = $3;
+     d : double = $4
+IF TRUE
+DO test.log("triggerMethod7 : d_lit == " + d_lit);
+   test.log("triggerMethod7 : i + d_lit == " + (i + d_lit));
+   test.log("triggerMethod7 : j + d_lit == " + (j + d_lit));
+   test.log("triggerMethod7 : f + d_lit == " + (f + d_lit));
+   test.log("triggerMethod7 : d + d_lit == " + (d + d_lit));
+   return d_lit;
+ENDRULE
