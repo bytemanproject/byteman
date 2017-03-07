@@ -547,9 +547,16 @@ public class Instrumentor
         return scriptName;
     }
 
-
     /**
+     * <p>
      * Removing particular script from the remote byteman agent.
+     * <p>
+     * If you submitted a rule directly to remote JVM then the scriptName
+     * is the name under the script was installed.
+     * <p>
+     * If you used {@link #setRedirectedSubmissionsFile(File)} to define
+     * a file where the rule will be written then this method won't work
+     * and you will get an {@link IllegalStateException}.
      *
      * @param scriptName  name of script that should be removed
      * @throws Exception in case that script can't be removed
@@ -562,6 +569,17 @@ public class Instrumentor
         }
         submit.deleteScripts(Arrays.asList(script));
         installedScripts.remove(script);
+    }
+
+    /**
+     * Removing particular script installed as a rule by {@link RuleConstructor}.
+     *
+     * @param builder  a rule defining a script to be removed
+     * @throws Exception  in case of failure
+     */
+    public void removeRule(RuleConstructor builder) throws Exception {
+        String scriptName = builder.getRuleName();
+        removeScript(scriptName);
     }
 
     /**

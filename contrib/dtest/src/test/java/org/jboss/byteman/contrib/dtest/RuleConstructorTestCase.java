@@ -29,19 +29,19 @@ public class RuleConstructorTestCase {
     public void basic() {
         String testRule = String.format(
             "RULE basic rule%n" +
-            "CLASS javax.transdoAction.xa.XAResource%n" +
+            "CLASS javax.transaction.xa.XAResource%n" +
             "METHOD commit%n" +
             "AT ENTRY%n" +
             "IF NOT flagged(\"commitFlag\")%n" +
-            "DO throw new javax.transdoAction.xa.XAResource(100)%n" +
+            "DO throw new javax.transaction.xa.XAResource(100)%n" +
             "ENDRULE%n");
 
         String rule = RuleConstructor.createRule("basic rule")
-            .onClass("javax.transdoAction.xa.XAResource")
+            .onClass("javax.transaction.xa.XAResource")
             .inMethod("commit")
             .atEntry()
             .ifCondition("NOT flagged(\"commitFlag\")")
-            .doAction("throw new javax.transdoAction.xa.XAResource(100)")
+            .doAction("throw new javax.transaction.xa.XAResource(100)")
             .build();
 
         Assert.assertEquals("The rule does not match the built one", testRule, rule);
@@ -51,20 +51,20 @@ public class RuleConstructorTestCase {
     public void basicWithSubclasses() {
         String testRule = String.format(
             "RULE basic rule%n" +
-            "CLASS ^javax.transdoAction.xa.XAResource%n" +
+            "CLASS ^javax.transaction.xa.XAResource%n" +
             "METHOD rollback%n" +
             "AT EXIT%n" +
             "IF NOT flagged(\"commitFlag\")%n" +
-            "DO throw new javax.transdoAction.xa.XAResource(100)%n" +
+            "DO throw new javax.transaction.xa.XAResource(100)%n" +
             "ENDRULE%n");
 
         String rule = RuleConstructor.createRule("basic rule")
-            .onClass("javax.transdoAction.xa.XAResource")
+            .onClass("javax.transaction.xa.XAResource")
             .includeSubclases()
             .inMethod("rollback")
             .atExit()
             .ifCondition("NOT flagged(\"commitFlag\")")
-            .doAction("throw new javax.transdoAction.xa.XAResource(100)")
+            .doAction("throw new javax.transaction.xa.XAResource(100)")
             .build();
 
         Assert.assertEquals("The rule does not match the built one", testRule, rule);
