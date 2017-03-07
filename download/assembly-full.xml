@@ -111,7 +111,7 @@
     <files>
         <!-- documentation -->
         <file>
-            <source>../contrib/dtest/README.txt</source>
+            <source>../contrib/dtest/README.adoc</source>
             <outputDirectory>contrib/dtest</outputDirectory>
             <lineEnding>keep</lineEnding>
         </file>
