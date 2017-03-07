@@ -28,7 +28,11 @@
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-jboss-modules</artifactId>
+<<<<<<< HEAD
         <version>4.0.0-BETA3</version>
+=======
+        <version>3.0.8</version>
+>>>>>>> origin
         <relativePath>../pom.xml</relativePath>
     </parent>
 

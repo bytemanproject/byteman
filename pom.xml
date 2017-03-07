@@ -78,13 +78,6 @@
             <timezone>0</timezone>
         </developer>
     </developers>
-    <repositories>
-        <repository>
-            <id>ow2</id>
-            <name>ow2 release repository</name>
-            <url>http://repository.ow2.org/nexus/content/repositories/releases/</url>
-        </repository>
-    </repositories>
     <distributionManagement>
         <!-- obviously we need to use the Sonatype staging repo for upload -->
         <snapshotRepository>
