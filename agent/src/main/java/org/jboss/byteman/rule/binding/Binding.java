@@ -23,7 +23,6 @@
 */
 package org.jboss.byteman.rule.binding;
 
-import com.sun.org.apache.bcel.internal.generic.PUTFIELD;
 import org.jboss.byteman.agent.Transformer;
 import org.jboss.byteman.rule.compiler.CompileContext;
 import org.jboss.byteman.rule.expression.ArrayInitExpression;

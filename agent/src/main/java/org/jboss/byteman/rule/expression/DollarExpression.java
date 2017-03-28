@@ -23,7 +23,6 @@
 */
 package org.jboss.byteman.rule.expression;
 
-import com.sun.org.apache.bcel.internal.generic.GETFIELD;
 import org.jboss.byteman.rule.binding.Binding;
 import org.jboss.byteman.rule.binding.Bindings;
 import org.jboss.byteman.rule.compiler.CompileContext;
