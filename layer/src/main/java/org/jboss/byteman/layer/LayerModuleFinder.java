@@ -79,7 +79,7 @@ public class LayerModuleFinder implements ModuleFinder
             uri = new URI("byteman", moduleName, null);
         } catch (URISyntaxException e) {
         }
-        ModuleDescriptor.Builder builder =  ModuleDescriptor.module(moduleName);
+        ModuleDescriptor.Builder builder =  ModuleDescriptor.newModule(moduleName);
         for(String required : requiresNames) {
             builder.requires(required);
         }

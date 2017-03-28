@@ -65,7 +65,7 @@ public class LayerFactory
         Layer parent =  Layer.boot();
         Configuration parentConfig = parent.configuration();
 
-        Configuration childConfig = parentConfig.resolveRequires(ModuleFinder.of(), finder, Set.of("org.jboss.byteman.jigsaw"));
+        Configuration childConfig = parentConfig.resolve(ModuleFinder.of(), finder, Set.of("org.jboss.byteman.jigsaw"));
         ClassLoader scl = ClassLoader.getSystemClassLoader();
 
         Layer layer = parent.defineModulesWithOneLoader(childConfig, scl);
