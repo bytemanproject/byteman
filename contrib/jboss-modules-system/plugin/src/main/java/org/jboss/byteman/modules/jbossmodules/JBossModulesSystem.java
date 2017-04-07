@@ -93,7 +93,7 @@ public class JBossModulesSystem implements ModuleSystem<ClassbyteClassLoader>
     }
     
     /**
-     * Utility class to allow instantiating {@link ModuleLoader} with jboss-modules <= 1.2.0 (protected constructors)
+     * Utility class to allow instantiating {@link ModuleLoader} with jboss-modules version 1.2.0 and earlier (protected constructors)
      */
     public class ModuleLoaderWrapper extends ModuleLoader
     {
