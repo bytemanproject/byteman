@@ -397,8 +397,8 @@
         <module>contrib/rulecheck-maven-plugin</module>
         <module>contrib/jboss-modules-system</module>
         <module>sample</module>
-        <module>download</module>
         <module>docs</module>
+        <module>download</module>
     </modules>
 
     <profiles>
