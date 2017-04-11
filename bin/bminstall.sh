@@ -25,14 +25,15 @@
 # a JVM which was started without the agent. This provides an
 # alternative to using the -javaagent java command line flag
 #
-# usage: bminstall [-p port] [-h host] [-b] [-s] [-Dname[=value]]* pid
+# usage: bminstall [-p port] [-h host] [-b] [-s] [-m] [-Dname[=value]]* pid
 #   pid is the process id of the target JVM
 #   -h host selects the host name or address the agent listener binds to
 #   -p port selects the port the agent listener binds to
 #   -b adds the byteman jar to the bootstrap classpath
 #   -s sets an access-all-areas security policy for the Byteman agent code
+#   -m activates the byteman JBoss modules plugin
 #   -Dname=value can be used to set system properties whose name starts with "org.jboss.byteman."
-#   expects to find a byteman agent jar in BYTEMAN_HOME
+#   expects to find a byteman agent jar and byteman JBoss modules plugin jar (if -m is indicated) in BYTEMAN_HOME
 #
 
 # helper function to obtain java version

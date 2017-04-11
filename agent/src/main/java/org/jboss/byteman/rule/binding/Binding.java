@@ -307,7 +307,7 @@ public class Binding extends RuleElement
                 if (type == Type.STRING) {
                     // force conversion to String
                     result = result.toString();
-                } else if (type.getTargetClass().isInstance(result)) {
+                } else if (!type.getTargetClass().isInstance(result)) {
                     throw new ClassCastException("Cannot cast " + result + " to class " + type);
                 }
             }

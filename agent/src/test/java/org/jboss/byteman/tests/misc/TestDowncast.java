@@ -33,6 +33,19 @@ import java.util.List;
  */
 public class TestDowncast extends Test
 {
+    public static abstract class StringHolder
+    {
+        public StringHolder() { }
+        public abstract String toString();
+    }
+
+    public static class StringHolderImpl extends StringHolder
+    {
+        private String string;
+        public StringHolderImpl(String string) { this.string = string; }
+        public String toString() { return string; }
+    }
+
     public TestDowncast()
     {
         super(TestDowncast.class.getCanonicalName());
@@ -40,9 +53,9 @@ public class TestDowncast extends Test
 
     public void test()
     {
-        List<Object> names = new ArrayList<Object>();
+        List<StringHolder> names = new ArrayList<StringHolder>();
 
-        names.add("Andrew");
+        names.add(new StringHolderImpl("Andrew"));
         
         try {
             log("calling TestDowncast.triggerMethod((Andrew))");
@@ -55,7 +68,7 @@ public class TestDowncast extends Test
         checkOutput(true);
     }
 
-    public void triggerMethod(List<Object> names)
+    public void triggerMethod(List<StringHolder> names)
     {
         log("inside TestDowncast.triggerMethod()");
     }

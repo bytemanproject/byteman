@@ -31,7 +31,7 @@ CLASS org.jboss.byteman.tests.misc.TestDowncast
 METHOD triggerMethod(List)
 HELPER org.jboss.byteman.tests.helpers.Default
 AT EXIT
-BIND name : String = $1.get(0);
+BIND name : org.jboss.byteman.tests.misc.TestDowncast$StringHolderImpl = $1.get(0);
     test = $0
 IF TRUE
 DO test.log("triggerMethod : list.get(0) == " + name);

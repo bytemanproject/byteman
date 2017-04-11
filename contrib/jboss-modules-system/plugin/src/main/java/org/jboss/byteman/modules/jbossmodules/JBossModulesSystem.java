@@ -89,7 +89,17 @@ public class JBossModulesSystem implements ModuleSystem<ClassbyteClassLoader>
                 }
             }
         };
-        ruleModuleLoader = new ModuleLoader(finders);
+        ruleModuleLoader = new ModuleLoaderWrapper(finders);
+    }
+    
+    /**
+     * Utility class to allow instantiating {@link ModuleLoader} with jboss-modules &le; 1.2.0 (protected constructors)
+     */
+    public class ModuleLoaderWrapper extends ModuleLoader
+    {
+        public ModuleLoaderWrapper(ModuleFinder[] finders) {
+            super(finders);
+        }
     }
 
     public ClassbyteClassLoader createLoader(ClassLoader triggerClassLoader, String[] imports)

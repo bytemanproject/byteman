@@ -41,3 +41,8 @@ exit /b 1
 
 :okJar
 set "BYTEMAN_JAR=%BYTEMAN_HOME%\lib\byteman.jar"
+if exist "%BYTEMAN_HOME%\contrib\jboss-modules-system\byteman-jboss-modules-plugin.jar" goto okPluginJar
+echo Cannot locate byteman JBoss modules plugin jar
+
+:okPluginJar
+set "BYTEMAN_MODULES_PLUGIN_JAR=%BYTEMAN_HOME%\contrib\jboss-modules-system\byteman-jboss-modules-plugin.jar"
