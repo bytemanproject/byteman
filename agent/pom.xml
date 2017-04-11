@@ -634,7 +634,6 @@
                          <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestTriggerClassMethodBinding.btm</argLine>
                       </configuration>
                     </execution>
-                    <!--
                     <execution>
                       <id>misc.TestDowncast</id>
                       <phase>integration-test</phase>
@@ -651,7 +650,6 @@
                          <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/misc/TestDowncast.btm</argLine>
                       </configuration>
                     </execution>
-                    -->
                     <!-- bugfixes -->
                     <execution>
                       <id>bugfixes.TestEmptySignature</id>

@@ -200,9 +200,13 @@ public class Binding extends RuleElement
                             resolveUnknownAgainstDerived(valueType);
                         } else if (!type.isAssignableFrom(valueType)) {
                             // if this is a downcast we need to check whether downcasts are disabled
-                            if (valueType == Type.VOID || !valueType.isAssignableFrom(type)) {
+                            if(valueType == Type.VOID || !valueType.isAssignableFrom(type)) {
                                 throw new TypeException("Binding.typecheck : incompatible type for binding expression " + valueType + value.getPos());
                             }
+                            doCheckCast = true;
+                        } else if (type == Type.STRING && valueType != Type.STRING) {
+                            // special case -- we actually use a string conversion
+                            doCheckCast = true;
                         }
                     }
                 }
@@ -295,7 +299,10 @@ public class Binding extends RuleElement
                 // if the assigment involves a type conversion then we need to rebox the value
                 result = rebox(value.getType(), type, result);
             } else if (doCheckCast) {
-                if (type.getTargetClass().isInstance(result)) {
+                if (type == Type.STRING) {
+                    // force conversion to String
+                    result = result.toString();
+                } else if (!type.getTargetClass().isInstance(result)) {
                     throw new ClassCastException("Cannot cast " + result + " to class " + type);
                 }
             }
@@ -323,7 +330,11 @@ public class Binding extends RuleElement
                 compileTypeConversion(value.getType(), type, mv, compileContext);
                 compileBox(Type.boxType(type), mv, compileContext);
             } else if (doCheckCast) {
-                mv.visitTypeInsn(Opcodes.CHECKCAST, type.getInternalName());
+                if (type == Type.STRING) {
+                    compileTypeConversion(value.getType(), type, mv, compileContext);
+                } else {
+                    mv.visitTypeInsn(Opcodes.CHECKCAST, type.getInternalName());
+                }
             }
             // compile a setBinding call pops 3 from stack height
             mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, Type.internalName(HelperAdapter.class), "setBinding", "(Ljava/lang/String;Ljava/lang/Object;)V");
