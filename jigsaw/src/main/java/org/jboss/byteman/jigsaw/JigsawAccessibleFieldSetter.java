@@ -23,7 +23,6 @@
  */
 
 package org.jboss.byteman.jigsaw;
-import org.jboss.byteman.agent.AccessibleFieldGetter;
 import org.jboss.byteman.agent.AccessibleFieldSetter;
 import org.jboss.byteman.rule.exception.ExecuteException;
 

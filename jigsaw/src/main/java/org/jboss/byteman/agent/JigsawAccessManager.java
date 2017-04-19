@@ -24,9 +24,8 @@
 
 package org.jboss.byteman.agent;
 import java.lang.instrument.Instrumentation;
-import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Module;
+import java.lang.Module;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

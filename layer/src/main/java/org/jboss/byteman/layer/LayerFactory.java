@@ -24,9 +24,9 @@
 
 package org.jboss.byteman.layer;
 import java.lang.module.ModuleFinder;
-import java.lang.reflect.Layer;
+import java.lang.ModuleLayer;
 import java.lang.module.Configuration;
-import java.lang.reflect.Module;
+import java.lang.Module;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -62,13 +62,13 @@ public class LayerFactory
     {
         ModuleFinder finder = new LayerModuleFinder(moduleName, exportsNames, requiresNames, classMapper);
 
-        Layer parent =  Layer.boot();
+        ModuleLayer parent =  ModuleLayer.boot();
         Configuration parentConfig = parent.configuration();
 
         Configuration childConfig = parentConfig.resolve(ModuleFinder.of(), finder, Set.of("org.jboss.byteman.jigsaw"));
         ClassLoader scl = ClassLoader.getSystemClassLoader();
 
-        Layer layer = parent.defineModulesWithOneLoader(childConfig, scl);
+        ModuleLayer layer = parent.defineModulesWithOneLoader(childConfig, scl);
         Optional<Module> optModule = layer.findModule(moduleName);
         Module module = (optModule.isPresent() ? optModule.get() : null);
 

@@ -65,7 +65,7 @@ public class AccessManager
 
         ClassLoader systemLoader = ClassLoader.getSystemClassLoader();
         try {
-            systemLoader.loadClass("java.lang.reflect.Module");
+            systemLoader.loadClass("java.lang.Module");
         } catch (ClassNotFoundException ce) {
             //  we are not in a Jigsaw runtime so use
             // a default access enabler
