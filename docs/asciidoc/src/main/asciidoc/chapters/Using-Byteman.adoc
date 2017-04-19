@@ -271,7 +271,7 @@ modules plugin.
 Note that the `bminstall` script provides a command flag `-m` to
 automatically configure the JBoss Modules plugin when installing the
 Byteman agent dynamically. It expects to find the JBoss Modules plugin
-jar in directory`$BYTEMAN_HOME/contrib/jboss-modules-system`.
+jar in directory `$BYTEMAN_HOME/contrib/jboss-modules-system`.
 
 *sys:jarfile* where _jarfile_ is a path to to a jar file to be added to the JVM _system_ class path. 
 This option makes classes contained in the jar file available for use when type checking, 
