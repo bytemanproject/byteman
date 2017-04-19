@@ -142,7 +142,7 @@ described below to upload or unload rules via the Byteman agent listener. The co
 for the `bminstall` script is
 
 ----
-bminstall [-p port] [-h host] [-b] [-s] [-Dproperty[=value]]* pid
+bminstall [-p port] [-h host] [-b] [-s] [-m] [-Dproperty[=value]]* pid
 ----
 
 where terms between _[_ and _]_ are optional and _*_ means zero or more repetitions.
@@ -156,9 +156,15 @@ where terms between _[_ and _]_ are optional and _*_ means zero or more repetiti
 - `-s` sets an access-all-areas security policy for the Byteman agent code. This may be necessary 
   when the JVM is running an application employing a security manager which imposes access 
   restrictions (this includes recent versions of JBoss Wildfly/EAP).
+- `-m` activates the byteman JBoss modules plugin
 - `-Dproperty=value` means call `System.setProperty(property, value)` before starting the agent. 
   More than one such property setting may be provided. If value is omitted then it defaults to “”. 
   Note that property must start with prefix “`org.jboss.byteman.`”.
+
+bminstall expects to find the byteman agent jar (`byteman.jar`) in
+`$BYTEMAN_HOME/lib`. If `-m` is specified it also expects to find the
+byteman JBoss Modules plugin jar (`byteman-jboss-modules-plugin.jar`) in
+`$BYTEMAN_HOME/contrib/jboss-modules-system`.
 
 Note that when you identify the JVM using an application name instead of a process id you do not 
 have to provide the full name but you must be sure the name is unambiguous. For example, if you 
@@ -262,10 +268,10 @@ in the bootstrap classpath. As a corollary this means it is not
 normally possible to inject into bootstrap classes when using a
 modules plugin.
 
-Note also that currently it is only possible to configure a module
-plugin from the Java command line using this -javaagent option. The
-bminstall and bmjava scripts do not yet provide command flags for this
-purpose. This may be rectified in later releases.
+Note that the `bminstall` script provides a command flag `-m` to
+automatically configure the JBoss Modules plugin when installing the
+Byteman agent dynamically. It expects to find the JBoss Modules plugin
+jar in directory `$BYTEMAN_HOME/contrib/jboss-modules-system`.
 
 *sys:jarfile* where _jarfile_ is a path to to a jar file to be added to the JVM _system_ class path. 
 This option makes classes contained in the jar file available for use when type checking, 
