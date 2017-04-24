@@ -167,12 +167,11 @@ public class TypeGroup {
             }
 
             Type newType = new Type(name, clazz);
-            if (checkAlias(newType)) {
-                typeTable.put(name, newType);
-                return newType;
-            } else {
-                return null;
-            }
+            // if possible bag the non-package qualified name as an alias for this type
+            checkAlias(newType);
+            // add the package qualified name
+            typeTable.put(name, newType);
+            return newType;
         }
     }
 
