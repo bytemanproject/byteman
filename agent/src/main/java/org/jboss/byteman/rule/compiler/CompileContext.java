@@ -149,18 +149,32 @@ public class CompileContext
                 }
             }
             if (box) {
-                Type midType = Type.boxType(toType);
-                compileUnbox(fromType, midType);
-                compileBox(midType);
+                if (toType == Type.NUMBER) {
+                    // special case! nothing to do
+                } else {
+                    // convert from one numeric object type to another
+                    Type midType = Type.boxType(toType);
+                    compileUnbox(fromType, midType);
+                    compileBox(toType);
+                }
             } else {
                 compileUnbox(fromType, toType);
             }
         } else if (box) {
-            Type midType = Type.boxType(toType);
-            if (fromType != midType) {
-                compilePrimitiveConversion(fromType, midType);
+            if (toType == Type.CHARACTER) {
+                compilePrimitiveConversion(fromType, Type.C);
+                compileBox(toType);
+            } else if (toType == Type.NUMBER) {
+                // special case! convert primitive to it's numeric box type
+                toType = Type.boxType(fromType);
+                compileBox(toType);
+            } else {
+                Type midType = Type.boxType(toType);
+                if(fromType != midType) {
+                    compilePrimitiveConversion(fromType, midType);
+                }
+                compileBox(toType);
             }
-            compileBox(toType);
         } else {
             compilePrimitiveConversion(fromType, toType);
         }
