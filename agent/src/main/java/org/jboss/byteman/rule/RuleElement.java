@@ -162,20 +162,35 @@ public abstract class RuleElement {
             // if this is not already a numeric type then generate a cast
             if (!fromType.isNumeric()) {
                 compileObjectConversion(fromType, Type.NUMBER, mv, compileContext);
+                fromType = Type.NUMBER;
             }
             if (box) {
-                Type midType = Type.boxType(toType);
-                compileUnbox(fromType, midType, mv, compileContext);
-                compileBox(midType, mv, compileContext);
+                if (toType == Type.NUMBER) {
+                    // special case! nothing to do
+                } else {
+                    // convert from one numeric object type to another
+                    Type midType = Type.boxType(toType);
+                    compileUnbox(fromType, midType, mv, compileContext);
+                    compileBox(toType, mv, compileContext);
+                }
             } else {
                 compileUnbox(fromType, toType, mv, compileContext);
             }
         } else if (box) {
-            Type midType = Type.boxType(toType);
-            if (fromType != midType) {
-                compilePrimitiveConversion(fromType, midType, mv, compileContext);
+            if (toType == Type.CHARACTER) {
+                compilePrimitiveConversion(fromType, Type.C, mv, compileContext);
+                compileBox(toType, mv, compileContext);
+            } else if (toType == Type.NUMBER) {
+                // special case! convert primitive to it's numeric box type
+                toType = Type.boxType(fromType);
+                compileBox(toType, mv, compileContext);
+            } else {
+                Type midType = Type.boxType(toType);
+                if(fromType != midType) {
+                    compilePrimitiveConversion(fromType, midType, mv, compileContext);
+                }
+                compileBox(toType, mv, compileContext);
             }
-            compileBox(toType, mv, compileContext);
         } else {
             compilePrimitiveConversion(fromType, toType, mv, compileContext);
         }

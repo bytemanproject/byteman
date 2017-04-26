@@ -1066,17 +1066,17 @@ public class Type {
     // pseudo type representing an undefined numeric primitive type
     final public static Type N = new Type("", null, F_UNKNOWN|F_NUMERIC|F_PRIMITIVE, 0);
 
-    final public static Type BOOLEAN = new Type("java.lang.Boolean", Boolean.class, F_BOOLEAN, 4);
-    final public static Type BYTE = new Type("java.lang.Byte", Byte.class, F_INTEGRAL, 4);
-    final public static Type SHORT = new Type("java.lang.Short", Short.class, F_INTEGRAL, 4);
-    final public static Type CHARACTER = new Type("java.lang.Character", Character.class, F_INTEGRAL, 4);
-    final public static Type INTEGER = new Type("java.lang.Integer", Integer.class, F_INTEGRAL, 4);
-    final public static Type LONG = new Type("java.lang.Long", Long.class, F_INTEGRAL, 4);
-    final public static Type FLOAT = new Type("java.lang.Float", Float.class, F_FLOATING, 4);
-    final public static Type DOUBLE = new Type("java.lang.Double", Double.class, F_FLOATING, 4);
+    final public static Type BOOLEAN = new Type("java.lang.Boolean", Boolean.class, F_OBJECT|F_BOOLEAN, 4);
+    final public static Type BYTE = new Type("java.lang.Byte", Byte.class, F_OBJECT|F_INTEGRAL, 4);
+    final public static Type SHORT = new Type("java.lang.Short", Short.class, F_OBJECT|F_INTEGRAL, 4);
+    final public static Type CHARACTER = new Type("java.lang.Character", Character.class, F_OBJECT|F_INTEGRAL, 4);
+    final public static Type INTEGER = new Type("java.lang.Integer", Integer.class, F_OBJECT|F_INTEGRAL, 4);
+    final public static Type LONG = new Type("java.lang.Long", Long.class, F_OBJECT|F_INTEGRAL, 4);
+    final public static Type FLOAT = new Type("java.lang.Float", Float.class, F_OBJECT|F_FLOATING, 4);
+    final public static Type DOUBLE = new Type("java.lang.Double", Double.class, F_OBJECT|F_FLOATING, 4);
     final public static Type STRING = new Type("java.lang.String", String.class, F_OBJECT|F_STRING, 4);
     final public static Type VOID = new Type("void", void.class, F_VOID, 0);
-    final public static Type NUMBER = new Type("java.lang.Number", Number.class, F_NUMERIC, 0);
+    final public static Type NUMBER = new Type("java.lang.Number", Number.class, F_OBJECT|F_NUMERIC, 0);
     final public static Type OBJECT = new Type("java.lang.Object", Object.class, F_OBJECT, 0);
     // pseudo type representing an undefined primitive or object type
     final public static Type UNDEFINED = new Type("", Undefined.class, F_UNKNOWN, 0);
