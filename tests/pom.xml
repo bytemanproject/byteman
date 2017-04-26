@@ -57,6 +57,22 @@
                 <executions>
                     <!-- access tests specific to JDK9 -->
                     <execution>
+                      <id>access.TestNonLookupAccess</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                          <forkCount>1</forkCount>
+                          <reuseForks>true</reuseForks>
+                         <includes>
+                           <include>org/jboss/byteman/tests/access/TestNonLookupAccess.class</include>
+                         </includes>
+                         <argLine>-javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/access/TestNonLookupAccess.btm</argLine>
+                      </configuration>
+                    </execution>
+                    <execution>
                       <id>access.TestAccess</id>
                       <phase>integration-test</phase>
                       <goals>
@@ -72,17 +88,6 @@
                          <argLine>-javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/access/TestAccess.btm</argLine>
                       </configuration>
                     </execution>
-                    <!-- cannot run the compiled access tests until
-                         the issue of references to non-exported public
-                         instances (also non-public instances) from
-                         compiled code is fixed. e.g. we cannot handle
-                         an expression of type Unsafe even though the
-                         class is public. this is just a more general
-                         version of the old problem of handling exprs
-                         with non-public type from compiled code
-                         (see BYTEMAN-288 and related issues)
-                    -->
-                    <!--
                     <execution>
                       <id>access.TestAccess.compiled</id>
                       <phase>integration-test</phase>
@@ -96,10 +101,25 @@
                          <includes>
                            <include>org/jboss/byteman/tests/access/TestAccess.class</include>
                          </includes>
-                          <argLine>-javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/access/TestAccess.btm</argLine>
+                          <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/access/TestAccess.btm</argLine>
                       </configuration>
                     </execution>
-                    -->
+                    <execution>
+                      <id>access.TestNonLookupAccess.compiled</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                          <forkCount>1</forkCount>
+                          <reuseForks>true</reuseForks>
+                         <includes>
+                           <include>org/jboss/byteman/tests/access/TestNonLookupAccess.class</include>
+                         </includes>
+                         <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/access/TestNonLookupAccess.btm</argLine>
+                      </configuration>
+                    </execution>
                     <!-- java language operations -->
                     <execution>
                       <id>javaops.TestArithmetic</id>

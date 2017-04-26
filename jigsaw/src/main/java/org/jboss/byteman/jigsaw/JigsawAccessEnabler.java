@@ -30,13 +30,10 @@ import org.jboss.byteman.agent.AccessibleFieldGetter;
 import org.jboss.byteman.agent.AccessibleFieldSetter;
 import org.jboss.byteman.agent.AccessibleMethodInvoker;
 import org.jboss.byteman.agent.DefaultAccessEnabler;
-import org.jboss.byteman.rule.exception.ExecuteException;
 
 import java.lang.instrument.Instrumentation;
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
-import java.lang.invoke.MethodType;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -107,6 +104,14 @@ public class JigsawAccessEnabler implements AccessEnabler
     private Lookup theLookup;
 
     /**
+     * default enabler to provide reflective access in cases
+     * where we run up against an IllegalAccessException
+     * for java.base classes because of the current rather
+     * extreme restrictions provided by Jigsaw
+     */
+    private DefaultAccessEnabler defaultAccessEnabler;
+
+    /**
      * create an AccessEnabler that is capable of ensuring access when
      * running inside a Jigsaw enabled JDK.
      *
@@ -140,6 +145,9 @@ public class JigsawAccessEnabler implements AccessEnabler
         } catch (Exception e) {
             throw new RuntimeException("JigsawAccessEnabler : cannot obtain lookup from Byteman module", e);
         }
+
+        defaultAccessEnabler = new DefaultAccessEnabler();
+
         debug("created JigsawAccessEnabler");
     }
     /**
@@ -147,7 +155,7 @@ public class JigsawAccessEnabler implements AccessEnabler
      * class requires the use of reflection or a method handle
      * and possibly also module jiggery-pokery.
      *
-     * @param klazz the clas to be checked
+     * @param klazz the class to be checked
      * @return  true if reference to the class from a classpath
      * class requires the use of reflection or a method handle
      * and possibly module jiggery-pokery otherwise false.
@@ -280,6 +288,10 @@ public class JigsawAccessEnabler implements AccessEnabler
         Lookup privateLookup = null;
         try {
             privateLookup = MethodHandles.privateLookupIn(method.getDeclaringClass(), theLookup);
+        } catch (IllegalArgumentException e) {
+            // this may happen but only when reflection *will* work
+            method.setAccessible(true);
+            return defaultAccessEnabler.createMethodInvoker(method, true);
         } catch (IllegalAccessException e) {
             // this should never happen
         }
@@ -293,6 +305,10 @@ public class JigsawAccessEnabler implements AccessEnabler
         Lookup privateLookup = null;
         try {
             privateLookup = MethodHandles.privateLookupIn(constructor.getDeclaringClass(), theLookup);
+        } catch (IllegalArgumentException e) {
+            // this may happen but only when reflection *will* work
+            constructor.setAccessible(true);
+            return defaultAccessEnabler.createConstructorInvoker(constructor, true);
         } catch (IllegalAccessException e) {
             // this should never happen
         }
@@ -306,6 +322,10 @@ public class JigsawAccessEnabler implements AccessEnabler
         Lookup privateLookup = null;
         try {
             privateLookup = MethodHandles.privateLookupIn(field.getDeclaringClass(), theLookup);
+        } catch (IllegalArgumentException e) {
+            // this may happen but only when reflection *will* work
+            field.setAccessible(true);
+            return defaultAccessEnabler.createFieldGetter(field, true);
         } catch (IllegalAccessException e) {
             // this should never happen
         }
@@ -319,6 +339,10 @@ public class JigsawAccessEnabler implements AccessEnabler
         Lookup privateLookup = null;
         try {
             privateLookup = MethodHandles.privateLookupIn(field.getDeclaringClass(), theLookup);
+        } catch (IllegalArgumentException e) {
+            // this may happen but only when reflection *will* work
+            field.setAccessible(true);
+            return defaultAccessEnabler.createFieldSetter(field, true);
         } catch (IllegalAccessException e) {
             // this should never happen
         }

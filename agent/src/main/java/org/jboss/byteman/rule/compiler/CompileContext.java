@@ -445,9 +445,13 @@ public class CompileContext
                 // nothing more to do
             }
         } else {
-            // this happens when we downcast a bound variable from Object to the variable's type
             assert fromType.isAssignableFrom(toType);
-            mv.visitTypeInsn(Opcodes.CHECKCAST, toType.getInternalName());
+            compileCheckCast(toType);
         }
+    }
+    
+    public void compileCheckCast(Type toType)
+    {
+        mv.visitTypeInsn(Opcodes.CHECKCAST, toType.getInternalName());
     }
 }

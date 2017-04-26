@@ -137,7 +137,13 @@ public class JigsawAccessEnablerGenerator
             fv.visitEnd();
         }
         {
+            // private Lookup theLookup;
             fv = cw.visitField(ACC_PRIVATE, "theLookup", "Ljava/lang/invoke/MethodHandles$Lookup;", null, null);
+            fv.visitEnd();
+        }
+        {
+            // private DefaultAccessEnabler defaultAccessEnabler;
+            fv = cw.visitField(ACC_PRIVATE, "defaultAccessEnabler", "Lorg/jboss/byteman/agent/DefaultAccessEnabler;", null, null);
             fv.visitEnd();
         }
         {
@@ -243,6 +249,12 @@ public class JigsawAccessEnablerGenerator
             mv.visitInsn(ATHROW);
             // }
             mv.visitLabel(l5);
+            // defaultAccessEnabler = new DefaultAccessEnabler();
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitTypeInsn(NEW, "org/jboss/byteman/agent/DefaultAccessEnabler");
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, "org/jboss/byteman/agent/DefaultAccessEnabler", "<init>", "()V", false);
+            mv.visitFieldInsn(PUTFIELD,"org/jboss/byteman/jigsaw/JigsawAccessEnabler", "defaultAccessEnabler", "Lorg/jboss/byteman/agent/DefaultAccessEnabler;");
             if (DEBUG) {
             // debug("created JigsawAccessEnabler")
             mv.visitVarInsn(ALOAD, 0);
@@ -715,7 +727,9 @@ public class JigsawAccessEnablerGenerator
             Label l0 = new Label();
             Label l1 = new Label();
             Label l2 = new Label();
-            mv.visitTryCatchBlock(l0, l1, l2, "java/lang/IllegalAccessException");
+            mv.visitTryCatchBlock(l0, l1, l2, "java/lang/IllegalArgumentException");
+            Label l3 = new Label();
+            mv.visitTryCatchBlock(l0, l1, l3, "java/lang/IllegalAccessException");
             // ensureModuleAccess(method);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
@@ -733,13 +747,27 @@ public class JigsawAccessEnablerGenerator
             mv.visitMethodInsn(INVOKESTATIC, "java/lang/invoke/MethodHandles", "privateLookupIn", "(Ljava/lang/Class;Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/invoke/MethodHandles$Lookup;", false);
             mv.visitVarInsn(ASTORE, 2);
             mv.visitLabel(l1);
-            // } catch (IllegalAccessException e) {
-            Label l3 = new Label();
-            mv.visitJumpInsn(GOTO, l3);
+            Label l4 = new Label();
+            mv.visitJumpInsn(GOTO, l4);
+            // } catch (IllegalArgumentException e) {
             mv.visitLabel(l2);
             mv.visitVarInsn(ASTORE, 3);
+            // method.setAccessible(true);
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitInsn(ICONST_1);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/reflect/Method", "setAccessible", "(Z)V", false);
+            // return defaultAccessEnabler.createMethodInvoker(method, true);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "defaultAccessEnabler", "Lorg/jboss/byteman/agent/DefaultAccessEnabler;");
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitInsn(ICONST_1);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/agent/DefaultAccessEnabler", "createMethodInvoker", "(Ljava/lang/reflect/Method;Z)Lorg/jboss/byteman/agent/AccessibleMethodInvoker;", false);
+            mv.visitInsn(ARETURN);
+            // } catch (IllegalAccessException e) {
             mv.visitLabel(l3);
+            mv.visitVarInsn(ASTORE, 3);
             // }
+            mv.visitLabel(l4);
             // return new JigsawAccessibleMethodInvoker(privateLookup, method);
             mv.visitTypeInsn(NEW, "org/jboss/byteman/jigsaw/JigsawAccessibleMethodInvoker");
             mv.visitInsn(DUP);
@@ -756,7 +784,9 @@ public class JigsawAccessEnablerGenerator
             Label l0 = new Label();
             Label l1 = new Label();
             Label l2 = new Label();
-            mv.visitTryCatchBlock(l0, l1, l2, "java/lang/IllegalAccessException");
+            mv.visitTryCatchBlock(l0, l1, l2, "java/lang/IllegalArgumentException");
+            Label l3 = new Label();
+            mv.visitTryCatchBlock(l0, l1, l3, "java/lang/IllegalAccessException");
             // ensureModuleAccess(constructor);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
@@ -774,13 +804,27 @@ public class JigsawAccessEnablerGenerator
             mv.visitMethodInsn(INVOKESTATIC, "java/lang/invoke/MethodHandles", "privateLookupIn", "(Ljava/lang/Class;Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/invoke/MethodHandles$Lookup;", false);
             mv.visitVarInsn(ASTORE, 2);
             mv.visitLabel(l1);
-            // } catch (IllegalAccessException e) {
-            Label l3 = new Label();
-            mv.visitJumpInsn(GOTO, l3);
+            Label l4 = new Label();
+            mv.visitJumpInsn(GOTO, l4);
+            // } catch (IllegalArgumentException e) {
             mv.visitLabel(l2);
             mv.visitVarInsn(ASTORE, 3);
+            // constructor.setAccessible(true);
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitInsn(ICONST_1);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/reflect/Constructor", "setAccessible", "(Z)V", false);
+            // return defaultAccessEnabler.createConstructorInvoker(constructor);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "defaultAccessEnabler", "Lorg/jboss/byteman/agent/DefaultAccessEnabler;");
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitInsn(ICONST_1);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/agent/DefaultAccessEnabler", "createConstructorInvoker", "(Ljava/lang/reflect/Constructor;Z)Lorg/jboss/byteman/agent/AccessibleConstructorInvoker;", false);
+            mv.visitInsn(ARETURN);
+            // } catch (IllegalAccessException e) {
             mv.visitLabel(l3);
+            mv.visitVarInsn(ASTORE, 3);
             // }
+            mv.visitLabel(l4);
             // return new JigsawAccessibleConstructorInvoker(privateLookup, constructor);
             mv.visitTypeInsn(NEW, "org/jboss/byteman/jigsaw/JigsawAccessibleConstructorInvoker");
             mv.visitInsn(DUP);
@@ -797,7 +841,9 @@ public class JigsawAccessEnablerGenerator
             Label l0 = new Label();
             Label l1 = new Label();
             Label l2 = new Label();
-            mv.visitTryCatchBlock(l0, l1, l2, "java/lang/IllegalAccessException");
+            mv.visitTryCatchBlock(l0, l1, l2, "java/lang/IllegalArgumentException");
+            Label l3 = new Label();
+            mv.visitTryCatchBlock(l0, l1, l3, "java/lang/IllegalAccessException");
             // ensureModuleAccess(field);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
@@ -815,13 +861,27 @@ public class JigsawAccessEnablerGenerator
             mv.visitMethodInsn(INVOKESTATIC, "java/lang/invoke/MethodHandles", "privateLookupIn", "(Ljava/lang/Class;Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/invoke/MethodHandles$Lookup;", false);
             mv.visitVarInsn(ASTORE, 2);
             mv.visitLabel(l1);
-            // } catch (IllegalAccessException e) {
-            Label l3 = new Label();
-            mv.visitJumpInsn(GOTO, l3);
+            Label l4 = new Label();
+            mv.visitJumpInsn(GOTO, l4);
+            // } catch (IllegalArgumentException e) {
             mv.visitLabel(l2);
             mv.visitVarInsn(ASTORE, 3);
+            // field.setAccessible(true);
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitInsn(ICONST_1);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/reflect/Field", "setAccessible", "(Z)V", false);
+            // return defaultAccessEnabler.createFieldGetter(method);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "defaultAccessEnabler", "Lorg/jboss/byteman/agent/DefaultAccessEnabler;");
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitInsn(ICONST_1);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/agent/DefaultAccessEnabler", "createFieldGetter", "(Ljava/lang/reflect/Field;Z)Lorg/jboss/byteman/agent/AccessibleFieldGetter;", false);
+            mv.visitInsn(ARETURN);
+            // } catch (IllegalAccessException e) {
             mv.visitLabel(l3);
+            mv.visitVarInsn(ASTORE, 3);
             // }
+            mv.visitLabel(l4);
             // return new JigsawAccessibleFieldGetter(privateLookup, field);
             mv.visitTypeInsn(NEW, "org/jboss/byteman/jigsaw/JigsawAccessibleFieldGetter");
             mv.visitInsn(DUP);
@@ -838,7 +898,9 @@ public class JigsawAccessEnablerGenerator
             Label l0 = new Label();
             Label l1 = new Label();
             Label l2 = new Label();
-            mv.visitTryCatchBlock(l0, l1, l2, "java/lang/IllegalAccessException");
+            mv.visitTryCatchBlock(l0, l1, l2, "java/lang/IllegalArgumentException");
+            Label l3 = new Label();
+            mv.visitTryCatchBlock(l0, l1, l3, "java/lang/IllegalAccessException");
             // ensureModuleAccess(field);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
@@ -856,13 +918,27 @@ public class JigsawAccessEnablerGenerator
             mv.visitMethodInsn(INVOKESTATIC, "java/lang/invoke/MethodHandles", "privateLookupIn", "(Ljava/lang/Class;Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/invoke/MethodHandles$Lookup;", false);
             mv.visitVarInsn(ASTORE, 2);
             mv.visitLabel(l1);
-            // } catch (IllegalAccessException e) {
-            Label l3 = new Label();
-            mv.visitJumpInsn(GOTO, l3);
+            Label l4 = new Label();
+            mv.visitJumpInsn(GOTO, l4);
+            // } catch (IllegalArgumentException e) {
             mv.visitLabel(l2);
             mv.visitVarInsn(ASTORE, 3);
+            // field.setAccessible(true);
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitInsn(ICONST_1);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/reflect/Field", "setAccessible", "(Z)V", false);
+            // return defaultAccessEnabler.createFieldSetter(method);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "defaultAccessEnabler", "Lorg/jboss/byteman/agent/DefaultAccessEnabler;");
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitInsn(ICONST_1);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "org/jboss/byteman/agent/DefaultAccessEnabler", "createFieldSetter", "(Ljava/lang/reflect/Field;Z)Lorg/jboss/byteman/agent/AccessibleFieldSetter;", false);
+            mv.visitInsn(ARETURN);
+            // } catch (IllegalAccessException e) {
             mv.visitLabel(l3);
+            mv.visitVarInsn(ASTORE, 3);
             // }
+            mv.visitLabel(l4);
             // return new JigsawAccessibleFieldSetter(privateLookup, field);
             mv.visitTypeInsn(NEW, "org/jboss/byteman/jigsaw/JigsawAccessibleFieldSetter");
             mv.visitInsn(DUP);

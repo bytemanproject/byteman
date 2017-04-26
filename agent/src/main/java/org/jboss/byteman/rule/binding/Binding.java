@@ -202,13 +202,18 @@ public class Binding extends RuleElement
                             // if this is a downcast we need to check whether downcasts are disabled
                             if(valueType == Type.VOID || !valueType.isAssignableFrom(type)) {
                                 throw new TypeException("Binding.typecheck : incompatible type for binding expression " + valueType + value.getPos());
-                            } else if (!rule.requiresAccess(type)) {
+                            } else if(!rule.requiresAccess(type)) {
                                 // we need an explicit downcast here
                                 // n.b. we can omit the downcast for types
                                 // needing access because they are stored
                                 // generically and handled by reflection
                                 doCheckCast = true;
                             }
+                        } else if (rule.requiresAccess(valueType) && !rule.requiresAccess(type)) {
+                            // the value will have been computed generically as
+                            // an object but we need to use it via a supertype which is
+                            // not treated generically
+                            doCheckCast = true;
                         } else if (type == Type.STRING && valueType != Type.STRING) {
                             // special case -- we actually use a string conversion
                             doCheckCast = true;
@@ -330,7 +335,14 @@ public class Binding extends RuleElement
             value.compile(mv, compileContext);
             // plant check cast if required
             if (doCheckCast) {
-                compileContext.compileTypeConversion(value.getType(), type);
+                // we schedule a direct checkcast here rather than calling
+                // compileTypeConversion(value.type, type). the latter
+                // is fine when we are doing a downcast but does nothing
+                // if this is an 'upcast' i.e.when value.type is a subtype
+                // of type. We may still find doCheckCast set in that case
+                // because value.type requires access i.e. the value has
+                // been handled generically as an Object.
+                compileContext.compileCheckCast(type);
             }
             Type type = this.type;
             if (rule.requiresAccess(type)) {

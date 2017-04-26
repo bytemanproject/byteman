@@ -209,52 +209,84 @@ public class DefaultAccessEnabler implements AccessEnabler
     @Override
     public AccessibleMethodInvoker createMethodInvoker(Method method)
     {
-        // make the method usable
-        try {
-            method.setAccessible(true);
-        } catch (Exception e) {
-            Helper.verbose("DefaultAccessEnabler.createMethodInvoker: error enabling access for method " + e);
-            Helper.verboseTraceException(e);
+        return createMethodInvoker(method, false);
+    }
+
+    public AccessibleMethodInvoker createMethodInvoker(Method method, boolean alreadyAccessible)
+    {
+        if (!alreadyAccessible) {
+            // make the method usable
+            try {
+                method.setAccessible(true);
+            } catch (Exception e) {
+                Helper.verbose("DefaultAccessEnabler.createMethodInvoker: error enabling access for method " + e);
+                Helper.verboseTraceException(e);
+            }
         }
+        
         return new DefaultAccessibleMethodInvoker(method);
     }
 
     @Override
     public AccessibleConstructorInvoker createConstructorInvoker(Constructor constructor)
     {
-        // make the constructor usable
-        try {
-            constructor.setAccessible(true);
-        } catch (Exception e) {
-            Helper.verbose("DefaultAccessEnabler.createConstructorInvoker: error enabling access for constructor " + e);
-            Helper.verboseTraceException(e);
+        return createConstructorInvoker(constructor, false);
+    }
+
+    public AccessibleConstructorInvoker createConstructorInvoker(Constructor constructor, boolean alreadyAccessible)
+    {
+        if (!alreadyAccessible) {
+            // make the constructor usable
+            try {
+                constructor.setAccessible(true);
+            } catch (Exception e) {
+                Helper.verbose("DefaultAccessEnabler.createConstructorInvoker: error enabling access for constructor " + e);
+                Helper.verboseTraceException(e);
+            }
         }
+
         return new DefaultAccessibleConstructorInvoker(constructor);
     }
 
     @Override
     public AccessibleFieldGetter createFieldGetter(Field field)
     {
-        // make the constructor usable
-        try {
-            field.setAccessible(true);
-        } catch (Exception e) {
-            Helper.verbose("DefaultAccessEnabler.createFieldGetter: error enabling access for field " + e);
-            Helper.verboseTraceException(e);
+        return createFieldGetter(field, false);
+    }
+
+    public AccessibleFieldGetter createFieldGetter(Field field, boolean alreadyAccessible)
+    {
+        if (!alreadyAccessible) {
+            // make the constructor usable
+            try {
+                field.setAccessible(true);
+            } catch (Exception e) {
+                Helper.verbose("DefaultAccessEnabler.createFieldGetter: error enabling access for field " + e);
+                Helper.verboseTraceException(e);
+            }
         }
+
         return new DefaultAccessibleFieldGetter(field);
     }
 
     @Override
     public AccessibleFieldSetter createFieldSetter(Field field)
     {
-        // make the constructor usable
-        try {
-            field.setAccessible(true);
-        } catch (Exception e) {
-            Helper.verbose("DefaultAccessEnabler.createFieldGetter: error enabling access for field " + e);
-            Helper.verboseTraceException(e);
+        return createFieldSetter(field, false);
+    }
+
+    public AccessibleFieldSetter createFieldSetter(Field field, boolean alreadyAccessible)
+    {
+        if (!alreadyAccessible) {
+            // make the constructor usable
+            try {
+                field.setAccessible(true);
+            } catch (Exception e) {
+                Helper.verbose("DefaultAccessEnabler.createFieldGetter: error enabling access for field " + e);
+                Helper.verboseTraceException(e);
+            }
         }
+        
         return new DefaultAccessibleFieldSetter(field);
     }
 }

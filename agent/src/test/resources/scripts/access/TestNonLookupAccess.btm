@@ -1,6 +1,6 @@
 ##############################################################################
 # JBoss, Home of Professional Open Source
-# Copyright 2016, Red Hat and individual contributors
+# Copyright 2017, Red Hat and individual contributors
 # by the @authors tag. See the copyright.txt in the distribution for a
 # full listing of individual contributors.
 #
@@ -25,13 +25,13 @@
 # which are not exported by a Jigsaw module
 
 RULE test access
-CLASS TestAccess
-METHOD triggerMethod()
+CLASS TestNonLookupAccess
+METHOD triggerMethod(int, boolean)
 AT ENTRY
 HELPER org.jboss.byteman.tests.helpers.Default
-BIND unsafe : Unsafe = jdk.internal.misc.Unsafe.theUnsafe;
-     loader : ClassLoader =   jdk.internal.loader.ClassLoaders.PLATFORM_LOADER
+BIND intObject : Integer = Integer.valueOf($1);
+     boolObject : Boolean = Boolean.valueOf($2);
 IF TRUE
-DO $0.log("triggerMethod : got the unsafe!");
-   $0.log("triggerMethod : got the platform loader!");
+DO $0.log("triggerMethod : int value is " + intObject.value);
+   $0.log("triggerMethod : bool value is " + boolObject.value);
 ENDRULE
