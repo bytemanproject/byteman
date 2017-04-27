@@ -449,7 +449,7 @@ computed each time the rule is triggered before testing the rule condition. For 
   ENDRULE
 ----
 
-creates a variable called engine. This variable is bound to the recipient of the commit
+creates a variable called `engine`. This variable is bound to the recipient of the commit
 method call which triggered the rule, identified by the parameter reference `$0` (if commit
 was a static method then reference to `$0` would result in a type check exception).
 Arguments to the trigger method can be identified using parameter references with
@@ -457,12 +457,58 @@ successive indices, `$1`, `$2` etc. The declaration of engine specifies its type
 CoordinatorEngine though this is not strictly necessary since it can be inferred form
 the type of `$0`.
 
-Similarly, variables recovered and identifier are bound by evaluating the
-expressions on the right of the = operator. Note that the binding for engine has been
+Similarly, variables `recovered` and `identifier` are bound by evaluating the
+expressions on the right of the `=` operator. Note that the binding for `engine` has been
 established before these variables are bound so it can be referenced in the evaluated
 expression. Once again, type specifications are provided but they could be inferred.
 The special syntax `BIND NOTHING` is available for cases where the rule does not need to
 employ any bindings. Alternatively, the `BIND` clause may be omitted.
+
+==== Downcasts At Rule Variable Initialization
+
+A binding initialization can do more than simply introduce a place holder for the value
+computed in the initializer expression and in this respect it differs significantly
+from an assignment that occurs elsewhere in the rule body. It is possible to perform a
+'downcast' in a binding initialization i.e. assigning a value of some generic class type
+to a rule variable whose type is a compatible subclass type.
+
+For example, in the following rule
+
+----
+  # downcast example
+  RULE countdown at commit
+  CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine
+  METHOD commit
+  AT READ state
+  BIND engine:CoordinatorEngine = $0;
+       endpoint : javax.xml.ws.EndpointReference = engine.participant;
+       w3cEndpoint javax.xml.ws.wsaddressing.W3CEndpointReference = endpoint;
+  . . .
+  ENDRULE
+----
+
+the reference stored in the `CoordinatorEngine` field `participant` is used to initialize rule
+variable `endpoint` whose type is the generic JaxWS class `EndpointReference`. The second
+binding for rule variable `w3cEndpoint` uses the value stored in `endpoint`. The type of this
+second variable `w3cEdpoint` is subclass `W3CEndpointReference` of the type `EndpointReference` of
+the initializing expression. In an assignment anywhere else in a rule this would lead to a type error.
+The Byteman type checker ignores the type mismatch in this initializing assignment, but only because
+it knows that `W3CEndpointReference` is a subclass of the type for the intiializer expression,
+`endpoint`. It assumes that the 'downcast' at this point is deliberate, i.e. that the
+rule author knows that the value returned by the initializer expression will in fact belongs to the
+subtype.
+
+Byteman still performs a type check when it executes the initialization to ensure that the
+value is indeed of the required type, throwing an exception if the test fails. n.b. in this case the
+assignment will never fail because `CoordinatorEngine` field `participant` is actually declared as
+a `W3CEndpointReference`.
+
+Downcasting is particularly useful when rules need to handle generic types like `List` etc. The
+Byteman type checker cannot identify information about generic types from bytecode because it is
+erased at compile time. So, for example, a list `get` operation will always be typed as returning
+an Object. If you know that a specific list available at the injection point stores values of some
+given type then a value retrieved from the list can be downcast to the desired type in the BIND
+clause.
 
 === Rule Expressions
 
