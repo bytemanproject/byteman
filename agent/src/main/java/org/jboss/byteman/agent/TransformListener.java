@@ -217,6 +217,7 @@ public class TransformListener extends Thread
                 out.println("ERROR");
                 out.println("Expecting input command");
                 out.println("OK");
+                out.flush();
             } else if (line.equals("BOOT")) {
                 loadJars(in, out, true);
             } else if (line.equals("SYS")) {
@@ -248,6 +249,7 @@ public class TransformListener extends Thread
         } catch (Exception e) {
             Helper.err("TransformListener.run : exception " + e + " processing command " + line);
             Helper.errTraceException(e);
+        } finally {
             try {
                 socket.close();
             } catch (IOException e1) {
