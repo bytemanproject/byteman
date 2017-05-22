@@ -79,29 +79,13 @@ if [ $JAVA_VERSION -le 8 ]; then
      echo "please set JAVA_HOME"
      exit
   fi
-# on Linux we need to add the tools jar to the path
-# this is not currently needed on a Mac
-  OS=`uname`
-  if [ ${OS} != "Darwin" ]; then
-    if [ -r ${JAVA_HOME}/lib/tools.jar ]; then
-      TOOLS_JAR=${JAVA_HOME}/lib/tools.jar
-      CP=${BYTEMAN_INSTALL_JAR}:${TOOLS_JAR}
-    else
-      echo "Cannot locate tools jar"
-      CP=${BYTEMAN_INSTALL_JAR}
-    fi
+  # on Linux and Mac we need to add the tools jar to the path
+  if [ -r ${JAVA_HOME}/lib/tools.jar ]; then
+    TOOLS_JAR=${JAVA_HOME}/lib/tools.jar
+    CP=${BYTEMAN_INSTALL_JAR}:${TOOLS_JAR}
   else
-    if [ $JAVA_VERSION -gt 6 ]; then
-      if [ -r ${JAVA_HOME}/Classes/classes.jar ]; then
-        TOOLS_JAR=${JAVA_HOME}/Classes/classes.jar
-        CP=${BYTEMAN_INSTALL_JAR}:${TOOLS_JAR}
-      else
-        echo "Cannot locate tools jar"
-        CP=${BYTEMAN_INSTALL_JAR}
-      fi
-    else
-      CP=${BYTEMAN_INSTALL_JAR}                          
-    fi
+    echo "Cannot locate tools jar"
+    CP=${BYTEMAN_INSTALL_JAR}
   fi
 else
   CP=${BYTEMAN_INSTALL_JAR}
