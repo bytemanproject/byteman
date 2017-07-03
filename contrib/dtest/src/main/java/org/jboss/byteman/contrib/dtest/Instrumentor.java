@@ -141,7 +141,20 @@ public class Instrumentor
      */
     public InstrumentedClass instrumentClass(Class clazz) throws Exception
     {
-        return instrumentClass(clazz, null);
+        Set<String> nullSet = null;
+        return instrumentClass(clazz, nullSet);
+    }
+
+    public InstrumentedClass instrumentClass(Class clazz, String... methodNames) throws Exception
+    {
+        if (methodNames ==null)
+        {
+            Set<String> nullSet = null;
+            return instrumentClass(clazz, nullSet);
+        } else
+        {
+            return instrumentClass(clazz, new HashSet<String>(Arrays.asList(methodNames)));
+        }
     }
 
     /**
@@ -167,6 +180,14 @@ public class Instrumentor
         }
 
         return instrumentClass(className, methodNamesToInstrument);
+    }
+
+    /**
+     * See {@link #instrumentClass(String, Set)}
+     */
+    public InstrumentedClass instrumentClass(String className, String... methodNames) throws Exception
+    {
+        return instrumentClass(className, new HashSet<String>(Arrays.asList(methodNames)));
     }
 
     /**

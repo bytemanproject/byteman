@@ -20,10 +20,9 @@
  */
 package org.jboss.byteman.contrib.dtest;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.junit.Assert.assertTrue;
+
+import java.util.Queue;
 
 /**
  * InstrumentedInstance instances serve two purposes:
@@ -40,7 +39,7 @@ public class InstrumentedInstance
 {
     private final String className;
     private final Integer instanceId;
-    private final List<String> methodTraces = new ArrayList<String>();
+    private final Queue<String> methodTraces = new java.util.concurrent.ConcurrentLinkedQueue<String>();
 
     InstrumentedInstance(String className, Integer instanceId)
     {
