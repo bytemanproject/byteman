@@ -48,7 +48,7 @@ METHOD triggerMethod21()
 HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : TestCallerMatches = $0
-IF callerMatches("org\.jboss\.byteman\.tests\.helpertests\.TestCallerMatches\.triggerMethod2", true, true)
+IF callerMatches("org\\.jboss\\.byteman\\.tests\\.helpertests\\.TestCallerMatches\\.triggerMethod2", true, true)
 DO test.log("caller match first caller with class and package")
 ENDRULE
 

@@ -49,7 +49,7 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : TestStackTrace = $0
 IF TRUE
-DO test.log(formatStackMatching("TestStackTrace\.triggerMethod2.*", true, false, "stacktrace matching frames with class\n"))
+DO test.log(formatStackMatching("TestStackTrace\\.triggerMethod2.*", true, false, "stacktrace matching frames with class\n"))
 ENDRULE
 
 RULE test stacktrace three frames
@@ -69,7 +69,7 @@ HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : TestStackTrace = $0
 IF TRUE
-DO test.log(formatStackMatching("org\.jboss\.byteman\.tests\.helpertests\.TestStackTrace\.triggerMethod3.*",
+DO test.log(formatStackMatching("org\\.jboss\\.byteman\\.tests\\.helpertests\\.TestStackTrace\\.triggerMethod3.*",
                                 true, true, "stacktrace matching frames with class and package\n"))
 ENDRULE
 

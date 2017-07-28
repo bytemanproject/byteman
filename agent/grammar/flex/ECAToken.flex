@@ -301,8 +301,8 @@ Float = {Sign}? {PosFloat} F?
 \\t			{ string.append('\t'); }
 \\n			{ string.append('\n'); }
 \\r			{ string.append('\r'); }
-\\\"			{ string.append('\"'); }
-\\			{ string.append('\\'); }
+\\\"		{ string.append('\"'); }
+\\\\		{ string.append('\\'); }
 
 /* anything else is an error! */
 \n			{ throw new Error("File " + file + " line " + (yyline + startLine) + " : newline in string"); }
