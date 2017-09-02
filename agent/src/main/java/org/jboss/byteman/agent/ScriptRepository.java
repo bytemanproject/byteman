@@ -47,7 +47,7 @@ public class ScriptRepository
      * @param scriptText the text obtained from a script file
      * @param scriptFile the name of the file containing the text
      * @return a list of rule scripts
-     * @throws Exception if there is an error in the format of the script file tesxt
+     * @throws Exception if there is an error in the format of the script file text
      */
     public List<RuleScript> processScripts(String scriptText, String scriptFile) throws Exception
     {
