@@ -45,7 +45,7 @@ public class ScriptRepository
     /**
      * Split the text of a script file into a list of individual rule scripts
      * @param scriptText the text obtained from a script file
-     * @param scriptFile teh name of the file containing teh text
+     * @param scriptFile the name of the file containing the text
      * @return a list of rule scripts
      * @throws Exception if there is an error in the format of the script file tesxt
      */
