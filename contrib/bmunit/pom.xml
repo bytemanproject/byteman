@@ -60,6 +60,7 @@
                             <value></value>
                         </property>
                     </systemProperties>
+                    <argLine>-Djdk.attach.allowAttachSelf</argLine>
                     <environmentVariables>
                         <BYTEMAN_HOME></BYTEMAN_HOME>
                     </environmentVariables>
