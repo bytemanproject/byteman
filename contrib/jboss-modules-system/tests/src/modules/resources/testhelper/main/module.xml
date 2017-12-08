@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.1" name="testhelper">
     <resources>
-        <resource-root path="testhelper.jar"/>
+        <resource-root path="testhelper-lib.jar"/>
     </resources>
     <dependencies>
         <module name="common"/>
