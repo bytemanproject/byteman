@@ -115,6 +115,9 @@
             <activation>
                 <jdk>[1.8,)</jdk>
             </activation>
+			<properties>
+				<maven.javadoc.failOnError>false</maven.javadoc.failOnError>
+			</properties>
             <build>
                 <plugins>
                     <!-- switch off errors for missing author and version fields -->
