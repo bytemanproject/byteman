@@ -13,17 +13,8 @@
   <name>Byteman Documentation</name>
   <packaging>pom</packaging>
 
-  <profiles>
-    <profile>
-      <id>non-jigsaw</id>
-      <activation>
-        <!-- Asciidoctor won't work on JDK9 yet  -->
-        <jdk>1.8</jdk>
-      </activation>
-      <modules>
-        <module>asciidoc</module>
-      </modules>
-    </profile>
-  </profiles>
+  <modules>
+    <module>asciidoc</module>
+  </modules>
 
 </project>
