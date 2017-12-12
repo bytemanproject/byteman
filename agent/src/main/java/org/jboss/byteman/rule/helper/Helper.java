@@ -1355,6 +1355,80 @@ public class Helper
         return null;
     }
 
+    /**
+     * atomically return a list of all keys for current links in the map named by mapName
+     * @param mapName the name of the map to retrieve keys from
+     * @return a possibly zero-length list of all keys or null if the named map is not found
+     */
+    public List<Object> linkKeys(Object mapName)
+    {
+        synchronized (linkMaps) {
+            HashMap<Object, Object> map = linkMaps.get(mapName);
+            if (map != null) {
+                Set<Object> keySet = map.keySet();
+                
+                int size = keySet.size();
+                if (size == 0) {
+                    return Collections.EMPTY_LIST;
+                } else {
+                    ArrayList<Object> list = new ArrayList<Object>(size);
+                    for (Object key : keySet) {
+                        list.add(key);
+                    }
+                    return list;
+                }
+            } else {
+                return null;
+            }
+        }
+    }
+
+    /**
+     * atomically return a list of all values for current links in the map named by mapName
+     * @param mapName the name of the map to retrieve values from
+     * @return a possibly zero-length list of all values or null if the named map is not found
+     */
+    public List<Object> linkValues(Object mapName)
+    {
+        synchronized (linkMaps) {
+            HashMap<Object, Object> map = linkMaps.get(mapName);
+            if (map != null) {
+                Collection<Object> values = map.values();
+
+                int size = values.size();
+                if (size == 0) {
+                    return Collections.EMPTY_LIST;
+                } else {
+                    ArrayList<Object> list = new ArrayList<Object>(size);
+                    for (Object key : values) {
+                        list.add(key);
+                    }
+                    return list;
+                }
+            } else {
+                return null;
+            }
+        }
+    }
+
+    /**
+     * clear all current links from the map named by mapName
+     * @param mapName the name of the map to clear
+     * @return true if the named map was found and was not empty otherwise false
+     */
+    public boolean clearLinks(Object mapName)
+    {
+        synchronized (linkMaps) {
+            HashMap<Object, Object> map = linkMaps.get(mapName);
+            if (map != null) {
+                boolean result = !map.isEmpty();
+                map.clear();
+                return result;
+            }
+            return false;
+        }
+    }
+
     // default link support
 
     /**
@@ -1388,7 +1462,33 @@ public class Helper
         return unlink("default", name);
     }
 
+    /**
+     * retrieve all keys in the default linkmap by indirectly calling linkKeys("default")
+     * @return all current keys in the default linkmap
+     */
+    public List<Object> linkKeys()
+    {
+        return linkKeys("default");
+    }
 
+    /**
+     * retrieve all values in the default linkmap by indirectly calling linkValues("default")
+     * @return all current values in the default linkmap
+     */
+    public List<Object> linkValues()
+    {
+        return linkValues("default");
+    }
+
+    /**
+     * clear all links in the default linkmap by indirectly calling clearLinks("default")
+     * @return true if the default map was found and was not empty otherwise false
+     */
+    public boolean clearLinks()
+    {
+        return clearLinks("default");
+    }
+    
     /**
      * cause the current thread to throw a runtime exception which will normally cause it to exit.
      * The exception may not kill the thread if the trigger method or calling code contains a
