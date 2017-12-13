@@ -103,6 +103,7 @@
 							</includes>
 							<outputDirectory>${project.build.directory}/modules-root/common/main</outputDirectory>
 							<finalName>common</finalName>
+							<classifier>lib</classifier>
 						</configuration>
 					</execution>
 					<execution>
@@ -117,6 +118,7 @@
 							</includes>
 							<outputDirectory>${project.build.directory}/modules-root/runner/main</outputDirectory>
 							<finalName>runner</finalName>
+							<classifier>lib</classifier>
 						</configuration>
 					</execution>
 					<execution>
@@ -131,6 +133,7 @@
 							</includes>
 							<outputDirectory>${project.build.directory}/modules-root/helper/main</outputDirectory>
 							<finalName>helper</finalName>
+							<classifier>lib</classifier>
 						</configuration>
 					</execution>
                     <execution>
@@ -145,6 +148,7 @@
                             </includes>
                             <outputDirectory>${project.build.directory}/modules-root/testimport/main</outputDirectory>
                             <finalName>testimport</finalName>
+							<classifier>lib</classifier>
                         </configuration>
                     </execution>
 					<execution>
@@ -159,6 +163,7 @@
 							</includes>
 							<outputDirectory>${project.build.directory}/modules-root/testhelper/main</outputDirectory>
 							<finalName>testhelper</finalName>
+							<classifier>lib</classifier>
 						</configuration>
 					</execution>
 				</executions>
