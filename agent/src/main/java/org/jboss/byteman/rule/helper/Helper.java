@@ -1360,7 +1360,7 @@ public class Helper
      * @param mapName the name of the map to retrieve keys from
      * @return a possibly zero-length list of all keys or null if the named map is not found
      */
-    public List<Object> linkKeys(Object mapName)
+    public List<Object> linkNames(Object mapName)
     {
         synchronized (linkMaps) {
             HashMap<Object, Object> map = linkMaps.get(mapName);
@@ -1463,12 +1463,12 @@ public class Helper
     }
 
     /**
-     * retrieve all keys in the default linkmap by indirectly calling linkKeys("default")
+     * retrieve all keys in the default linkmap by indirectly calling linkNames("default")
      * @return all current keys in the default linkmap
      */
-    public List<Object> linkKeys()
+    public List<Object> linkNames()
     {
-        return linkKeys("default");
+        return linkNames("default");
     }
 
     /**

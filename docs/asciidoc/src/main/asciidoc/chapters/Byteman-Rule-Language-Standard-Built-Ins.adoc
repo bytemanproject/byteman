@@ -200,9 +200,15 @@ boolean deleteLinkMap(Object mapName)
 Object link(Object mapName, Object name, Object value)
 Object linked(Object mapName, Object name)
 Object unlink(Object mapName, Object name)
+List<Object> linkNames(Object mapName)
+List<Object> linkValues(Object mapName)
+boolean clearLinks(Object mapName)
 Object link(Object name, Object value)
 Object linked(Object name)
 Object unlink(Object name)
+List<Object> linkNames()
+List<Object> linkValues()
+boolean clearLinks()
 ----
 
 The API methods which omit a `mapName` parameter operate on the default
@@ -230,17 +236,38 @@ i.e. the one labelled with name `"default"`. The return value from the
 call is any previous value that was linked to `name` or null if no
 link was previously present in the map.
 
-`linked` is used to retrieve the value linked of `name` from a map.
+`linked` is used to retrieve the value linked via `name` from a map.
 The version with no `mapName` argument retrieves the value of the link
 from the default map i.e. the one labelled with name `"default"`. The
 return value from the call is whatever value is linked to `name` or
-null if no link is present in the map.
+null if no link is present in the map or if a map labelled `mapname`
+cannot be found.
 
 `unlink` is used to remove any link from `name` from a map. The
 version with no `mapName` argument removes any link to the default map
 i.e. the one labelled with name `"default"`.The return value from the
 call is whatever value was linked to `name` or null if no link was
 present in the map.
+
+`linkNames` is used to retrieve a list of all Objects used as names
+for links in a map. The version with no `mapName` argument retrieves
+all names for links in the default map i.e. the one labelled with
+name `"default"`. The return value will be a, possibly empty, list if
+the map is found when the call is made. It will be null if a map
+labelled `mapname` cannot be found.
+
+`linkValues` is used to retrieve a list of all Objects occuring as
+values for links in a map. The version with no `mapName` argument
+retrieves all values for links in the default map i.e. the one
+labelled with name `"default"`. The return value will be a, possibly
+empty, list if the map is found when the call is made. It will be null
+if a map labelled `mapname` cannot be found.
+
+`clearLinks` is used to atomically clear all links from a map. The
+version with no `mapName` argument clears all links in the default
+map i.e. the one labelled with name `"default".` The return value will
+be true if a non-empty map labelled `mapname` is found and cleared or
+false if no map is found or an empty map is found.
 
 ==== CountDowns
 

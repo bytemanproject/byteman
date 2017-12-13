@@ -84,11 +84,11 @@ public class TestLinkMap extends Test
                 logExpected("triggerMethod1 : lookup of 1 == " + null);
                 logExpected("triggerMethod1 : link(1, one) == " + null);
                 logExpected("triggerMethod1 : link(1, uno) == one");
-                logExpected("triggerMethod1 : linkKeys() == {1}");
+                logExpected("triggerMethod1 : linkNames() == {1}");
                 logExpected("triggerMethod1 : linkValues() == {uno}");
                 logExpected("triggerMethod1 : unlink(1) == uno");
                 logExpected("triggerMethod1 : unlink(1) == " + null);
-                logExpected("triggerMethod1 : linkKeys() == {}");
+                logExpected("triggerMethod1 : linkNames() == {}");
                 logExpected("triggerMethod1 : linkValues() == {}");
                 logExpected("triggerMethod1 : deleted link map " + this);
                 logExpected("inside TestLinkMap.triggerMethod1");
