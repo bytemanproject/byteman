@@ -78,10 +78,10 @@ METHOD triggerMethod1()
 HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : TestLinkMap = $0;
-     keys = linkKeys($0);
+     names = linkNames($0);
      values = linkValues($0);
-IF keys.size() == 1 && values.size() == 1
-DO test.log("triggerMethod1 : linkKeys() == {" + keys.get(0) + "}");
+IF names.size() == 1 && values.size() == 1
+DO test.log("triggerMethod1 : linkNames() == {" + names.get(0) + "}");
    test.log("triggerMethod1 : linkValues() == {" + values.get(0) + "}");
 ENDRULE
 
@@ -111,10 +111,10 @@ METHOD triggerMethod1()
 HELPER org.jboss.byteman.tests.helpers.Default
 AT ENTRY
 BIND test : TestLinkMap = $0;
-     keys = linkKeys($0);
+     names = linkNames($0);
      values = linkValues($0);
-IF keys.size() == 0 && values.size() == 0
-DO test.log("triggerMethod1 : linkKeys() == {}");
+IF names.size() == 0 && values.size() == 0
+DO test.log("triggerMethod1 : linkNames() == {}");
    test.log("triggerMethod1 : linkValues() == {}");
 ENDRULE
 
