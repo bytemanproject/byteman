@@ -23,14 +23,29 @@
  */
 package org.jboss.byteman.rule.helper;
 
+import org.jboss.byteman.agent.Transformer;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.exception.ExecuteException;
-import org.jboss.byteman.synchronization.*;
+import org.jboss.byteman.synchronization.CountDown;
+import org.jboss.byteman.synchronization.Counter;
+import org.jboss.byteman.synchronization.Joiner;
+import org.jboss.byteman.synchronization.Rendezvous;
 import org.jboss.byteman.synchronization.Timer;
-import org.jboss.byteman.agent.Transformer;
+import org.jboss.byteman.synchronization.Waiter;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * This is the default helper class which is used to define builtin operations for rules.
@@ -3600,6 +3615,7 @@ public class Helper
 
     public static void deactivated()
     {
+        clearStaticResources();
         if (Transformer.isDebug()) {
             System.out.println("Default helper deactivated");
         }
@@ -3858,6 +3874,37 @@ public class Helper
         writer.write(".log");
         return writer.toString();
     }
+
+    /**
+     * clean up function called by deactivate to ensure all
+     * static resources used to hold rule state are cleared
+     */
+    private static void clearStaticResources()
+    {
+        // simply clean up all static resources
+        // it is up to the program to ensure
+        // nothing is depending or waiting on them
+        flagSet.clear();
+        countDownMap.clear();
+        counterMap.clear();
+        waitMap.clear();
+        rendezvousMap.clear();
+        timerMap.clear();
+        linkMaps.clear();
+        // try closing all trace streams
+        // n.b. this will fail for out and err
+        // which is what we want
+        List<Object> keyset = new ArrayList<Object>(traceMap.keySet());
+        for (Object key : keyset) {
+            doTraceClose(key);
+        }
+        // restore the 3 other well known streams
+        PrintStream sysout =  traceMap.get("out");
+        traceMap.put("dbg", sysout);
+        traceMap.put("vrb", sysout);
+        traceMap.put("nzy", sysout);
+    }
+
     /**
      * a hash map used to identify trace streams from their
      * identifying objects
