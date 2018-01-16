@@ -865,7 +865,7 @@ public class Transformer implements ClassFileTransformer {
         }
         if (scripts != null) {
             for (RuleScript script : scripts) {
-                if (!script.hasTransform(clazz)) {
+                if (script.hasTransform(clazz)) {
                     found = true;
                     Helper.verbose("Retransforming loaded bootstrap class " + clazz.getName());
                     break;

@@ -31,11 +31,11 @@ import org.testng.annotations.Test;
 /**
  * Created by adinn on 04/07/14.
  */
-@BMRule(name="ZTest", targetClass = "ZTest", targetMethod = "bar",action = "traceln(\"ZTest!\"")
+@BMRule(name="ZTest", targetClass = "ZTest", targetMethod = "bar",action = "traceln(\"ZTest!\")")
 public class ZTest extends BMNGRunner
 {
     @Test
-    @BMRule(name="ZTest::bar", targetClass = "ZTest", targetMethod = "bar", action = "traceln(\"ZTest::bar!\"")
+    @BMRule(name="ZTest::bar", targetClass = "ZTest", targetMethod = "bar", action = "traceln(\"ZTest::bar!\")")
     public void bar()
     {
         System.out.println("ZTest::bar()");
