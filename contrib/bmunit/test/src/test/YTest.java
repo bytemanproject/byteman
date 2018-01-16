@@ -31,11 +31,11 @@ import org.testng.annotations.Test;
 /**
  * Created by adinn on 04/07/14.
  */
-@BMRule(name="YTest", targetClass = "YTest", targetMethod = "bar",action = "traceln(\"YTest!\"")
+@BMRule(name="YTest", targetClass = "YTest", targetMethod = "bar",action = "traceln(\"YTest!\")")
 public class YTest extends BMNGRunner
 {
     @Test
-    @BMRule(name="YTest::bar", targetClass = "YTest", targetMethod = "bar", action = "traceln(\"YTest::bar!\"")
+    @BMRule(name="YTest::bar", targetClass = "YTest", targetMethod = "bar", action = "traceln(\"YTest::bar!\")")
     public void bar()
     {
         System.out.println("YTest::bar()");

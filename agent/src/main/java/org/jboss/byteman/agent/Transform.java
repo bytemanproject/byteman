@@ -38,6 +38,7 @@ public class Transform
     private Rule rule;
     private Throwable throwable;
     private boolean compiled;
+    private boolean installed;
     private boolean successful;
     private String detail;
 
@@ -51,6 +52,7 @@ public class Transform
         this.triggerMethodName = triggerMethodName;
         this.rule = rule;
         this.compiled = false;
+        this.installed = false;
         this.throwable = th;
         this.successful = false;
         this.detail = "";
@@ -93,6 +95,16 @@ public class Transform
     
     public boolean isCompiledOk() {
         return compiled && successful;
+    }
+
+    public boolean isInstalled()
+    {
+        return installed;
+    }
+
+    public void setInstalled()
+    {
+        this.installed = true;
     }
 
     public void writeTo(PrintWriter writer)

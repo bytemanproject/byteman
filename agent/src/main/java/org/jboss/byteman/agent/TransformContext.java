@@ -70,8 +70,7 @@ public class TransformContext
         this.helperManager = helperManager;
         this.ruleMap = new HashMap<String, Rule>();
         this.firstRule = null;
-
-
+        this.failed = false;
     }
 
     public byte[] transform(byte[] targetClassBytes)
@@ -79,6 +78,15 @@ public class TransformContext
         final Location handlerLocation = ruleScript.getTargetLocation();
 
         String ruleName = ruleScript.getName();
+
+        // we are about to try to retransform the rule
+        // in the context of a given class and loader
+        // so we can clear any existing transforms
+        // associated with this rule's script
+        // which specify the same class and loader
+
+        ruleScript.purge(loader, triggerClassName);
+
         try {
             parseRule();
         } catch (ParseException pe) {
@@ -254,7 +262,8 @@ public class TransformContext
         TypeException te = new TypeException(message);
         ruleScript.recordTransform(loader, triggerClassName, triggerMethodName, triggerMethodDescriptor, rule, te);
 
-        purgeRules();
+        failed = true;
+
         throw new TransformFailure();
     }
 
@@ -262,7 +271,7 @@ public class TransformContext
     {
         ruleScript.recordFailedTransform(loader, triggerClassName, th);
 
-        purgeRules();
+        failed = true;
     }
 
     public boolean matchTargetMethod(int access, String name, String desc)
@@ -313,30 +322,36 @@ public class TransformContext
      */
     private boolean notifyRules()
     {
-        // if we got here then we have performed a successful injection for each rule in the rule map
-        // if the map is empty then we ned to generate a warning that the rule was not injectable
+        // if the map is empty then we need to generate a warning
+        // that the rule was not injectable
 
         if (ruleMap.isEmpty() && firstRule != null) {
             // we parsed the rule but failed ever to inject it
             TypeWarningException twe = new TypeWarningException("failed to find any matching trigger method in class " + TypeHelper.internalizeClass(triggerClassName));
             ruleScript.recordTransform(loader, triggerClassName, null, null, firstRule, twe);
+            return false;
         }
 
-        for (String key : ruleMap.keySet()) {
-            String triggerMethodName = getKeyTriggerMethodName(key);
-            String triggerMethodDescriptor = getKeyTriggerMethodDescriptor(key);
-            Rule rule = ruleMap.get(key);
-            if (!ruleScript.recordTransform(loader, triggerClassName, triggerMethodName, triggerMethodDescriptor, rule, null))
-            {
-                // rule script must have been deleted so purge rules and avoid installing the transformed code
-                purgeRules();
+        if (failed) {
+            // we had an injection failure so purge all successfully
+            // injected rules
+            purgeRules();
 
-                return false;
+            return false;
+        } else {
+            // try to install all successfully injected rules
+            for (String key : ruleMap.keySet()) {
+                String triggerMethodName = getKeyTriggerMethodName(key);
+                String triggerMethodDescriptor = getKeyTriggerMethodDescriptor(key);
+                Rule rule = ruleMap.get(key);
+                if(!ruleScript.recordTransform(loader, triggerClassName, triggerMethodName, triggerMethodDescriptor, rule, null)) {
+                    // rule script must have been deleted so purge rules and avoid installing the transformed code
+                    purgeRules();
+
+                    return false;
+                }
             }
-
         }
-
-        // ok install the transformed code
 
         return true;
     }
@@ -607,6 +622,7 @@ public class TransformContext
     private String targetDescriptor;
     private ClassLoader loader;
     private HelperManager helperManager;
+    private boolean failed;
 
     /**
      * a hashmap indexing Rule instances using key classname.methodnameandsig@loaderhashcode. rules are

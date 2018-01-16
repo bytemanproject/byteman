@@ -100,9 +100,21 @@ public class RuleScript
      */
     private final boolean compileToBytecode;
     /**
-     * a list of records identifying contexts in which the rule has been applied.
+     * a list of records identifying transforms associated with a specific class.
+     * each set is identified by the name of a trigger class and the class's
+     * associated loader i.e. it corresponds with an attempt to transform a unique
+     * class using this rule script.
+     *
+     * A transform set may contain more than one transform because the rule's
+     * METHOD clause may omit a descriptor, leading to injection into multiple
+     * methods. Each transform references the specific method it applies to with
+     * a name and and descriptor string. Also, not all transforms record successful
+     * injections. Entries are added to record parse errors or warnings, including
+     * failure to inject a rule at all. There is at most one successful Transform
+     * for a given class+method, at most one failure or, possibly, one or more
+     * warnings.
      */
-    private List<Transform> transformed;
+    private List<TransformSet> transformSets;
 
     /**
      * standard constructor for a rule
@@ -133,7 +145,7 @@ public class RuleScript
         this.line = line;
         this.file = file;
         this.compileToBytecode = compileToBytecode;
-        this.transformed = new ArrayList<Transform>();
+        this.transformSets = new ArrayList<TransformSet>();
     }
 
     public String getName() {
@@ -188,20 +200,29 @@ public class RuleScript
      * getter for list of transforms applied for this script. must be called synchronized on the script.
      * @return the list of transforms
      */
-    public List<Transform> getTransformed()
+    public List<TransformSet> getTransformSets()
     {
-        return transformed;
+        return transformSets;
     }
 
     /**
      * return a count of the number of transforms applied for this script. must be called synchronized on the script.
      * @return the size of the list of transforms
      */
-    public int getTransformedCount()
+    public int getTransformSetsCount()
     {
-        return (transformed != null ? transformed.size() : 0);
+        return (transformSets != null ? transformSets.size() : 0);
     }
 
+    public List<Transform> allTransforms()
+    {
+        List<Transform> allTransforms = new ArrayList<Transform>();
+        for (TransformSet transformSet : transformSets) {
+            allTransforms.addAll(transformSet.getTransforms());
+        }
+        return allTransforms;
+    }
+    
     /**
      * invoked by the scriptmanager when a rule is redefined to inhibit further transformations via this script
      * @return the previous setting of deleted
@@ -275,9 +296,11 @@ public class RuleScript
             fullMethodName = triggerMethodName + TypeHelper.internalizeDescriptor(desc);
         }
 
-        // and install the transform in the list
+        // make sure we know about this specific loader and classname combination
+        TransformSet transformSet = ensureTransformSet(loader, internalClassName, null);
 
-        transformed.add(new Transform(loader, internalClassName, fullMethodName, rule, th));
+        // and install the transform in the set
+        transformSet.add(new Transform(loader, internalClassName, fullMethodName, rule, th));
 
         return true;
     }
@@ -297,11 +320,9 @@ public class RuleScript
             loader = ClassLoader.getSystemClassLoader();
         }
 
-        int count = getTransformedCount();
-        for (int i =  0; i < count; i++) {
-            Transform transform = transformed.get(i);
-            if (transform.getLoader() == loader) {
-                return true;
+        for (TransformSet transformSet : transformSets) {
+            if (transformSet.isFor(loader, clazz.getName())) {
+                return !transformSet.isEmpty();
             }
         }
         return false;
@@ -312,38 +333,96 @@ public class RuleScript
      * @param loader the classloader of the trigger class
      * @param successful true if the rule compiled successfully and false if it suffered from parse,
      * type or compile errors
-     * @param detail text decribing more details of the compilation outcome
+     * @param detail text describing more details of the compilation outcome
+     * @return true if the rule needs to be installed otherwise false
      */
-    public synchronized void recordCompile(String triggerClass, ClassLoader loader, boolean successful, String detail)
+    public synchronized boolean recordCompile(Rule rule, String triggerClass, ClassLoader loader, boolean successful, String detail)
     {
-        int count = getTransformedCount();
-        for (int i =  0; i < count; i++) {
-            Transform transform = transformed.get(i);
-            if (transform.getLoader() == loader) {
+        if(deleted) {
+            return false;
+        }
+
+        // find an existing transform set or create a new one
+        TransformSet transformSet = ensureTransformSet(loader, triggerClass, null);
+        for (Transform transform : transformSet.getTransforms()) {
+            if(transform.getRule() == rule) {
                 transform.setCompiled(successful, detail);
+                boolean isInstalled = transformSet.isInstalled();
+                // record this as the latest rule to be installed
+                transformSet.setInstalled(rule);
+                // if this is the first installed rule then
+                // we need to perform lifecycle processing
+                return !isInstalled;
             }
         }
+        // no such rule so no lifecycle processing
+        return false;
     }
 
     /**
-     * uninstall any rules associated with this script. this is called after marking the script as
+     * delete any transforms associated with a specific trigger class and loader for
+     * deletion. this is called just before any attempt to retransform the class
+     * to inject the script's associated rule. it ensures that records of previous
+     * transforms associated with a prior retransformation of the class are removed
+     * before any new ones are added
+     */
+    public synchronized void purge(ClassLoader loader, String triggerClassName)
+    {
+        TransformSet transformSet = lookupTransformSet(loader, triggerClassName);
+        if (transformSet != null) {
+            for (Transform transform : transformSet.getTransforms()) {
+                Rule rule = transform.getRule();
+                if(rule != null) {
+                    rule.purge();
+                }
+            }
+            transformSet.clearTransforms();
+        }
+    }
+
+
+    /**
+     * uninstall all transforms associated with this script. this is called after marking the script as
      * deleted and regenerating the methods for any associated transformed class to ensure that it does
      * not cause a rule trigger call to fail.
      */
     public synchronized void purge()
     {
-        if (transformed != null) {
-            int count = transformed.size();
-            for (int i =  0; i < count; i++) {
-                Transform transform = transformed.get(i);
+        for (TransformSet transformSet : transformSets) {
+            for (Transform transform : transformSet.getTransforms()) {
                 Rule rule = transform.getRule();
-                if (rule != null) {
+                if(rule != null) {
                     rule.purge();
                 }
             }
+            transformSet.clearTransforms();
         }
+        transformSets.clear();
     }
-    
+
+    public TransformSet ensureTransformSet(ClassLoader loader, String triggerClass, Rule installedRule)
+    {
+        TransformSet transformSet = lookupTransformSet(loader, triggerClass);
+        if (transformSet == null) {
+            transformSet = new TransformSet(loader, triggerClass);
+            transformSet.setInstalled(installedRule);
+            transformSets.add(transformSet);
+        }
+        return transformSet;
+    }
+
+
+    public TransformSet lookupTransformSet(ClassLoader loader, String triggerClass)
+    {
+        for (TransformSet transformSet : transformSets) {
+            if (transformSet.isFor(loader, triggerClass)) {
+                return transformSet;
+            }
+        }
+
+        return null;
+    }
+
     public String toString()
     {
         StringWriter stringWriter = new StringWriter();

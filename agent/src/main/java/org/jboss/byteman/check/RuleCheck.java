@@ -234,8 +234,7 @@ public class RuleCheck {
 
             // see if we have a record of any transform
             if (script.hasTransform(targetClass)) {
-                List<Transform> transforms = script.getTransformed();
-                int numTransforms = transforms.size();
+                List<Transform> transforms = script.allTransforms();
                 for (Transform transform : transforms) {
                     Throwable throwable = transform.getThrowable();
                     Rule rule = transform.getRule();

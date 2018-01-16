@@ -488,7 +488,6 @@ public class Rule
                 typeCheck();
                 compile();
                 checked = true;
-                installed();
             } catch (TypeWarningException te) {
                 checkFailed = true;
                 StringWriter stringWriter = new StringWriter();
@@ -516,7 +515,10 @@ public class Rule
             }
 
             // this uses the original class loader for matching
-            ruleScript.recordCompile(triggerClass, targetLoader, !checkFailed, detail);
+            boolean runInstall = ruleScript.recordCompile(this, triggerClass, targetLoader, !checkFailed, detail);
+            if (runInstall) {
+                installed();
+            }
             return !checkFailed;
         }
 
@@ -842,9 +844,6 @@ public class Rule
         // nothing to do unless we actually allocated a key
         if (key != null) {
             ruleKeyMap.remove(key);
-            if (checked) {
-                uninstalled();
-            }
         }
     }
 
@@ -964,7 +963,7 @@ public class Rule
      * method called when the rule has been successfully injected into a class, type checked and compiled. it passes
      * the message on to the Transformer so it can perform helper lifecycle management.
      */
-    private void installed()
+    public void installed()
     {
         helperManager.installed(this);
     }
@@ -974,7 +973,7 @@ public class Rule
      * type checked and compiled. it passes the message on to the Transformer so it can perform helper lifecycle
      * management.
      */
-    private void uninstalled()
+    public void uninstalled()
     {
         helperManager.uninstalled(this);
     }

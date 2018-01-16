@@ -103,6 +103,8 @@
         <useReleaseProfile>false</useReleaseProfile>
         <pushChanges>false</pushChanges>
         <autoVersionSubmodules>true</autoVersionSubmodules>
+        <!-- for testing: command line args to enable debugger and verbose trace -->
+        <debug.args>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -Dorg.jboss.byteman.verbose</debug.args>
     </properties>
 
     <dependencyManagement>

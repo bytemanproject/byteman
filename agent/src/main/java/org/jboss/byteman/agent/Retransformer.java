@@ -98,16 +98,21 @@ public class Retransformer extends Transformer {
         // ok, now that we have updated the indexes we need to find all classes which match the scripts and
         // retransform them
 
-        // list all class names for the to be aded and to be removed scripts
+        // list all class names for the to be added and to be removed scripts
 
         List<String> deletedClassNames = new LinkedList<String>();
 
         for (RuleScript ruleScript : toBeRemoved) {
-            List<Transform> transforms = ruleScript.getTransformed();
+            List<Transform> transforms = ruleScript.allTransforms();
             for (Transform transform : transforms) {
-                String className = transform.getInternalClassName();
-                if (!deletedClassNames.contains(className)) {
-                    deletedClassNames.add(className);
+                // only need to retransform classes which were updated
+                // so ignore transforms which include a throwable
+                Throwable throwable = transform.getThrowable();
+                if(throwable == null) {
+                    String className = transform.getInternalClassName();
+                    if(!deletedClassNames.contains(className)) {
+                        deletedClassNames.add(className);
+                    }
                 }
             }
         }
@@ -153,10 +158,46 @@ public class Retransformer extends Transformer {
             }
         }
 
-        // now we can safely purge keys for all deleted scripts
+        // now we need to ensure that previously installed
+        // rules are uninstalled. however, if the rule
+        // has been re-injected in an equivalent transform
+        // set then we simply mark it as installed, eliding
+        // an extra uninstall/install cycle. this also
+        // avoids an unhelpful deactivate/activate step
+        // that is not really appropriate when redefining
+        // an existing rule.
+        //
+        // n.b. we mark the set using the last installed Rule
+        // instance so as to to retain a target for any subsequent
+        // uninstall. if/when the newly injected rule gets triggered
+        // it will update to use the new rule as the marker.
 
-        for (RuleScript ruleScript : toBeRemoved) {
-            ruleScript.purge();
+        for (RuleScript oldRuleScript : toBeRemoved) {
+            RuleScript newRuleScript = scriptRepository.scriptForRuleName(oldRuleScript.getName());
+            // new script must exist!
+            synchronized (newRuleScript) {
+                for (TransformSet oldTransformSet : oldRuleScript.getTransformSets()) {
+                    // see if we have an equivalent new rule set
+                    TransformSet newTransformSet = newRuleScript.lookupTransformSet(oldTransformSet.getLoader(), oldTransformSet.getTriggerClass());
+                    if(newTransformSet == null || newTransformSet.isInstalled()) {
+                        if(oldTransformSet.isInstalled()) {
+                            // we need to run an uninstall for the old transform set
+                            oldTransformSet.getInstalledRule().uninstalled();
+                        }
+                    } else {
+                        // copy across the rule used for the prior
+                        // install so we can use it for a later uninstall
+                        // it will be replaced with a new instance
+                        // if any of the newly injected rules pass
+                        // ensureTypeCheckCompiled
+                        if(newTransformSet != null) {
+                            newTransformSet.setInstalled(oldTransformSet.getInstalledRule());
+                        } else {
+                            newRuleScript.ensureTransformSet(oldTransformSet.getLoader(), oldTransformSet.getTriggerClass(), oldTransformSet.getInstalledRule());
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -196,13 +237,9 @@ public class Retransformer extends Transformer {
                 RuleScript ruleScript = iterator.next();
                 ruleScript.writeTo(out);
                 synchronized (ruleScript) {
-                    List<Transform> transformed = ruleScript.getTransformed();
-                    if (transformed != null) {
-                        Iterator<Transform> iter = transformed.iterator();
-                        while (iter.hasNext()) {
-                            Transform transform = iter.next();
-                            transform.writeTo(out);
-                        }
+                    List<Transform> transforms = ruleScript.allTransforms();
+                    for (Transform transform : transforms) {
+                        transform.writeTo(out);
                     }
                 }
             }
@@ -262,11 +299,13 @@ public class Retransformer extends Transformer {
         List<String> deletedClassNames = new LinkedList<String>();
 
         for (RuleScript ruleScript : toBeRemoved) {
-            List<Transform> transforms = ruleScript.getTransformed();
-            if (transforms != null) {
-                for (Transform transform : transforms) {
+            for (Transform transform : ruleScript.allTransforms()) {
+                // only need to retransform classes which were updated
+                // so ignore transforms which include a throwable
+                Throwable throwable = transform.getThrowable();
+                if(throwable == null) {
                     String className = transform.getInternalClassName();
-                    if (!deletedClassNames.contains(className)) {
+                    if(!deletedClassNames.contains(className)) {
                         deletedClassNames.add(className);
                     }
                 }
@@ -305,9 +344,42 @@ public class Retransformer extends Transformer {
         // after the retransform because the latter removes the trigger code which uses
         // the rule key
 
-        for (RuleScript ruleScript : toBeRemoved) {
-            ruleScript.purge();
-            out.println("uninstall RULE " + ruleScript.getName());
+        for (RuleScript oldRuleScript : toBeRemoved) {
+            RuleScript newRuleScript = scriptRepository.scriptForRuleName(oldRuleScript.getName());
+            // new script may not exist!
+            if (newRuleScript != null) {
+                synchronized (newRuleScript) {
+                    for (TransformSet oldTransformSet : oldRuleScript.getTransformSets()) {
+                        // see if we have an equivalent new rule set
+                        TransformSet newTransformSet = newRuleScript.lookupTransformSet(oldTransformSet.getLoader(), oldTransformSet.getTriggerClass());
+                        if(newTransformSet == null || newTransformSet.isInstalled()) {
+                            if(oldTransformSet.isInstalled()) {
+                                // we need to run an uninstall for the old transform set
+                                oldTransformSet.getInstalledRule().uninstalled();
+                            }
+                        } else {
+                            // copy across the rule used for the prior
+                            // install so we can use it for a later uninstall
+                            // it will be replaced with a new instance
+                            // if any of the newly injected rules pass
+                            // ensureTypeCheckCompiled
+                            if(newTransformSet != null) {
+                                newTransformSet.setInstalled(oldTransformSet.getInstalledRule());
+                            } else {
+                                newRuleScript.ensureTransformSet(oldTransformSet.getLoader(), oldTransformSet.getTriggerClass(), oldTransformSet.getInstalledRule());
+                            }
+                        }
+                    }
+                }
+            } else {
+                for (TransformSet oldTransformSet : oldRuleScript.getTransformSets()) {
+                    if(oldTransformSet.isInstalled()) {
+                        // we need to run an uninstall for the old transform set
+                        oldTransformSet.getInstalledRule().uninstalled();
+                    }
+                }
+            }
+            out.println("uninstall RULE " + oldRuleScript.getName());
         }
     }
 

@@ -136,7 +136,7 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                 if (rule.getTargetLocation().getLocationType() != LocationType.INVOKE) {
                     Helper.verbose("RuleCheckMethodAdapter.checkBindings : found invoke parameter array binding $@ in non-AT INVOKE rule " + rule.getName());
 
-                    transformContext.warn(name, descriptor, "found throwable value binding " + binding + " in rule which is not AT THROW");
+                    transformContext.warn(name, descriptor, "found invoke parameter array binding $@ in non-AT INVOKE rule ");
                 }
             } else if (binding.isTriggerClass() || binding.isTriggerMethod()) {
                 // this is ok
