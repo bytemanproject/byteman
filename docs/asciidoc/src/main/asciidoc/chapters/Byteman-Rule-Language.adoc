@@ -855,7 +855,7 @@ line outside of the scope of a rule. So, in the following example the first two 
   HELPER YellowSub
 ----
 
-=== The Rule Helper Lifecycle Methods
+=== Rule Helper Lifecycle Methods
 
 It is occasionally useful to be able to perform some sort of setup activity when rules are loaded 
 or a teardown activity when rules are unloaded. For example, if tracing rules are loaded to collect 
@@ -915,12 +915,62 @@ specific to the supplied rule.
 using the `Byteman Rule` instance. Note that if both flavours are implemented only the method 
 which takes a `Rule` will be called.
 
+Note that the default helper class, _Helper_, implements these lifecycle methods. In particular,
+its implementation of _deactivated _ clears any resources allocated during rule execution, such
+as counters, flags, trace streams, etc, since it can be sure that there are no longer any installed
+rules relying on them.
+
 It is important to understand that loading and unloading of a rule does not always initiate 
 lifecycle processing. If a rule does not parse or typecheck correctly it will not be installed so 
 it will not generate activate or install events. If later this rule is unloaded it will not 
 generate uninstall or deactivate events since it was never installed. It is also possible for a 
 valid rule to be loaded and unloaded without initiating lifecycle processing. For example, the rule 
-may never get injected because no matching trigger class has been loaded into the JVM.
+may never get injected because no matching trigger class has been loaded into the JVM. Finally, when
+a rule is resubmitted and, hence, redefined the agent will normally elide an uninstall and reinstall
+associated with removing the old version of the rule and injecting the new version. Of course, if the
+new version of a rule fails to parse, inject or type check correctly then an uninstall will be
+performed (assuming that the old version of the rule was actually installed).
+
+=== Helper Lifecycle Method Chaining
+
+Although lifecycle methods are static (i.e. associated with the class rather than with an instance) it
+is necessary to propagate lifecycle events up the superclass hierarchy, chaining calls to lifecycle
+methods where present not just on the immediate helper class but also on its parent classes. Byteman
+ensures that all available implementations of methods activated and installed are called in response
+to the associated lifecyle events, searching for implementations starting with the immediate helper
+class of the rule and working up the super hierarchy. Similarly, it ensures that all available
+implementations of methods uninstalled and deactivated are called in response to the associated lifecyle
+events searching for implementations starting at the top of the helper super class hierarchy and working
+down to the rule's immediate helper class.
+
+This is necessary to ensure that each superclass of the helper that is interested in tracking rule
+lifecyle events is aware of the state of all rules that may be relying on it as a helper. If a rule
+_r_ has helper _H_ which inherits from helpers _H'_, _H''_, etc then at install time _r_ has effectively
+been installed into all the associated sets _R(H)_, _R(H')_, _R(H'')_, etc and at deinstall time it has
+effectively been removed from these sets. In consequence, Byteman must perform lifecycle processing for
+each of the helpers _H_, _H'_, _H''_, etc that implements lifecycle callbacks.
+
+Two examples may help clarify why this is needed. First, consider a rule _r_ which uses helper _H_ where _H_
+specialises some other helper class _H'_. Let's also assume that _H_ does not implement any lifecycle
+methods while _H'_ implements both _activated_ and _deactivated_, respectively, to create and destroy a
+hashmap used by some of its builtin methods. If _r_ gets injected before any other rules using _H'_ then it
+is no good just counting it as installed into _R(H)_ and, finding no lifecycle methods, ignoring the install.
+This will fail to run method _H'.activated_. If _r_ executes a builtin of _H'_ that uses the hashmap it will
+suffer a null pointer exception.
+
+Conversely, assume that a rule _r'_ using _H'_ is installed first, followed by rule _r_ and that _r'_ is
+then uninstalled. If _r_ is only included in _R(H)_ and not _R(H')_ then deinstall of _r'_ will transition
+_R(H')_ to empty, deactivating _H'_ and deleting the hashmap. Once again, if rule _r_ calls a builtin of
+_H'_ which uses the hashmap it will suffer a null pointer exception.
+
+It is not enough for Byteman simply to find the first helper or super which implements activated and
+expect the helper to perform the call chaining. This can be seen if the above example is changed so that
+_H_ implements _activated_ and _deactivated_ to call the corresponding method of _H'_. The problem is that the
+installed and uninstalled counts will still not be correctly updated. In the second scenario, the _activated_
+callback for _H'_ will be called when _r'_ is installed (because _R(H')_ transitions from empty to
+non-empty) and called again, this time indirectly from _H.activate_, when _r_ is installed (because _R(H)_
+transitions from empty to non-empty). Also, when _r'_ is uninstalled _H'.deactivated_ will be called (as
+_R(H')_ transitions back to empty), deleting the hashmap even though rule _r_ is still depending on it.
 
 === Rule Compilation
 
