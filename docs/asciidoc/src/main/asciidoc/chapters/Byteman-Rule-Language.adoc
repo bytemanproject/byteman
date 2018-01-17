@@ -916,7 +916,7 @@ using the `Byteman Rule` instance. Note that if both flavours are implemented on
 which takes a `Rule` will be called.
 
 Note that the default helper class, _Helper_, implements these lifecycle methods. In particular,
-its implementation of _deactivated _ clears any resources allocated during rule execution, such
+its implementation of _deactivated_ clears any resources allocated during rule execution, such
 as counters, flags, trace streams, etc, since it can be sure that there are no longer any installed
 rules relying on them.
 
