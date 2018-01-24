@@ -4,6 +4,7 @@ release.properties
 .classpath
 .project
 .settings
+.metadata
 target
 *.iml
 *.ipr
