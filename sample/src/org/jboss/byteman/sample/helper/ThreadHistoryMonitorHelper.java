@@ -292,6 +292,13 @@ public class ThreadHistoryMonitorHelper extends Helper
                 e.printStackTrace();
             }
         }
+        try {
+            ses.shutdown();
+            ses.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw new RuntimeException("Waiting on finishing scheduled writer executor "
+                + ses + " failed", e);
+        }
     }
     private void doWriteAllEvents(String path) throws IOException {
         FileWriter fw = new FileWriter(path);
