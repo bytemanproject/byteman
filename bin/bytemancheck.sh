@@ -28,10 +28,10 @@
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then
 # use the root of the path to this file to locate the byteman jar
-    BYTEMAN_HOME=${0%*/bin/bytemancheck.sh}
+    BYTEMAN_HOME="${0%*/bin/bytemancheck.sh}"
 # allow for rename to plain bmjava
     if [ "$BYTEMAN_HOME" == "$0" ]; then
-	BYTEMAN_HOME=${0%*/bin/bytemancheck}
+	BYTEMAN_HOME="${0%*/bin/bytemancheck}"
     fi
     if [ "$BYTEMAN_HOME" == "$0" ]; then
 	echo "Unable to find byteman home"
@@ -40,8 +40,8 @@ if [ -z "$BYTEMAN_HOME" ]; then
 fi
 
 # check that we can find  the byteman jar via BYTEMAN_HOME
-if [ -r ${BYTEMAN_HOME}/lib/byteman.jar ]; then
-    BYTEMAN_JAR=${BYTEMAN_HOME}/lib/byteman.jar
+if [ -r "${BYTEMAN_HOME}/lib/byteman.jar" ]; then
+    BYTEMAN_JAR="${BYTEMAN_HOME}/lib/byteman.jar"
 else
     echo "Cannot locate byteman jar"
     exit
@@ -52,7 +52,7 @@ VERBOSE=""
 # for debugging purposes we will also pass through sys prop defines
 DEFINES=""
 # include application classes upplied via -cp flag and check for -v flag
-while [ $# -ne 0 -a ${1#-*} != ${1} ]; 
+while [ $# -ne 0 -a "${1#-*}" != "${1}" ];
 do
   if [ "$1" == "-cp" ] ; then
     CP=${CP}:$2
@@ -89,7 +89,7 @@ fi
 error=0
 while [ $# -ne 0 ]
 do
-  if [ ! -f $1 -o ! -r $1 ] ; then
+  if [ ! -f "$1" -o ! -r "$1" ] ; then
     echo "$1 is not a readable file";
     error=1
   fi
@@ -103,4 +103,4 @@ fi
 
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 
-java ${BYTEMAN_JAVA_OPTS} -classpath ${CP} $DEFINES org.jboss.byteman.check.TestScript $PACKAGES $VERBOSE $FILES
+java ${BYTEMAN_JAVA_OPTS} -classpath "${CP}" $DEFINES org.jboss.byteman.check.TestScript $PACKAGES $VERBOSE $FILES
