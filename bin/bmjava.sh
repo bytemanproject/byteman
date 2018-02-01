@@ -103,10 +103,10 @@ exit
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then
 # use the root of the path to this file to locate the byteman jar
-    BYTEMAN_HOME=${0%*/bin/bmjava.sh}
+    BYTEMAN_HOME="${0%*/bin/bmjava.sh}"
 # allow for rename to plain bmjava
     if [ "$BYTEMAN_HOME" == "$0" ]; then
-	BYTEMAN_HOME=${0%*/bin/bmjava}
+	BYTEMAN_HOME="${0%*/bin/bmjava}"
     fi
     if [ "$BYTEMAN_HOME" == "$0" ]; then
 	echo "Unable to find byteman home"
@@ -115,8 +115,8 @@ if [ -z "$BYTEMAN_HOME" ]; then
 fi
 
 # the byteman jar shouldbe in the lib directory
-if [ -r ${BYTEMAN_HOME}/lib/byteman.jar ]; then
-    BYTEMAN_JAR=${BYTEMAN_HOME}/lib/byteman.jar
+if [ -r "${BYTEMAN_HOME}/lib/byteman.jar" ]; then
+    BYTEMAN_JAR="${BYTEMAN_HOME}/lib/byteman.jar"
 else
     echo "Cannot locate byteman jar"
     exit
@@ -224,5 +224,6 @@ AGENT_ARGUMENT=${AGENT_PREFIX}=${AGENT_OPTS}
 
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 
-exec java ${BYTEMAN_JAVA_OPTS} ${AGENT_ARGUMENT} ${INJECT_JAVA_LANG_OPTS} $*
+set -x
+exec java ${BYTEMAN_JAVA_OPTS} "${AGENT_ARGUMENT}" ${INJECT_JAVA_LANG_OPTS} $*
 

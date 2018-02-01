@@ -49,15 +49,15 @@
 #        prop= sets system property 'prop' to an empty string
 #        prop unsets system property 'prop'
 #
-#   -v print the version of the byteman agent and this client 
+#   -v print the version of the byteman agent and this client
 #
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then
 # use the root of the path to this file to locate the byteman jar
-    BYTEMAN_HOME=${0%*/bin/bmsubmit.sh}
+    BYTEMAN_HOME="${0%*/bin/bmsubmit.sh}"
 # allow for rename to plain submit
     if [ "$BYTEMAN_HOME" == "$0" ]; then
-	BYTEMAN_HOME=${0%*/bin/bmsubmit}
+	BYTEMAN_HOME="${0%*/bin/bmsubmit}"
     fi
     if [ "$BYTEMAN_HOME" == "$0" ]; then
 	echo "Unable to find byteman home"
@@ -66,14 +66,14 @@ if [ -z "$BYTEMAN_HOME" ]; then
 fi
 
 # the byteman and byteman-submit jars should be in ${BYTEMAN_HOME}/lib
-if [ -r ${BYTEMAN_HOME}/lib/byteman.jar ]; then
-    BYTEMAN_JAR=${BYTEMAN_HOME}/lib/byteman.jar
+if [ -r "${BYTEMAN_HOME}/lib/byteman.jar" ]; then
+    BYTEMAN_JAR="${BYTEMAN_HOME}/lib/byteman.jar"
 else
     echo "Cannot locate byteman jar"
     exit
 fi
-if [ -r ${BYTEMAN_HOME}/lib/byteman-submit.jar ]; then
-    BYTEMAN_SUBMIT_JAR=${BYTEMAN_HOME}/lib/byteman-submit.jar
+if [ -r "${BYTEMAN_HOME}/lib/byteman-submit.jar" ]; then
+    BYTEMAN_SUBMIT_JAR="${BYTEMAN_HOME}/lib/byteman-submit.jar"
 else
     echo "Cannot locate byteman-submit jar"
     exit
@@ -81,4 +81,4 @@ fi
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 # Submit class will validate arguments
 
-java ${BYTEMAN_JAVA_OPTS} -classpath ${BYTEMAN_JAR}:${BYTEMAN_SUBMIT_JAR} org.jboss.byteman.agent.submit.Submit $*
+java ${BYTEMAN_JAVA_OPTS} -classpath "${BYTEMAN_JAR}":"${BYTEMAN_SUBMIT_JAR}" org.jboss.byteman.agent.submit.Submit $*
