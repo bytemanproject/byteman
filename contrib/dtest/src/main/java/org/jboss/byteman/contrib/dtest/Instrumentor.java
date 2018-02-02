@@ -182,6 +182,10 @@ public class Instrumentor
 
     /**
      * See {@link #instrumentClass(String, Set)}
+     *
+     * @param className the class name to instrument.
+     * @param methodNames the selection of methods to instrument.
+     * @throws Exception in case of failure.
      */
     public InstrumentedClass instrumentClass(String className, String... methodNames) throws Exception
     {

@@ -20,6 +20,10 @@
  */
 package org.jboss.byteman.contrib.dtest;
 
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.jboss.byteman.rule.helper.Helper;
+
 /**
  * <p>
  * Provides a fluent API for creating Byteman rules without needing
@@ -50,6 +54,8 @@ package org.jboss.byteman.contrib.dtest;
  * </code>
  */
 public final class RuleConstructor {
+    private static AtomicReference<Instrumentor> defaultInstrumentor = new AtomicReference<Instrumentor>();
+
     private static final String LINEBREAK = String.format("%n");
 
     private static final String CONSTRUCTOR_METHOD = "<init>";
@@ -60,7 +66,7 @@ public final class RuleConstructor {
     private boolean isInterface;
     private boolean isIncludeSubclases;
     private String methodName;
-    private String helperName;
+    private String helperName = Helper.class.getName();
     private String where = "AT ENTRY";
     private String bind;
     private String ifcondition = "true";
@@ -68,8 +74,47 @@ public final class RuleConstructor {
     private String imports;
     private String compile;
 
+    /**
+     * No use of constructor, new rule creation with:
+     *     <code>RuleConstructor.createRule("myRule")</code>
+     */
     private RuleConstructor(String ruleName) {
         this.ruleName = ruleName;
+    }
+
+
+    /**
+     * <p>
+     * Setting default initialize instance of {@link Instrumentor} class
+     * that will be used when {@link #install()}/{@link #submit()} method
+     * is used for the created rule.<br>
+     * You can define this default Instrumentor which could be used whenever
+     * the new rule is submitted to the Byteman agent.<br>
+     * <code>null</code> is permitted then {@link #install()} method throws exception
+     * </p>
+     *
+     * @param instrumentor  initiated instrumentor instance or null
+     */
+    public static final void setDefaultInstrumentor(Instrumentor instrumentor) {
+        defaultInstrumentor.set(instrumentor);
+    }
+
+    /**
+     * Undefinining value of default instrumentor.
+     * Methods {@link #install()}/{@link #submit()} are illegal to be used from now
+     * up to time it's set again.
+     */
+    public static final void undefineDefaultInstrumentor() {
+        RuleConstructor.setDefaultInstrumentor(null);
+    }
+
+    /**
+     * Returning value of the previously set default {@link Instrumentor} instance.
+     *
+     * @return  instrumentor instance or null, when was not set
+     */
+    public static final Instrumentor getDefaultInstrumentor() {
+        return defaultInstrumentor.get();
     }
 
     /**
@@ -83,6 +128,84 @@ public final class RuleConstructor {
      */
     public static final RuleConstructor.ClassClause createRule(String ruleName) {
         return new RuleConstructor(ruleName).new ClassClause();
+    }
+
+    /**
+     * <p>
+     * Installing/submitting rule to the Byteman agent via instance of instrumentor
+     * defined as default to the {@link RuleConstructor} class.
+     * </p>
+     * <p>
+     * Internally this:
+     * <ul>
+     *   <li>build the rule where {@link #build()} is called to generate rule as {@link String}</li>
+     *   <li>calling submit of the rule over instance of {@link Instrumentor}</li>
+     * </ul><br>
+     * <b>Prerequisite:</b> you need
+     * set up the instrumentor by call {@link #setDefaultInstrumentor(Instrumentor)}
+     *
+     * @return  rule constructor if expected to be used later again
+     * @throws IllegalStateException if default instrumentor is not set
+     * @throws RuntimeException  if error happens during installation rule
+     *     via default instrumentor instance
+     */
+    public RuleConstructor install() {
+        if(defaultInstrumentor.get() == null)
+            throw new IllegalStateException("Can't install rule '" + this.getRuleName()
+                + "' as default instrumentor was not set-up");
+        return install(defaultInstrumentor.get());
+    }
+
+    /**
+     * <p>
+     * Installing/submitting rule to the Byteman agent via instance of instrumentor.
+     * </p>
+     * <p>
+     * Internally this:
+     * <ul>
+     *   <li>build the rule where {@link #build()} is called to generate rule as {@link String}</li>
+     *   <li>calling submit of the rule over instance of {@link Instrumentor}</li>
+     * </ul>
+     *
+     * @param instrumentor  instance of instrumentor to be used to submit the rule to
+     * @return  rule constructor if expected to be used later again
+     * @throws NullPointerException  if instrumentor param is provided as null
+     * @throws RuntimeException  if error happens during installation rule
+     *     via default instrumentor instance
+     */
+    public RuleConstructor install(Instrumentor instrumentor) {
+        if(instrumentor == null)
+            throw new NullPointerException("instrumentor");
+
+        try {
+            instrumentor.installRule(this);
+        } catch (Exception e) {
+            throw new RuntimeException("Can't install rule '" + this.getRuleName() + "'", e);
+        }
+        return this;
+    }
+
+    /**
+     * Facade to method {@link #install()}.
+     *
+     * @return  rule constructor, if expected to be used later again
+     * @throws IllegalStateException if default instrumentor is not set
+     * @throws RuntimeException  if error happens during installation rule
+     */
+    public RuleConstructor submit() {
+        return install();
+    }
+
+    /**
+     * Facade to method {@link #install(Instrumentor)}.
+     *
+     * @param instrumentor  instance of instrumentor to be used to submit the rule to
+     * @return  rule constructor, if expected to be used later again
+     * @throws NullPointerException  if instrumentor param is provided as null
+     * @throws RuntimeException  if error happens during installation rule
+     */
+    public RuleConstructor submit(Instrumentor instrumentor) {
+        return install(instrumentor);
     }
 
     /**
@@ -116,7 +239,7 @@ public final class RuleConstructor {
         stringBuilder.append(where);
         stringBuilder.append(LINEBREAK);
 
-        if(helperName != null) {
+        if(helperName != null && !helperName.isEmpty()) {
             stringBuilder.append("HELPER ");
             stringBuilder.append(helperName);
             stringBuilder.append(LINEBREAK);
@@ -126,12 +249,12 @@ public final class RuleConstructor {
             stringBuilder.append(imports);
         }
 
-        if(compile != null) {
+        if(compile != null && !compile.isEmpty()) {
             stringBuilder.append(compile);
             stringBuilder.append(LINEBREAK);
         }
 
-        if(bind != null) {
+        if(bind != null && !bind.isEmpty()) {
             stringBuilder.append("BIND ");
             stringBuilder.append(bind);
             stringBuilder.append(LINEBREAK);
@@ -339,6 +462,27 @@ public final class RuleConstructor {
     }
 
     public final class LocationClause {
+        /**
+         * Byteman helper class to be used in rule definition.
+         *
+         * @param helperClass  byteman helper class
+         * @return  this, for having fluent api
+         */
+        public RuleConstructor.LocationClause helper(Class<?> helperClass) {
+            return helper(helperClass.getCanonicalName());
+        }
+
+        /**
+         * Class name of Byteman helper class.
+         *
+         * @param helperClassName  byteman helper class name
+         * @return  this, for having fluent api
+         */
+        public RuleConstructor.LocationClause helper(String helperClassName) {
+            RuleConstructor.this.helperName = helperClassName;
+            return this;
+        }
+
         /**
          * <p>
          * Rule is invoked at entry point of method.

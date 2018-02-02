@@ -20,7 +20,9 @@
  */
 package org.jboss.byteman.contrib.dtest;
 
+import org.jboss.byteman.rule.helper.Helper;
 import org.junit.Test;
+
 import junit.framework.Assert;
 
 public class RuleConstructorTestCase {
@@ -40,6 +42,7 @@ public class RuleConstructorTestCase {
             .onClass("javax.transaction.xa.XAResource")
             .inMethod("commit")
             .atEntry()
+            .helper((String) null)
             .ifCondition("NOT flagged(\"commitFlag\")")
             .doAction("throw new javax.transaction.xa.XAResource(100)")
             .build();
@@ -54,6 +57,7 @@ public class RuleConstructorTestCase {
             "CLASS ^javax.transaction.xa.XAResource%n" +
             "METHOD rollback%n" +
             "AT EXIT%n" +
+            "HELPER " + Helper.class.getName() + "%n" +
             "IF NOT flagged(\"commitFlag\")%n" +
             "DO throw new javax.transaction.xa.XAResource(100)%n" +
             "ENDRULE%n");
@@ -103,6 +107,7 @@ public class RuleConstructorTestCase {
             "CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine%n" +
             "METHOD State commit()%n" +
             "AT LINE 324%n" +
+            "HELPER " + Helper.class.getName() + "%n" +
             "IF false%n" +
             "DO traceStack(\"dump\", 20)%n" +
             "ENDRULE%n");
@@ -110,6 +115,7 @@ public class RuleConstructorTestCase {
         String builtRule = RuleConstructor.createRule("commit with no arguments on wst11 coordinator engine")
             .onClass("com.arjuna.wst11.messaging.engines.CoordinatorEngine")
             .inMethod("State commit()")
+            .helper(Helper.class)
             .atLine(324)
             .ifFalse()
             .doAction("traceStack(\"dump\", 20)")
@@ -125,6 +131,7 @@ public class RuleConstructorTestCase {
             "CLASS CoordinatorEngine%n" +
             "METHOD commit%n" +
             "AT INVOKE sendCommit%n" +
+            "HELPER " + Helper.class.getName() + "%n" +
             "IF false%n" +
             "DO traceStack(\"dump\", 20)%n" +
             "ENDRULE%n");
@@ -139,7 +146,7 @@ public class RuleConstructorTestCase {
 
         Assert.assertEquals("The rule does not match the built one", testRule, builtRule);
     }
-    
+
     @Test
     public void afterRead() {
         String testRule = String.format(
@@ -147,6 +154,7 @@ public class RuleConstructorTestCase {
             "CLASS CoordinatorEngine%n" +
             "METHOD commit%n" +
             "AFTER READ $current%n" +
+            "HELPER " + Helper.class.getName() + "%n" +
             "IF false%n" +
             "DO traceStack(\"dump\", 20)%n" +
             "ENDRULE%n");
@@ -158,10 +166,10 @@ public class RuleConstructorTestCase {
             .ifFalse()
             .doAction("traceStack(\"dump\", 20)")
             .build();
-        
+
         Assert.assertEquals("The rule does not match the built one", testRule, builtRule);
     }
-    
+
     @Test
     public void afterWrite() {
         String testRule = String.format(
@@ -169,6 +177,7 @@ public class RuleConstructorTestCase {
             "CLASS CoordinatorEngine%n" +
             "METHOD commit%n" +
             "AFTER WRITE $current%n" +
+            "HELPER " + Helper.class.getName() + "%n" +
             "IF false%n" +
             "DO traceStack(\"dump\", 20)%n" +
             "ENDRULE%n");
@@ -180,10 +189,10 @@ public class RuleConstructorTestCase {
             .ifFalse()
             .doAction("traceStack(\"dump\", 20)")
             .build();
-        
+
         Assert.assertEquals("The rule does not match the built one", testRule, builtRule);
     }
-    
+
     @Test
     public void atSynchronize() {
         String testRule = String.format(
@@ -191,6 +200,7 @@ public class RuleConstructorTestCase {
             "CLASS CoordinatorEngine%n" +
             "METHOD commit%n" +
             "AT SYNCHRONIZE%n" +
+            "HELPER " + Helper.class.getName() + "%n" +
             "IF false%n" +
             "DO traceStack(\"dump\", 20)%n" +
             "ENDRULE%n");
@@ -202,7 +212,7 @@ public class RuleConstructorTestCase {
             .ifFalse()
             .doAction("traceStack(\"dump\", 20)")
             .build();
-        
+
         Assert.assertEquals("The rule does not match the built one", testRule, builtRule);
     }
 
@@ -213,6 +223,7 @@ public class RuleConstructorTestCase {
             "INTERFACE com.arjuna.wst11.messaging.engines.Engine%n" +
             "METHOD commit()%n" +
             "AT THROW%n" +
+            "HELPER " + Helper.class.getName() + "%n" +
             "IF true%n" +
             "DO System.out.println(\"One ring\");%n" +
             "System.out.println(\"rule them all\")%n" +
@@ -238,6 +249,7 @@ public class RuleConstructorTestCase {
             "CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine%n" +
             "METHOD commit%n" +
             "AT READ state%n" +
+            "HELPER " + Helper.class.getName() + "%n" +
             "IF true%n" +
             "DO debug(\"throwing wrong state\");%n" +
             "throw new WrongStateException()%n" +
@@ -263,6 +275,7 @@ public class RuleConstructorTestCase {
             "CLASS com.arjuna.wst11.messaging.engines.CoordinatorEngine%n" +
             "METHOD prepare%n" +
             "AT ENTRY%n" +
+            "HELPER " + Helper.class.getName() + "%n" +
             "IMPORT javax.transaction.api%n" +
             "NOCOMPILE%n" +
             "IF true%n" +
@@ -280,5 +293,17 @@ public class RuleConstructorTestCase {
             .build();
 
         Assert.assertEquals("The rule does not match the built one", testRule, builtRule);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void defaultInstrumentorNotSet() {
+        RuleConstructor.undefineDefaultInstrumentor();
+        RuleConstructor.createRule("myrule")
+          .onClass("Object")
+          .inMethod("toString")
+          .atExit()
+          .ifTrue()
+          .doAction("throw new RuntimeException()")
+          .submit();
     }
 }
