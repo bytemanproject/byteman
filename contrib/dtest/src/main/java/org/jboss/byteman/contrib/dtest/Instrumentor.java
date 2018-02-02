@@ -39,8 +39,6 @@ import java.util.*;
  */
 public class Instrumentor
 {
-    private static final int DEFAULT_RMI_PORT = 1099;
-
     private final Submit submit;
     private final Registry registry;
     private final int rmiRegistryPort;
@@ -58,12 +56,12 @@ public class Instrumentor
 
     public Instrumentor() throws RemoteException
     {
-        this(new Submit(), DEFAULT_RMI_PORT);
+        this(new Submit(), BytemanTestHelper.DEFAULT_RMI_PORT);
     }
 
     public Instrumentor(String address, int port) throws RemoteException
     {
-        this(new Submit(address, port), DEFAULT_RMI_PORT);
+        this(new Submit(address, port), BytemanTestHelper.DEFAULT_RMI_PORT);
     }
 
     public Instrumentor(String address, int port, int rmiPort) throws RemoteException
