@@ -36,6 +36,7 @@ import java.util.Map;
 public class BytemanTestHelper extends Helper
 {
     public static final String RMIREGISTRY_PORT_PROPERTY_NAME = "org.jboss.byteman.contrib.dtest.rmiregistry.port";
+    static final int DEFAULT_RMI_PORT = 1099;
 
     private static Map<String, Map<Object, Integer>> targetInstances = new HashMap<String, Map<Object, Integer>>();
     private static Registry registry;
