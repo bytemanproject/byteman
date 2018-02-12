@@ -25,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.rmi.RemoteException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -51,6 +52,7 @@ public class InstrumentorTest {
     @Before
     public void startUp() throws Exception {
         instrumentor.removeLocalState();
+        RuleConstructor.undefineDefaultInstrumentor();
     }
 
     @Test
@@ -211,7 +213,7 @@ public class InstrumentorTest {
         File ruleFile = tmpDir.newFile("injectFault.btm");
         instrumentor.setRedirectedSubmissionsFile(ruleFile);
 
-        Class exception = NullPointerException.class;
+        Class<NullPointerException> exception = NullPointerException.class;
         Object[] args = {"hello"};
         instrumentor.injectFault(clazz, method, exception, args);
 
@@ -234,12 +236,32 @@ public class InstrumentorTest {
         File ruleFile = tmpDir.newFile("installRule.btm");
         instrumentor.setRedirectedSubmissionsFile(ruleFile);
 
-        Class exception = NullPointerException.class;
-        Object[] args = {"hello"};
         instrumentor.installRule(RuleConstructor.createRule("install rule")
             .onClass(clazz).inMethod(method).atEntry().helper(BytemanTestHelper.class).ifTrue()
-            .doAction("throw new " + exception.getName() + "(\"" + args[0] + "\")"));
+            .doAction("throw new " + NullPointerException.class.getName() + "(\"hello\")"));
 
+        verifyRuleInstall(ruleFile);
+    }
+
+    @Test
+    public void ruleInstallDefaultInstrumentor() throws Exception {
+        File ruleFile = tmpDir.newFile("installRule.btm");
+        instrumentor.setRedirectedSubmissionsFile(ruleFile);
+
+        RuleConstructor.setDefaultInstrumentor(instrumentor);
+        RuleConstructor.createRule("install rule")
+            .onClass(clazz)
+            .inMethod(method)
+            .helper(BytemanTestHelper.class)
+            .atEntry()
+            .ifTrue()
+            .doAction("throw new " + NullPointerException.class.getName() + "(\"hello\")")
+            .install();
+
+        verifyRuleInstall(ruleFile);
+    }
+
+    private void verifyRuleInstall(File ruleFile) throws FileNotFoundException {
         String ruleString = readFileToString(ruleFile);
 
         Pattern pattern = new RegexRuleBuilder()
@@ -247,7 +269,7 @@ public class InstrumentorTest {
                 .method(method)
                 .ifTrue()
                 .atEntry()
-                .doo("throw new " + exception.getName() + "(\"" + args[0])
+                .doo("throw new " + NullPointerException.class.getName() + "(\"hello")
                 .build();
 
         Assert.assertTrue("Pattern\n" + pattern.pattern() + "\ndoes not match rule\n" + ruleString,
