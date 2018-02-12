@@ -45,10 +45,10 @@ function print_java_version()
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then
 # use the root of the path to this file to locate the byteman jar
-    BYTEMAN_HOME=${0%*/bin/bminstall.sh}
+    BYTEMAN_HOME="${0%*/bin/bminstall.sh}"
 # allow for rename to plain bminstall
     if [ "$BYTEMAN_HOME" == "$0" ]; then
-	BYTEMAN_HOME=${0%*/bin/bminstall}
+	BYTEMAN_HOME="${0%*/bin/bminstall}"
     fi
     if [ "$BYTEMAN_HOME" == "$0" ]; then
 	echo "Unable to find byteman home"
@@ -59,15 +59,15 @@ fi
 # check that we can find  the byteman jar via BYTEMAN_HOME
 
 # the Install class is in the byteman-install jar
-if [ -r ${BYTEMAN_HOME}/lib/byteman.jar ]; then
-    BYTEMAN_JAR=${BYTEMAN_HOME}/lib/byteman.jar
+if [ -r "${BYTEMAN_HOME}/lib/byteman.jar" ]; then
+    BYTEMAN_JAR="${BYTEMAN_HOME}/lib/byteman.jar"
 else
     echo "Cannot locate byteman jar"
     exit
 fi
 # the Install class is in the byteman-install jar
-if [ -r ${BYTEMAN_HOME}/lib/byteman-install.jar ]; then
-    BYTEMAN_INSTALL_JAR=${BYTEMAN_HOME}/lib/byteman-install.jar
+if [ -r "${BYTEMAN_HOME}/lib/byteman-install.jar" ]; then
+    BYTEMAN_INSTALL_JAR="${BYTEMAN_HOME}/lib/byteman-install.jar"
 else
     echo "Cannot locate byteman install jar"
     exit
@@ -83,31 +83,31 @@ if [ $JAVA_VERSION -le 8 ]; then
 # this is not currently needed on a Mac
   OS=`uname`
   if [ ${OS} != "Darwin" ]; then
-    if [ -r ${JAVA_HOME}/lib/tools.jar ]; then
-      TOOLS_JAR=${JAVA_HOME}/lib/tools.jar
-      CP=${BYTEMAN_INSTALL_JAR}:${TOOLS_JAR}
+    if [ -r "${JAVA_HOME}/lib/tools.jar" ]; then
+      TOOLS_JAR="${JAVA_HOME}/lib/tools.jar"
+      CP="${BYTEMAN_INSTALL_JAR}:${TOOLS_JAR}"
     else
       echo "Cannot locate tools jar"
-      CP=${BYTEMAN_INSTALL_JAR}
+      CP="${BYTEMAN_INSTALL_JAR}"
     fi
   else
     if [ $JAVA_VERSION -gt 6 ]; then
-      if [ -r ${JAVA_HOME}/Classes/classes.jar ]; then
-        TOOLS_JAR=${JAVA_HOME}/Classes/classes.jar
-        CP=${BYTEMAN_INSTALL_JAR}:${TOOLS_JAR}
+      if [ -r "${JAVA_HOME}/Classes/classes.jar" ]; then
+        TOOLS_JAR="${JAVA_HOME}/Classes/classes.jar"
+        CP="${BYTEMAN_INSTALL_JAR}:${TOOLS_JAR}"
       else
         echo "Cannot locate tools jar"
-        CP=${BYTEMAN_INSTALL_JAR}
+        CP="${BYTEMAN_INSTALL_JAR}"
       fi
     else
-      CP=${BYTEMAN_INSTALL_JAR}                          
+      CP="${BYTEMAN_INSTALL_JAR}"
     fi
   fi
 else
-  CP=${BYTEMAN_INSTALL_JAR}
+  CP="${BYTEMAN_INSTALL_JAR}"
 fi
 
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 # attach class will validate arguments
 
-java ${BYTEMAN_JAVA_OPTS} -classpath $CP org.jboss.byteman.agent.install.Install $*
+java ${BYTEMAN_JAVA_OPTS} -classpath "$CP" org.jboss.byteman.agent.install.Install $*
