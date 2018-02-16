@@ -94,12 +94,64 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <!-- for the asmmdebug profile we avoid remapping
+        asm classes to the byteman space> in order to
+        allow the debugger to find them -->
+        <profile>
+            <id>asmdebug</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-shade-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
+                                <configuration>
+                                    <relocations>
+                                        <relocation>
+                                            <pattern>org.objectweb.asm</pattern>
+                                            <shadedPattern>org.objectweb.asm</shadedPattern>
+                                        </relocation>
+                                    </relocations>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
     <dependencies>
+        <!-- n.b. all of these jars are 'provided' because
+        we don't want the shade plugin to try to reinsert
+        them into the jigsaw jar. on jdk9+ that gets done
+        in module byteman by the assembly plugin (and on jdk8-
+        this part of the build doesn't happen :-) -->
+        <!-- we need the usual 4 core asm jars -->
         <dependency>
             <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-all</artifactId>
+            <artifactId>asm</artifactId>
             <scope>provided</scope>
-            <version>6.0_ALPHA</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-tree</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-analysis</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <scope>provided</scope>
         </dependency>
         <!-- we need the byteman agent jar so we can
              reuse interface AccessEnabler and override

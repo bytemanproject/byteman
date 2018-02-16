@@ -85,7 +85,7 @@ public class JigsawAccessEnablerGenerator
 
         // package org/jboss/byteman/jigsaw;
         // public class JigsawAccessEnabler implements AccessEnabler { ... }
-        cw.visit(V1_9, ACC_PUBLIC + ACC_SUPER, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", null, "java/lang/Object", new String[] { "org/jboss/byteman/agent/AccessEnabler" });
+        cw.visit(V9, ACC_PUBLIC + ACC_SUPER, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", null, "java/lang/Object", new String[] { "org/jboss/byteman/agent/AccessEnabler" });
 
         cw.visitSource("JigsawAccessEnabler.java", null);
 
@@ -1086,7 +1086,7 @@ public class JigsawAccessEnablerGenerator
         FieldVisitor fv;
         MethodVisitor mv;
 
-        cw.visit(V1_9, ACC_PUBLIC + ACC_SUPER, "org/jboss/byteman/jigsaw/JigsawAccessibleConstructorInvoker", null, "java/lang/Object", new String[] { "org/jboss/byteman/agent/AccessibleConstructorInvoker" });
+        cw.visit(V9, ACC_PUBLIC + ACC_SUPER, "org/jboss/byteman/jigsaw/JigsawAccessibleConstructorInvoker", null, "java/lang/Object", new String[] { "org/jboss/byteman/agent/AccessibleConstructorInvoker" });
 
         cw.visitInnerClass("java/lang/invoke/MethodHandles$Lookup", "java/lang/invoke/MethodHandles", "Lookup", ACC_PUBLIC + ACC_FINAL + ACC_STATIC);
 
@@ -1178,7 +1178,7 @@ public class JigsawAccessEnablerGenerator
         FieldVisitor fv;
         MethodVisitor mv;
 
-        cw.visit(V1_9, ACC_PUBLIC + ACC_SUPER, "org/jboss/byteman/jigsaw/JigsawAccessibleMethodInvoker", null, "java/lang/Object", new String[]{"org/jboss/byteman/agent/AccessibleMethodInvoker"});
+        cw.visit(V9, ACC_PUBLIC + ACC_SUPER, "org/jboss/byteman/jigsaw/JigsawAccessibleMethodInvoker", null, "java/lang/Object", new String[]{"org/jboss/byteman/agent/AccessibleMethodInvoker"});
 
         cw.visitInnerClass("java/lang/invoke/MethodHandles$Lookup", "java/lang/invoke/MethodHandles", "Lookup", ACC_PUBLIC + ACC_FINAL + ACC_STATIC);
 
@@ -1313,7 +1313,7 @@ public class JigsawAccessEnablerGenerator
         FieldVisitor fv;
         MethodVisitor mv;
 
-        cw.visit(V1_9, ACC_PUBLIC + ACC_SUPER, "org/jboss/byteman/jigsaw/JigsawAccessibleFieldGetter", null, "java/lang/Object", new String[] { "org/jboss/byteman/agent/AccessibleFieldGetter" });
+        cw.visit(V9, ACC_PUBLIC + ACC_SUPER, "org/jboss/byteman/jigsaw/JigsawAccessibleFieldGetter", null, "java/lang/Object", new String[] { "org/jboss/byteman/agent/AccessibleFieldGetter" });
 
         cw.visitInnerClass("java/lang/invoke/MethodHandles$Lookup", "java/lang/invoke/MethodHandles", "Lookup", ACC_PUBLIC + ACC_FINAL + ACC_STATIC);
 
@@ -1447,7 +1447,7 @@ public class JigsawAccessEnablerGenerator
         FieldVisitor fv;
         MethodVisitor mv;
 
-        cw.visit(V1_9, ACC_PUBLIC + ACC_SUPER, "org/jboss/byteman/jigsaw/JigsawAccessibleFieldSetter", null, "java/lang/Object", new String[] { "org/jboss/byteman/agent/AccessibleFieldSetter" });
+        cw.visit(V9, ACC_PUBLIC + ACC_SUPER, "org/jboss/byteman/jigsaw/JigsawAccessibleFieldSetter", null, "java/lang/Object", new String[] { "org/jboss/byteman/agent/AccessibleFieldSetter" });
 
         cw.visitInnerClass("java/lang/invoke/MethodHandles$Lookup", "java/lang/invoke/MethodHandles", "Lookup", ACC_PUBLIC + ACC_FINAL + ACC_STATIC);
 

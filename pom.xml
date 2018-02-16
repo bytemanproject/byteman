@@ -105,6 +105,8 @@
         <autoVersionSubmodules>true</autoVersionSubmodules>
         <!-- for testing: command line args to enable debugger and verbose trace -->
         <debug.args>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -Dorg.jboss.byteman.verbose</debug.args>
+        <!-- asm release version to use -->
+        <asm.version>6.1-beta2</asm.version>
     </properties>
 
     <dependencyManagement>
@@ -273,13 +275,23 @@
              <!-- External dependencies -->
             <dependency>
                  <groupId>org.ow2.asm</groupId>
-                 <artifactId>asm-all</artifactId>
-                 <version>5.0.3</version>
+                 <artifactId>asm</artifactId>
+                 <version>${asm.version}</version>
             </dependency>
             <dependency>
                  <groupId>org.ow2.asm</groupId>
-                 <artifactId>asm-debug-all</artifactId>
-                 <version>5.0.3</version>
+                 <artifactId>asm-tree</artifactId>
+                 <version>${asm.version}</version>
+            </dependency>
+            <dependency>
+                 <groupId>org.ow2.asm</groupId>
+                 <artifactId>asm-analysis</artifactId>
+                 <version>${asm.version}</version>
+            </dependency>
+            <dependency>
+                 <groupId>org.ow2.asm</groupId>
+                 <artifactId>asm-commons</artifactId>
+                 <version>${asm.version}</version>
             </dependency>
              <dependency>
                  <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>

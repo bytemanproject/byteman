@@ -75,7 +75,10 @@
                         <configuration>
                             <artifactSet>
                                 <includes>
-                                    <include>org.ow2.asm:asm-all</include>
+                                    <include>org.ow2.asm:asm</include>
+                                    <include>org.ow2.asm:asm-tree</include>
+                                    <include>org.ow2.asm:asm-analysis</include>
+                                    <include>org.ow2.asm:asm-commons</include>
                                     <include>net.sf.squirrel-sql.thirdparty-non-maven:java-cup</include>
                                 </includes>
                             </artifactSet>
@@ -87,7 +90,25 @@
                                     </includes>
                                 </filter>
                                 <filter>
-                                    <artifact>org.ow2.asm:asm-all</artifact>
+                                    <artifact>org.ow2.asm:asm</artifact>
+                                    <includes>
+                                        <include>org/objectweb/asm/**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.ow2.asm:asm-tree</artifact>
+                                    <includes>
+                                        <include>org/objectweb/asm/**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.ow2.asm:asm-analysis</artifact>
+                                    <includes>
+                                        <include>org/objectweb/asm/**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.ow2.asm:asm-commons</artifact>
                                     <includes>
                                         <include>org/objectweb/asm/**</include>
                                     </includes>
@@ -2242,37 +2263,15 @@
     </build>
     <profiles>
         <profile>
-            <!-- this always active profile forces inclusion of
-            asm-all jar unless the profile is explicitly deactivated
-           -->
-            <id>default</id>
-            <activation>
-                <file>
-                    <exists>${java.home}</exists>
-                </file>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.ow2.asm</groupId>
-                    <artifactId>asm-all</artifactId>
-                    <scope>compile</scope>
-                    <version>6.0_ALPHA</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
             <!--
               during development we want asm classes to appear in
               their correct package so we can step through the asm
-              code in the debugger. so we need to use jar
-              asm-debug-all instead of jar asm-all
+              code in the debugger.
               use command
 
-                  mvn -P '!default,asmdebug' install
+                  mvn -P 'asmdebug' install
 
-              to disable the always on default profile (which provides
-              the dependency on jar asm-all) and enable this profile
-              (which provides the dependency on jar asm-debug-all)
+              to exclude asm classes from the shade relocations
             -->
             <id>asmdebug</id>
             <build>
@@ -2289,8 +2288,11 @@
                           <configuration>
                             <artifactSet>
                               <includes>
-                                <include>org.ow2.asm:asm-debug-all</include>
-                                <include>net.sf.squirrel-sql.thirdparty-non-maven:java-cup</include>
+                                  <include>org.ow2.asm:asm</include>
+                                  <include>org.ow2.asm:asm-tree</include>
+                                  <include>org.ow2.asm:asm-analysis</include>
+                                  <include>org.ow2.asm:asm-commons</include>
+                                  <include>net.sf.squirrel-sql.thirdparty-non-maven:java-cup</include>
                               </includes>
                             </artifactSet>
                             <filters>
@@ -2300,18 +2302,40 @@
                                   <include>java_cup/runtime/**</include>
                                 </includes>
                               </filter>
-                              <filter>
-                                <artifact>org.ow2.asm:asm-debug-all</artifact>
-                                <includes>
-                                  <include>org/objectweb/asm/**</include>
-                                </includes>
-                              </filter>
+                                <filter>
+                                  <artifact>org.ow2.asm:asm</artifact>
+                                  <includes>
+                                    <include>org/objectweb/asm/**</include>
+                                  </includes>
+                                </filter>
+                                <filter>
+                                  <artifact>org.ow2.asm:asm-tree</artifact>
+                                  <includes>
+                                    <include>org/objectweb/asm/**</include>
+                                  </includes>
+                                </filter>
+                                <filter>
+                                  <artifact>org.ow2.asm:asm-analysis</artifact>
+                                  <includes>
+                                    <include>org/objectweb/asm/**</include>
+                                  </includes>
+                                </filter>
+                                <filter>
+                                  <artifact>org.ow2.asm:asm-commons</artifact>
+                                  <includes>
+                                    <include>org/objectweb/asm/**</include>
+                                  </includes>
+                                </filter>
                             </filters>
                             <relocations>
-                              <relocation>
-                                <pattern>java_cup.runtime</pattern>
-                                <shadedPattern>org.jboss.byteman.java_cup.runtime</shadedPattern>
-                              </relocation>
+                                <relocation>
+                                    <pattern>org.objectweb.asm</pattern>
+                                    <shadedPattern>org.pobjectweb.asm</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                  <pattern>java_cup.runtime</pattern>
+                                  <shadedPattern>org.jboss.byteman.java_cup.runtime</shadedPattern>
+                                </relocation>
                             </relocations>
                           </configuration>
                         </execution>
@@ -2319,14 +2343,6 @@
                     </plugin>
                 </plugins>
             </build>
-            <dependencies>
-              <dependency>
-                <groupId>org.ow2.asm</groupId>
-                <artifactId>asm-debug-all</artifactId>
-                <scope>compile</scope>
-                <version>6.0_ALPHA</version>
-              </dependency>
-            </dependencies>
         </profile>
         <profile>
             <id>parser</id>
@@ -2402,8 +2418,29 @@
     </profiles>
     <dependencies>
         <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-tree</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-analysis</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
             <artifactId>java-cup</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
