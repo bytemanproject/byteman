@@ -53,7 +53,7 @@ public class JigsawAccessManager
      */
     public static AccessEnabler init(Instrumentation inst)
     {
-        System.out.println("AccessManager:init Initialising JDK9 AccessManager");
+        Helper.verbose("AccessManager:init Initialising JDK9 AccessManager");
         if(inst == null) {
             Helper.verbose("AccessManager:init No instrumentation provided -- using default AccessEnabler");
             return new DefaultAccessEnabler();

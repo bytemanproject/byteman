@@ -10,7 +10,7 @@ LICENSE TERMS FOR ASM and JAVACUP SOFTWARE THAT MAY ACCOMPANY THE
 JBOSS SOFTWARE
 
 --------------------------------------------------------
-License for ASM 5 software
+License for ASM 6 software
 
  ASM: a very small and fast Java bytecode manipulation framework
  Copyright (c) 2000-2011 INRIA, France Telecom
