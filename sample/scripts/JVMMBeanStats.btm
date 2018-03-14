@@ -285,7 +285,7 @@ METHOD close()
 AT RETURN
 BIND nullfd : java.io.FileDescriptor = null
 # don't count if this is a call to super or if the file has already been closed
-IF !callerMatches(".*\.close") && $0.fd != nullfd
+IF !callerMatches(".*\\.close") && $0.fd != nullfd
 DO debug("close input file " + $0.fd.fd);
    incrementCounter("file in closes")
 ENDRULE
@@ -297,7 +297,7 @@ METHOD close()
 AT RETURN
 BIND nullfd : java.io.FileDescriptor = null
  # don't count if this is a call to super or if the file has already been closed
-IF !callerMatches(".*\.close")  && $0.fd != nullfd
+IF !callerMatches(".*\\.close")  && $0.fd != nullfd
 DO debug("close output file " + $0.fd.fd);
    incrementCounter("file out closes")
 ENDRULE
