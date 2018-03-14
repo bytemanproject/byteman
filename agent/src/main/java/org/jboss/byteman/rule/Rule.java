@@ -67,6 +67,10 @@ import java_cup.runtime.Symbol;
 public class Rule
 {
     /**
+     * the name of the helper class for this rule
+     */
+    private final String helperToUse;
+    /**
      * the script defining this rule
      */
     private RuleScript ruleScript;
@@ -247,18 +251,22 @@ public class Rule
         String helperName = ruleScript.getTargetHelper();
         String[] imports = ruleScript.getImports();
         if (helperName != null || isCompileToBytecode() || imports.length > 0) {
-            try {
+            //try {
                 // We always need to load the helper via the module system if we're compiling to byte code
                 // so that the compiler can use it.
                 String helperToUse = (helperName != null) ? helperName : Helper.class.getName();
                 this.helperLoader = getModuleSystem().createLoader(targetLoader, imports);
-                helperClass = helperLoader.loadClass(helperToUse);
+                this.helperToUse = helperToUse;
+                // initialise helper class lazily so it doesn't happen under
+                // a Transform, invalidating ruel injection
+                // helperClass = helperLoader.loadClass(helperToUse);
                 typeGroup = new TypeGroup(helperLoader);
-            } catch (ClassNotFoundException e) {
-                throw new TypeException("Rule.typecheck : unknown helper class " + helperName + " for rule " + getName());
-            }
+            //} catch (ClassNotFoundException e) {
+            //    throw new TypeException("Rule.typecheck : unknown helper class " + helperName + " for rule " + getName());
+            //}
         } else {
             this.helperLoader = null;
+            this.helperToUse = Helper.class.getName();
             helperClass = Helper.class;
             typeGroup = new TypeGroup(targetLoader);
         }
@@ -557,6 +565,7 @@ public class Rule
     public void typeCheck()
             throws TypeException
     {
+        ensureHelperClass();
         if (triggerExceptions != null) {
             // ensure that the type group includes the exception types
             typeGroup.addExceptionTypes(triggerExceptions);
@@ -599,6 +608,7 @@ public class Rule
     {
         boolean doCompileToBytecode = doCompileToBytecode();
         String[] imports = ruleScript.getImports();
+        Class<?> helperClass = getHelperClass();
 
         if (helperClass == Helper.class && !doCompileToBytecode && imports.length == 0) {
             // we can use the builtin interpreted helper adapter for class Helper
@@ -677,7 +687,7 @@ public class Rule
     {
         Type type;
         // add a binding for the helper so we can call builtin static methods
-        type = typeGroup.create(helperClass.getName());
+        type = typeGroup.create(getHelperClass().getName());
         Binding ruleBinding = bindings.lookup("$$");
         if (ruleBinding != null) {
             ruleBinding.setType(type);
@@ -983,6 +993,22 @@ public class Rule
     public Class getHelperClass()
     {
         return helperClass;
+    }
+
+    /**
+     * method called at start of type check to ensure helper class can be loaded
+     */
+    private void ensureHelperClass() throws TypeException
+    {
+        // we do the load lazily so it doesn't happen under
+        // a Transform, invalidating rule injection
+        if (helperClass == null) {
+            try {
+                helperClass = helperLoader.loadClass(helperToUse);
+            } catch (ClassNotFoundException e) {
+                throw new TypeException("Rule.typecheck : unknown helper class " + helperToUse + " for rule " + getName());
+            }
+        }
     }
 
     /**
