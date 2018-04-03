@@ -968,6 +968,10 @@ public class Rule
                 throw new TypeException("Rule.typecheck : unknown helper class " + helperToUse + " for rule " + getName());
             }
         }
+        
+        if (Modifier.isFinal(helperClass.getModifiers())) {
+            throw new TypeException("Rule.typecheck : helper class cannto be final " + helperToUse + " for rule " + getName());
+        }
     }
 
     /**
