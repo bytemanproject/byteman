@@ -61,7 +61,7 @@ public class LoadCache
         HashMap<String, Class> baseLoaderMap = null;
         Class clazz;
 
-        // see if we have cached the cahe in the map associated with this loader
+        // see if we have cached the class in the map associated with this loader
 
         if (baseLoader == null) {
             baseLoaderMap = bootMap;
@@ -89,7 +89,7 @@ public class LoadCache
         ClassLoader loader = baseLoader;
 
         // use a do while loop so we don't omit to look in the bootstrap classpath
-        do
+        while (true)
         {
             Class[] classes = inst.getInitiatedClasses(loader);
             for (int i = 0; i < classes.length; i++) {
@@ -108,21 +108,24 @@ public class LoadCache
                 }
             }
 
-            if (loader != null) {
-                loader = loader.getParent();
-                if (loader == null) {
-                    loaderMap = bootMap;
-                } else {
-                    synchronized (loaderMaps) {
-                        loaderMap = loaderMaps.get(loader);
-                        if (loaderMap == null) {
-                            loaderMap = new HashMap<String, Class>();
-                            loaderMaps.put(loader, loaderMap);
-                        }
+            // search stops at the bootstrap loader
+            if (loader == null) {
+                break;
+            }
+            // try with parent loader and map
+            loader = loader.getParent();
+            if (loader == null) {
+                loaderMap = bootMap;
+            } else {
+                synchronized (loaderMaps) {
+                    loaderMap = loaderMaps.get(loader);
+                    if (loaderMap == null) {
+                        loaderMap = new HashMap<String, Class>();
+                        loaderMaps.put(loader, loaderMap);
                     }
                 }
             }
-        } while (loader != null);
+        }
 
         return null;
     }
