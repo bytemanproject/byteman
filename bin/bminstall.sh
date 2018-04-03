@@ -39,7 +39,17 @@
 # helper function to obtain java version
 function print_java_version()
 {
-  java -version 2>&1 |  grep "version" | cut -d'"' -f2 | cut -b3
+    typeset -l java_version
+    # grep output for line : 'java/openjdk version "AAAAAAAA"' where A is alpha, num, '''. or '-'
+    java_version=`java -version 2>&1 |  grep "version" | cut -d'"' -f2`
+    # format for JDK8- is 1.N.[n_]+
+    if [ ${java_version%%.*} == 1 ] ; then
+        echo $java_version | cut -d'.' -f2
+    else
+        # format may JDK9+ may be N.n.[n_]+ for proper
+        # release or N-aaa for internal/ea build
+        echo ${java_version%%[.-]*}
+    fi
 }
 
 # use BYTEMAN_HOME to locate installed byteman release

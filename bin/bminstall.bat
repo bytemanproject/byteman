@@ -64,7 +64,7 @@ goto noTools
 :okJavaHome
 
 if exist "%JAVA_HOME%\lib\tools.jar" goto okTools
-echo Cannot locate tools jar
+@rem Cannot locate tools jar -- ignore as this may happen with jdk9+
 @rem carry on anyway as this is legitimate for jdk9
 goto noTools
 
