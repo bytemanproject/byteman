@@ -47,7 +47,7 @@ public class BMNGRunner extends BMNGAbstractRunner
      * method inherited by a subclass and recognized by TestNG which ensures that
      * Byteman rules specified using @BMRule or @BMScript annotations attached to
      * a test method are unloaded automatically before executing the method.
-     * @throws Exception if the test cannto be run
+     * @throws Exception if the test cannot be run
      */
     @BeforeMethod(alwaysRun = true)
     public void bmngBeforeTest(Method method) throws Exception

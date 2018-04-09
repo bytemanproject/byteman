@@ -970,7 +970,7 @@ public class Rule
         }
         
         if (Modifier.isFinal(helperClass.getModifiers())) {
-            throw new TypeException("Rule.typecheck : helper class cannto be final " + helperToUse + " for rule " + getName());
+            throw new TypeException("Rule.typecheck : helper class cannot be final " + helperToUse + " for rule " + getName());
         }
     }
 
