@@ -806,7 +806,17 @@ rule, class `FailureTester` is used as the helper class. Its boolean instance me
 
 A helper class does not need to implement any special interface or inherit from any pre-defined 
 class. It merely needs to provide instance methods to resolve the built-in calls which occur in the 
-rule. By sub-classing the default helper it is possible to extend or override the default set of 
+rule. The only limitations are
+
+* your helper class must not be final
+** Byteman needs to be able to subclass your helper in order to interface it to the rule execution engine
+* your helper class must not be abstract
+** Byteman needs to be able to instantiate your helper when the rule is triggered
+* you must provide a suitable public constructor for your helper class
+** by default Byteman will instantiate it using the empty constructor (i.e. the one with signature ``()``)
+** if you provide a constructor that accepts the rule as argument (i.e. with signature ``(org.jboss.byteman.agent.rule.Rule)``) Byteman will use that for preference
+
+By sub-classing the default helper it is possible to extend or override the default set of 
 methods. For example, the following rule employs a helper which adds emphasis to the debug messages 
 printed by the rule.
 
@@ -827,6 +837,10 @@ printed by the rule.
 ----
   class HelperSub extends Helper
   {
+      public HelperSub(Rule rule)
+      {
+        super(rule);
+      }
       public boolean debug(String message)
       {
           super("!!! IMPORTANT EVENT !!! " + message);
@@ -853,6 +867,7 @@ line outside of the scope of a rule. So, in the following example the first two 
   CLASS . . .
   METHOD . . .
   HELPER YellowSub
+  . . .
 ----
 
 === Rule Helper Lifecycle Methods
