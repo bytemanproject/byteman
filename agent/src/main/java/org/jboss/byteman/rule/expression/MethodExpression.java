@@ -592,7 +592,7 @@ public class MethodExpression extends Expression
     }
 
     /**
-     * prune the candidates list removing all methods whose parameter at index argIdx cannto be assigned to
+     * prune the candidates list removing all methods whose parameter at index argIdx cannot be assigned to
      * class argClazz
      * @param candidates candidate matching methods
      * @param argIdx index of arg curently being checked
