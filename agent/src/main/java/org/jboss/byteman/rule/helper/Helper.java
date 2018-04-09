@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -1284,13 +1285,7 @@ public class Helper
      */
     public boolean createLinkMap(Object mapName)
     {
-        synchronized(linkMaps) {
-            if (linkMaps.get(mapName) == null) {
-                linkMaps.put(mapName, new HashMap<Object, Object>());
-                return true;
-            }
-        }
-        return false;
+        return (linkMaps.putIfAbsent(mapName, new HashMap<Object, Object>()) == null);
     }
 
     /**
@@ -1300,15 +1295,7 @@ public class Helper
      */
     public boolean deleteLinkMap(Object mapName)
     {
-        synchronized(linkMaps) {
-            HashMap<Object, Object> map = linkMaps.get(mapName);
-            if (map != null) {
-                linkMaps.remove(mapName);
-                return true;
-            } else {
-                return false;
-            }
-        }
+        return (linkMaps.remove(mapName) != null);
     }
 
     /**
@@ -1322,14 +1309,15 @@ public class Helper
      */
     public Object link(Object mapName, Object name, Object value)
     {
-        synchronized(linkMaps) {
-            HashMap<Object, Object> map = linkMaps.get(mapName);
+        HashMap<Object, Object> map = linkMaps.get(mapName);
+        if (map == null) {
+            HashMap<Object, Object> newMap = new HashMap<Object, Object>();
+            map  = linkMaps.putIfAbsent(mapName, newMap);
             if (map == null) {
-                linkMaps.put(mapName, new HashMap<Object, Object>());
-                map = linkMaps.get(mapName);
+                map = newMap;
             }
-            return map.put(name, value);
         }
+        return map.put(name, value);
     }
 
     /**
@@ -1342,9 +1330,9 @@ public class Helper
      */
     public Object linked(Object mapName, Object name)
     {
-        synchronized(linkMaps) {
-            HashMap<Object, Object> map = linkMaps.get(mapName);
-            if (map != null) {
+        HashMap<Object, Object> map = linkMaps.get(mapName);
+        if (map != null) {
+            synchronized (map) {
                 return map.get(name);
             }
         }
@@ -1361,9 +1349,9 @@ public class Helper
      */
     public Object unlink(Object mapName, Object name)
     {
-        synchronized(linkMaps) {
-            HashMap<Object, Object> map = linkMaps.get(mapName);
-            if (map != null) {
+        HashMap<Object, Object> map = linkMaps.get(mapName);
+        if (map != null) {
+            synchronized (map) {
                 return map.remove(name);
             }
         }
@@ -1377,13 +1365,13 @@ public class Helper
      */
     public List<Object> linkNames(Object mapName)
     {
-        synchronized (linkMaps) {
-            HashMap<Object, Object> map = linkMaps.get(mapName);
-            if (map != null) {
+        HashMap<Object, Object> map = linkMaps.get(mapName);
+        if (map != null) {
+            synchronized(map) {
                 Set<Object> keySet = map.keySet();
-                
+
                 int size = keySet.size();
-                if (size == 0) {
+                if(size == 0) {
                     return Collections.EMPTY_LIST;
                 } else {
                     ArrayList<Object> list = new ArrayList<Object>(size);
@@ -1392,9 +1380,9 @@ public class Helper
                     }
                     return list;
                 }
-            } else {
-                return null;
             }
+        } else {
+            return null;
         }
     }
 
@@ -1405,13 +1393,13 @@ public class Helper
      */
     public List<Object> linkValues(Object mapName)
     {
-        synchronized (linkMaps) {
-            HashMap<Object, Object> map = linkMaps.get(mapName);
-            if (map != null) {
+        HashMap<Object, Object> map = linkMaps.get(mapName);
+        if (map != null) {
+            synchronized (map) {
                 Collection<Object> values = map.values();
 
                 int size = values.size();
-                if (size == 0) {
+                if(size == 0) {
                     return Collections.EMPTY_LIST;
                 } else {
                     ArrayList<Object> list = new ArrayList<Object>(size);
@@ -1420,9 +1408,9 @@ public class Helper
                     }
                     return list;
                 }
-            } else {
-                return null;
             }
+        } else {
+            return null;
         }
     }
 
@@ -1433,15 +1421,15 @@ public class Helper
      */
     public boolean clearLinks(Object mapName)
     {
-        synchronized (linkMaps) {
-            HashMap<Object, Object> map = linkMaps.get(mapName);
-            if (map != null) {
+        HashMap<Object, Object> map = linkMaps.get(mapName);
+        if(map != null) {
+            synchronized (map) {
                 boolean result = !map.isEmpty();
                 map.clear();
                 return result;
             }
-            return false;
         }
+        return false;
     }
 
     // default link support
@@ -3953,7 +3941,7 @@ public class Helper
      * a hash map used to identify maps from their identifying
      * objects
      */
-    private static HashMap<Object, HashMap<Object, Object>> linkMaps = new HashMap<Object, HashMap<Object, Object>>();
+    private static ConcurrentHashMap<Object, HashMap<Object, Object>> linkMaps = new ConcurrentHashMap<Object, HashMap<Object, Object>>();
 
     // initialise the trace map so it contains the system output and
     // error keyed under "out" and "err"
