@@ -25,7 +25,6 @@ package org.jboss.byteman.agent;
 
 import org.jboss.byteman.agent.adapter.*;
 import org.jboss.byteman.agent.check.ClassChecker;
-import org.jboss.byteman.agent.check.LoadCache;
 import org.jboss.byteman.modules.ModuleSystem;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
@@ -68,7 +67,6 @@ public class Transformer implements ClassFileTransformer {
         this.inst = inst;
         this.isRedefine = isRedefine;
         scriptRepository = new ScriptRepository(skipOverrideRules);
-        loadCache = new LoadCache(inst);
         helperManager = new HelperManager(inst, moduleSystem);
 
         Iterator<String> scriptsIter = scriptTexts.iterator();
@@ -907,14 +905,7 @@ public class Transformer implements ClassFileTransformer {
         // may not have loaded the super. if we force a load now then transforms will not be performed on
         // the super class. this may cause us to miss the chance to apply rule injection into the super
 
-        ClassLoader loader = baseLoader;
-        Class clazz = loadCache.lookupClass(name, loader);
-
-        if (clazz != null) {
-            return new org.jboss.byteman.agent.check.LoadedClassChecker(clazz);
-        }
-
-        // ok, instead try loading the bytecode as a resource - user-defined loaders may not support this but
+        // so, instead try loading the bytecode as a resource - user-defined loaders may not support this but
         // at least the JVM system and boot loaders should
 
         String resourceName = name.replace('.', '/') + ".class";
@@ -1080,13 +1071,6 @@ public class Transformer implements ClassFileTransformer {
      */
 
     protected final ScriptRepository scriptRepository;
-
-    /**
-     * a cache tracking which classes have been loaded by which class loaders which is used when
-     * attempting to resolve a superName to a superclass.
-     */
-
-    protected final LoadCache loadCache;
 
     /**
      * a manager for helper lifecycle events which can be safely handed on to rules
