@@ -23,15 +23,13 @@
 */
 package org.jboss.byteman.agent;
 
-import org.jboss.byteman.agent.adapter.*;
+import org.jboss.byteman.agent.check.BytecodeChecker;
+import org.jboss.byteman.agent.check.CheckerCache;
 import org.jboss.byteman.agent.check.ClassChecker;
 import org.jboss.byteman.modules.ModuleSystem;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
 import org.jboss.byteman.rule.type.TypeHelper;
-import org.jboss.byteman.rule.exception.ParseException;
-import org.jboss.byteman.rule.exception.TypeException;
-import org.objectweb.asm.*;
 
 import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
@@ -67,6 +65,7 @@ public class Transformer implements ClassFileTransformer {
         this.inst = inst;
         this.isRedefine = isRedefine;
         scriptRepository = new ScriptRepository(skipOverrideRules);
+        checkerCache = new CheckerCache();
         helperManager = new HelperManager(inst, moduleSystem);
 
         Iterator<String> scriptsIter = scriptTexts.iterator();
@@ -889,8 +888,7 @@ public class Transformer implements ClassFileTransformer {
 
     /**
      * return a checker object which can be used to retrieve the super and interfaces of a class from its name and
-     * classloader, identifying it from the Class instance if it the class is already loaded otherwise loading
-     * the corresponding bytecode and parsing it to obtain the relevant details.
+     * classloader without forcing a load of the class.
      *
      * @param name the name of the superclass being checked
      * @param baseLoader the class loader of the subclass's bytecode
@@ -898,23 +896,67 @@ public class Transformer implements ClassFileTransformer {
      */
     public org.jboss.byteman.agent.check.ClassChecker getClassChecker(String name, ClassLoader baseLoader)
     {
-        // we would like to just do this
-        // Class superClazz = baseLoader.loadClass(name)
-        // and then access the details using methods of Class
-        // however, this fails because we are in the middle of transforming the subclass and the classloader
-        // may not have loaded the super. if we force a load now then transforms will not be performed on
-        // the super class. this may cause us to miss the chance to apply rule injection into the super
+        // when looking up the super of a class that is currently being loaded and considered for
+        // transformation we would like to just do this
+        //
+        //   Class superClazz = classBeingLoaded.getSuper();
+        //
+        // or perhaps we might obtain the superName from the bytecode and then try this
+        //
+        //   Class superClazz = baseLoader.loadClass(superName)
+        //
+        // We could then then access details of the super using reflection and so on (ditto for interfaces).
+        //
+        // however, both the above options are a FAIL! We are in the middle of transforming the subclass and
+        // it may not be fully resolved. In particular, that means that the JVM may not even have started
+        // loading the super or implemented interfaces (yes, rilly!). if we force a load, whether implicitly
+        // via the reflection API or explicitly by calling loadClass, then transforms will not be performed
+        // on that recursively loaded class. this may cause us to miss the chance to apply rule injection into
+        // classes in the super chain or into other implementors of the interface.
 
-        // so, instead try loading the bytecode as a resource - user-defined loaders may not support this but
-        // at least the JVM system and boot loaders should
+        // so, instead we must load the bytecode as a resource - user-defined loaders may not support this but
+        // at least the JVM system and boot loaders should. As a performance optimization we use a cache to
+        // retain checker objects derived from the bytecode. if we have already tried to resolve the named class
+        // via this loader we can reuse the checker, avoiding a reload of the class bytes as a resource.
+
+        // unfortunately, we normally have to load and then cache the super/interface resource using the loader
+        // of the subclass/implementor. That may mean that we end up with multiple checkers for the same class.
+        // To see why, assume classes A and B derive, respectively, from loaders CL_A and CL_B and both inherit
+        // from class C defined by a third loader CL_C. If we load the class bytes for C from CL_A we will store
+        // a checker for them keyed under loader CL_A and name "C". We can detect that CL_A and CL_B both have
+        // CL_C as a parent. However, there is normally no way of knowing that the bytes we obtained were provided
+        // by CL_A or CL_C. So, when we try to resolve C as the super of B via CL_B we cannot safely re-use the
+        // bytes loaded via CL_A. Instead we have to resort to reloading the bytes for C via CL_B and storing a
+        // new checker keyed under loader CL_B and name "C".
+        //
+        // There is one further optimization available. If the class name starts with "java." then it can only be
+        // loaded via the bootstrap loader (even when it is being resolved by some other baseLoader). In that case
+        // the class bytes can only come from the bootstrap loader. So, a  checker created for any lookup will suffice
+        // for all lookups. In this case, we can always do the cache lookup, resource load and cache update relative
+        // to the bootstrap loader by ignoring the supplied base loader and passing null instead.
+
+        if(name.startsWith("java.")) {
+            baseLoader = null;
+        }
+
+        // if a checker is in cache then just reuse it
+
+        BytecodeChecker checker = checkerCache.lookup(baseLoader, name);
+        if (checker != null) {
+            return checker;
+        }
+
+        // ok, we have to look up the class details
 
         String resourceName = name.replace('.', '/') + ".class";
         try {
             InputStream is;
-            if (baseLoader != null) {
-                is = baseLoader.getResourceAsStream(resourceName);
-            } else {
+            // use the system loader if the supplied loader is null
+            // the system loader will delegate to the bootstrap loader
+            if (baseLoader == null || resourceName.startsWith("java.")) {
                 is = ClassLoader.getSystemClassLoader().getResourceAsStream(resourceName);
+            } else {
+                is = baseLoader.getResourceAsStream(resourceName);
             }
             if (is != null) {
                 int length = is.available();
@@ -927,7 +969,9 @@ public class Transformer implements ClassFileTransformer {
                     }
                     count += read;
                 }
-                return new org.jboss.byteman.agent.check.BytecodeChecker(bytecode);
+                checker = new org.jboss.byteman.agent.check.BytecodeChecker(bytecode);
+                checkerCache.put(baseLoader, name, checker);
+                return checker;
             } else {
                 // throw new IOException("unable to load bytecode for for class " + name);
                 Helper.verbose("Transformer.getClassChecker : unable to load bytecode for for class " + name);
@@ -1071,6 +1115,8 @@ public class Transformer implements ClassFileTransformer {
      */
 
     protected final ScriptRepository scriptRepository;
+
+    protected final CheckerCache checkerCache;
 
     /**
      * a manager for helper lifecycle events which can be safely handed on to rules
