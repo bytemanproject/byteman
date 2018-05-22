@@ -39,13 +39,20 @@ public class BytecodeChecker implements ClassChecker {
     private int bytesize;
 
     public BytecodeChecker(byte[] buffer) {
-        // run a pass over the bytecode to identify the interfaces
+        // run a pass over the bytecode to identify the super and interfaces
         ClassReader cr = new ClassReader(buffer);
         ClassStructureAdapter adapter = new ClassStructureAdapter();
         cr.accept(adapter, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
         isInterface = adapter.isInterface();
         interfaces = adapter.getInterfaces();
+        for (int i = 0; i < interfaces.length; i++) {
+            // it's safe to update the array as this is the only use
+            interfaces[i] = TypeHelper.internalizeClass(interfaces[i]);
+        }
         superName = adapter.getSuper();
+        if (superName != null) {
+            superName = TypeHelper.internalizeClass(superName);
+        }
         outerClass = adapter.getOuterClass();
         bytesize = buffer.length;
     }
@@ -55,9 +62,6 @@ public class BytecodeChecker implements ClassChecker {
     }
 
     public String getSuper() {
-        if (superName != null) {
-            superName = TypeHelper.internalizeClass(superName);
-        }
         return superName;
     }
 
@@ -70,7 +74,7 @@ public class BytecodeChecker implements ClassChecker {
     }
 
     public String getInterface(int idx) {
-        return TypeHelper.internalizeClass(interfaces[idx]);
+        return interfaces[idx];
     }
 
     public int getBytesize() {
