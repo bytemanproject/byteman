@@ -159,7 +159,9 @@ public class Main {
                 } else {
                     System.err.println("org.jboss.byteman.agent.Main:\n" +
                             "  illegal agent argument : " + arg + "\n" +
-                            "  valid arguments are boot:<path-to-jar>, sys:<path-to-jar>, script:<path-to-script> or listener:<true-or-false>");
+                            "  valid arguments are boot:<path-to-jar>, sys:<path-to-jar>, script:<path-to-script>, resourcescript:<scripts-prefix>,"
+                            + "prop:<property-to-set>, address:<address-for-agent>, port:<port-for-agent>, modules:<module-system-class>, "
+                            + "policy:<agent-security-policy>, manager:<manager-class> or listener:<true-or-false>");
                 }
             }
         }
