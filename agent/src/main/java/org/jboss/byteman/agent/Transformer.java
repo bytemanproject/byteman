@@ -1092,7 +1092,7 @@ public class Transformer implements ClassFileTransformer {
      * @param className the name to be checked
      * @return true if a class is located in the byteman package otherwise return false
      */
-    protected boolean isBytemanClass(String className)
+    public static boolean isBytemanClass(String className)
     {
         return className.startsWith(BYTEMAN_PACKAGE_PREFIX) &&
                 !className.startsWith(BYTEMAN_TEST_PACKAGE_PREFIX) &&
