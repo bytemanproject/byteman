@@ -306,18 +306,32 @@ public class Helper
      * or "err"
      */
     private static boolean doTraceOpen(Object identifier, String fileName) {
+        // a key must be provided
     	if (identifier == null) {
             return false;
+        }
+        // out and err cannot be redirected
+        if (identifier.equals("out") || identifier.equals("err")) {
+    	    return false;
         }
 
         synchronized(traceMap) {
             PrintStream stream = traceMap.get(identifier);
-            String name = fileName;
             if (stream != null) {
                 return false;
             }
+            // dbg, vrb and nzy can be redirected
+            // but if not they default to System.out
+            if (stream == null) {
+                if (identifier.equals("dbg") ||
+                        identifier.equals("vrb") ||
+                        identifier.equals(("nzy"))) {
+                    return false;
+                }
+            }
+            String name = fileName;
             if (fileName == null) {
-                name = nextFileName(identifier);
+                name = nextFileName();
             }
             File file = new File(name);
 
@@ -325,7 +339,7 @@ public class Helper
                 if (fileName == null) {
                     // keep trying new names until we hit an unused one
                     do {
-                        name = nextFileName(identifier);
+                        name = nextFileName();
                         file = new File(name);
                     } while (file.exists() && !file.canWrite());
                 } else {
@@ -359,10 +373,11 @@ public class Helper
      * close the trace output stream identified by identifier flushing any pending output.
      * @param identifier an identifier used subsequently to identify the trace output stream
      * @return true if the stream was flushed and closed, false if no stream is identified by
-     * identifier or identifer is null, "out" or "err"
+     * identifier or identifier is null, "out" or "err"
      */
     private static boolean doTraceClose(Object identifier)
     {
+        // we never need to deal with these cases
         if (identifier == null ||
                 identifier.equals("out") ||
                 identifier.equals("err")) {
@@ -374,11 +389,7 @@ public class Helper
             // proceed until we have flushed all changes to disk
             PrintStream ps = traceMap.get(identifier);
             if (ps != null) {
-                // make sure not to close System.out which we may see as the
-                // trace stream bound to "dbg", "vrb" or "nzy"
-                if (ps != System.out && ps != System.err) {
-                    ps.close();
-                }
+                ps.close();
                 traceMap.remove(identifier);
                 return true;
             }
@@ -405,7 +416,11 @@ public class Helper
                 if (doTraceOpen(identifier, null)) {
                     ps = traceMap.get(identifier);
                 } else {
-                    ps = System.out;
+                    if (identifier.equals("err")) {
+                        ps = System.err;
+                    } else {
+                        ps = System.out;
+                    }
                 }
             }
             ps.print(message);
@@ -432,7 +447,11 @@ public class Helper
                 if (doTraceOpen(identifier, null)) {
                     ps = traceMap.get(identifier);
                 } else {
-                    ps = System.out;
+                    if (identifier.equals("err")) {
+                        ps = System.err;
+                    } else {
+                        ps = System.out;
+                    }
                 }
             }
             ps.println(message);
@@ -452,7 +471,11 @@ public class Helper
         synchronized (traceMap) {
             ps = traceMap.get(id);
             if (ps == null) {
-                ps = System.out;
+                if (id.equals("err")) {
+                    ps = System.err;
+                } else {
+                    ps = System.out;
+                }
             }
         }
         th.printStackTrace(ps);
@@ -3819,33 +3842,17 @@ public class Helper
 
     /**
      * generate a name for an output file to be used to sink the trace stream
-     * named by identifier. the name will normally start with the prefix
-     * "trace" followed by a 9 digit number followed by a ".log" suffix.
-     * In the special case that identifier is one of the special String values
-     * "dbg", "vrb" or "nzy" idenitfying the 3 special Byteman trace streams
-     * used to log rule debug messages or verbose/noisy level Byteman agent trace
-     * messages the returned file name will start with the respective prefixes
-     * "debug", "verbose" and "noisy".
-     * @param identifier the identifier of the trace stream for which a file
-     * is being opened
+     * named by identifier. the name will start with the prefix "trace"
+     * followed by a 9 digit number followed by a ".log" suffix.
      * @return a name to be used for the trace file.
      */
-    private static String nextFileName(Object identifier)
+    private static String nextFileName()
     {
         // if we are writing to the debug, verbose or noisy trace streams
         // then start the file name with the that name as prefix otherwise
         // juts start it with the prefix "trace"
-        String prefix;
-
-        if ("dbg".equals(identifier)) {
-            prefix = "debug";
-        } else if ("vrb".equals(identifier)) {
-            prefix = "verbose";
-        } else if ("nzy".equals(identifier)) {
-            prefix = "noisy";
-        } else {
-            prefix = "trace";
-        }
+        String prefix = "trace";
+        
         StringWriter writer = new StringWriter();
         String digits = Integer.toString(nextFileIndex());
         int numDigits = digits.length();
@@ -3879,18 +3886,11 @@ public class Helper
         rendezvousMap.clear();
         timerMap.clear();
         linkMaps.clear();
-        // try closing all trace streams
-        // n.b. this will fail for out and err
-        // which is what we want
+        // close all open trace streams
         List<Object> keyset = new ArrayList<Object>(traceMap.keySet());
         for (Object key : keyset) {
             doTraceClose(key);
         }
-        // restore the 3 other well known streams
-        PrintStream sysout =  traceMap.get("out");
-        traceMap.put("dbg", sysout);
-        traceMap.put("vrb", sysout);
-        traceMap.put("nzy", sysout);
     }
 
     /**
@@ -3942,19 +3942,4 @@ public class Helper
      * objects
      */
     private static ConcurrentHashMap<Object, HashMap<Object, Object>> linkMaps = new ConcurrentHashMap<Object, HashMap<Object, Object>>();
-
-    // initialise the trace map so it contains the system output and
-    // error keyed under "out" and "err"
-
-    static {
-        // set up out and err trace streams to System.out and System.err
-        // traceClose ensures they cannot be closed and hence re-opened
-        traceMap.put("out", System.out);
-        traceMap.put("err", System.err);
-        // default dbg, vrb and nzy trace streams to System.out
-        // they can be closed and re-opened
-        traceMap.put("dbg", System.out);
-        traceMap.put("vrb", System.out);
-        traceMap.put("nzy", System.out);
-    }
 }
