@@ -157,12 +157,18 @@ public class ScriptRepository
                         isOverride = true;
                         targetClass = targetClass.substring(1).trim();
                     }
+                    if (Transformer.isBytemanClass(targetClass)) {
+                        throw new Exception("org.jboss.byteman.agent.Transformer : invalid target class " + targetClass + " at line " + lineNumber + " in script " + scriptFile);
+                    }
                 } else if (line.startsWith("INTERFACE ")) {
                     targetClass = line.substring(10).trim();
                     isInterface = true;
                     if (targetClass.startsWith("^")) {
                         isOverride = true;
                         targetClass = targetClass.substring(1).trim();
+                    }
+                    if (Transformer.isBytemanClass(targetClass)) {
+                        throw new Exception("org.jboss.byteman.agent.Transformer : invalid target class " + targetClass + " at line " + lineNumber + " in script " + scriptFile);
                     }
                 } else if (line.startsWith("METHOD ")) {
                     targetMethod = line.substring(7).trim();
