@@ -34,7 +34,7 @@
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-root</artifactId>
-        <version>3.0.13-SNAPSHOT</version>
+        <version>3.0.13</version>
     </parent>
     <properties>
         <debug.args>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</debug.args>
