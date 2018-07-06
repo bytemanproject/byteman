@@ -35,7 +35,7 @@ public class BMJSRInliner extends ClassVisitor
 {
     public BMJSRInliner(ClassVisitor cv)
     {
-        super(Opcodes.ASM5, cv);
+        super(Opcodes.ASM7_EXPERIMENTAL, cv);
     }
 
     @Override
