@@ -9,21 +9,21 @@ package org.jboss.byteman.rule.grammar;
 import java_cup.runtime.*;
 import org.jboss.byteman.rule.grammar.ParseNode;
 
-/** CUP v0.11a beta 20060608 generated parser.
+/* CUP v0.11a beta 20060608 generated parser.
   * @version Fri Jul 28 14:28:03 BST 2017
   */
 public class ECAGrammarParser extends java_cup.runtime.lr_parser {
 
-  /** Default constructor. */
+  /* Default constructor. */
   public ECAGrammarParser() {super();}
 
-  /** Constructor which sets the default scanner. */
+  /* Constructor which sets the default scanner. */
   public ECAGrammarParser(java_cup.runtime.Scanner s) {super(s);}
 
-  /** Constructor which sets the default scanner. */
+  /* Constructor which sets the default scanner. */
   public ECAGrammarParser(java_cup.runtime.Scanner s, java_cup.runtime.SymbolFactory sf) {super(s,sf);}
 
-  /** Production table. */
+  /* Production table. */
   protected static final short _production_table[][] = 
     unpackFromStrings(new String[] {
     "\000\230\000\002\002\003\000\002\002\004\000\002\002" +
@@ -74,10 +74,10 @@ public class ECAGrammarParser extends java_cup.runtime.lr_parser {
     "\005\000\002\036\003\000\002\045\003\000\002\045\005" +
     "\000\002\046\003\000\002\047\003\000\002\047\005" });
 
-  /** Access to production table. */
+  /* Access to production table. */
   public short[][] production_table() {return _production_table;}
 
-  /** Parse-action table. */
+  /* Parse-action table. */
   protected static final short[][] _action_table = 
     unpackFromStrings(new String[] {
     "\000\377\000\010\005\015\006\014\007\020\001\002\000" +
@@ -775,10 +775,10 @@ public class ECAGrammarParser extends java_cup.runtime.lr_parser {
     "\063\021\064\031\065\022\066\064\001\002\000\004\002" +
     "\uffef\001\002" });
 
-  /** Access to parse-action table. */
+  /* Access to parse-action table. */
   public short[][] action_table() {return _action_table;}
 
-  /** <code>reduce_goto</code> table. */
+  /* <code>reduce_goto</code> table. */
   protected static final short[][] _reduce_table = 
     unpackFromStrings(new String[] {
     "\000\377\000\026\002\016\003\006\004\011\050\007\051" +
@@ -1022,19 +1022,19 @@ public class ECAGrammarParser extends java_cup.runtime.lr_parser {
     "\031\022\035\036\036\054\046\061\047\052\001\001\000" +
     "\002\001\001" });
 
-  /** Access to <code>reduce_goto</code> table. */
+  /* Access to <code>reduce_goto</code> table. */
   public short[][] reduce_table() {return _reduce_table;}
 
-  /** Instance of action encapsulation class. */
+  /* Instance of action encapsulation class. */
   protected CUP$ECAGrammarParser$actions action_obj;
 
-  /** Action encapsulation object initializer. */
+  /* Action encapsulation object initializer. */
   protected void init_actions()
     {
       action_obj = new CUP$ECAGrammarParser$actions(this);
     }
 
-  /** Invoke a user supplied parse action. */
+  /* Invoke a user supplied parse action. */
   public java_cup.runtime.Symbol do_action(
     int                        act_num,
     java_cup.runtime.lr_parser parser,
@@ -1046,19 +1046,19 @@ public class ECAGrammarParser extends java_cup.runtime.lr_parser {
     return action_obj.CUP$ECAGrammarParser$do_action(act_num, parser, stack, top);
   }
 
-  /** Indicates start state. */
+  /* Indicates start state. */
   public int start_state() {return 0;}
-  /** Indicates start production. */
+  /* Indicates start production. */
   public int start_production() {return 1;}
 
-  /** <code>EOF</code> Symbol index. */
+  /* <code>EOF</code> Symbol index. */
   public int EOF_sym() {return 0;}
 
-  /** <code>error</code> Symbol index. */
+  /* <code>error</code> Symbol index. */
   public int error_sym() {return 1;}
 
 
-  /** Scan to get the next Symbol. */
+  /* Scan to get the next Symbol. */
   public java_cup.runtime.Symbol scan()
     throws java.lang.Exception
     {
@@ -1078,7 +1078,7 @@ public class ECAGrammarParser extends java_cup.runtime.lr_parser {
     this.file = file;
   }
 
-  /**
+  /*
    * Called by the parser when it detects a syntax error. This is overridden so
    * that it does nothing. Instead the parser relies upon explicit calls to routine
    * error(String) or error(String, int line, int column) which store details of
@@ -1092,7 +1092,7 @@ public class ECAGrammarParser extends java_cup.runtime.lr_parser {
   {
   }
 
-  /**
+  /*
    * Called by the parser when it is unable to recover from one or more syntax errors
    *
    * @param cur_token the token current at the point in the token stream where the recovery
@@ -1149,7 +1149,7 @@ public class ECAGrammarParser extends java_cup.runtime.lr_parser {
 
   /*. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .*/
 
-  /** Do debug output for a reduce.
+  /* Do debug output for a reduce.
    *
    * @param prod_num  the production we are reducing with.
    * @param nt_num    the index of the LHS non terminal.
@@ -1163,7 +1163,7 @@ public class ECAGrammarParser extends java_cup.runtime.lr_parser {
 
   /*. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .*/
 
-  /** Do debug output for shift.
+  /* Do debug output for shift.
    *
    * @param shift_tkn the Symbol being shifted onto the stack.
    */
@@ -1175,7 +1175,7 @@ public class ECAGrammarParser extends java_cup.runtime.lr_parser {
 
 }
 
-/** Cup generated class to encapsulate user supplied action code.*/
+/* Cup generated class to encapsulate user supplied action code.*/
 class CUP$ECAGrammarParser$actions {
 
 
@@ -1225,12 +1225,12 @@ class CUP$ECAGrammarParser$actions {
 
   private final ECAGrammarParser parser;
 
-  /** Constructor */
+  /* Constructor */
   CUP$ECAGrammarParser$actions(ECAGrammarParser parser) {
     this.parser = parser;
   }
 
-  /** Method with the actual generated action code. */
+  /* Method with the actual generated action code. */
   public final java_cup.runtime.Symbol CUP$ECAGrammarParser$do_action(
     int                        CUP$ECAGrammarParser$act_num,
     java_cup.runtime.lr_parser CUP$ECAGrammarParser$parser,
