@@ -382,7 +382,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
     /**
      * Generates the instruction to push the given value on the stack.
      *
-     * @param value the value to be pushed on the stack. May be <tt>null</tt>.
+     * @param value the value to be pushed on the stack. May be null.
      */
     public void push(final String value) {
         if (value == null) {
@@ -901,7 +901,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
      * @param type the type of the top two stack values.
      * @param mode how these values must be compared. One of EQ, NE, LT, GE, GT,
      *        LE.
-     * @param label where to jump if the comparison result is <tt>true</tt>.
+     * @param label where to jump if the comparison result is true.
      */
     public void ifCmp(final Type type, final int mode, final Label label) {
         int intOp = -1;
@@ -969,7 +969,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
      *
      * @param mode how these values must be compared. One of EQ, NE, LT, GE, GT,
      *        LE.
-     * @param label where to jump if the comparison result is <tt>true</tt>.
+     * @param label where to jump if the comparison result is true.
      */
     public void ifICmp(final int mode, final Label label) {
         ifCmp(Type.INT_TYPE, mode, label);
@@ -981,7 +981,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
      *
      * @param mode how these values must be compared. One of EQ, NE, LT, GE, GT,
      *        LE.
-     * @param label where to jump if the comparison result is <tt>true</tt>.
+     * @param label where to jump if the comparison result is true.
      */
     public void ifZCmp(final int mode, final Label label) {
         visitJumpInsn(mode, label);
@@ -991,7 +991,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
      * Generates the instruction to jump to the given label if the top stack
      * value is null.
      *
-     * @param label where to jump if the condition is <tt>true</tt>.
+     * @param label where to jump if the condition is true.
      */
     public void ifNull(final Label label) {
         visitJumpInsn(Opcodes.IFNULL, label);
@@ -1001,7 +1001,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
      * Generates the instruction to jump to the given label if the top stack
      * value is not null.
      *
-     * @param label where to jump if the condition is <tt>true</tt>.
+     * @param label where to jump if the condition is true.
      */
     public void ifNonNull(final Label label) {
         visitJumpInsn(Opcodes.IFNONNULL, label);
@@ -1010,7 +1010,7 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
     /**
      * Generates the instruction to jump to the given label.
      *
-     * @param label where to jump if the condition is <tt>true</tt>.
+     * @param label where to jump if the condition is true.
      */
     public void goTo(final Label label) {
         visitJumpInsn(Opcodes.GOTO, label);
@@ -1051,8 +1051,8 @@ public class RuleGeneratorAdapter extends RuleMethodAdapter {
      *
      * @param keys the switch case keys.
      * @param generator a generator to generate the code for the switch cases.
-     * @param useTable <tt>true</tt> to use a TABLESWITCH instruction, or
-     *        <tt>false</tt> to use a LOOKUPSWITCH instruction.
+     * @param useTable true to use a TABLESWITCH instruction, or
+     *        false to use a LOOKUPSWITCH instruction.
      */
     public void tableSwitch(
         final int[] keys,

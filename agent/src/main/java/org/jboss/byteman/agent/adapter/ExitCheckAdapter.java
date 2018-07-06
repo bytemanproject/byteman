@@ -96,7 +96,7 @@ public class ExitCheckAdapter extends RuleCheckAdapter
          * @param end end of the exception handler's scope (exclusive).
          * @param handler beginning of the exception handler's code.
          * @param type internal name of the type of exceptions handled by the
-         *        handler, or <tt>null</tt> to catch any exceptions (for "finally"
+         *        handler, or null to catch any exceptions (for "finally"
          *        blocks).
          * @throws IllegalArgumentException if one of the labels has already been
          *         visited by this visitor (by the {@link #visitLabel visitLabel}
