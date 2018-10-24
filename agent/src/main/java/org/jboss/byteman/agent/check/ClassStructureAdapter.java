@@ -38,7 +38,7 @@ public class ClassStructureAdapter extends ClassVisitor {
     private String superName = null;
     private String outerClass = null;
 
-    public ClassStructureAdapter() { super(Opcodes.ASM7_EXPERIMENTAL); }
+    public ClassStructureAdapter() { super(Opcodes.ASM7); }
 
     public boolean isInterface() {
         return isInterface;
