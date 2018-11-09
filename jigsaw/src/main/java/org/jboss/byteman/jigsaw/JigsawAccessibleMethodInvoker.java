@@ -56,7 +56,7 @@ public class JigsawAccessibleMethodInvoker implements AccessibleMethodInvoker
             }
             this.handle = h;
         } catch (Exception e) {
-            // throw new RuntimeException("JigsawAccessibleMethodInvoker.invoke : exception creating methodhandle for method " + method, e);
+            // throw new RuntimeException("JigsawAccessibleMethodInvoker : exception creating methodhandle for method " + method, e);
             throw new RuntimeException("JigsawAccessibleMethodInvoker.invoke : exception creating methodhandle for method ", e);
         }
     }

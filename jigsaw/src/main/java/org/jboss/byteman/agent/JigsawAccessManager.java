@@ -81,21 +81,14 @@ public class JigsawAccessManager
         }
 
         // the new module needs to read this (default) module so it can implement interface AccessEnabler
-        // if Byteman has been injected into the bootstrap path then it also needs to read the default module
-        // used by the system and platform class loaders so that it can access stuff in those modules
-        /*
-        Set<Module> extraReads = Set.of(AccessEnabler.class.getModule());
-        Map<String, Set<Module>> extraExports = Map.of();
-        Map<String, Set<Module>> extraExportsPrivate = extraExports;
-        Set<Class<?>> extraUses = Set.of();
-        Map<Class<?>, List<Class<?>>> extraProvides = Map.of();
-        */
+        // it also needs to read the default module used by the system and platform class loaders so
+        // that it can access stuff in those modules
         Set<Module> extraReads = new HashSet<Module>();
         extraReads.add(AccessEnabler.class.getModule());
-        if (AccessEnabler.class.getClassLoader() == null) {
-            extraReads.add(ClassLoader.getPlatformClassLoader().getUnnamedModule());
-            extraReads.add(ClassLoader.getSystemClassLoader().getUnnamedModule());
-        }
+        // one of these may well duplicate the last add but that does no harm
+        extraReads.add(ClassLoader.getPlatformClassLoader().getUnnamedModule());
+        extraReads.add(ClassLoader.getSystemClassLoader().getUnnamedModule());
+
         Map<String, Set<Module>> extraExports = new HashMap<String, Set<Module>>();
         Map<String, Set<Module>> extraExportsPrivate = extraExports;
         Set<Class<?>> extraUses = new HashSet<Class<?>>();

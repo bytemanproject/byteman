@@ -47,7 +47,7 @@ public class JigsawAccessibleConstructorInvoker implements AccessibleConstructor
             }
             this.handle = h;
         } catch (Exception e) {
-            // throw new RuntimeException("JigsawAccessibleMethodInvoker.invoke : exception creating method handle for constructor " + constructor, e);
+            // throw new RuntimeException("JigsawAccessibleMethodInvoker : exception creating method handle for constructor " + constructor, e);
             throw new RuntimeException("JigsawAccessibleConstructorInvoker : exception creating method handle for constructor ", e);
         }
     }

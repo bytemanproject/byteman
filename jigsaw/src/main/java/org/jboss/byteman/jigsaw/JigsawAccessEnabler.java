@@ -361,10 +361,14 @@ public class JigsawAccessEnabler implements AccessEnabler
         Class<?> clazz = member.getDeclaringClass();
         Module module = clazz.getModule();
 
-        // we can always access classes in the unnamed module
+        // for an empty module we just need to ensure we can read the module
         if (!module.isNamed()) {
+            if (!THIS_MODULE.canRead(module)) {
+                 inst.redefineModule(THIS_MODULE, Set.of(module), EMPTY_EXPORTS_MAP, EMPTY_OPENS_MAP, EMPTY_USES_SET, EMPTY_PROVIDES_MAP);
+            }
             return;
         }
+
 
         // check the exports for the owner class's package
         String pkg = clazz.getPackageName();

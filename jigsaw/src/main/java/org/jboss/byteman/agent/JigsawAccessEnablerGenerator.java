@@ -969,6 +969,31 @@ public class JigsawAccessEnablerGenerator
             mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Module", "isNamed", "()Z", false);
             Label l0 = new Label();
             mv.visitJumpInsn(IFNE, l0);
+            // if (!THIS_MODULE.canRead(module)) {
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "THIS_MODULE", "Ljava/lang/Module;");
+            mv.visitVarInsn(ALOAD, 4);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Module", "canRead", "(Ljava/lang/Module;)Z", false);
+            Label ltmp0 = new Label();
+            mv.visitJumpInsn(IFNE, ltmp0);
+            // inst.redefineModule(THIS_MODULE, Set.of(module), EMPTY_EXPORTS_MAP, EMPTY_OPENS_MAP, EMPTY_USES_SET, EMPTY_PROVIDES_MAP);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "inst", "Ljava/lang/instrument/Instrumentation;");
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "THIS_MODULE", "Ljava/lang/Module;");
+            mv.visitVarInsn(ALOAD, 4);
+            mv.visitMethodInsn(INVOKESTATIC, "java/util/Set", "of", "(Ljava/lang/Object;)Ljava/util/Set;", true);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "EMPTY_EXPORTS_MAP", "Ljava/util/Map;");
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "EMPTY_OPENS_MAP", "Ljava/util/Map;");
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "EMPTY_USES_SET", "Ljava/util/Set;");
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, "org/jboss/byteman/jigsaw/JigsawAccessEnabler", "EMPTY_PROVIDES_MAP", "Ljava/util/Map;");
+            mv.visitMethodInsn(INVOKEINTERFACE, "java/lang/instrument/Instrumentation", "redefineModule", "(Ljava/lang/Module;Ljava/util/Set;Ljava/util/Map;Ljava/util/Map;Ljava/util/Set;Ljava/util/Map;)V", true);
+            // }
+            mv.visitLabel(ltmp0);
             // return;
             mv.visitInsn(RETURN);
             // }
@@ -1253,7 +1278,7 @@ public class JigsawAccessEnablerGenerator
             mv.visitVarInsn(ASTORE, 3);
             mv.visitTypeInsn(NEW, "java/lang/RuntimeException");
             mv.visitInsn(DUP);
-            mv.visitLdcInsn("JigsawAccessibleMethodInvoker.invoke : exception creating methodhandle for method ");
+            mv.visitLdcInsn("JigsawAccessibleMethodInvoker : exception creating methodhandle for method ");
             mv.visitVarInsn(ALOAD, 3);
             mv.visitMethodInsn(INVOKESPECIAL, "java/lang/RuntimeException", "<init>", "(Ljava/lang/String;Ljava/lang/Throwable;)V", false);
             mv.visitInsn(ATHROW);
