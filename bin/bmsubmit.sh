@@ -51,6 +51,12 @@
 #
 #   -v print the version of the byteman agent and this client
 #
+# use JAVA_HOME for the java binary unless JAVA_HOME is not specified
+JAVA=java
+if [ ! -z "$JAVA_HOME" ]; then
+    JAVA=$JAVA_HOME/bin/java
+fi
+#
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then
 # use the root of the path to this file to locate the byteman jar
@@ -81,4 +87,4 @@ fi
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 # Submit class will validate arguments
 
-java ${BYTEMAN_JAVA_OPTS} -classpath "${BYTEMAN_JAR}":"${BYTEMAN_SUBMIT_JAR}" org.jboss.byteman.agent.submit.Submit $*
+$JAVA ${BYTEMAN_JAVA_OPTS} -classpath "${BYTEMAN_JAR}":"${BYTEMAN_SUBMIT_JAR}" org.jboss.byteman.agent.submit.Submit $*

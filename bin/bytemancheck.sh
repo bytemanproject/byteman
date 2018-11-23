@@ -25,6 +25,12 @@
 #
 # usage: bytemancheck [-cp classpath]* [-p package]* [-v] script1 . . . scriptN
 #
+# use JAVA_HOME for the java binary unless JAVA_HOME is not specified
+JAVA=java
+if [ ! -z "$JAVA_HOME" ]; then
+    JAVA=$JAVA_HOME/bin/java
+fi
+#
 # use BYTEMAN_HOME to locate installed byteman release
 if [ -z "$BYTEMAN_HOME" ]; then
 # use the root of the path to this file to locate the byteman jar
@@ -103,4 +109,4 @@ fi
 
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 
-java ${BYTEMAN_JAVA_OPTS} -classpath "${CP}" $DEFINES org.jboss.byteman.check.TestScript $PACKAGES $VERBOSE $FILES
+${JAVA} ${BYTEMAN_JAVA_OPTS} -classpath "${CP}" $DEFINES org.jboss.byteman.check.TestScript $PACKAGES $VERBOSE $FILES

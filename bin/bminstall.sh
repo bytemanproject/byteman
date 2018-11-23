@@ -36,12 +36,18 @@
 #   expects to find a byteman agent jar and byteman JBoss modules plugin jar (if -m is indicated) in BYTEMAN_HOME
 #
 
+# use JAVA_HOME for the java binary unless, JAVA_HOME is not specified
+JAVA=java
+if [ ! -z "$JAVA_HOME" ]; then
+    JAVA=$JAVA_HOME/bin/java
+fi
+
 # helper function to obtain java version
 function print_java_version()
 {
     typeset -l java_version
     # grep output for line : 'java/openjdk version "AAAAAAAA"' where A is alpha, num, '''. or '-'
-    java_version=`java -version 2>&1 |  grep "version" | cut -d'"' -f2`
+    java_version=`$JAVA -version 2>&1 |  grep "version" | cut -d'"' -f2`
     # format for JDK8- is 1.N.[n_]+
     if [ ${java_version%%.*} == 1 ] ; then
         echo $java_version | cut -d'.' -f2
@@ -120,4 +126,4 @@ fi
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 # attach class will validate arguments
 
-java ${BYTEMAN_JAVA_OPTS} -classpath "$CP" org.jboss.byteman.agent.install.Install $*
+$JAVA ${BYTEMAN_JAVA_OPTS} -classpath "$CP" org.jboss.byteman.agent.install.Install $*

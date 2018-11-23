@@ -52,10 +52,16 @@
 #   javaargs trailing arguments to be supplied to the java command
 #
 # The script employs the java command found in the current execution
-# PATH. If BYTEMAN_JAVA_ARGS is set then this is inserted to the
-# java command line before the -javaagent argument and before any
-# arguments in javaargs.
+# PATH (or the java version found via JAVA_HOME). If BYTEMAN_JAVA_ARGS
+# is set then this is inserted to the java command line before the
+# -javaagent argument and before any arguments in javaargs.
 #
+
+# use JAVA_HOME for the java binary unless JAVA_HOME is not specified
+JAVA=java
+if [ ! -z "$JAVA_HOME" ]; then
+    JAVA=$JAVA_HOME/bin/java
+fi
 
 usage()
 {
@@ -225,5 +231,5 @@ AGENT_ARGUMENT=${AGENT_PREFIX}=${AGENT_OPTS}
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 
 set -x
-exec java ${BYTEMAN_JAVA_OPTS} "${AGENT_ARGUMENT}" ${INJECT_JAVA_LANG_OPTS} $*
+exec $JAVA ${BYTEMAN_JAVA_OPTS} "${AGENT_ARGUMENT}" ${INJECT_JAVA_LANG_OPTS} $*
 
