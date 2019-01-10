@@ -308,7 +308,7 @@ public class Binding extends RuleElement
             if (type.isPrimitive()) {
                 // if the assigment involves a type conversion then we need to rebox the value
                 result = rebox(value.getType(), type, result);
-            } else if (doCheckCast) {
+            } else if (result != null && doCheckCast) {
                 if (type == Type.STRING) {
                     // force conversion to String
                     result = result.toString();
