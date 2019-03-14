@@ -1,0 +1,8 @@
+# Test script to check load and unload at method level
+RULE test autoload method rule 2
+CLASS UnitTest
+METHOD testTwo
+AT CALL tryTwo
+IF TRUE
+DO traceln("Byteman: intercepted call to tryTwo in testTwo from method @BMScript script");
+ENDRULE
