@@ -1,0 +1,139 @@
+<!--
+  ~ JBoss, Home of Professional Open Source.
+  ~ Copyright 2011, 2019 Red Hat and individual contributors
+  ~ as indicated by the @author tags. See the copyright.txt file in the
+  ~ distribution for a full listing of individual contributors.
+  ~
+  ~ This is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU Lesser General Public License as
+  ~ published by the Free Software Foundation; either version 2.1 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This software is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this software; if not, write to the Free
+  ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>byteman-bmunit5</artifactId>
+    <packaging>jar</packaging>
+    <description>
+        The Byteman bmunit5 jar provides integration of Byteman into JUnit5 tests.
+    </description>
+    <name>byteman-bmunit5</name>
+    <parent>
+        <groupId>org.jboss.byteman</groupId>
+        <artifactId>byteman-root</artifactId>
+        <version>4.0.6-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.1</version>
+                <configuration>
+                    <useSystemClassLoader>true</useSystemClassLoader>
+                    <useManifestOnlyJar>true</useManifestOnlyJar>
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
+                    <systemProperties>
+                        <property>
+                            <name>org.jboss.byteman.home</name>
+                            <value></value>
+                        </property>
+                    </systemProperties>
+                    <argLine>-Djdk.attach.allowAttachSelf</argLine>
+                    <environmentVariables>
+                        <BYTEMAN_HOME></BYTEMAN_HOME>
+                    </environmentVariables>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>junit</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>**/UnitTest5.class</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>junitconfig</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>**/UnitConfigTest5.class</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.4.0</version>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>5.4.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.4.0</version>
+            <scope>test</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.jboss.byteman</groupId>
+            <artifactId>byteman-bmunit</artifactId>
+        </dependency>
+
+    </dependencies>
+    <profiles>
+        <!-- the bmunit code uses the VM_Attach API which is available in the JDK tools jar
+             in JDK6/7/8. In JDK9 it is always available via the system loader.
+        -->
+        <profile>
+            <id>use-toolsjar-profile</id>
+            <activation>
+                <jdk>[1.6,1.8]</jdk>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.sun</groupId>
+                    <artifactId>tools</artifactId>
+                    <version>1.6</version>
+                    <scope>system</scope>
+                    <systemPath>${tools.jar}</systemPath>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+</project>

@@ -79,7 +79,8 @@ public class BMUnit
      */
     public static boolean isBMUnitVerbose()
     {
-        return BMUnitConfigState.getCurrentConfigState().isBMUnitVerbose();
+        BMUnitConfigState config = BMUnitConfigState.getCurrentConfigState();
+        return config != null && config.isBMUnitVerbose();
     }
     /**
      * getter for the load directory

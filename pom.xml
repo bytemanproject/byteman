@@ -435,6 +435,7 @@
         <module>jigsaw</module>
         <module>install</module>
         <module>contrib/bmunit</module>
+        <module>contrib/bmunit5</module>
         <module>contrib/dtest</module>
         <module>contrib/rulecheck-maven-plugin</module>
         <module>contrib/jboss-modules-system</module>
