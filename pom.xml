@@ -106,7 +106,7 @@
         <!-- for testing: command line args to enable debugger and verbose trace -->
         <debug.args>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -Dorg.jboss.byteman.verbose</debug.args>
         <!-- asm release version to use -->
-        <asm.version>7.0</asm.version>
+        <asm.version>7.1</asm.version>
     </properties>
 
     <dependencyManagement>
