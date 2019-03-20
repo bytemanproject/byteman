@@ -23,6 +23,7 @@
 */
 package org.jboss.byteman.agent.adapter;
 
+import org.jboss.byteman.agent.Location;
 import org.jboss.byteman.rule.helper.Helper;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Label;
@@ -100,6 +101,7 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
             } else if (binding.isReturn()) {
                 // this is a valid reference in an AT EXIT rule and in an AFTER INVOKE
                 // but only if the corresponding returning or called method is non-void
+                // it is also valid in an AFTER NEW rule as a reference to the new object/array
                 LocationType locationType = rule.getTargetLocation().getLocationType();
                 if (locationType == LocationType.EXIT) {
                     if ("void".equals(getReturnBindingType())) {
@@ -113,8 +115,10 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
 
                         transformContext.warn(name, descriptor, "found return value binding " + binding + " checking void called method in AFTER INVOKE rule");
                     }
+                } else if (locationType == LocationType.NEW_COMPLETED) {
+                    binding.setDescriptor(getNewTypeParamDescriptor());
                 } else {
-                    Helper.verbose("RuleCheckMethodAdapter.checkBindings : found return value binding " + binding + " in rule which is neither AT EXIT nor AFTER INVOKE " + rule.getName());
+                    Helper.verbose("RuleCheckMethodAdapter.checkBindings : found return value binding " + binding + " in rule which is neither AT EXIT nor AFTER INVOKE nor AFTER NEW " + rule.getName());
 
                     transformContext.warn(name, descriptor, "found return value binding " + binding + " in rule which is neither AT EXIT nor AFTER INVOKE");
                 }
@@ -136,10 +140,17 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
                 if (rule.getTargetLocation().getLocationType() != LocationType.INVOKE) {
                     Helper.verbose("RuleCheckMethodAdapter.checkBindings : found invoke parameter array binding $@ in non-AT INVOKE rule " + rule.getName());
 
-                    transformContext.warn(name, descriptor, "found invoke parameter array binding $@ in non-AT INVOKE rule ");
+                    transformContext.warn(name, descriptor, "found invoke parameter array binding $@ in non-AT INVOKE rule");
                 }
             } else if (binding.isTriggerClass() || binding.isTriggerMethod()) {
                 // this is ok
+            } else if (binding.isNewClass()) {
+                LocationType locationType = rule.getTargetLocation().getLocationType();
+                if (locationType != LocationType.NEW && locationType != LocationType.NEW_COMPLETED) {
+                    Helper.verbose("RuleCheckMethodAdapter.checkBindings : found new class binding $NEWCLASS in non-AT NEW rule " + rule.getName());
+
+                    transformContext.warn(name, descriptor, "found new class binding $NEWCLASS in non-AT NEW rule");
+                }
             } else if (binding.isLocalVar()){
                 // make sure we have a local variable with the correct name
                 String localVarName = binding.getName().substring(1);
@@ -205,6 +216,17 @@ public class RuleCheckMethodAdapter extends RuleMethodAdapter {
         checkBindings();
 
         super.visitEnd();
+    }
+
+    /**
+     * method overridden by AT NEW method check adapter allowing String value for the type name provided
+     * in the NEW location spec to be retrieved.
+     * this default version should never get invoked
+     * @return String value for
+     */
+    protected String getNewTypeParamDescriptor()
+    {
+        throw new RuntimeException("RuleTriggerMethodAdapter.getNewTypeParamDescriptor() : should never get called!");
     }
 
     private List<Label> triggerPoints;

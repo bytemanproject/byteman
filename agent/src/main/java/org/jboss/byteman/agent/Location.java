@@ -68,6 +68,10 @@ public abstract class Location
                 return ExitLocation.create(parameters);
             case EXCEPTION_EXIT:
                 return ExceptionExitLocation.create(parameters);
+            case NEW:
+                return NewLocation.create(parameters, false);
+            case NEW_COMPLETED:
+                return NewLocation.create(parameters, true);
         }
 
         return null;
@@ -998,4 +1002,158 @@ public abstract class Location
         }
     }
 
+    private static class NewLocation extends Location
+    {
+        /**
+         * the name of the new type being created or the empty String if
+         * no typename was specified
+         */
+        private String typeName;
+
+        /**
+         * count identifying which new operation should be taken as the trigger point.
+         * if not specified as a parameter this defaults to the first invocation. if
+         * 'ALL' was specified this takes value 0.
+         */
+        private int count;
+
+        /**
+         * number of array dimensions that should be matched at an array allocation site
+         * or 0 if plain, non-array object allocations should be matched
+         */
+        int dims;
+
+        /**
+         * flag which is false if the trigger should be inserted before the method invocation is performed
+         * and true if it should be inserted after
+         */
+        private boolean whenComplete;
+
+        private NewLocation(String typeName, int count, int dims, boolean whenComplete)
+        {
+            this.typeName = typeName;
+            this.count = count;
+            this.dims = dims;
+            this.whenComplete = whenComplete;
+        }
+
+        /**
+         * create a location identifying a method exceptional exit trigger point
+         * @param parameters the text of the parameters appended to the location specifier
+         * @return a method entry location or null if the parameters is not a blank String
+         */
+        protected static Location create(String parameters, boolean whenComplete) {
+            // syntax is AT NEW [{typename}] [{count} | 'ALL']
+            String text = parameters.trim();
+            String typeNamePattern = "[A-Za-z][A-Za-z0-9_]+";
+            String arrayDimsPattern = "(\\[\\])+";
+            String countPattern = "[0-9]+";
+            String allPattern = "ALL";
+            String countText = null;
+            String typeNameText = null;
+            String typeName;
+            int count;
+            int dims;
+
+            if (text.contains(" ")) {
+                int tailIdx = text.lastIndexOf(" ");
+                countText = text.substring(tailIdx + 1).trim();
+                typeNameText = text.substring(0, tailIdx).trim();
+            } else if (text.matches(allPattern) || text.matches(countPattern)) {
+                typeNameText = null;
+                countText = text;
+            } else {
+                typeNameText = text;
+                countText = null;
+            }
+
+            if (countText == null) {
+                count = 1;
+            } else if (countText.matches(allPattern)) {
+                count = 0;
+            } else if (countText.matches(countPattern)){
+                try {
+                    count = Integer.valueOf(countText);
+                } catch (NumberFormatException nfe) {
+                    return null;
+                }
+            } else if (countText.matches(arrayDimsPattern)) {
+                // space was separating array dims from type
+                // glue it back together and continue.
+                typeNameText = typeNameText + countText;
+                count = 1;
+            } else {
+                return null;
+            }
+
+            if (typeNameText == null || typeNameText.length() == 0) {
+                typeName = "";
+                dims = 0;
+            } else if (typeNameText.matches(typeNamePattern)) {
+                typeName = typeNameText;
+                dims = 0;
+            } else if (typeNameText.matches(arrayDimsPattern)) {
+                typeName = "";
+                dims  = typeNameText.length() / 2;
+            } else {
+                if (!typeNameText.contains("[")) {
+                    return null;
+                }
+                int tailIdx = typeNameText.indexOf("[");
+                String dimsText = typeNameText.substring(tailIdx);
+                typeNameText = typeNameText.substring(0, tailIdx);
+
+                if (typeNameText.matches(typeNamePattern) && dimsText.matches(arrayDimsPattern)) {
+                    typeName = typeNameText;
+                    dims = dimsText.length() / 2;
+                } else {
+                    return null;
+                }
+            }
+
+            return new NewLocation(typeName, count, dims, whenComplete);
+        }
+
+        public RuleCheckAdapter getRuleCheckAdapter(ClassVisitor cv, TransformContext transformContext)
+        {
+            if (dims == 0) {
+                return new NewCheckAdapter(cv, transformContext, typeName, count, whenComplete);
+            } else {
+                return new NewArrayCheckAdapter(cv, transformContext, typeName, count, dims, whenComplete);
+            }
+        }
+
+        public RuleTriggerAdapter getRuleAdapter(ClassVisitor cv, TransformContext transformContext)
+        {
+            if (dims == 0) {
+                return new NewTriggerAdapter(cv, transformContext, typeName, count, whenComplete);
+            } else {
+                return new NewArrayTriggerAdapter(cv, transformContext, typeName, count, dims, whenComplete);
+            }
+        }
+
+        public LocationType getLocationType()
+        {
+            return (whenComplete ? LocationType.NEW_COMPLETED : LocationType.NEW);
+        }
+
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append((whenComplete ? "AFTER NEW" : "AT NEW"));
+            if (typeName != null) {
+                builder.append(" ");
+                builder.append(typeName);
+            }
+            for (int i = 0; i < dims; i++) {
+                builder.append("[]");
+            }
+            if (count == 0) {
+                builder.append(" ALL");
+            } else if (count != 1) {
+                builder.append(" ");
+                builder.append(count);
+            }
+            return builder.toString();
+        }
+    }
 }

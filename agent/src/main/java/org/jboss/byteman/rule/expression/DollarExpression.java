@@ -78,6 +78,8 @@ public class DollarExpression extends AssignableExpression
             name = "$CLASS";
         } else if (index == TRIGGER_METHOD_IDX){
             name = "$METHOD";
+        } else if (index == NEW_CLASS_IDX){
+            name = "$NEWCLASS";
         } else {
             name = "$" + Integer.toString(index);
         }
@@ -367,4 +369,8 @@ public class DollarExpression extends AssignableExpression
      * index of $METHOD variable which is bound to a String identifying the trigger method and signature
      */
     public final static int TRIGGER_METHOD_IDX = -10;
+    /**
+     * index of $METHOD variable which is bound to a String identifying the trigger method and signature
+     */
+    public final static int NEW_CLASS_IDX = -11;
 }

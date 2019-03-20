@@ -36,6 +36,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.jboss.byteman.agent.HelperManager;
+import org.jboss.byteman.agent.Location;
 import org.jboss.byteman.agent.LocationType;
 import org.jboss.byteman.agent.RuleScript;
 import org.jboss.byteman.agent.ScriptRepository;
@@ -481,18 +482,22 @@ public class RuleCheck {
                         binding.setDescriptor(paramTypes.get(idx - 1));
                     }
                 } else if (binding.isReturn()) {
-                    if (rule.getTargetLocation().getLocationType() != LocationType.INVOKE_COMPLETED) {
+                    LocationType locationType = rule.getTargetLocation().getLocationType();
+                    if (locationType == LocationType.INVOKE_COMPLETED) {
+                        warning("WARNING : Cannot infer type for $! in AFTER INVOKE rule \"" + rule.getName() + "\"");
+                        binding.setDescriptor("void");
+                    } else if (locationType == LocationType.NEW_COMPLETED) {
+                        warning("WARNING : Cannot infer type for $! in AFTER NEW rule \"" + rule.getName() + "\"");
+                        binding.setDescriptor("void");
+                    } else {
                         // return type is on end of list
                         String returnType = paramTypes.get(paramCount);
-                        if ("void".equals(returnType)) {
+                        if("void".equals(returnType)) {
                             errorCount++;
                             error("ERROR : Invalid return value reference $! in rule \"" + rule.getName() + "\"");
                         } else {
                             binding.setDescriptor(returnType);
                         }
-                    } else {
-                        warning("WARNING : Cannot infer type for $! in AFTER INVOKE rule \"" + rule.getName() + "\"");
-                        binding.setDescriptor("void");
                     }
                 } else if (binding.isLocalVar()) {
                     warning("WARNING : Cannot typecheck local variable " + binding.getName()  + " in rule \"" + rule.getName() + "\"");

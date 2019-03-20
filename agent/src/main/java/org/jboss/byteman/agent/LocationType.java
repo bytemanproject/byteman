@@ -113,7 +113,7 @@ public enum LocationType
     /**
      * specifies a location for trigger insertion at return from the trigger method n.b. a trigger will be
      * injected at ALL return points
-     * script syntax : 'AT' 'RETURN'
+     * script syntax : 'AT' 'EXIT'
      */
     EXIT,
 
@@ -121,7 +121,21 @@ public enum LocationType
      * specifies a location for trigger insertion on exception exit from the trigger method
      * script syntax : 'AT' 'EXCEPTION' 'EXIT'
      */
-    EXCEPTION_EXIT;
+    EXCEPTION_EXIT,
+
+    /**
+     * specifies a location for trigger insertion at object allocation
+     * script syntax : 'AT' 'NEW' [{typename}]  [ '[]'+ ] [ {count} | 'ALL' ]
+     */
+
+    NEW,
+
+    /**
+     * specifies a location for trigger insertion after object allocation and initialization
+     * script syntax : 'AFTER' 'NEW' [{typename}] [ '[]'+ ] [ {count} | 'ALL' ]
+     */
+
+    NEW_COMPLETED;
 
     public String specifierText()
     {
@@ -187,11 +201,13 @@ public enum LocationType
             "AFTER[ \t]*SYNCHRONIZE",
             "AT[ \t]*THROW",
             "AT[ \t]*EXIT",
+            "AT[ \t]*EXCEPTION[ \t]*EXIT",
+            "AT[ \t]*NEW",
+            "AFTER[ \t]*NEW",
             "LINE", // for compatibility
             "AT[ \t]*CALL", // for ambiguity :-)
             "AFTER[ \t]*CALL", // for ambiguity :-)
-            "AT[ \t]*RETURN", // for ambiguity :-)
-            "AT[ \t]*EXCEPTION[ \t]*EXIT" // for ambiguity :-)
+            "AT[ \t]*RETURN" // for ambiguity :-)
     };
 
     private static Pattern[] specifierPatterns = createPatterns();
@@ -209,10 +225,12 @@ public enum LocationType
             SYNCHRONIZE_COMPLETED,
             THROW,
             EXIT,
+            EXCEPTION_EXIT,
+            NEW,
+            NEW_COMPLETED,
             LINE,
             INVOKE,
             INVOKE_COMPLETED,
-            EXIT,
-            EXCEPTION_EXIT
+            EXIT
     };
 }
