@@ -716,7 +716,8 @@ public class Rule
             Binding binding = iterator.next();
             // these bindings are typed via the descriptor installed during trigger injection
             // note that the return type has to be done this way because it may represent the
-            // trigger method return type or the invoke method return type
+            // trigger method return type or the invoke method return type or a new object or
+            // array type
             if (binding.isParam() || binding.isLocalVar() || binding.isReturn()) {
                 String typeName = binding.getDescriptor();
                 String[] typeAndArrayBounds = typeName.split("\\[");
@@ -737,7 +738,7 @@ public class Rule
                 binding.setType(Type.I);
             } else if (binding.isParamArray() || binding.isInvokeParamArray()) {
                 binding.setType(Type.OBJECT.arrayType());
-            } else if (binding.isTriggerClass() || binding.isTriggerMethod()) {
+            } else if (binding.isTriggerClass() || binding.isTriggerMethod() || binding.isNewClass()) {
                 binding.setType(Type.STRING);
             }
         }

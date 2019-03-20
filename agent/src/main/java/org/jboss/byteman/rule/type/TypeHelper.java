@@ -124,20 +124,59 @@ public class TypeHelper {
     }
 
     /**
-     * convert a classname from external form to canonical form i.e. replace
-     * all slashes with dots
+     * convert a classname from external form to canonical form. equivalent
+     * to calling internalizeClass(className, false).
      *
      * @param className the external name
      * @return the canonical name
      */
     public static String internalizeClass(String className)
     {
-        String result = className;
-        int length = result.length();
-        if (result.charAt(length - 1) == ';') {
-            result = result.substring(1, length - 2);
+        return internalizeClass(className, false);
+    }
+
+    /**
+     * convert a classname from external form to canonical form. equivalent
+     * to calling internalizeClass(className, false).
+     * i.e. replace all slashes with dots, replace each leading square left
+     * brace with a corresponding trailing square brace pair and remove any
+     * L and colon characters bracketing the base type name.
+     *
+     * if arrayBaseOnly is true then do not append trailing brace pairs
+     *
+     * @param className the external name
+     * @param  arrayBaseOnly omit trailing brace pairs when this is true
+     * @return the canonical name
+     */
+    public static String internalizeClass(String className, boolean arrayBaseOnly)
+    {
+        String result;
+        int arrayDims = 0;
+        while(className.charAt(arrayDims) == '[') {
+            arrayDims++;
         }
+        int length = className.length();
+        if (className.charAt(length - 1) == ';') {
+            result = className.substring(arrayDims + 1, length - 1);
+        } else {
+
+            result = className.substring(arrayDims, length);
+
+            // special check for primitive types
+            for (int i = 0; i < externalNames.length; i++) {
+                if (externalNames[i].equals(result)) {
+                    result = internalNames[i];
+                    break;
+                }
+            }
+        }
+
         result = result.replace('/', '.');
+        if (!arrayBaseOnly) {
+            for (int i = 0; i < arrayDims; i++) {
+                result = result + "[]";
+            }
+        }
         return result;
     }
 
@@ -427,5 +466,24 @@ public class TypeHelper {
         } else {
             return "";
         }
+    }
+
+    /**
+     * idenitfy the number of array dimensions encoded in the supplied type
+     * @param type a type in external format
+     * @return the number of array dimensions encoded in the supplied type
+     */
+    public static int dimCount(String type)
+    {
+        int start = 0;
+        int dims = 0;
+        if (type.startsWith("L") && type.endsWith(";")) {
+            start = 1;
+        }
+        while (start < type.length() && type.charAt(start++)== '[') {
+            dims++;
+        }
+        
+        return dims;
     }
 }

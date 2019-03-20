@@ -291,8 +291,10 @@ The full set of location specifiers is as follows:
 `AFTER WRITE _$var-or-idx [count_ | ALL _]_` +
 `AT INVOKE _[ type .] method [ ( argtypes ) ] [count_ | ALL _]_` +
 `AFTER INVOKE _[ type .] method [ ( argtypes ) ][count_ | ALL _]_` +
-`AT SYNCHRONIZE _[count_ | ALL _]_` +
-`AFTER SYNCHRONIZE _[count_ | ALL _]_` +
+`AT NEW _[ type ] [_ [] _] * [count_ | ALL _]_` +
+`AFTER NEW _[ type ] [_ [] _] * [count_ | ALL _]_` +
+`AT SYNCHRONIZE _[ count_ | ALL _]_` +
+`AFTER SYNCHRONIZE _[ count_ | ALL _]_` +
 `AT THROW _[count_ | ALL _]_` +
 `AT EXCEPTION EXIT`
 
@@ -382,6 +384,52 @@ be qualified by a, possibly package-qualified, type or by a descriptor. A descri
 of a comma-separated list of type names within brackets. The type names identify the
 types of the method parameters and may be prefixed with package qualifiers and employ
 array bracket pairs as suffixes.
+
+==== AT NEW, AFTER NEW
+
+`AT NEW` and `AFTER NEW` specifiers identify locations in the target
+method where a `new` operation creates a Java object class or array
+class. An `AT NEW` rule is triggered before the object or array is
+allocated. An `AFTER NEW` rule is triggered after creation and
+initialization of the object or array.
+
+Selection of the `NEW` trigger location may be constrained by
+supplying a variety of optional arguments, a type name, one or more
+pairs of square braces and either an integer count or the keyword
+`ALL`. These arguments may all be specified independently and they
+each serve to select a more or less precise set of matches for points
+where the rule may be considered for injection into the target method.
+
+If a type name is supplied injection is limited to points where an
+instance (or array) of the named type is created. The type name can be
+supplied without a package qualifier, in which case any new operation
+with a type sharing the same non-package qualified name will match.
+
+If the type name is omitted then injection can occur at any point
+where an instance (or array) is created.
+
+Note that `extends` and `implements` relationships are ignored when
+matching. For example, if a rule specifies `AT NEW Foo` then the
+location will not be matched against operation `new Foobar` even if
+`Foo extends FooBar`. Similarly, when `Foo implements IFoo` specifying
+location `AT NEW IFoo` will not be matched. Indeed specifying any
+interface is a mistake. new operations always instantiate a specific
+class and never an interface. So, locations specifying an interface
+name will never match.
+
+If one or more brace pairs are included then injection is limited to
+points in the method where an array with the equivalent number of
+dimensions is created. So, for example specifying `AT NEW [][]` will
+match any new operation where a 2d array is created, irresp[etive of
+what the array base type is, By contrast, specifying `AT NEW int[]`
+will only match a new operation where a 1d int array is created. If no
+braces are supplied then matches will be restricted to new operations
+where a Java object class (i.e. a non-array class) is instantiated.
+
+When there are multiple canidate injection points in a method an
+integer count may be supplied to pick a specific injection point
+(count defaults to 1 if it is left unspecified). Keyword `ALL` can be
+supplied to request injection at _all_ matching injection points.
 
 ===== AT SYNCHRONIZE, AFTER SYNCHRONIZE
 
@@ -560,6 +608,10 @@ such special variables:
 - `$!` is also valid in an `AFTER INVOKE` rule and is bound to the return value on the stack at 
   the point where the rule is triggered. Its type is the same as the invoked method return type. 
   The rule will fail to inject if the invoked method return type is void.
+- `$!` is also valid in an `AFTER NEW` rule and is bound the instance
+  or array created by the new operation which triggered the rule. Its
+  type is that of the corresponding new expression in the trigger
+  method. 
 - `$^` is valid in an `AT THROW` rule and is bound to the throwable on the stack at the 
   point where the rule is triggered. Its type is Throwable.
 -  `$^` is also valid in an `AT EXCEPTION EXIT` rule and is bound to the throwable being returned from the method via exceptional
@@ -585,6 +637,10 @@ such special variables:
   Note that this is normally the same as the target method mentioned in the `METHOD` clause of the 
   rule. However, the target method may omit the signature and return type. So there may be more 
   than one trigger method for any given target method.
+- `$NEWCLASS` is only valid in `AT NEW` and `AFER NEW` rules.  It is
+  bound to a String which is the canonical name of the object or array
+  created by the new operation e.g `org.my.Foo`, `int[]`,
+  `org.my.Bar[][]`.
 * Array literal expressions are a comma-separated sequence of expressions enclosed in braces such 
   as `{}` , `{ "foo", "bar" }`.  Array literals may only be used to define the initial value for 
   either: an array variable declared in the `BIND` clause  e.g. +
@@ -604,7 +660,7 @@ such special variables:
   occur.
 * Assignments may update the bindings for rule variables introduced in the `BIND` clause, 
   parameter or local variables, instance fields, static fields or the return value special 
-  variables `$!`. Assignments are not currently allowed to update any of the the other special 
+  variable `$!`. Assignments are not currently allowed to update any of the the other special 
   variables.
 * Assignments to parameter variables or local variables are visible on resumption of the trigger 
   method. For example, assume that a rule includes an assignment  such as `$name = "Ernie"`, where 
@@ -613,9 +669,13 @@ such special variables:
   resumption of the trigger method `name` will have value `"Ernie"`. Note that assignments cannot be 
   made to `$this` (or, equivalently, `$0`); the recipient argument for an instance method is 
   always `final`.
-* Assignment to `$!` updates the return value on top of the stack at the trigger point, causing 
-  the trigger method to return this updated value. The same effect can be achieved by executing a 
-  `RETURN` expression.
+* Assignment to `$!` in an AT RETURN, AFTER INVOKE or AFTER NEW rule
+  updates the value on top of the stack at the trigger point. For an
+  AT RETURN rule this causes the trigger method to return this updated
+  value.  The same effect can be achieved in an AT RETURN rule by
+  executing a `RETURN` expression. For an AFTER INVOKE or AFTER NEW
+  rule this substitutes an alternative result for the just completed
+  call or new operation.
 * Byteman provides the English language keywords listed below which can be used in place of the 
   related standard Java operators (in brackets): +
   `OR (||)`, `AND (&&)`, `NOT (!)`, `LE (<` `=)`, `LT (<)`, `EQ (==)`, `NE (!=)`, `GE (>=)`, `GT (>)`, 

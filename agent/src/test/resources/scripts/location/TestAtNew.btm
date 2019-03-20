@@ -1,0 +1,348 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2019, Red Hat and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+
+RULE test AT NEW instance notype
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AT NEW instance Parent match
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW Parent
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW Parent NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AT NEW instance Child nomatch
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW Child
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW Child NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AFTER NEW instance notype
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName())
+ENDRULE
+
+RULE test AFTER NEW instance Parent match
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW Parent
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW Parent NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName());
+   # reassign new instance with a Child
+   # n.b. this side-effects the value seen by the above rule
+   # since AFTER rules for the same target location are executed
+   # in reverse order of appearance
+   test.log("TestAtNew.test: reassigning $! to a Child");
+   $! = new  org.jboss.byteman.tests.auxiliary.Child()
+ENDRULE
+
+RULE test AFTER NEW instance Child nomatch
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW Child
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW Child NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName())
+ENDRULE
+
+RULE test AT NEW array notype
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW []
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW [] NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AT NEW array 2 notype
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW [] 2
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW [] 2 NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AT NEW array Parent nomatch
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW Parent[]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW Parent [] NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AT NEW array Child match
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW Child[]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW Child [] NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AT NEW array int match
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW int[]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW int [] NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AFTER NEW array notype
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW []
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW [] NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName());
+   test.log("TestAtNew.test: $!.length == " + $!.length);
+ENDRULE
+
+RULE test AFTER NEW array 2 notype
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW [] 2
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW [] 2 NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName());
+   test.log("TestAtNew.test: $!.length == " + $!.length);
+ENDRULE
+
+RULE test AFTER NEW array Parent nomatch
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW Parent[]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW Parent [] NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName());
+   test.log("TestAtNew.test: $!.length == " + $!.length);
+ENDRULE
+
+RULE test AFTER NEW array Child match
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW Child[]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW Child [] NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName());
+   test.log("TestAtNew.test: $!.length == " + $!.length);
+ENDRULE
+
+RULE test AFTER NEW array int match
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW int[]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW int [] NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName());
+   test.log("TestAtNew.test: $!.length == " + $!.length);
+ENDRULE
+
+RULE test AT NEW 2d array notype
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW [][]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW [][] NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AT NEW 2 2d array notype 
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW [][] 2
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW [][] 2 NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AT NEW 3 2d array notype
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW [][] 3
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW [][] 3 NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AT NEW 2d array Parent match
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW Parent[][]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW Parent [][] NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AT NEW 2d array Child nomatch
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW Child[][]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW Child [][] NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AT NEW 2d array int match
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AT NEW int[][]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AT NEW int [][] NEWCLASS == " + $NEWCLASS);
+ENDRULE
+
+RULE test AFTER NEW 2d array notype
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW [][]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW [][] NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName());
+   test.log("TestAtNew.test: $!.length == " + $!.length);
+   # for this case subarrays should be null
+   test.log("TestAtNew.test: $![0] == " + $![0]);
+ENDRULE
+
+RULE test AFTER NEW 2 2d array notype
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW [][] 2
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW [][] 2 NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName());
+   test.log("TestAtNew.test: $!.length == " + $!.length);
+   test.log("TestAtNew.test: $![0].length == " + $![0].length);
+ENDRULE
+
+RULE test AFTER NEW 3 2d array notype
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW [][] 3
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW [][] 3 NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName());
+   test.log("TestAtNew.test: $!.length == " + $!.length);
+   test.log("TestAtNew.test: $![0].length == " + $![0].length);
+ENDRULE
+
+RULE test AFTER NEW 2d array Parent match
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW Parent[][]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW Parent [][] NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName());
+   test.log("TestAtNew.test: $!.length == " + $!.length);
+   # for this case subarrays shoudl be null
+   test.log("TestAtNew.test: $![0] == " + $![0]);
+ENDRULE
+
+RULE test AFTER NEW 2d array Child nomatch
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW Child[][]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW Child [][] NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName());
+   test.log("TestAtNew.test: $!.length == " + $!.length);
+   test.log("TestAtNew.test: $![0].length == " + $![0].length);
+ENDRULE
+
+RULE test AFTER NEW 2d array int match
+CLASS TestAtNew
+METHOD test()
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER NEW int [][]
+BIND test : Test = $0
+IF TRUE
+DO test.log("TestAtNew.test: triggered AFTER NEW int [][] NEWCLASS == " + $NEWCLASS);
+   test.log("TestAtNew.test: $!.getClass().getSimpleName() == " + $!.getClass().getSimpleName());
+   test.log("TestAtNew.test: $!.length == " + $!.length);
+   test.log("TestAtNew.test: $![0].length == " + $![0].length);
+   # reassign new instance with a Child
+   # n.b. this side-effects the value seen by the 3rd 2d notype rule
+   # since AFTER rules for the same target location are executed
+   # in reverse order of appearance
+   test.log("TestAtNew.test: reassigning $! to new int[5][2]");
+   $! = new int[5][2];
+ENDRULE

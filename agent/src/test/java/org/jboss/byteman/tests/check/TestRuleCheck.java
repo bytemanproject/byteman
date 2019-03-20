@@ -49,6 +49,7 @@ public class TestRuleCheck extends Test
         addBtmScript(checker, new File("src/test/resources/scripts/location"));
         addBtmScript(checker, new File("src/test/resources/scripts/misc"));
         checker.addPackage("org.jboss.byteman.tests.auxiliary");
+        checker.addPackage("org.jboss.byteman.tests.location");
         checker.addPackage("org.jboss.byteman.tests.bugfixes");
         checker.addPackage("org.jboss.byteman.tests.javaops");
         checker.addPackage("org.jboss.byteman.tests.helpertests");

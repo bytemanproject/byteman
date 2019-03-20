@@ -57,7 +57,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
         this.argLocalIndices = new int[argumentTypes.length];
         this.bindReturnOrThrowableValue = false;
         this.bindInvokeParams = false;
-        this.bindingIndicesSet =  false;
+        this.bindingIndicesSet = false;
     }
 
     /**
@@ -67,6 +67,16 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
      */
     public Type[] getInvokedTypes()    {
         throw new RuntimeException("RuleTriggerMethodAdapter.getInvokedTypes() : should never get called!");
+    }
+
+    /**
+     * method overridden by AT NEW method trigger adapter allowing String value for NEWCLASS binding to
+     * be retrieved.,
+     * this default version should never get invoked
+     * @return String value for NEWCLASS binding
+     */
+    public String getNewClassName()    {
+        throw new RuntimeException("RuleTriggerMethodAdapter.getNewClassName() : should never get called!");
     }
 
     /**
@@ -157,7 +167,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
                 // have to add a local var to store the value so track that requirement
                 callArrayBindings.add(binding);
                 bindInvokeParams = true;
-            } else if (binding.isTriggerClass() || binding.isTriggerMethod()) {
+            } else if (binding.isTriggerClass() || binding.isTriggerMethod() || binding.isNewClass()) {
                 callArrayBindings.add(binding);
                 binding.setDescriptor("java.lang.String");
             }
@@ -237,10 +247,19 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
                             return -1;
                         }
                     } else if (b1.isTriggerMethod()) {
-                        if (b2.isParam() || b2.isLocalVar() || b2.isParamCount() || b2.isParamArray() || b2.isInvokeParamArray() || b2.isTriggerClass()) {
+                        if(b2.isParam() || b2.isLocalVar() || b2.isParamCount() || b2.isParamArray() || b2.isInvokeParamArray() || b2.isTriggerClass()) {
                             // param, local and param count, param array, invoke param array and trigger class bindings precede trigger method
                             return 1;
-                        } else if (b2.isTriggerMethod()) {
+                        } else if(b2.isTriggerMethod()) {
+                            return 0;
+                        } else {
+                            return -1;
+                        }
+                    } else if (b1.isNewClass()) {
+                        if(b2.isParam() || b2.isLocalVar() || b2.isParamCount() || b2.isParamArray() || b2.isInvokeParamArray() || b2.isTriggerClass() || b2.isTriggerMethod()) {
+                            // param, local and param count, param array, invoke param array and trigger class and trigger method bindings precede new class
+                            return 1;
+                        } else if(b2.isNewClass()) {
                             return 0;
                         } else {
                             return -1;
@@ -451,7 +470,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
                 } else {
                     box(getLocalType(idx));
                 }
-            } else if (binding.isParamCount()){
+            } else if (binding.isParamCount()) {
                 int count = argumentTypes.length;
                 push(count);
                 box(Type.INT_TYPE);
@@ -474,15 +493,18 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
                     box(argumentTypes[idx]);
                     arrayStore(objectType);
                 }
-            } else if (binding.isInvokeParamArray()){
+            } else if (binding.isInvokeParamArray()) {
                 loadLocal(saveSlot);
-            } else if (binding.isTriggerClass()){
+            } else if (binding.isTriggerClass()) {
                 String triggerClassName = TypeHelper.internalizeClass(getTriggerClassName());
                 visitLdcInsn(triggerClassName);
-            } else if (binding.isTriggerMethod()){
+            } else if (binding.isTriggerMethod()) {
                 String triggerMethodName = name + TypeHelper.internalizeDescriptor(descriptor);
                 visitLdcInsn(triggerMethodName);
-            } else if (binding.isThrowable() | binding.isReturn()){
+            } else if (binding.isNewClass()) {
+                String typeName = getNewClassName();
+                visitLdcInsn(typeName);
+            } else if (binding.isThrowable() | binding.isReturn()) {
                 loadLocal(saveSlot);
                 box(saveValueType);
             }

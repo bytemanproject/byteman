@@ -28,7 +28,15 @@ package org.jboss.byteman.tests.auxiliary;
  */
 public class Parent
 {
+    private static int nextId = 0;
+    private static synchronized int nextId() { return nextId++; }
+
+    private int id;
+
     public Parent()
     {
+        id = nextId();
     }
+
+    public int getId() { return id; }
 }

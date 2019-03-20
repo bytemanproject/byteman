@@ -322,6 +322,22 @@
                       </configuration>
                     </execution>
                     <execution>
+                      <id>location.TestAtNew</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                          <forkCount>1</forkCount>
+                          <reuseForks>true</reuseForks>
+                         <includes>
+                           <include>org/jboss/byteman/tests/location/TestAtNew.class</include>
+                         </includes>
+                         <argLine>-javaagent:${project.build.directory}/byteman-agent-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/location/TestAtNew.btm</argLine>
+                      </configuration>
+                    </execution>
+                    <execution>
                       <id>location.TestCall</id>
                       <phase>integration-test</phase>
                       <goals>
@@ -1376,6 +1392,22 @@
                                 <include>org/jboss/byteman/tests/location/TestAll.class</include>
                             </includes>
                             <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-agent-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/location/TestAll.btm</argLine>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>location.TestAtNew.compiled</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
+                            <includes>
+                                <include>org/jboss/byteman/tests/location/TestAtNew.class</include>
+                            </includes>
+                            <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-agent-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/location/TestAtNew.btm</argLine>
                         </configuration>
                     </execution>
                     <execution>

@@ -222,6 +222,8 @@ public class ExpressionHelper
                     expr = new DollarExpression(rule, rule.getTypeGroup().createArray(Type.OBJECT), exprTree, DollarExpression.TRIGGER_CLASS_IDX);
                 } else if (text.equals("$METHOD")) {
                     expr = new DollarExpression(rule, rule.getTypeGroup().createArray(Type.OBJECT), exprTree, DollarExpression.TRIGGER_METHOD_IDX);
+                } else if (text.equals("$NEWCLASS")) {
+                    expr = new DollarExpression(rule, rule.getTypeGroup().createArray(Type.OBJECT), exprTree, DollarExpression.NEW_CLASS_IDX);
                 } else {
                     expr = new DollarExpression(rule, type, exprTree, text.substring(1));
                 }
@@ -756,6 +758,8 @@ public class ExpressionHelper
                     expr = new DollarExpression(rule, rule.getTypeGroup().createArray(Type.OBJECT), exprTree, DollarExpression.TRIGGER_CLASS_IDX);
                 } else if (text.equals("$METHOD")) {
                     expr = new DollarExpression(rule, rule.getTypeGroup().createArray(Type.OBJECT), exprTree, DollarExpression.TRIGGER_METHOD_IDX);
+                } else if (text.equals("$NEWCLASS")) {
+                    expr = new DollarExpression(rule, rule.getTypeGroup().createArray(Type.OBJECT), exprTree, DollarExpression.NEW_CLASS_IDX);
                 } else {
                     expr = new DollarExpression(rule, type, exprTree, text.substring(1));
                 }

@@ -99,6 +99,9 @@ public class Binding extends RuleElement
         } else if (name.equals("$METHOD")) {
             // $* refers to the parameters for the trigger method supplied as an Object array
             index = DollarExpression.TRIGGER_METHOD_IDX;
+        } else if (name.equals("$NEWCLASS")) {
+            // $* refers to the parameters for the trigger method supplied as an Object array
+            index = DollarExpression.NEW_CLASS_IDX;
         } else if (name.matches("\\$[A-Za-z].*")) {
            // $AAAAA refers  to a local variable in the trigger method
             index = DollarExpression.LOCAL_IDX;
@@ -488,6 +491,11 @@ public class Binding extends RuleElement
     public boolean isTriggerMethod()
     {
         return index == DollarExpression.TRIGGER_METHOD_IDX;
+    }
+
+    public boolean isNewClass()
+    {
+        return index == DollarExpression.NEW_CLASS_IDX;
     }
 
     public int getIndex()
