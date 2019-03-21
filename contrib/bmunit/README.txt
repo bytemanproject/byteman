@@ -93,22 +93,39 @@ public class MyTestClass
 This is particulary useful when your test class needs to inherit
 behaviour from a libray class.
 
-JUnit 4 Style Tests
+JUnit 4/5 Style Tests
 -------------------
-Your test class should be annotated with annotation class org.junit.RunWith
-supplyng class BMUnitRunner as argument to the annotation. BMUnitRunner will
-load the Byteman agent on demand and will load and unload rules in response
-to the presence of @BMScript, @BMScripts,  @BMRule or @BMRules annotations.
+For JUnit5 your test class should be annotated with annotation class
+org.jboss.byteman.contrib.bmunit.WithByteman. This annotation integrates
+with the JUnit5 runner, loading the Byteman agent on demand and loading
+and unloading rules in response to the presence of @BMScript, @BMScripts,
+@BMRule or @BMRules annotations on the test class and/or test methods.
 
-@BMScript(. . .)
-@RunWith(BMUnitRunner.class)
+@WithByteman
+@BMScripts(. . .)
 public class MyTestClass
 {
   @Test
   @BMScript(. . .)
+  @BMRules(. . .)
   public void myTestMethod() {
     . . .
 
+For JUnit4 your test class should be annotated with annotation class
+org.junit.RunWith supplyng class BMUnitRunner as argument to the annotation.
+BMUnitRunner will load the Byteman agent on demand and will load and unload
+rules in response to the presence of @BMScript, @BMScripts,  @BMRule or @BMRules
+annotations on the test class and/or test methods.
+
+@RunWith(BMUnitRunner.class)
+@BMScripts(. . .)
+public class MyTestClass
+{
+  @Test
+  @BMScript(. . .)
+  @BMRules(. . .)
+  public void myTestMethod() {
+    . . .
 
 @BMScript(s) annotation
 -----------------------
