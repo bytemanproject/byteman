@@ -53,6 +53,17 @@
             <outputFileNameMapping>${artifact.artifactId}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
         </dependencySet>
         <dependencySet>
+            <outputDirectory>contrib/bmunit</outputDirectory>
+            <includes>
+                <include>org.jboss.byteman:byteman-bmunit5:jar:*</include>
+            </includes>
+            <excludes>
+                <exclude>*:javadoc</exclude>
+                <exclude>*:sources</exclude>
+            </excludes>
+            <outputFileNameMapping>${artifact.artifactId}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
+        </dependencySet>
+        <dependencySet>
             <outputDirectory>contrib/jboss-modules-system</outputDirectory>
             <includes>
                 <include>org.jboss.byteman:byteman-jboss-modules-plugin:jar:*</include>

@@ -102,6 +102,11 @@
         </dependency>
         <dependency>
             <groupId>org.jboss.byteman</groupId>
+            <artifactId>byteman-bmunit5</artifactId>
+	    <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.byteman</groupId>
             <artifactId>byteman-dtest</artifactId>
 	    <version>${project.version}</version>
         </dependency>
@@ -138,6 +143,12 @@
         <dependency>
             <groupId>org.jboss.byteman</groupId>
             <artifactId>byteman-bmunit</artifactId>
+            <classifier>javadoc</classifier>
+	    <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.byteman</groupId>
+            <artifactId>byteman-bmunit5</artifactId>
             <classifier>javadoc</classifier>
 	    <version>${project.version}</version>
         </dependency>
@@ -181,6 +192,12 @@
         <dependency>
             <groupId>org.jboss.byteman</groupId>
             <artifactId>byteman-bmunit</artifactId>
+            <classifier>sources</classifier>
+	    <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.byteman</groupId>
+            <artifactId>byteman-bmunit5</artifactId>
             <classifier>sources</classifier>
 	    <version>${project.version}</version>
         </dependency>
