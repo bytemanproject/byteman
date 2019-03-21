@@ -385,7 +385,7 @@ of a comma-separated list of type names within brackets. The type names identify
 types of the method parameters and may be prefixed with package qualifiers and employ
 array bracket pairs as suffixes.
 
-==== AT NEW, AFTER NEW
+===== AT NEW, AFTER NEW
 
 `AT NEW` and `AFTER NEW` specifiers identify locations in the target
 method where a `new` operation creates a Java object class or array
