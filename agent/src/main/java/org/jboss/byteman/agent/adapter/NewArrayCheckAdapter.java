@@ -91,9 +91,10 @@ public class NewArrayCheckAdapter extends RuleCheckAdapter
         public void visitTypeInsn(int opcode, String type)
         {
             boolean triggerReady = false;
+            int elementDims = TypeHelper.dimCount(type);
             if (opcode == Opcodes.ANEWARRAY &&
                     (count == 0 || visitedCount < count) &&
-                    matchDims(type, 1) && matchType(type)) {
+                    (dims == elementDims + 1) && matchType(type)) {
                 // a relevant invocation occurs in the called method
                 visitedCount++;
                 if (count ==  0 || visitedCount == count) {
@@ -140,7 +141,8 @@ public class NewArrayCheckAdapter extends RuleCheckAdapter
         public void visitMultiANewArrayInsn(String descriptor, int numDimensions)
         {
             boolean triggerReady = false;
-            if (dims == numDimensions && (count == 0 || visitedCount < count) && matchType(descriptor)) {
+            int totalDims = TypeHelper.dimCount(descriptor);
+            if (dims == totalDims && (count == 0 || visitedCount < count) && matchType(descriptor)) {
                 // a relevant invocation occurs in the called method
                 visitedCount++;
                 if (count ==  0 || visitedCount == count) {
@@ -157,11 +159,6 @@ public class NewArrayCheckAdapter extends RuleCheckAdapter
             if (triggerReady) {
                 setTriggerPoint();
             }
-        }
-
-        private boolean matchDims(String type, int included) {
-            int typeDims = TypeHelper.dimCount(type) + included;
-            return typeDims == dims;
         }
 
         private boolean matchType(int operand)

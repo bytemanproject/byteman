@@ -99,10 +99,11 @@ public class NewArrayTriggerAdapter extends RuleTriggerAdapter
         {
             boolean triggerReady = false;
             // n.b. have to skip any ANEWARRAY injected into the byteman trigger code
+            int elementDims = TypeHelper.dimCount(type);
             if (!inBytemanTrigger() &&
                     opcode == Opcodes.ANEWARRAY &&
                     (count == 0 || visitedCount < count) &&
-                    matchDims(type, 1) && matchType(type)) {
+                    (dims == elementDims + 1) && matchType(type)) {
                 // a relevant invocation occurs in the called method
                 visitedCount++;
                 if (count ==  0 || visitedCount == count) {
@@ -150,7 +151,8 @@ public class NewArrayTriggerAdapter extends RuleTriggerAdapter
         public void visitMultiANewArrayInsn(String descriptor, int numDimensions)
         {
             boolean triggerReady = false;
-            if (dims == numDimensions && (count == 0 || visitedCount < count) && matchType(descriptor)) {
+            int totalDims = TypeHelper.dimCount(descriptor);
+            if (dims == totalDims && (count == 0 || visitedCount < count) && matchType(descriptor)) {
                 // a relevant invocation occurs in the called method
                 visitedCount++;
                 if (count ==  0 || visitedCount == count) {
@@ -167,11 +169,6 @@ public class NewArrayTriggerAdapter extends RuleTriggerAdapter
             if (triggerReady) {
                 injectTriggerPoint();
             }
-        }
-
-        private boolean matchDims(String type, int included) {
-            int typeDims = TypeHelper.dimCount(type) + included;
-            return typeDims == dims;
         }
 
         private boolean matchType(int operand)
