@@ -411,7 +411,7 @@ where an instance (or array) is created.
 Note that `extends` and `implements` relationships are ignored when
 matching. For example, if a rule specifies `AT NEW Foo` then the
 location will not be matched against operation `new Foobar` even if
-`Foo extends FooBar`. Similarly, when `Foo implements IFoo` specifying
+`FooBar extends Foo`. Similarly, when `Foo implements IFoo` specifying
 location `AT NEW IFoo` will not be matched. Indeed specifying any
 interface is a mistake. new operations always instantiate a specific
 class and never an interface. So, locations specifying an interface
@@ -420,7 +420,7 @@ name will never match.
 If one or more brace pairs are included then injection is limited to
 points in the method where an array with the equivalent number of
 dimensions is created. So, for example specifying `AT NEW [][]` will
-match any new operation where a 2d array is created, irresp[etive of
+match any new operation where a 2d array is created, irrespective of
 what the array base type is, By contrast, specifying `AT NEW int[]`
 will only match a new operation where a 1d int array is created. If no
 braces are supplied then matches will be restricted to new operations
