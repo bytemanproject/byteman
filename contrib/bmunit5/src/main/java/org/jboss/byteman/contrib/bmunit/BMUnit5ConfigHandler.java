@@ -45,7 +45,7 @@ public class BMUnit5ConfigHandler extends BMUnit5AbstractHandler<BMUnitConfig> {
 
         final Optional<BMUnitConfig> optionalAnnotation = findAnnotation(testClass, annotationClass);
         System.out.println(this.getClass().getName() + " installing " + testClass.getCanonicalName());
-        if(optionalAnnotation.isEmpty()) {
+        if(optionalAnnotation.isPresent()) {
             install(testClass, null, null);
         } else {
             install(testClass, null, optionalAnnotation.get());
