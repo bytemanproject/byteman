@@ -74,7 +74,7 @@ public abstract class BMUnit5AbstractHandler<A extends Annotation>
         final Class<?> testClass = context.getRequiredTestClass();
 
         final Optional<Method> testMethod = context.getTestMethod();
-        if (testMethod.isEmpty()) {
+        if (!testMethod.isPresent()) {
             return;
         }
 
@@ -114,7 +114,7 @@ public abstract class BMUnit5AbstractHandler<A extends Annotation>
         final Class<?> testClass = context.getRequiredTestClass();
 
         final Optional<Method> testMethod = context.getTestMethod();
-        if (testMethod.isEmpty()) {
+        if (!testMethod.isPresent()) {
             return;
         }
 
