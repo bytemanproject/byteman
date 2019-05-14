@@ -224,6 +224,5 @@ AGENT_ARGUMENT=${AGENT_PREFIX}=${AGENT_OPTS}
 
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 
-set -x
 exec java ${BYTEMAN_JAVA_OPTS} "${AGENT_ARGUMENT}" ${INJECT_JAVA_LANG_OPTS} $*
 
