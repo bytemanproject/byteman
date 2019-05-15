@@ -23,6 +23,8 @@
 */
 package org.jboss.byteman.rule.type;
 
+import org.jboss.byteman.rule.exception.TypeException;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -271,7 +273,15 @@ public class TypeGroup {
         } else if (clazz.isPrimitive()) {
             return typeTable.get(clazz.getName());
         } else {
-            String name = clazz.getCanonicalName();
+            String name;
+            if (clazz.isMemberClass()) {
+                String simpleName = clazz.getSimpleName();
+                Class outerClazz = clazz.getDeclaringClass();
+                Type outerType = ensureType(outerClazz);
+                name = outerType.getName() + "$" + simpleName;
+            } else {
+                name = clazz.getCanonicalName();
+            }
             Type type = typeTable.get(name);
             if (type == null) {
                 type = create(name, clazz);
