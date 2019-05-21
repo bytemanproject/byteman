@@ -34,8 +34,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
-import java.util.LinkedList;
+import java.net.URL;
 import java.util.Properties;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 /**
  * class used to model a specific BMUnit configuration
@@ -426,6 +428,35 @@ public class BMUnitConfigState
         }
     }
 
+    private void checkBMUnitVersion(String agentVersion) throws Exception
+    {
+        String bmunitVersion = null;
+
+        String className = this.getClass().getSimpleName() + ".class";
+        String classPath = this.getClass().getResource(className).toString();
+        if (classPath.startsWith("file")) {
+            // this happens during building -- just ignore
+            return;
+        } else if (!classPath.startsWith("jar")) {
+            throw new Exception("BMUnit : could not find manifest for bmunit jar");
+        }
+        try {
+            String manifestPath = classPath.substring(0, classPath.lastIndexOf("!") + 1) +
+                    "/META-INF/MANIFEST.MF";
+            Manifest manifest = new Manifest(new URL(manifestPath).openStream());
+            bmunitVersion = manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+        } catch (IOException E) {
+            // handle
+        }
+        if (bmunitVersion == null || bmunitVersion.equals("")) {
+            throw new Exception("BMUnit : could not find manifest implementation version for bmunit jar");
+        }
+
+        if (!bmunitVersion.equals(agentVersion)) {
+            throw new Exception("BMUnit : Identified test JVM process but agent version " + agentVersion + " does not match BMUnit version " + bmunitVersion);
+        }
+    }
+
     /**
      * load the agent into this JVM if not already loaded. unfortunately this can only be done if we have
      * the pid of the current process and we cannot get that in a portable way
@@ -433,6 +464,7 @@ public class BMUnitConfigState
     private void loadAgent() throws Exception
     {
         String id = null;
+        String agentVersion = null;
 
         // if we can get a proper pid on Linux  we use it
         int pid = getPid();
@@ -517,6 +549,16 @@ public class BMUnitConfigState
         } catch (AgentInitializationException e) {
             // this probably indicates that the agent is already installed
         }
+        
+        // check that the Byteman agent version property matches the version we expect
+
+        agentVersion = Install.getSystemProperty(id, AGENT_VERSION);
+
+        if (agentVersion == null || agentVersion.equals("")) {
+            throw new Exception("BMUnit : found agent with id " + id + " but could not find agent version");
+        }
+
+        checkBMUnitVersion(agentVersion);
     }
 
     /**
@@ -597,6 +639,10 @@ public class BMUnitConfigState
      * loaded the agent into a remote service in another JVM driven by your unit test.
      */
     public final static String AGENT_INHIBIT = "org.jboss.byteman.contrib.bmunit.agent.inhibit";
+    /**
+     * system property set by the agent to advertise the version of the loaded agent
+     */
+    public final static String AGENT_VERSION = "org.jboss.byteman.agent.version";
     /**
      * System property which enables tracing of Byteman activity
      */
