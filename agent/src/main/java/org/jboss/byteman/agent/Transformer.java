@@ -35,12 +35,15 @@ import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
+import java.net.URL;
 import java.security.Policy;
 import java.security.ProtectionDomain;
 import java.util.*;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.File;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 /**
  * byte code transformer used to introduce byteman events into JBoss code
@@ -97,6 +100,9 @@ public class Transformer implements ClassFileTransformer {
         }
 
         accessEnabler = AccessManager.init(inst);
+
+        // initialise the agent version property
+        setAgentVersion();
     }
 
     /**
@@ -435,6 +441,11 @@ public class Transformer implements ClassFileTransformer {
      */
 
     public static final String DEBUG = BYTEMAN_PACKAGE_PREFIX + "debug";
+
+    /**
+     * system property set to record the currently installed Byteman agent's version
+     */
+    public static final String AGENT_VERSION = BYTEMAN_PACKAGE_PREFIX + "agent.version";
 
     /**
      * retained for compatibility
@@ -1433,6 +1444,38 @@ public class Transformer implements ClassFileTransformer {
             return file.mkdirs();
         }
     }
+
+    private void setAgentVersion() throws Exception
+    {
+        String version = System.getProperty(AGENT_VERSION);
+        if (version != null && !version.equals("")) {
+            throw new Exception("Transformer.setAgentVersion: Byteman agent version already set!");
+        }
+
+        String className = this.getClass().getSimpleName() + ".class";
+        String classPath = this.getClass().getResource(className).toString();
+        if (classPath.startsWith("file")) {
+            // this happens during building -- just ignore
+            return;
+        } else if (!classPath.startsWith("jar")) {
+            throw new Exception("Transformer.setAgentVersion: could not find manifest for agent jar");
+        }
+        try {
+            String manifestPath = classPath.substring(0, classPath.lastIndexOf("!") + 1) +
+                    "/META-INF/MANIFEST.MF";
+            Manifest manifest = new Manifest(new URL(manifestPath).openStream());
+            version = manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+        } catch (IOException E) {
+            // drop through
+        }
+
+        if (version == null || version.equals("")) {
+            throw new Exception("Transformer.setAgentVersion: could not find manifest implementation version for byteman agent jar");
+        }
+
+        System.setProperty(AGENT_VERSION, version);
+    }
+
     /**
      * Thread local holding a per thread Boolean which is true if triggering is disabled and false if triggering is
      * enabled
