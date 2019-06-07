@@ -351,11 +351,7 @@ public class Helper
             FileOutputStream fos;
 
             try {
-                if (file.exists()) {
-                    fos = new FileOutputStream(file, true);
-                } else {
-                    fos = new FileOutputStream(file, true);
-                }
+                fos = new FileOutputStream(file, true);
             } catch (FileNotFoundException e) {
                 // oops, just return false
                 return false;
