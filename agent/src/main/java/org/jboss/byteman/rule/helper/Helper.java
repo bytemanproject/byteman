@@ -47,6 +47,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * This is the default helper class which is used to define builtin operations for rules.
@@ -315,6 +316,12 @@ public class Helper
     	    return false;
         }
 
+        //check for presence in Map before hitting the synchronization;
+        PrintStream unlockedStream = traceMap.get(identifier);
+        if (unlockedStream != null) {
+            return false;
+        }
+
         synchronized(traceMap) {
             PrintStream stream = traceMap.get(identifier);
             if (stream != null) {
@@ -351,11 +358,7 @@ public class Helper
             FileOutputStream fos;
 
             try {
-                if (file.exists()) {
-                    fos = new FileOutputStream(file, true);
-                } else {
-                    fos = new FileOutputStream(file, true);
-                }
+                fos = new FileOutputStream(file, true);
             } catch (FileNotFoundException e) {
                 // oops, just return false
                 return false;
@@ -387,10 +390,9 @@ public class Helper
         synchronized(traceMap) {
             // need to do the close while synchronized so we ensure an open cannot
             // proceed until we have flushed all changes to disk
-            PrintStream ps = traceMap.get(identifier);
+            PrintStream ps = traceMap.remove(identifier);
             if (ps != null) {
                 ps.close();
-                traceMap.remove(identifier);
                 return true;
             }
         }
@@ -410,9 +412,9 @@ public class Helper
      */
     private static boolean dotrace(Object identifier, String message)
     {
-        synchronized(traceMap) {
-            PrintStream ps = traceMap.get(identifier);
-            if (ps == null) {
+        PrintStream ps = traceMap.get(identifier);
+        if (ps == null) {
+            synchronized(traceMap) {
                 if (doTraceOpen(identifier, null)) {
                     ps = traceMap.get(identifier);
                 } else {
@@ -441,9 +443,9 @@ public class Helper
      */
     private static boolean dotraceln(Object identifier, String message)
     {
-        synchronized(traceMap) {
-            PrintStream ps = traceMap.get(identifier);
-            if (ps == null) {
+        PrintStream ps = traceMap.get(identifier);
+        if (ps == null) {
+            synchronized(traceMap) {
                 if (doTraceOpen(identifier, null)) {
                     ps = traceMap.get(identifier);
                 } else {
@@ -467,10 +469,9 @@ public class Helper
      */
     private static void doTraceException(Object id, Throwable th)
     {
-        PrintStream ps;
-        synchronized (traceMap) {
-            ps = traceMap.get(id);
-            if (ps == null) {
+        PrintStream ps = traceMap.get(id);
+        if (ps == null) {
+            synchronized (traceMap) {
                 if (id.equals("err")) {
                     ps = System.err;
                 } else {
@@ -3896,8 +3897,11 @@ public class Helper
     /**
      * a hash map used to identify trace streams from their
      * identifying objects
+     * Mutating the map requires synchronization on the traceMap;
+     * not required for read operations (or use of the stored PrintStream instances)
+     * as that is inherently racy.
      */
-    private static HashMap<Object, PrintStream> traceMap = new HashMap<Object, PrintStream>();
+    private final static ConcurrentMap<Object, PrintStream> traceMap = new ConcurrentHashMap<Object, PrintStream>();
 
     /**
      * a set used to identify settings for boolean flags associated
