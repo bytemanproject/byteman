@@ -414,20 +414,21 @@ public class Helper
     {
         PrintStream ps = traceMap.get(identifier);
         if (ps == null) {
-            synchronized(traceMap) {
-                if (doTraceOpen(identifier, null)) {
+            synchronized (traceMap) {
+                if(doTraceOpen(identifier, null)) {
                     ps = traceMap.get(identifier);
                 } else {
-                    if (identifier.equals("err")) {
+                    if(identifier.equals("err")) {
                         ps = System.err;
                     } else {
                         ps = System.out;
                     }
                 }
             }
-            ps.print(message);
-            ps.flush();
         }
+        ps.print(message);
+        ps.flush();
+
         return true;
     }
 
@@ -445,20 +446,21 @@ public class Helper
     {
         PrintStream ps = traceMap.get(identifier);
         if (ps == null) {
-            synchronized(traceMap) {
-                if (doTraceOpen(identifier, null)) {
+            synchronized (traceMap) {
+                if(doTraceOpen(identifier, null)) {
                     ps = traceMap.get(identifier);
                 } else {
-                    if (identifier.equals("err")) {
+                    if(identifier.equals("err")) {
                         ps = System.err;
                     } else {
                         ps = System.out;
                     }
                 }
             }
-            ps.println(message);
-            ps.flush();
         }
+        ps.println(message);
+        ps.flush();
+
         return true;
     }
 
