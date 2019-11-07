@@ -122,10 +122,14 @@ public class InvokeTriggerAdapter extends RuleTriggerAdapter
                 super.visitMethodInsn(opcode, owner, name, desc, itf);
             }
             if ((count == 0 || visitedCount < count) && matchCall(owner, name, desc)) {
-                // a relevant invocation occurs in the called method
-                visitedCount++;
-                if (!latched && (count == 0 || visitedCount == count)) {
-                    injectTriggerPoint();
+                // avoid matching calls to println which can be injected into
+                // Byteman catch handlers when verbose mode is enabled
+                if (!inBytemanHandler()) {
+                    // a relevant invocation occurs in the called method
+                    visitedCount++;
+                    if(!latched && (count == 0 || visitedCount == count)) {
+                        injectTriggerPoint();
+                    }
                 }
             }
             if (!whenComplete) {
