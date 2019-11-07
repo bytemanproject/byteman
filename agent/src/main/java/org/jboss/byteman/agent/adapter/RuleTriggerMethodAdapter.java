@@ -873,7 +873,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
         // we don't need a return or throw handler if we are in the scope of a monitor enter/exit pair
         // all the handler regions end here so we use the same end label for all of them
         Label end = new Label();
-        Label executeHandler = newLabel();
+        Label executeHandler = new Label();
 
         if (!cfg.inOpenMonitor()) {
             // ok this one needs the full set of handlers and the subtype handlers need to come first
@@ -970,11 +970,6 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
                 // saved exception then protect it with a try catch block and update
                 // the trigger details so that it is the target of this block
 
-                // generate a rethrow handler for each exception type
-
-                Label newStart = newLabel();
-                Label newEnd = newLabel();
-
                 // if we get here the return and throw handlers labels should be null
                 if (details.getEarlyReturnHandler() != null || details.getThrowHandler() != null) {
                     Helper.err("unexpected : trigger region with open monitorenters has subtype handler!");
@@ -982,12 +977,12 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
 
                 // generate rethrow code and mark the handler as a try catch block for all
                 // three exception types
-                newStart = newLabel();
-                newEnd = newLabel();
+                Label newStart = newLabel();
+                Label newEnd = newLabel();
                 Label newEarlyReturn = newLabel();
                 Label newThrow = newLabel();
-                visitLabel(details.getExecuteHandler());
                 Label newExecute = newLabel();
+                visitLabel(details.getExecuteHandler());
                 visitLabel(newStart);
                 while (openEnters.hasNext()) {
                     CodeLocation enterLocation = openEnters.next();
