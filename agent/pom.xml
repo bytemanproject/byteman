@@ -2427,7 +2427,7 @@
                             <relocations>
                                 <relocation>
                                     <pattern>org.objectweb.asm</pattern>
-                                    <shadedPattern>org.pobjectweb.asm</shadedPattern>
+                                    <shadedPattern>org.objectweb.asm</shadedPattern>
                                 </relocation>
                                 <relocation>
                                   <pattern>java_cup.runtime</pattern>
