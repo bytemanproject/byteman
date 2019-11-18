@@ -73,9 +73,9 @@ public class Rule
      */
     private String name;
     /**
-     * the class loader for the target class
+     * the class loader for the trigger class
      */
-    private ClassLoader targetLoader;
+    private ClassLoader triggerLoader;
     /**
      * the class loader for the help adapter
      */
@@ -179,7 +179,7 @@ public class Rule
 
         this.ruleScript = ruleScript;
         this.helperClass = null;
-        this.targetLoader = loader;
+        this.triggerLoader = loader;
 
         bindings = new Bindings();
         checked = false;
@@ -230,7 +230,7 @@ public class Rule
                 // We always need to load the helper via the module system if we're compiling to byte code
                 // so that the compiler can use it.
                 String helperToUse = (helperName != null) ? helperName : Helper.class.getName();
-                this.helperLoader = getModuleSystem().createLoader(targetLoader, imports);
+                this.helperLoader = getModuleSystem().createLoader(triggerLoader, imports);
                 this.helperToUse = helperToUse;
                 // initialise helper class lazily so it doesn't happen under
                 // a Transform, invalidating rule injection
@@ -243,7 +243,7 @@ public class Rule
             this.helperLoader = null;
             this.helperToUse = Helper.class.getName();
             helperClass = Helper.class;
-            typeGroup = new TypeGroup(targetLoader);
+            typeGroup = new TypeGroup(triggerLoader);
         }
 
         ParseNode eventTree = (ParseNode)ruleTree.getChild(0);
@@ -346,7 +346,7 @@ public class Rule
      */
     public ClassLoader getLoader()
     {
-        return targetLoader;
+        return triggerLoader;
     }
 
     /**
@@ -523,7 +523,7 @@ public class Rule
             }
 
             // this uses the original class loader for matching
-            boolean runInstall = ruleScript.recordCompile(this, triggerClass, targetLoader, !checkFailed, detail);
+            boolean runInstall = ruleScript.recordCompile(this, triggerClass, triggerLoader, !checkFailed, detail);
             if (runInstall) {
                 installed();
             }
@@ -831,21 +831,10 @@ public class Rule
             return key;
         }
         
-        String key = getName() + "_" + nextId();
-        this.key = key;
+        key = ruleScript.getRuleKey(triggerClass, triggerMethod, triggerDescriptor, triggerLoader);
         ruleKeyMap.put(key, this);
         return key;
     }
-
-    /**
-     * return the key under which this rule has been indexed in the rule key map
-     * @return the key
-     */
-    public String lookupKey()
-    {
-        return key;
-    }
-
 
     /**
      * delete any reference to the rule from the rule map

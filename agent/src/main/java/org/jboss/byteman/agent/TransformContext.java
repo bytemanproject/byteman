@@ -85,7 +85,7 @@ public class TransformContext
         // associated with this rule's script
         // which specify the same class and loader
 
-        ruleScript.purge(loader, triggerClassName);
+        // ruleScript.purge(loader, triggerClassName);
 
         try {
             parseRule();
@@ -335,7 +335,7 @@ public class TransformContext
         if (failed) {
             // we had an injection failure so purge all successfully
             // injected rules
-            purgeRules();
+            // purgeRules();
 
             return false;
         } else {
@@ -346,7 +346,7 @@ public class TransformContext
                 Rule rule = ruleMap.get(key);
                 if(!ruleScript.recordTransform(loader, triggerClassName, triggerMethodName, triggerMethodDescriptor, rule, null)) {
                     // rule script must have been deleted so purge rules and avoid installing the transformed code
-                    purgeRules();
+                    // purgeRules();
 
                     return false;
                 }
