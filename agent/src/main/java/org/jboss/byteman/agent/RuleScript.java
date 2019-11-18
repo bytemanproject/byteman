@@ -27,6 +27,7 @@ import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.type.TypeHelper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.io.StringWriter;
 import java.io.PrintWriter;
@@ -39,6 +40,20 @@ import java.io.PrintWriter;
 
 public class RuleScript
 {
+    /**
+     * a counter used to ensure rule identifiers are unique
+     */
+    private static int nextId = 0;
+
+    /**
+     * a method to return the next available counter for use in constructing a key for a rule
+     * @return the next id
+     */
+    private synchronized static int nextId()
+    {
+        return nextId++;
+    }
+
     /**
      * the name of the rule from which this script is derived
      */
@@ -100,6 +115,24 @@ public class RuleScript
      */
     private final boolean compileToBytecode;
     /**
+     * hash map used to lookup a key used at injection time to identify a
+     * rule cloned from this script for injection into a specific trigger
+     * method. the map translates a string constructed from the trigger class
+     * name, method name, method descriptor and class loader hash to a unique
+     * key based on the rule name. This ensures that concurrent attempts to inject
+     * the rule into the same trigger method will employ the same key and hence
+     * perform exactly the same transformation. That way it does not matter which
+     * of the transformations are accepted or dropped by the JVM when defining a
+     * newly loaded class. Any transform result for a given key is as valid as
+     * any other.
+     */
+    private final HashMap<String, String> keySet;
+    /**
+     * base string from which to construct rule injection keys
+     */
+    private final String key_base;
+
+    /**
      * a list of records identifying transforms associated with a specific class.
      * each set is identified by the name of a trigger class and the class's
      * associated loader i.e. it corresponds with an attempt to transform a unique
@@ -146,6 +179,8 @@ public class RuleScript
         this.file = file;
         this.compileToBytecode = compileToBytecode;
         this.transformSets = new ArrayList<TransformSet>();
+        this.keySet = new HashMap<String, String>();
+        this.key_base = name + "_" + nextId();
     }
 
     public String getName() {
@@ -195,6 +230,20 @@ public class RuleScript
     }
 
     public boolean isCompileToBytecode() { return compileToBytecode; }
+
+    public synchronized String getRuleKey(String triggerClassName, String triggerMethodName, String triggerMethodDescriptor, ClassLoader loader) {
+        if (triggerMethodName == null) {
+            // this can happen when we get errors ???
+            return key_base;
+        }
+        String lookup =  triggerClassName + "." + triggerMethodName + TypeHelper.internalizeDescriptor(triggerMethodDescriptor) + "_" + loader.hashCode();
+        String result = keySet.get(lookup);
+        if (result == null) {
+            result = key_base + ":" + keySet.size();
+            keySet.put(lookup, result);
+        }
+        return result;
+    }
 
     /**
      * getter for list of transforms applied for this script. must be called synchronized on the script.
@@ -260,23 +309,8 @@ public class RuleScript
     }
 
     /**
-     * record the fact that a trigger call has been successfully installed into bytecode associated with a specific
-     * class and loader and a corresponding rule instance been installed
-     * @param loader the loader of the class for which injection was attempted
-     * @param internalClassName the internal Java name of the class
-     * @param triggerMethodName the name of the method injected into
-     * @param desc the descriptor of the method injected into
-     * @param rule the rule which was injected
-     * @return true if the successful injection was recorded false if not
-     */
-    public synchronized boolean recordMethodTransform(ClassLoader loader, String internalClassName, String triggerMethodName, String desc, Rule  rule)
-    {
-        return recordTransform(loader, internalClassName, triggerMethodName, desc, rule, null);
-    }
-
-    /**
-     * record the fact that a trigger call has failed to install into bytecode associated with a specific
-     * class and loader
+     * record the fact that a trigger call has succeeded or else failed to install into bytecode
+     * associated with a specific class and loader
      * @param loader the loader of the class for which injection was attempted
      * @param internalClassName the internal Java name of the class
      * @param triggerMethodName the name of the method injected into
@@ -345,7 +379,9 @@ public class RuleScript
         // find an existing transform set or create a new one
         TransformSet transformSet = ensureTransformSet(loader, triggerClass, null);
         for (Transform transform : transformSet.getTransforms()) {
-            if(transform.getRule() == rule) {
+            // transform may not employ the same rule
+            // but it may have the same key.
+            if(transform.getRule().getKey() == rule.getKey()) {
                 transform.setCompiled(successful, detail);
                 boolean isInstalled = transformSet.isInstalled();
                 // record this as the latest rule to be installed

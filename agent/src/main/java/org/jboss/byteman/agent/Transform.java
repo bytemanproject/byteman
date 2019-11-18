@@ -33,7 +33,13 @@ import java.io.PrintWriter;
 public class Transform
 {
     private ClassLoader loader;
+    /**
+     * fully qualified internal name of class
+     */
     private String internalClassName;
+    /**
+     * full method name including descriptor
+     */
     private String triggerMethodName;
     private Rule rule;
     private Throwable throwable;
@@ -41,10 +47,6 @@ public class Transform
     private boolean installed;
     private boolean successful;
     private String detail;
-
-    public Transform(ClassLoader loader, String internalClassName, Rule rule) {
-        this(loader, internalClassName, null, rule, null);
-    }
 
     public Transform(ClassLoader loader, String internalClassName, String triggerMethodName, Rule rule, Throwable th) {
         this.loader = loader;

@@ -182,7 +182,7 @@ public class Retransformer extends Transformer {
                     if(newTransformSet == null || newTransformSet.isInstalled()) {
                         if(oldTransformSet.isInstalled()) {
                             // we need to run an uninstall for the old transform set
-                            oldTransformSet.getInstalledRule().uninstalled();
+                            oldTransformSet.getRule().uninstalled();
                         }
                     } else {
                         // copy across the rule used for the prior
@@ -191,9 +191,9 @@ public class Retransformer extends Transformer {
                         // if any of the newly injected rules pass
                         // ensureTypeCheckCompiled
                         if(newTransformSet != null) {
-                            newTransformSet.setInstalled(oldTransformSet.getInstalledRule());
+                            newTransformSet.setInstalled(oldTransformSet.getRule());
                         } else {
-                            newRuleScript.ensureTransformSet(oldTransformSet.getLoader(), oldTransformSet.getTriggerClass(), oldTransformSet.getInstalledRule());
+                            newRuleScript.ensureTransformSet(oldTransformSet.getLoader(), oldTransformSet.getTriggerClass(), oldTransformSet.getRule());
                         }
                     }
                 }
@@ -345,6 +345,9 @@ public class Retransformer extends Transformer {
         // the rule key
 
         for (RuleScript oldRuleScript : toBeRemoved) {
+            // mark the script as deleted so it doesn't get run any more
+            oldRuleScript.setDeleted();
+            // now deal with uninstall, allowing for possible reinstall
             RuleScript newRuleScript = scriptRepository.scriptForRuleName(oldRuleScript.getName());
             // new script may not exist!
             if (newRuleScript != null) {
@@ -354,20 +357,19 @@ public class Retransformer extends Transformer {
                         TransformSet newTransformSet = newRuleScript.lookupTransformSet(oldTransformSet.getLoader(), oldTransformSet.getTriggerClass());
                         if(newTransformSet == null || newTransformSet.isInstalled()) {
                             if(oldTransformSet.isInstalled()) {
-                                // we need to run an uninstall for the old transform set
-                                oldTransformSet.getInstalledRule().uninstalled();
+                                // new rule has already been installed so we need
+                                // to run an uninstall for the old transform set
+                                oldTransformSet.getRule().uninstalled();
                             }
                         } else {
-                            // copy across the rule used for the prior
-                            // install so we can use it for a later uninstall
-                            // it will be replaced with a new instance
-                            // if any of the newly injected rules pass
-                            // ensureTypeCheckCompiled
-                            if(newTransformSet != null) {
-                                newTransformSet.setInstalled(oldTransformSet.getInstalledRule());
-                            } else {
-                                newRuleScript.ensureTransformSet(oldTransformSet.getLoader(), oldTransformSet.getTriggerClass(), oldTransformSet.getInstalledRule());
-                            }
+                            // new rule is not yet installed so we can elide
+                            // the uninstalled + installed lifecycle events
+                            // we have to copy across the rule used for the prior
+                            // install so we can use it as the default argument
+                            // for a later uninstall. it will be replaced with a
+                            // new instance if any of the newly injected rules
+                            // pass ensureTypeCheckCompiled
+                            newTransformSet.setInstalled(oldTransformSet.getRule());
                         }
                     }
                 }
@@ -375,12 +377,13 @@ public class Retransformer extends Transformer {
                 for (TransformSet oldTransformSet : oldRuleScript.getTransformSets()) {
                     if(oldTransformSet.isInstalled()) {
                         // we need to run an uninstall for the old transform set
-                        oldTransformSet.getInstalledRule().uninstalled();
+                        oldTransformSet.getRule().uninstalled();
                     }
                 }
+                out.println("uninstall RULE " + oldRuleScript.getName());
             }
-            out.println("uninstall RULE " + oldRuleScript.getName());
         }
+        // now purge the rules for the old script
     }
 
     public void appendJarFile(PrintWriter out, JarFile jarfile, boolean isBoot) throws Exception
