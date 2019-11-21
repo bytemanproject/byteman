@@ -1447,6 +1447,11 @@ public class Transformer implements ClassFileTransformer {
 
     private void setAgentVersion() throws Exception
     {
+        if (inst == null) {
+            // we are just doing rule checks so no
+            // need to bother with this
+            return;
+        }
         String version = System.getProperty(AGENT_VERSION);
         if (version != null && !version.equals("")) {
             throw new Exception("Transformer.setAgentVersion: Byteman agent version already set!");
