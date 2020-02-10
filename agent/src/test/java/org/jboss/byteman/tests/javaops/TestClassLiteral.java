@@ -47,6 +47,7 @@ public class TestClassLiteral extends Test
     public String getExpected()
     {
         logExpected("classname = " + this.getClass().getName());
+        logExpected("hijacking class (canonically) to java.lang.String");
         logExpected("hijacking class to java.lang.String");
         logExpected("classname = " + String.class.getName());
         return super.getExpected();

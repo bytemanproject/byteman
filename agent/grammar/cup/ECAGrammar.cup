@@ -309,6 +309,7 @@ non terminal ParseNode new_expr;
 non terminal ParseNode new_array_spec;
 non terminal ParseNode array_dims;
 non terminal ParseNode array_dim;
+non terminal ParseNode class_expr;
 non terminal ParseNode simple_expr;
 non terminal ParseNode null_expr;
 
@@ -550,6 +551,7 @@ expr
 	|	unary_oper_expr:e {: RESULT = e; :}
 	|	array_expr:e {: RESULT = e; :}
 	|	field_expr:e {: RESULT = e; :}
+	|	class_expr:e {: RESULT = e; :}
 	|	meth_expr:e {: RESULT = e; :}
 	|   new_expr:ne {: RESULT = ne; :}
 	|	simple_expr:e {: RESULT = e; :}
@@ -623,17 +625,22 @@ array_idx
 	::=	LSQUARE expr:e RSQUARE {: RESULT = e; :}
 	;
 
+class_expr
+	::=	path:p DOT CLASS
+		{: RESULT = node(ParseNode.CLASS, pleft, pright, p); :}
+	;
+
 field_expr
 	::=	path:p DOT simple_name:f
 		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, p); :}
-	|	path:p DOT CLASS
-		{: RESULT = node(ParseNode.CLASS, pleft, pright, p); :}
 	|	expr_field_expr:efe {: RESULT = efe; :}
 	;
 
 expr_field_expr
 	::=	simple_expr:se DOT simple_name:f
 		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, se); :}
+	|	class_expr:ce DOT simple_name:f
+		{: error("illegal access to field of Class", fleft, fright); RESULT = node(ParseNode.FIELD, fleft, fright, f, ce); :}
 	|	meth_expr:me DOT simple_name:f
 		{: RESULT = node(ParseNode.FIELD, fleft, fright, f, me); :}
 	|	array_expr:ae DOT simple_name:f
@@ -659,6 +666,10 @@ expr_meth_expr
 		{: RESULT = node(ParseNode.METH, mleft, mright, m, se, null); :}
 	|	simple_expr:se DOT simple_name:m LPAREN expr_list:args RPAREN
 		{: RESULT = node(ParseNode.METH, mleft, mright, m, se, args); :}
+	|	class_expr:ce DOT simple_name:m LPAREN RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, ce, null); :}
+	|	class_expr:ce DOT simple_name:m LPAREN expr_list:args RPAREN
+		{: RESULT = node(ParseNode.METH, mleft, mright, m, ce, args); :}
 	|	meth_expr:eme DOT simple_name:m LPAREN RPAREN
 		{: RESULT = node(ParseNode.METH, mleft, mright, m, eme, null); :}
 	|	meth_expr:eme DOT simple_name:m LPAREN expr_list:args RPAREN
