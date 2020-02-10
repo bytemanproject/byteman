@@ -31,3 +31,12 @@ IF TRUE
 DO $clazz = String.class;
    $this.log("hijacking class to " + $clazz.getName());
 ENDRULE
+
+RULE test class literal as expression base
+CLASS TestClassLiteral
+METHOD test
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER INVOKE log 1
+IF TRUE
+DO $this.log("hijacking class (canonically) to " + String.class.getCanonicalName());
+ENDRULE
