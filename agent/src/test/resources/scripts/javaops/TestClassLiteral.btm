@@ -40,3 +40,21 @@ AFTER INVOKE log 1
 IF TRUE
 DO $this.log("hijacking class (canonically) to " + String.class.getCanonicalName());
 ENDRULE
+
+RULE test instanceof for direct class
+CLASS TestClassLiteral
+METHOD test
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER INVOKE log 1
+IF TRUE
+DO $this.log("this instanceof TestClassLiteral = " + ($this instanceof org.jboss.byteman.tests.javaops.TestClassLiteral));
+ENDRULE
+
+RULE test instanceof for indirect class
+CLASS TestClassLiteral
+METHOD test
+HELPER org.jboss.byteman.tests.helpers.Default
+AFTER INVOKE log 1
+IF TRUE
+DO $this.log("this instanceof Test = " + ($this instanceof org.jboss.byteman.tests.Test));
+ENDRULE

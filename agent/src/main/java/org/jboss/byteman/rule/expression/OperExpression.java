@@ -100,9 +100,9 @@ public abstract class OperExpression extends Expression
         return -1;
     }
 
-    final public static int UNARY       = 0x1000;
-    final public static int BINARY      = 0x2000;
-    final public static int TERNARY     = 0x4000;
+    final public static int UNARY       = 0x10000;
+    final public static int BINARY      = 0x20000;
+    final public static int TERNARY     = 0x40000;
 
     final public static int NOT         = 0x0010 | UNARY;
 
@@ -125,17 +125,19 @@ public abstract class OperExpression extends Expression
     final public static int RSH         = 0x0104 | BINARY;
     final public static int LSH         = 0x0105 | BINARY;
 
-    final public static int UMINUS      = 0x0200 | UNARY;
+    final public static int INSTANCEOF  = 0x0200 | BINARY;
 
-    final public static int MUL         = 0x0201 | BINARY;
-    final public static int DIV         = 0x0202 | BINARY;
-    final public static int PLUS        = 0x0203| BINARY;
-    final public static int MINUS       = 0x0204 | BINARY;
-    final public static int MOD         = 0x0205 | BINARY;
+    final public static int UMINUS      = 0x0400 | UNARY;
 
-    final public static int ASSIGN      = 0x0401 | BINARY;
+    final public static int MUL         = 0x0401 | BINARY;
+    final public static int DIV         = 0x0402 | BINARY;
+    final public static int PLUS        = 0x0403 | BINARY;
+    final public static int MINUS       = 0x0404 | BINARY;
+    final public static int MOD         = 0x0405 | BINARY;
 
-    final public static int COND        = 0x0800 | TERNARY;
+    final public static int ASSIGN      = 0x0800 | BINARY;
+
+    final public static int COND        = 0x1000 | TERNARY;
 
     final private static int[] operands = {
             NOT,
@@ -154,6 +156,7 @@ public abstract class OperExpression extends Expression
             URSH,
             RSH,
             LSH,
+            INSTANCEOF,
             UMINUS,
             MUL,
             DIV,
@@ -183,6 +186,7 @@ public abstract class OperExpression extends Expression
             org.jboss.byteman.rule.grammar.ParseNode.URSH,
             org.jboss.byteman.rule.grammar.ParseNode.RSH,
             org.jboss.byteman.rule.grammar.ParseNode.LSH,
+            org.jboss.byteman.rule.grammar.ParseNode.INSTANCEOF,
             org.jboss.byteman.rule.grammar.ParseNode.UMINUS,
             org.jboss.byteman.rule.grammar.ParseNode.MUL,
             org.jboss.byteman.rule.grammar.ParseNode.DIV,
@@ -210,6 +214,7 @@ public abstract class OperExpression extends Expression
             ">>>",
             ">>",
             "<<",
+            "instanceof",
             "-",
             "*",
             "/",

@@ -121,5 +121,6 @@ public class PrintableSymbol extends Symbol
     sym_name[org.jboss.byteman.rule.grammar.sym.DO] = "DO";
     sym_name[org.jboss.byteman.rule.grammar.sym.IDENTIFIER] = "IDENTIFIER";
     sym_name[org.jboss.byteman.rule.grammar.sym.INTEGER_LITERAL] = "INTEGER_LITERAL";
+    sym_name[org.jboss.byteman.rule.grammar.sym.INSTANCEOF] = "INSTANCEOF";
     }
 }

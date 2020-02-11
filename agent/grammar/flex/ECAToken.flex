@@ -139,6 +139,8 @@ Float = {Sign}? {PosFloat} F?
 
 "class"		{ return symbol(sym.CLASS); }
 
+"instanceof"		{ return symbol(sym.INSTANCEOF); }
+
 /* various bracket pairs */
 	
 "("		{ return symbol(sym.LPAREN); }
