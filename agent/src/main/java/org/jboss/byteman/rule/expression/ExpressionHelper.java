@@ -309,10 +309,10 @@ public class ExpressionHelper
         return fieldExpr;
     }
 
-    public static Expression createClassLiteralExpression(Rule rule, Bindings bindings, ParseNode pathTree, Type type)
+    public static ClassLiteralExpression createClassLiteralExpression(Rule rule, Bindings bindings, ParseNode pathTree, Type type)
             throws TypeException
     {
-        Expression classLiteralExpr;
+        ClassLiteralExpression classLiteralExpr;
         String[] pathList;
 
         // this is a class literal -- use the path as the tree for the expression
@@ -617,6 +617,15 @@ public class ExpressionHelper
 
                 int convertedOper = OperExpression.convertOper(oper);
                 expr = new ComparisonExpression(rule, convertedOper, exprTree, operand1, operand2);
+            }
+            break;
+            case INSTANCEOF:
+            {
+                Expression operand1 = createExpression(rule, bindings, child1, Type.UNDEFINED);
+                ClassLiteralExpression operand2 = createClassLiteralExpression(rule, bindings, child2, Type.UNDEFINED);
+
+                int convertedOper = OperExpression.convertOper(oper);
+                expr = new InstanceOfExpression(rule, convertedOper, exprTree, operand1, operand2);
             }
             break;
             default:

@@ -243,6 +243,9 @@ terminal	URSH, RSH, LSH, BOR, BAND, BXOR;
 /* arithmetic operators */
 terminal	MUL, DIV, PLUS, MINUS, MOD;
 
+/* type test operators */
+terminal INSTANCEOF;
+
 /* unary operators */
 
 /* logical operator */
@@ -350,6 +353,7 @@ precedence left LT, LE, GE, GT;
 precedence left PLUS, MINUS;
 precedence left MUL, DIV, MOD;
 precedence left URSH, RSH, LSH, BOR, BAND, BXOR;
+precedence left INSTANCEOF;
 precedence left TWIDDLE;
 precedence left UMINUS;
 precedence left DOT;
@@ -593,6 +597,8 @@ binary_oper_expr
 	|	expr:e1 MUL:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.MUL, oleft, oright), e1, e2); :}
 	|	expr:e1 DIV:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.DIV, oleft, oright), e1, e2); :}
 	|	expr:e1 MOD:o expr:e2 {: RESULT = node(ParseNode.BINOP, e1left, e1right, node(ParseNode.MOD, oleft, oright), e1, e2); :}
+    // type tets expression
+    | expr:e INSTANCEOF:o path:p {: RESULT = node(ParseNode.BINOP, eleft, eright, node(ParseNode.INSTANCEOF, oleft, oright), e, p); :}
 	;
 	
 unary_oper_expr

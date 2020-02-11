@@ -83,6 +83,8 @@ public abstract class ParseNode
     public final static int RSH = 51;
     public final static int URSH = 52;
 
+    public final static int INSTANCEOF = 53;
+
     /**
      * the type tag for this node
      */
@@ -293,6 +295,8 @@ public abstract class ParseNode
                     return ">>";
                 case URSH:
                     return ">>>";
+                case INSTANCEOF:
+                    return "instanceof";
                 case BAND:
                     return "&";
                 case BOR:
