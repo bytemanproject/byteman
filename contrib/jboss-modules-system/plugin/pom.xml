@@ -28,7 +28,7 @@
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-jboss-modules</artifactId>
-        <version>4.0.10</version>
+        <version>4.0.11</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
