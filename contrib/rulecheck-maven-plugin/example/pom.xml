@@ -18,7 +18,7 @@
       <plugin>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-rulecheck-maven-plugin</artifactId>
-        <version>3.0.17</version>
+        <version>3.0.18</version>
         <executions>
           <execution>
             <id>rulecheck-test</id>
