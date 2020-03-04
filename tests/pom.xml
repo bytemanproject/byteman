@@ -1169,7 +1169,7 @@
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestTraceOpenAndWrite.class</include>
                          </includes>
-                         <argLine>-javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/bugfixes/TestTraceOpenAndWrite.btm</argLine>
+                         <argLine>-javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/bugfixes/TestTraceOpenAndWrite.btm</argLine>
                       </configuration>
                     </execution>
                     <!-- dynamic rule submission
@@ -2203,7 +2203,7 @@
                          <includes>
                            <include>org/jboss/byteman/tests/bugfixes/TestTraceOpenAndWrite.class</include>
                          </includes>
-                         <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/bugfixes/TestTraceOpenAndWrite.btm</argLine>
+                         <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/bugfixes/TestTraceOpenAndWrite.btm</argLine>
                       </configuration>
                     </execution>
                     <execution>
