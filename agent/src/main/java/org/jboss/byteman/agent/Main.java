@@ -250,7 +250,10 @@ public class Main {
         // resolve against the system loader and injection into bootstrap classes fails. But that's still ok
         // because the byteman classes are still only found in one place.
 
-        ClassLoader loader = ClassLoader.getSystemClassLoader();
+        ClassLoader loader = Main.class.getClassLoader();
+        if (loader == null) {
+            loader = ClassLoader.getSystemClassLoader();
+        }
 
         if (moduleSystemName == null) {
             moduleSystemName = "org.jboss.byteman.modules.NonModuleSystem";
