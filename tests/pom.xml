@@ -670,6 +670,22 @@
                     </execution>
                     <!-- bugfixes -->
                     <execution>
+                      <id>bugfixes.TestAtNewWithCountAll</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
+                         <includes>
+                           <include>org/jboss/byteman/tests/bugfixes/TestAtNewWithCountAll.class</include>
+                         </includes>
+                         <argLine>-javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/bugfixes/TestAtNewWithCountAll.btm</argLine>
+                      </configuration>
+                    </execution>
+                    <execution>
                       <id>bugfixes.TestEmptySignature</id>
                       <phase>integration-test</phase>
                       <goals>
@@ -1742,6 +1758,22 @@
                       </configuration>
                     </execution>
                     <!-- bugfixes compiled -->
+                    <execution>
+                      <id>bugfixes.TestAtNewWithCountAll.compiled</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                         <forkCount>1</forkCount>
+                         <reuseForks>true</reuseForks>
+                         <includes>
+                           <include>org/jboss/byteman/tests/bugfixes/TestAtNewWithCountAll.class</include>
+                         </includes>
+                         <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/bugfixes/TestAtNewWithCountAll.btm</argLine>
+                      </configuration>
+                    </execution>
                     <execution>
                         <id>bugfixes.TestEmptySignature.compiled</id>
                         <phase>integration-test</phase>
