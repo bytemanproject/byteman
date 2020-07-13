@@ -109,10 +109,10 @@ public class NewTriggerAdapter extends RuleTriggerAdapter
         @Override
         public void visitTypeInsn(int opcode, String type)
         {
-            if (opcode == Opcodes.NEW && (visitedCount == 0 || visitedCount < count) && matchType(type)) {
+            if (opcode == Opcodes.NEW && (count == 0 || visitedCount < count) && matchType(type)) {
                 // a relevant invocation occurs in the called method
                 visitedCount++;
-                if(visitedCount == 0 || visitedCount == count) {
+                if(count == 0 || visitedCount == count) {
                     if(whenComplete) {
                         // set ready for triggering at the next invokespecial
                         triggerReady = true;
