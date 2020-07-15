@@ -28,7 +28,7 @@
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-root</artifactId>
-        <version>4.0.11</version>
+        <version>4.0.12-SNAPSHOT</version>
     </parent>
     <description>
         The Byteman download includes the byteman agent, submit and install jars. the contributed
