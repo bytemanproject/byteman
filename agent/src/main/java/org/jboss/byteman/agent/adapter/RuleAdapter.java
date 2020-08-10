@@ -34,7 +34,7 @@ public class RuleAdapter extends ClassVisitor
 {
     protected RuleAdapter(ClassVisitor cv, TransformContext transformContext)
     {
-        super(Opcodes.ASM7, cv);
+        super(Opcodes.ASM9, cv);
         this.transformContext =  transformContext;
     }
 
