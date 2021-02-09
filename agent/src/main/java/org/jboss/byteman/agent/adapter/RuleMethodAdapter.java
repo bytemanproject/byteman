@@ -27,7 +27,6 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Label;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.agent.TransformContext;
-import org.objectweb.asm.Opcodes;
 
 import java.util.LinkedList;
 import java.util.HashMap;
@@ -41,7 +40,7 @@ import java.util.List;
 // public class RuleMethodAdapter extends GeneratorAdapter {
 public class RuleMethodAdapter extends MethodVisitor {
     public RuleMethodAdapter(final MethodVisitor mv, final TransformContext transformContext, final int access, final String name, final String desc, Rule rule) {
-        super(Opcodes.ASM5, mv);
+        super(RuleAdapter.ASM_VERSION, mv);
         this.access = access;
         this.name = name;
         this.descriptor = desc;

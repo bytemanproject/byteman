@@ -34,7 +34,7 @@ public class BMLocalScopeAdapter extends ClassVisitor
 {
     public BMLocalScopeAdapter(ClassVisitor cv)
     {
-        super(OpcodesHelper.ASM9, cv);
+        super(RuleAdapter.ASM_VERSION, cv);
     }
 
     @Override

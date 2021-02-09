@@ -24,7 +24,6 @@
 package org.jboss.byteman.agent.adapter;
 
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
 
 /**
@@ -46,7 +45,7 @@ public class BMLocalScopeMethodAdapter extends MethodNode
      * @param exceptions names of exceptions thrown by the method
      */
     public BMLocalScopeMethodAdapter(MethodVisitor mv, int access, String name, String desc, String signature, String[] exceptions) {
-        super(Opcodes.ASM5, access, name, desc, signature, exceptions);
+        super(RuleAdapter.ASM_VERSION, access, name, desc, signature, exceptions);
         this.mv = mv;
         if (mv instanceof LocalScopeMethodVisitor) {
             // replace the instruction list so that it generates the required start and end local scope calls

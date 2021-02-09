@@ -25,7 +25,6 @@ package org.jboss.byteman.agent.adapter;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 
 /**
  * a modified version of JSRInliner which uses a slightly modified version of JSRInlinerAdapter
@@ -35,7 +34,7 @@ public class BMJSRInliner extends ClassVisitor
 {
     public BMJSRInliner(ClassVisitor cv)
     {
-        super(Opcodes.ASM9, cv);
+        super(RuleAdapter.ASM_VERSION, cv);
     }
 
     @Override

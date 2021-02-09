@@ -32,9 +32,11 @@ import org.objectweb.asm.*;
  */
 public class RuleAdapter extends ClassVisitor
 {
+    public final static int ASM_VERSION = Opcodes.ASM9;
+
     protected RuleAdapter(ClassVisitor cv, TransformContext transformContext)
     {
-        super(Opcodes.ASM9, cv);
+        super(ASM_VERSION, cv);
         this.transformContext =  transformContext;
     }
 

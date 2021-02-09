@@ -25,6 +25,7 @@
 
 package org.jboss.byteman.agent.check;
 
+import org.jboss.byteman.agent.adapter.RuleAdapter;
 import org.objectweb.asm.*;
 
 /**
@@ -38,7 +39,7 @@ public class ClassStructureAdapter extends ClassVisitor {
     private String superName = null;
     private String outerClass = null;
 
-    public ClassStructureAdapter() { super(Opcodes.ASM9); }
+    public ClassStructureAdapter() { super(RuleAdapter.ASM_VERSION); }
 
     public boolean isInterface() {
         return isInterface;
