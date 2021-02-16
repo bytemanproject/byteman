@@ -982,7 +982,7 @@ operation on behalf of all rules employing the helper.
 `installed(Rule)` is called when an install event occurs. It can perform a set up operation 
 specific to the supplied rule.
 
-`deinstalled(Rule)` is called when an install event occurs. It can perform a tear down operation 
+`uninstalled(Rule)` is called when an install event occurs. It can perform a tear down operation 
 specific to the supplied rule.
 
 `installed(String)` and `uninstalled(String)` can also be implemented as alternatives to 
