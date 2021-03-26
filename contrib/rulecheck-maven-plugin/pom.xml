@@ -38,10 +38,6 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<!--
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		-->
 	</properties>
 
 	<dependencies>
@@ -70,7 +66,7 @@
 		<dependency>
 			<groupId>org.apache.maven.plugin-tools</groupId>
 			<artifactId>maven-plugin-annotations</artifactId>
-			<version>3.6</version>
+			<version>3.2</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -91,7 +87,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-plugin-plugin</artifactId>
-				<version>3.6</version>
+				<version>3.2</version>
 				<configuration>
 					<goalPrefix>rulecheck</goalPrefix>
 					<skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
@@ -109,17 +105,6 @@
 							<goal>helpmojo</goal>
 						</goals>
 					</execution>
-					<execution>
-                    	<id>default-descriptor</id>
-                    	<phase>process-classes</phase>
-                	</execution>
-                	<execution>
-                    	<id>help-descriptor</id>
-                    	<goals>
-                        	<goal>helpmojo</goal>
-                    	</goals>
-                    <phase>process-classes</phase>
-                </execution>
 				</executions>
 			</plugin>
 		</plugins>

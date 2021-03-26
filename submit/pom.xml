@@ -47,8 +47,6 @@
               <Bundle-SymbolicName>org.jboss.byteman.agent.submit</Bundle-SymbolicName>
               <_noee>true</_noee> <!-- Do not generate Require-Capability header -->
             </instructions>
-            <source>15</source>
-            <target>15</target>
           </configuration>
         </plugin>
       </plugins>
