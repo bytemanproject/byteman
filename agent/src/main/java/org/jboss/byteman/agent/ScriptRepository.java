@@ -62,6 +62,8 @@ public class ScriptRepository
             String name = null;
             String targetClass = null;
             String targetMethod = null;
+            String stressType = null;
+            int cpuCount = 0;
             String targetHelper = null;
             String defaultHelper = null;
             String[] targetImports  = null;
@@ -172,6 +174,14 @@ public class ScriptRepository
                     }
                 } else if (line.startsWith("METHOD ")) {
                     targetMethod = line.substring(7).trim();
+                } else if (line.startsWith("STRESS ")) {
+                    stressType = line.substring(7).trim();
+                } else if (line.startsWith("CPUCOUNT ")) {
+                    try {
+                        cpuCount = Integer.parseInt(line.substring(9).trim());
+                    } catch (NumberFormatException e) {
+                       throw e;
+                    }
                 } else if ((locationType = LocationType.type(line)) != null) {
                     String parameters = LocationType.parameterText(line);
                     targetLocation = Location.create(locationType, parameters);
@@ -181,23 +191,30 @@ public class ScriptRepository
                 } else if (line.startsWith("ENDRULE")) {
                     if (name == null || "".equals(name)) {
                         throw new Exception("org.jboss.byteman.agent.Transformer : no matching RULE for ENDRULE at line " + lineNumber + " in script " + scriptFile);
+                    } else if (stressType != null && !"".equals(stressType)) {
+                        if ("CPU".equals(stressType) && cpuCount == 0 ) {
+                            throw new Exception("org.jboss.byteman.agent.Transformer: CPUCOUNT can't be 0 when STRESS is CPU");
+                        }
                     } else if (targetClass == null || "".equals(targetClass)) {
                         throw new Exception("org.jboss.byteman.agent.Transformer : no CLASS for RULE  " + name + " in script " + scriptFile);
                     } else if (targetMethod == null || "".equals(targetMethod)) {
                         throw new Exception("org.jboss.byteman.agent.Transformer : no METHOD for RULE  " + name + " in script " + scriptFile);
-                    } else {
-                        if (targetLocation == null) {
-                            targetLocation = Location.create(LocationType.ENTRY, "");
-                        }
-                        if (targetHelper == null) {
-                            targetHelper = defaultHelper;
-                        }
-                        if (targetImports == null) {
-                            targetImports = (defaultImports != null) ? defaultImports : new String[0];
-                        }
-                        RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetImports, targetLocation, nextRule, startNumber, scriptFile, ruleCompileToBytecode);
-                        ruleScripts.add(ruleScript);
                     }
+                        
+                    if (targetLocation == null) {
+                        targetLocation = Location.create(LocationType.ENTRY, "");
+                    }
+                    if (targetHelper == null) {
+                        targetHelper = defaultHelper;
+                    }
+                    if (targetImports == null) {
+                        targetImports = (defaultImports != null) ? defaultImports : new String[0];
+                    }
+
+                    Helper.verbose("new RuleScript, stressType: " + stressType + ", cpu count: " + cpuCount);
+                    RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetImports, targetLocation, nextRule, startNumber, scriptFile, ruleCompileToBytecode, stressType, cpuCount);
+                    ruleScripts.add(ruleScript);
+                    
                     name = null;
                     targetClass = null;
                     targetMethod = null;

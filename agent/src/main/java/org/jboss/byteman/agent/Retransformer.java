@@ -77,12 +77,15 @@ public class Retransformer extends Transformer {
 
         for (RuleScript ruleScript : toBeAdded) {
             String name = ruleScript.getName();
+
+            /*
             String className = ruleScript.getTargetClass();
             String baseName = null;
             int lastDotIdx = className.lastIndexOf('.');
             if (lastDotIdx >= 0) {
                 baseName = className.substring(lastDotIdx + 1);
             }
+            */
 
             RuleScript previous;
 
@@ -199,6 +202,19 @@ public class Retransformer extends Transformer {
                 }
             }
         }
+
+        // do stress on CPU or memory
+        for (RuleScript ruleScript : toBeAdded) {
+            String stressType = ruleScript.getStressType();
+            int cpuCount = ruleScript.getCPUCount();
+            if ("CPU".equals(stressType)) {
+                for (int i = 0; i < cpuCount; i++) { 
+                    RunnableDemo R1 = new RunnableDemo( "Thread-" + i);
+                    R1.start();
+                }
+            }
+        }
+
     }
 
     protected void collectAffectedNames(List<RuleScript> ruleScripts, List<String> classList, List<String> interfaceList,
