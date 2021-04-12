@@ -356,6 +356,8 @@ public class TransformListener extends Thread
             out.append('\n');
             e.printStackTrace(out);
         }
+
+        Helper.verbose("handleScripts OK:" + scripts);
         out.println("OK");
         out.flush();
     }

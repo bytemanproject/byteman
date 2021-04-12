@@ -133,6 +133,21 @@ public class RuleScript
     private final String key_base;
 
     /**
+     * inject stress to this java process, the value can be MEMORY and CPU
+     */
+    private String stressType;
+
+    /**
+     * the CPU core number need to use, only set it when stressType is CPU
+     */ 
+    private int cpuCount;
+
+    /*
+     * the memory size need to locate, only set it whern stressType is Memory
+     */
+    private int memorySize;
+
+    /**
      * a list of records identifying transforms associated with a specific class.
      * each set is identified by the name of a trigger class and the class's
      * associated loader i.e. it corresponds with an attempt to transform a unique
@@ -164,7 +179,7 @@ public class RuleScript
      * @param file the path to the file containing the rule
      * @param compileToBytecode true if the rule should be compiled otherwise false
      */
-    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file, boolean compileToBytecode)
+    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file, boolean compileToBytecode, String stressType, int cpuCount, int memorySize)
     {
         this.name = name;
         this.targetClass = targetClass;
@@ -181,6 +196,10 @@ public class RuleScript
         this.transformSets = new ArrayList<TransformSet>();
         this.keySet = new HashMap<String, String>();
         this.key_base = name + "_" + nextId();
+        
+        this.stressType = stressType;
+        this.cpuCount = cpuCount;
+        this.memorySize = memorySize;
     }
 
     public String getName() {
@@ -205,6 +224,18 @@ public class RuleScript
 
     public String getTargetMethod() {
         return targetMethod;
+    }
+
+    public String getStressType() {
+        return stressType;
+    }
+
+    public int getCPUCount() {
+        return cpuCount;
+    }
+
+    public int getMemorySize() {
+        return memorySize;
     }
 
     public boolean isOverride() {

@@ -77,12 +77,15 @@ public class Retransformer extends Transformer {
 
         for (RuleScript ruleScript : toBeAdded) {
             String name = ruleScript.getName();
+
+            /*
             String className = ruleScript.getTargetClass();
             String baseName = null;
             int lastDotIdx = className.lastIndexOf('.');
             if (lastDotIdx >= 0) {
                 baseName = className.substring(lastDotIdx + 1);
             }
+            */
 
             RuleScript previous;
 
@@ -197,6 +200,24 @@ public class Retransformer extends Transformer {
                         }
                     }
                 }
+            }
+        }
+
+        // do stress on CPU or memory
+        for (RuleScript ruleScript : toBeAdded) {
+            String stressType = ruleScript.getStressType();
+            int cpuCount = ruleScript.getCPUCount();
+            String name = ruleScript.getName();
+            int memorySize = ruleScript.getMemorySize();
+
+            if ("CPU".equals(stressType)) {
+                CPUStress stress = new CPUStress(name, cpuCount);
+                stresses.put(name, stress);
+                stress.load();
+            } else if ("MEMORY".equals(stressType)) {
+                MemoryStress stress = new MemoryStress(name, memorySize);
+                stresses.put(name, stress);
+                stress.load();
             }
         }
     }
@@ -383,7 +404,19 @@ public class Retransformer extends Transformer {
                 out.println("uninstall RULE " + oldRuleScript.getName());
             }
         }
+        
         // now purge the rules for the old script
+        for (RuleScript oldRuleScript : toBeRemoved) {
+            String stressType = oldRuleScript.getStressType();
+            if (stressType == null || "".equals(stressType)) {
+                continue;
+            }
+
+            String name = oldRuleScript.getName();
+            Stress stress = stresses.get(name);
+            stress.quit();
+            stresses.remove(name);
+        }
     }
 
     public void appendJarFile(PrintWriter out, JarFile jarfile, boolean isBoot) throws Exception

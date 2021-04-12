@@ -60,7 +60,7 @@ public class Install
                 attachTest.attach();
                 attachTest.injectAgent();
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
             System.exit(1);
         }
     }
