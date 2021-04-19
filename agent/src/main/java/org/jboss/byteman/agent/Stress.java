@@ -157,6 +157,12 @@ class MemoryStressThread implements StressRunnable {
                     oom = true;
                     Helper.verbose("exception: " + e);
                 }
+            } else {
+                try {
+                    Thread.sleep(500);
+                } catch (Exception e) {
+                    Helper.verbose("exception: " + e);
+                }
             }
         }
 
