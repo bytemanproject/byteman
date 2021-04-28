@@ -203,12 +203,13 @@ public class Retransformer extends Transformer {
             }
         }
 
-        // do stress on CPU or memory
+        // do stress on CPU or memory, or trigger gc
         for (RuleScript ruleScript : toBeAdded) {
             String stressType = ruleScript.getStressType();
             int cpuCount = ruleScript.getCPUCount();
             String name = ruleScript.getName();
             int memorySize = ruleScript.getMemorySize();
+            boolean triggerGC = ruleScript.getTriggerGC();
 
             if ("CPU".equals(stressType)) {
                 CPUStress stress = new CPUStress(name, cpuCount);
@@ -218,6 +219,9 @@ public class Retransformer extends Transformer {
                 MemoryStress stress = new MemoryStress(name, memorySize);
                 stresses.put(name, stress);
                 stress.load();
+            } else if (triggerGC) {
+                Helper.verbose("begin to trigger GC");
+                System.gc();
             }
         }
     }

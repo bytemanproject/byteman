@@ -147,6 +147,11 @@ public class RuleScript
      */
     private int memorySize;
 
+    /*
+     * is it need to trigger GC
+     */
+    private boolean triggerGC;
+
     /**
      * a list of records identifying transforms associated with a specific class.
      * each set is identified by the name of a trigger class and the class's
@@ -179,7 +184,7 @@ public class RuleScript
      * @param file the path to the file containing the rule
      * @param compileToBytecode true if the rule should be compiled otherwise false
      */
-    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file, boolean compileToBytecode, String stressType, int cpuCount, int memorySize)
+    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file, boolean compileToBytecode, String stressType, int cpuCount, int memorySize, boolean triggerGC)
     {
         this.name = name;
         this.targetClass = targetClass;
@@ -200,6 +205,7 @@ public class RuleScript
         this.stressType = stressType;
         this.cpuCount = cpuCount;
         this.memorySize = memorySize;
+        this.triggerGC = triggerGC;
     }
 
     public String getName() {
@@ -236,6 +242,10 @@ public class RuleScript
 
     public int getMemorySize() {
         return memorySize;
+    }
+
+    public boolean getTriggerGC() {
+        return triggerGC;
     }
 
     public boolean isOverride() {

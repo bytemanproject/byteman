@@ -63,6 +63,7 @@ public class ScriptRepository
             String targetClass = null;
             String targetMethod = null;
             String stressType = null;
+            boolean triggerGC = false;
             int cpuCount = 0;
             int memorySize = 0;
             String targetHelper = null;
@@ -189,6 +190,8 @@ public class ScriptRepository
                     } catch (NumberFormatException e) {
                        throw e;
                     }
+                } else if (line.startsWith("GC")) {
+                    triggerGC = true;
                 } else if ((locationType = LocationType.type(line)) != null) {
                     String parameters = LocationType.parameterText(line);
                     targetLocation = Location.create(locationType, parameters);
@@ -202,6 +205,8 @@ public class ScriptRepository
                         if ("CPU".equals(stressType) && cpuCount == 0 ) {
                             throw new Exception("org.jboss.byteman.agent.Transformer: CPUCOUNT can't be 0 when STRESS is CPU");
                         }
+                    } else if (triggerGC) {
+                        // do nothing
                     } else if (targetClass == null || "".equals(targetClass)) {
                         throw new Exception("org.jboss.byteman.agent.Transformer : no CLASS for RULE  " + name + " in script " + scriptFile);
                     } else if (targetMethod == null || "".equals(targetMethod)) {
@@ -219,7 +224,7 @@ public class ScriptRepository
                     }
 
                     Helper.verbose("new RuleScript, stressType: " + stressType + ", cpu count: " + cpuCount + ", memory size: " + memorySize);
-                    RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetImports, targetLocation, nextRule, startNumber, scriptFile, ruleCompileToBytecode, stressType, cpuCount, memorySize);
+                    RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetImports, targetLocation, nextRule, startNumber, scriptFile, ruleCompileToBytecode, stressType, cpuCount, memorySize, triggerGC);
                     ruleScripts.add(ruleScript);
                     
                     name = null;
