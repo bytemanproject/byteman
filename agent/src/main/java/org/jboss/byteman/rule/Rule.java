@@ -42,6 +42,7 @@ import org.jboss.byteman.rule.grammar.ECAGrammarParser;
 import org.jboss.byteman.rule.grammar.ParseNode;
 import org.jboss.byteman.rule.helper.HelperAdapter;
 import org.jboss.byteman.rule.helper.Helper;
+import org.jboss.byteman.rule.helper.ThreadPoolHelper;
 import org.jboss.byteman.rule.helper.InterpretedHelper;
 import org.jboss.byteman.agent.Location;
 import org.jboss.byteman.agent.Transformer;
