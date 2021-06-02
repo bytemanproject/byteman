@@ -381,7 +381,7 @@ public class Retransformer extends Transformer {
             // if the rule is for thread pool in org.jboss.byteman.rule.helper.ThreadPoolHelper, 
             // set the environment variable THREAD_POOL_INJECT_STOP=true, so that the thread created by byteman can stop
             String helper = oldRuleScript.getTargetHelper();
-            if (helper.contains("ThreadPoolHelper")) {
+            if ((helper != null) && helper.contains("ThreadPoolHelper")) {
                 System.out.println("set THREAD_POOL_INJECT_STOP to true");
                 ThreadTask.setStop(true);
             }
