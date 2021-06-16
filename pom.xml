@@ -254,23 +254,6 @@
                  <version>${project.version}</version>
                  <classifier>javadoc</classifier>
              </dependency>
-             <dependency>
-                 <groupId>org.jboss.byteman</groupId>
-                 <artifactId>byteman-jboss-modules-plugin</artifactId>
-                 <version>${project.version}</version>
-             </dependency>
-             <dependency>
-                 <groupId>org.jboss.byteman</groupId>
-                 <artifactId>byteman-jboss-modules-plugin</artifactId>
-                 <version>${project.version}</version>
-                 <classifier>sources</classifier>
-             </dependency>
-             <dependency>
-                 <groupId>org.jboss.byteman</groupId>
-                 <artifactId>byteman-jboss-modules-plugin</artifactId>
-                 <version>${project.version}</version>
-                 <classifier>javadoc</classifier>
-             </dependency>
 
              <!-- External dependencies -->
             <dependency>
@@ -438,7 +421,6 @@
         <module>contrib/bmunit5</module>
         <module>contrib/dtest</module>
         <module>contrib/rulecheck-maven-plugin</module>
-        <module>contrib/jboss-modules-system</module>
         <module>sample</module>
         <module>docs</module>
         <module>download</module>

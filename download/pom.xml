@@ -110,11 +110,6 @@
             <artifactId>byteman-dtest</artifactId>
 	    <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.jboss.byteman</groupId>
-            <artifactId>byteman-jboss-modules-plugin</artifactId>
-	    <version>${project.version}</version>
-        </dependency>
         <!-- javadoc jars -->
         <dependency>
             <groupId>org.jboss.byteman</groupId>
@@ -158,12 +153,6 @@
             <classifier>javadoc</classifier>
 	    <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.jboss.byteman</groupId>
-            <artifactId>byteman-jboss-modules-plugin</artifactId>
-            <classifier>javadoc</classifier>
-	    <version>${project.version}</version>
-        </dependency>
         <!-- source jars -->
         <dependency>
             <groupId>org.jboss.byteman</groupId>
@@ -204,12 +193,6 @@
         <dependency>
             <groupId>org.jboss.byteman</groupId>
             <artifactId>byteman-dtest</artifactId>
-            <classifier>sources</classifier>
-	    <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.byteman</groupId>
-            <artifactId>byteman-jboss-modules-plugin</artifactId>
             <classifier>sources</classifier>
 	    <version>${project.version}</version>
         </dependency>
