@@ -156,14 +156,14 @@ class MemoryStressThread implements StressRunnable {
                     Helper.verbose("exception: " + e);
                 }
             } else {
-                if (this.type.equals("heapOOM")) {
+                if (this.type.equals("heap")) {
                     try {
                         increaseSizeData.add("123456");
                     } catch (OutOfMemoryError e) {
                         oom = true;
                         Helper.verbose("exception: " + e);
                     }
-                } else if (this.type.equals("stackOOM")) {
+                } else if (this.type.equals("stack")) {
                     try {
                         ThreadTask task = new ThreadTask();
                         task.setInterval(9999999);
