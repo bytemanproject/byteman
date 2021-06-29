@@ -145,7 +145,7 @@ public class RuleScript
     /*
      * the memory size need to locate, only set it whern stressType is Memory
      */
-    private int memorySize;
+    private String memoryType;
 
     /*
      * is it need to trigger GC
@@ -184,7 +184,7 @@ public class RuleScript
      * @param file the path to the file containing the rule
      * @param compileToBytecode true if the rule should be compiled otherwise false
      */
-    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file, boolean compileToBytecode, String stressType, int cpuCount, int memorySize, boolean triggerGC)
+    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file, boolean compileToBytecode, String stressType, int cpuCount, String memoryType, boolean triggerGC)
     {
         this.name = name;
         this.targetClass = targetClass;
@@ -204,7 +204,7 @@ public class RuleScript
         
         this.stressType = stressType;
         this.cpuCount = cpuCount;
-        this.memorySize = memorySize;
+        this.memoryType = memoryType;
         this.triggerGC = triggerGC;
     }
 
@@ -240,8 +240,8 @@ public class RuleScript
         return cpuCount;
     }
 
-    public int getMemorySize() {
-        return memorySize;
+    public String getMemoryType() {
+        return memoryType;
     }
 
     public boolean getTriggerGC() {

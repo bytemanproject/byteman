@@ -1,11 +1,14 @@
 package org.jboss.byteman.agent;
 
+import org.jboss.byteman.modules.ModuleSystem;
 import org.jboss.byteman.rule.helper.Helper;
+import org.jboss.byteman.rule.helper.ThreadTask;
 
 import java.util.*;
 import java.nio.ByteBuffer;
 import java.lang.reflect.Method;
 import java.util.concurrent.locks.ReentrantLock;
+
 
 /*
     Stress is an interface used for inject stress on Java process, include Memory and CPU.
@@ -46,16 +49,16 @@ class CPUStress implements Stress {
 
 class MemoryStress implements Stress {
     private String name;
-    private int size;
+    private String type;
     private MemoryStressThread thread;
 
-    MemoryStress(String name, int size) {
+    MemoryStress(String name, String type) {
         this.name = name;
-        this.size = size;
+        this.type = type;
     }
 
     public void load() {
-        thread = new MemoryStressThread(name, size);
+        thread = new MemoryStressThread(name, type);
         thread.start();
     }
 
@@ -119,49 +122,58 @@ class MemoryStressThread implements StressRunnable {
     private String threadName;
     private int size;
     private boolean flag;
+    private String type;
 
     private ReentrantLock lock = new ReentrantLock();
 
-    MemoryStressThread(String name, int size) {
+    MemoryStressThread(String name, String type) {
         threadName = name;
-        this.size = size;
+        this.type = type;
         flag = true;
-        Helper.verbose("Creating " +  threadName );
+        Helper.verbose("Creating " +  threadName + ", type " + type);
     }
 
     public void run() {
         Helper.verbose("Running " +  threadName );
-        ByteBuffer stableSizeData;
         ArrayList<String> increaseSizeData = new ArrayList<String>();
         boolean oom = false;
-        
-        if (size > 0) {
-            stableSizeData = ByteBuffer.allocateDirect(size*1024*1024);
-        }
 
         while (true) {
             lock.lock();
             boolean exit = !flag;
             lock.unlock();
             if (exit) {
-                stableSizeData = null;
                 increaseSizeData = null;
-
+                ThreadTask.setStop(true);
                 System.gc(); 
                 break;
             }
-            if (size < 0 && !oom ) {
-                try {
-                    increaseSizeData.add("123456");
-                } catch (OutOfMemoryError e) {
-                    oom = true;
-                    Helper.verbose("exception: " + e);
-                }
-            } else {
+
+            if (oom) {
                 try {
                     Thread.sleep(500);
                 } catch (Exception e) {
                     Helper.verbose("exception: " + e);
+                }
+            } else {
+                if (this.type.equals("heapOOM")) {
+                    try {
+                        increaseSizeData.add("123456");
+                    } catch (OutOfMemoryError e) {
+                        oom = true;
+                        Helper.verbose("exception: " + e);
+                    }
+                } else if (this.type.equals("stackOOM")) {
+                    try {
+                        ThreadTask task = new ThreadTask();
+                        task.setInterval(9999999);
+                        Thread th = new Thread(task);
+                        th.start();
+                    } catch (OutOfMemoryError e) {
+                        oom = true;
+                        Helper.verbose("exception: " + e);
+                    }
+
                 }
             }
         }

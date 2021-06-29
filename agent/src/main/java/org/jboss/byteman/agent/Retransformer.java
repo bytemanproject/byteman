@@ -211,7 +211,7 @@ public class Retransformer extends Transformer {
             String stressType = ruleScript.getStressType();
             int cpuCount = ruleScript.getCPUCount();
             String name = ruleScript.getName();
-            int memorySize = ruleScript.getMemorySize();
+            String memoryType = ruleScript.getMemoryType();
             boolean triggerGC = ruleScript.getTriggerGC();
 
             if ("CPU".equals(stressType)) {
@@ -219,7 +219,7 @@ public class Retransformer extends Transformer {
                 stresses.put(name, stress);
                 stress.load();
             } else if ("MEMORY".equals(stressType)) {
-                MemoryStress stress = new MemoryStress(name, memorySize);
+                MemoryStress stress = new MemoryStress(name, memoryType);
                 stresses.put(name, stress);
                 stress.load();
             } else if (triggerGC) {

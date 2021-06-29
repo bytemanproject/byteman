@@ -65,7 +65,7 @@ public class ScriptRepository
             String stressType = null;
             boolean triggerGC = false;
             int cpuCount = 0;
-            int memorySize = 0;
+            String memoryType = "";
             String targetHelper = null;
             String defaultHelper = null;
             String[] targetImports  = null;
@@ -184,9 +184,9 @@ public class ScriptRepository
                     } catch (NumberFormatException e) {
                        throw e;
                     }
-                } else if (line.startsWith("MEMORYSIZE ")) {
+                } else if (line.startsWith("MEMORYTYPE ")) {
                     try {
-                        memorySize = Integer.parseInt(line.substring(11).trim());
+                        memoryType = line.substring(11).trim();
                     } catch (NumberFormatException e) {
                        throw e;
                     }
@@ -223,8 +223,8 @@ public class ScriptRepository
                         targetImports = (defaultImports != null) ? defaultImports : new String[0];
                     }
 
-                    Helper.verbose("new RuleScript, stressType: " + stressType + ", cpu count: " + cpuCount + ", memory size: " + memorySize);
-                    RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetImports, targetLocation, nextRule, startNumber, scriptFile, ruleCompileToBytecode, stressType, cpuCount, memorySize, triggerGC);
+                    Helper.verbose("new RuleScript, stressType: " + stressType + ", cpu count: " + cpuCount + ", memory size: " + memoryType);
+                    RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetImports, targetLocation, nextRule, startNumber, scriptFile, ruleCompileToBytecode, stressType, cpuCount, memoryType, triggerGC);
                     ruleScripts.add(ruleScript);
                     
                     name = null;
