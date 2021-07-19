@@ -110,7 +110,17 @@ IF TRUE
 DO traceRun($0)
 ENDRULE
 
-# A rule to trigger the registration of the ThreadHistoryMonitorHelper mbean.
+RULE ThreadMonitor trace Callable call
+INTERFACE ^java.util.concurrent.Callable
+METHOD call()
+HELPER org.jboss.byteman.sample.helper.ThreadHistoryMonitorHelper
+AT ENTRY
+IF TRUE
+DO traceRun($0)
+ENDRULE
+
+
+# A registration of the ThreadHistoryMonitorHelper MXBean
 # This has to be done after the installation of the platform mbean to avoid
 # conflicts with installing the j.u.l.LogManager.
 RULE Register ThreadHistoryMonitorHelper mbean

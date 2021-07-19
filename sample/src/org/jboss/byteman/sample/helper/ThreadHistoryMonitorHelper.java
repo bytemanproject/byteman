@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -59,13 +60,14 @@ import java.util.concurrent.TimeUnit;
 public class ThreadHistoryMonitorHelper extends Helper
     implements ThreadHistoryMonitorHelperMXBean
 {
-    private static Map<ThreadMonitored, ThreadMonitored> monitoredThreads =
+    private final static Map<ThreadMonitored, ThreadMonitored> monitoredThreads =
             new ConcurrentHashMap<ThreadMonitored, ThreadMonitored>();
-    private static Queue<ThreadMonitorEvent> createList      = new ConcurrentLinkedQueue<ThreadMonitorEvent>();
-    private static Queue<ThreadMonitorEvent> startList       = new ConcurrentLinkedQueue<ThreadMonitorEvent>();
-    private static Queue<ThreadMonitorEvent> exitList        = new ConcurrentLinkedQueue<ThreadMonitorEvent>();
-    private static Queue<ThreadMonitorEvent> runList         = new ConcurrentLinkedQueue<ThreadMonitorEvent>();
-    private static Queue<ThreadMonitorEvent> interruptedList = new ConcurrentLinkedQueue<ThreadMonitorEvent>();
+    private final static Queue<ThreadMonitorEvent> createList      = new ConcurrentLinkedQueue<ThreadMonitorEvent>();
+    private final static Queue<ThreadMonitorEvent> startList       = new ConcurrentLinkedQueue<ThreadMonitorEvent>();
+    private final static Queue<ThreadMonitorEvent> exitList        = new ConcurrentLinkedQueue<ThreadMonitorEvent>();
+    private final static Queue<ThreadMonitorEvent> runList         = new ConcurrentLinkedQueue<ThreadMonitorEvent>();
+    private final static Queue<ThreadMonitorEvent> callList        = new ConcurrentLinkedQueue<ThreadMonitorEvent>();
+    private final static Queue<ThreadMonitorEvent> interruptedList = new ConcurrentLinkedQueue<ThreadMonitorEvent>();
 
     /** The first instance of ThreadHistoryMonitorHelper that will be used as the mbean
      * by {@link #registerHelperMBean(String)}.
@@ -80,11 +82,11 @@ public class ThreadHistoryMonitorHelper extends Helper
      */
     public static void activated() {
         DEBUG = Boolean.getBoolean("org.jboss.byteman.sample.helper.debug");
-        if(DEBUG)
+        if (DEBUG)
             System.err.println("ThreadHistoryMonitorHelper.activated, ");
     }
     public static void installed(Rule rule) {
-        if(DEBUG)
+        if (DEBUG)
             System.err.println("ThreadHistoryMonitorHelper.installed, "+rule);
     }
     protected ThreadHistoryMonitorHelper(Rule rule) {
@@ -101,8 +103,9 @@ public class ThreadHistoryMonitorHelper extends Helper
             MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
             try {
                 ObjectName oname = new ObjectName(name);
-                if(mbs.isRegistered(oname) == false)
+                if (mbs.isRegistered(oname) == false) {
                     mbs.registerMBean(INSTANCE, oname);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -186,24 +189,40 @@ public class ThreadHistoryMonitorHelper extends Helper
         runList.add(event);
     }
 
+    /**
+     * trace run of the supplied Callable to System.out
+     *
+     * this should only be triggered from a call to an implementation of {@link Callable#call()}
+     *
+     * @param callable the callable being call
+     */
+    public void traceRun(Callable callable)
+    {
+        Thread thread = Thread.currentThread();
+        ThreadMonitored monitoredThread = getMonitoredThread(thread);
+        monitoredThread.setCallableClass(callable.getClass());
+        ThreadMonitorEvent event = newThreadEvent(monitoredThread, thread, ThreadMonitorEventType.CALL);
+        callList.add(event);
+    }
+
     public ThreadMonitorEvent[] getCreateEvents() {
-        ThreadMonitorEvent[] events = new ThreadMonitorEvent[createList.size()];
-        return createList.toArray(events);
+        return createList.toArray(new ThreadMonitorEvent[]{});
     }
 
     public ThreadMonitorEvent[] getStartEvents() {
-        ThreadMonitorEvent[] events = new ThreadMonitorEvent[startList.size()];
-        return startList.toArray(events);
+        return startList.toArray(new ThreadMonitorEvent[]{});
     }
 
     public ThreadMonitorEvent[] getExitEvents() {
-        ThreadMonitorEvent[] events = new ThreadMonitorEvent[exitList.size()];
-        return exitList.toArray(events);
+        return exitList.toArray(new ThreadMonitorEvent[]{});
     }
 
     public ThreadMonitorEvent[] getRunEvents() {
-        ThreadMonitorEvent[] events = new ThreadMonitorEvent[runList.size()];
-        return runList.toArray(events);
+        return runList.toArray(new ThreadMonitorEvent[]{});
+    }
+
+    public ThreadMonitorEvent[] getCallEvents() {
+        return callList.toArray(new ThreadMonitorEvent[]{});
     }
 
     public String getEventReport() throws IOException {
@@ -212,7 +231,8 @@ public class ThreadHistoryMonitorHelper extends Helper
         writeFullEvents(format, "Thread.create", createList);
         writeFullEvents(format, "Thread.start", startList);
         writeFullEvents(format, "Thread.exit", exitList);
-        writeFullEvents(format, "Runable.run", runList);
+        writeFullEvents(format, "Runnable.run", runList);
+        writeFullEvents(format, "Callable.call", callList);
         sw.close();
         return sw.toString();
     }
@@ -220,14 +240,16 @@ public class ThreadHistoryMonitorHelper extends Helper
     public void writeEventsToFile(String type, String path) throws IOException {
         FileWriter fw = new FileWriter(path);
         Formatter format = new Formatter(fw);
-        if(type == null || type.length() == 0 || type.equalsIgnoreCase("create"))
+        if (type == null || type.length() == 0 || type.equalsIgnoreCase("create"))
             writeFullEvents(format, "Thread.create Events", createList);
-        if(type == null || type.length() == 0 || type.equalsIgnoreCase("start"))
+        if (type == null || type.length() == 0 || type.equalsIgnoreCase("start"))
             writeFullEvents(format, "Thread.start Events", startList);
-        if(type == null || type.length() == 0 || type.equalsIgnoreCase("exit"))
+        if (type == null || type.length() == 0 || type.equalsIgnoreCase("exit"))
             writeFullEvents(format, "Thread.exit Events", exitList);
-        if(type == null || type.length() == 0 || type.equalsIgnoreCase("run"))
-            writeFullEvents(format, "Runable.run Events", runList);
+        if (type == null || type.length() == 0 || type.equalsIgnoreCase("run"))
+            writeFullEvents(format, "Runnable.run Events", runList);
+        if (type == null || type.length() == 0 || type.equalsIgnoreCase("call"))
+            writeFullEvents(format, "Callable.call Events", callList);
         fw.close();
     }
 
@@ -265,11 +287,11 @@ public class ThreadHistoryMonitorHelper extends Helper
         String suffix = null;
         String base = path;
         int lastDot = path.lastIndexOf('.');
-        if(lastDot > 0) {
+        if (lastDot > 0) {
             suffix = path.substring(lastDot);
             base = path.substring(0, lastDot);
         }
-        for(int n = 0; n <= sampleCount; n ++) {
+        for (int n = 0; n <= sampleCount; n ++) {
             final String samplePath = base + "-" + n + (suffix != null ? suffix : "");
             int delay = 5*n;
             ScheduledFuture future = ses.schedule(new Runnable() {
@@ -285,7 +307,7 @@ public class ThreadHistoryMonitorHelper extends Helper
             tasks.add(future);
         }
         // Wait for tasks to complete
-        for(ScheduledFuture future : tasks) {
+        for (ScheduledFuture future : tasks) {
             try {
                 future.get();
             } catch (Exception e) {
@@ -306,11 +328,12 @@ public class ThreadHistoryMonitorHelper extends Helper
         writeFullEvents(format, "Thread.create", createList);
         writeFullEvents(format, "Thread.start", startList);
         writeFullEvents(format, "Thread.exit", exitList);
-        writeFullEvents(format, "Runable.run", runList);
-        
+        writeFullEvents(format, "Runnable.run", runList);
+        writeFullEvents(format, "Callable.call", callList);
+
         // thread which were started but not exited yet
         Map<ThreadMonitored, ThreadMonitorEvent> runningThreads = getThreadEventMap(startList);
-        for(ThreadMonitorEvent exitEvent: exitList) {
+        for (ThreadMonitorEvent exitEvent: exitList) {
             runningThreads.remove(exitEvent.getMonitoredThread());
         }
         writeThreadNames(format, "Thread.start but not exit", runningThreads.values());
@@ -323,14 +346,16 @@ public class ThreadHistoryMonitorHelper extends Helper
         int count = 0;
         List<String> threadNames = new ArrayList<String>();
         fw.format("+++ Begin %s Events, count=%d +++\n", title, events.size());
-        for(ThreadMonitorEvent event : events) {
+        for (ThreadMonitorEvent event : events) {
             ThreadMonitored thread = event.getMonitoredThread();
-            if(thread.getRunnableClass() != null) {
-                fw.format("#%d [%s], %s:%s(runnable=%s, by=%s)\n%s\n", count++, title, thread.getThreadName(), thread.getThreadId(),
-                        thread.getRunnableClass(), thread.getCreatedBy(), event.getFullStack());
-            } else {
-                fw.format("#%d [%s], %s:%s(by=%s)\n%s\n", count++, title, thread.getThreadName(), thread.getThreadId(), thread.getCreatedBy(), event.getFullStack());
+            String runnableOrCallable = "";
+            if (thread.getRunnableClass() != null) {
+                runnableOrCallable += "runnable=" + thread.getRunnableClass() + ",";
+            } else if (thread.getCallableClass() != null) {
+                runnableOrCallable += "callable=" + thread.getCallableClass() + ",";
             }
+            fw.format("#%d [%s], %s:%s(%sby=%s)\n%s\n", count++, title, thread.getThreadName(), thread.getThreadId(),
+                    runnableOrCallable, thread.getCreatedBy(), event.getFullStack());
             threadNames.add(thread.toString());
         }
         fw.format("+++ End %s Events +++\n", title);
@@ -339,11 +364,11 @@ public class ThreadHistoryMonitorHelper extends Helper
     
     private void writeThreadNames(Formatter fw, String title, Collection<ThreadMonitorEvent> events) {
         List<String> threadNames = new ArrayList<String>();
-        for(ThreadMonitorEvent event : events) {
+        for (ThreadMonitorEvent event : events) {
             threadNames.add(event.getMonitoredThread().toString());
         }
         fw.format("+++ Begin %s Thread Names (count=%s) +++\n", title, threadNames.size());
-        for(String name : threadNames) {
+        for (String name : threadNames) {
             fw.format("%s\n", name);
         }
         fw.format("+++ End %s Thread Names +++\n", title);
@@ -374,7 +399,7 @@ public class ThreadHistoryMonitorHelper extends Helper
         stackInfo.add(line.toString());
         line.setLength(0);
 
-        for(int n = t; n < l; n ++) {
+        for (int n = t; n < l; n ++) {
             StackTraceElement frame = stack[n];
             super.printlnFrame(line, frame);
             buffer.append(line);
@@ -398,7 +423,7 @@ public class ThreadHistoryMonitorHelper extends Helper
      */
     private ThreadMonitored getMonitoredThread(Thread thread) {
         ThreadMonitored mt = ThreadMonitored.newMonitoredThread(thread);
-        if(monitoredThreads.containsKey(mt)) {
+        if (monitoredThreads.containsKey(mt)) {
             return monitoredThreads.get(mt);
         } else {
             monitoredThreads.put(mt, mt);
@@ -409,7 +434,7 @@ public class ThreadHistoryMonitorHelper extends Helper
 
     private Map<ThreadMonitored, ThreadMonitorEvent> getThreadEventMap(Iterable<ThreadMonitorEvent> events) {
         Map<ThreadMonitored, ThreadMonitorEvent> threadEventMap = new HashMap<ThreadMonitored, ThreadMonitorEvent>();
-        for(ThreadMonitorEvent event: events) {
+        for (ThreadMonitorEvent event: events) {
             threadEventMap.put(event.getMonitoredThread(), event);
         }
         return threadEventMap;
