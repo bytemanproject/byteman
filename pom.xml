@@ -107,6 +107,9 @@
         <debug.args>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -Dorg.jboss.byteman.verbose</debug.args>
         <!-- asm release version to use -->
         <asm.version>9.1</asm.version>
+        <!-- maven-verification-plugin -->
+        <tests.verification.file>access-verification.xml</tests.verification.file>
+        <agent.verification.file>verification.xml</agent.verification.file>
     </properties>
 
     <dependencyManagement>
@@ -422,11 +425,34 @@
         <module>contrib/dtest</module>
         <module>contrib/rulecheck-maven-plugin</module>
         <module>sample</module>
-        <module>docs</module>
         <module>download</module>
+        <!-- docs module is activated in profile 'default-with-docs' -->
     </modules>
 
     <profiles>
+      <profile>
+        <id>default-with-docs</id>
+        <activation>
+          <property>
+            <name>!skipDocs</name>
+          </property>
+        </activation>
+        <modules>
+          <module>docs</module>
+        </modules>
+      </profile>
+      <profile>
+        <id>skip-integration-test-skips-verification</id>
+        <activation>
+          <property>
+            <name>skipITs</name>
+          </property>
+        </activation>
+        <properties>
+          <tests.verification.file>noverification.xml</tests.verification.file>
+          <agent.verification.file>noverification.xml</agent.verification.file>
+        </properties>
+      </profile>
       <profile>
         <!-- normally tools jar is in ../lib/tools.jar -->
         <id>default-toolsjar-profile</id>
