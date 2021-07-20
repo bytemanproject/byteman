@@ -33,11 +33,11 @@ import java.io.Serializable;
 public class ThreadMonitored implements Serializable {
     private static final long serialVersionUID = 1;
 
-    private String threadName;
-    private long threadId;
-    private int threadHashCode;
-    private String runnableClass;
-    private ThreadMonitored createdBy;
+    private final String threadName;
+    private final long threadId;
+    private final int threadHashCode;
+    private String runnableClass, callableClass;
+    private String createdBy;
 
     /**
      * Creating new instance of {@link ThreadMonitored}. Data is drained
@@ -69,24 +69,38 @@ public class ThreadMonitored implements Serializable {
         this.runnableClass = runnableClass.toString();
     }
 
-    public void setCreatedBy(ThreadMonitored createdBy) {
-        this.createdBy = createdBy;
+    public String getCallableClass() {
+        return callableClass;
     }
 
-    public ThreadMonitored getCreatedBy() {
+    public void setCallableClass(Class<?> callableClass) {
+        this.callableClass = callableClass.toString();
+    }
+
+    public void setCreatedBy(ThreadMonitored createdBy) {
+        this.createdBy = createdBy.toString();
+    }
+
+    public String getCreatedBy() {
         return createdBy;
     }
 
     @Override
     public String toString() {
-        StringBuffer eventId = new StringBuffer()
+        StringBuilder eventId = new StringBuilder()
             .append(getThreadName())
             .append(":")
             .append(getThreadId());
         if(getRunnableClass() != null) {
             eventId
-                .append("(")
+                .append("(run:")
                 .append(getRunnableClass())
+                .append(")");
+        }
+        if(getCallableClass() != null) {
+            eventId
+                .append("(call:")
+                .append(getCallableClass())
                 .append(")");
         }
         return eventId.toString();
@@ -116,10 +130,10 @@ public class ThreadMonitored implements Serializable {
         if (threadId != other.threadId)
             return false;
         if (threadName == null) {
-            if (other.threadName != null)
-                return false;
-        } else if (!threadName.equals(other.threadName))
+            return other.threadName == null;
+        } else if (!threadName.equals(other.threadName)) {
             return false;
+        }
         return true;
     }
 }
