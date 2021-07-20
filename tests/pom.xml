@@ -2303,8 +2303,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-verifier-plugin</artifactId>
                 <configuration>
-                    <verificationFile>../agent/verification.xml</verificationFile>
-                    <verificationFile>access-verification.xml</verificationFile>
+                    <verificationFile>../agent/${agent.verification.file}</verificationFile>
+                    <verificationFile>${tests.verification.file}</verificationFile>
                     <failOnError>true</failOnError>
                 </configuration>
                 <executions>

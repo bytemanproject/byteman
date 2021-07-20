@@ -66,6 +66,17 @@ or application code.
 (n.b. these examples still need extending to show how to use Byteman
 for fault injection based testing).
 
+Compiling Byteman
+-----------------
+
+To compile source code use Maven command `mvn clean install`.
+Byteman will be compiled, the command generates documentation
+and distribution artifacts can be found at `download/target`.
+
+To speed-up compilation you can skip tests and generating
+the documentation with
+`mvn clean install -DskipITs -DskipTests -DskipDocs`.
+
 Copyright
 ---------
 See the copyright file in the docs directory for details of the open
