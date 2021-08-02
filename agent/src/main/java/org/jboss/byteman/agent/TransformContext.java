@@ -274,9 +274,24 @@ public class TransformContext
     public boolean matchTargetMethod(int access, String name, String desc)
     {
         // check the method is one we are really targeting
-        if ((access & (Opcodes.ACC_NATIVE|Opcodes.ACC_ABSTRACT|Opcodes.ACC_SYNTHETIC)) != 0 ||
-                !targetMethodName.equals(name) ||
-                (!targetDescriptor.equals("") && !TypeHelper.equalDescriptors(targetDescriptor, desc))) {
+
+        // cannot inject into a native or abstract method
+        if ((access & (Opcodes.ACC_NATIVE|Opcodes.ACC_ABSTRACT)) != 0) {
+            return false;
+        }
+
+        // cannot inject into a synthetic method unless it is a local lambda method
+        if ((access & Opcodes.ACC_SYNTHETIC) != 0 && !name.startsWith(LAMBDA_PREFIX)) {
+            return false;
+        }
+
+        // cannot inject unless the method name matches the target name
+        if (!targetMethodName.equals(name)) {
+            return false;
+        }
+
+        // cannot inject if there is a target descriptor which fails to match the actual descriptor
+        if (!targetDescriptor.equals("") && !TypeHelper.equalDescriptors(targetDescriptor, desc)) {
             return false;
         }
 
@@ -403,6 +418,11 @@ public class TransformContext
      * cases where the parameter type list is also specified.
      */
     private static final String JAVA_METHOD_SPEC_PATTERN = "[A-Za-z0-9$.]+ +[A-Za-z0-9$]+\\(.*\\)";
+
+    /**
+     * The prefix that identifies a method generated to implement a local lambda expression."
+     */
+    private static final String LAMBDA_PREFIX = "lambda$";
 
     /**
      * detect a method specification which includes a return type preceding the method name and transform
