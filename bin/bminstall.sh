@@ -120,4 +120,12 @@ fi
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 # attach class will validate arguments
 
-java ${BYTEMAN_JAVA_OPTS} -classpath "$CP" org.jboss.byteman.agent.install.Install $*
+USER=`echo "$USER"`
+PID=${*: -1}
+PID_USER="$( ps -o uname= -p "${PID}" )"
+
+if [ "$USER" == "root" ] && [ "$PID_USER" != "root" ] && [ $JAVA_VERSION -le 8 ]; then
+	sudo -u $PID_USER JAVA_HOME=$JAVA_HOME BYTEMAN_HOME=$BYTEMAN_HOME $JAVA_HOME/bin/java ${BYTEMAN_JAVA_OPTS} -classpath "$CP" org.jboss.byteman.agent.install.Install $*
+else
+	java ${BYTEMAN_JAVA_OPTS} -classpath "$CP" org.jboss.byteman.agent.install.Install $*
+fi
