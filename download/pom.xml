@@ -110,6 +110,11 @@
             <artifactId>byteman-dtest</artifactId>
 	    <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jboss.byteman</groupId>
+            <artifactId>byteman-asciidoc</artifactId>
+	    <version>${project.version}</version>
+        </dependency>
         <!-- javadoc jars -->
         <dependency>
             <groupId>org.jboss.byteman</groupId>
