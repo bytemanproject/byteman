@@ -85,3 +85,9 @@ expectWarnings -- count of how many warnings are to be expected. the
 
 skip        -- flag set to true if rule checks shoudl be skipped (default
             false)
+
+systemProperties -- a list of property settings that should be installed as
+            system properties before running the rule checker. this option
+            enables a few important org.jboss.byteman.xxx properties which
+            control operation of the byteman agent to be configured (e.g.
+            o.j.b.transform.all or o.j.b.verbose).
