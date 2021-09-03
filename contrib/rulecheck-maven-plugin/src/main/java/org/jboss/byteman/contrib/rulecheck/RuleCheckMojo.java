@@ -63,7 +63,9 @@ import org.jboss.byteman.check.RuleCheckResult;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Check the byteman script rule
@@ -132,7 +134,13 @@ public class RuleCheckMojo extends AbstractMojo
     @Parameter(property = "additionalClassPath")
     private String additionalClassPath;
 
-    /** 
+    /**
+     * env settings
+     */
+    @Parameter(property = "systemProperties")
+    private Properties systemProperties;
+
+    /**
      * verbose 
      */
     @Parameter(defaultValue = "false" , property = "verbose")
@@ -144,6 +152,14 @@ public class RuleCheckMojo extends AbstractMojo
         if(skip) {
             getLog().info("Checking byteman scripts are skipped");
             return;
+        }
+
+        for (String key : systemProperties.stringPropertyNames()) {
+            if (!key.matches("[-A-Za-z0-9_$.]+")) {
+                throw new MojoExecutionException("invalid system property " + key);
+            }
+            String value = systemProperties.getProperty(key);
+            System.setProperty(key, value);
         }
 
         try {
@@ -170,6 +186,12 @@ public class RuleCheckMojo extends AbstractMojo
         if(scripts.size() == 0) {
             getLog().info("No byteman script in " + scriptDir);
             return;
+        } else {
+            int n = scripts.size();
+            getLog().info("Found " + n + " scripts:");
+            for (int i = 0; i < n; i++) {
+                getLog().info("  " + i + ": " + scripts.get(i));
+            }
         }
 
         List<String> classpathElements;

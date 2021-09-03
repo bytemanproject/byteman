@@ -34,7 +34,17 @@
                     <include>**/*.btm</include>
                 </includes>
                 <additionalClassPath>../../../agent/target/test-classes</additionalClassPath>
-				<failOnError>true</failOnError>
+                <failOnError>true</failOnError>
+                <systemProperties>
+                    <property>
+                        <name>org.jboss.byteman.transform.all</name>
+                        <value>true</value>
+                    </property>
+                    <property>
+                        <name>org.jboss.byteman.verbose</name>
+                        <value>true</value>
+                    </property>
+                </systemProperties>
                 <verbose>true</verbose>
 			</configuration>
           </execution>
