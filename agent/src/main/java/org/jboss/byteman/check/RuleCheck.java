@@ -231,7 +231,7 @@ public class RuleCheck {
                 // or an abstract class so we may not get any results out of the transform
 
                 info("Checking rule " + script.getName() + " against class " + targetClass.getName());
-                bytes = transformer.transform(script, loader, targetClass.getName(), bytes);
+                bytes = transformer.transform(script, loader, targetClass.getName(), targetClass.getName(), bytes);
                 // maybe dump the transformed bytecode
                 Transformer.maybeDumpClass(targetClass.getName(), bytes);
             }
@@ -387,7 +387,7 @@ public class RuleCheck {
                         access = Opcodes.ACC_STATIC;
                     }
 
-                    rule.setTypeInfo(targetClass.getName(), access, candidateName, candidateDesc, exceptionNames);
+                    rule.setTypeInfo(targetClass.getName(), targetClass.getName(), access, candidateName, candidateDesc, exceptionNames);
                     // we can set param types this way but we cannot verify mention of local variables
                     // since we don't have an implementation
 

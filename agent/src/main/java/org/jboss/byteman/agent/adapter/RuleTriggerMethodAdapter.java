@@ -1089,7 +1089,7 @@ public class RuleTriggerMethodAdapter extends RuleGeneratorAdapter
     {
         // we need to set this here to avoid recursive re-entry into inject routine
 
-        rule.setTypeInfo(getTriggerClassName(), access, name, descriptor, exceptions);
+        rule.setTypeInfo(getTriggerClassName(), getTargetClassName(), access, name, descriptor, exceptions);
         String key = rule.getKey();
         Type ruleType = Type.getType(TypeHelper.externalizeType("org.jboss.byteman.rule.Rule"));
         Method method = Method.getMethod("void execute(String, Object, Object[])");

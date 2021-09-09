@@ -1,0 +1,67 @@
+# JBoss, Home of Professional Open Source
+# Copyright 2021, Red Hat and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# @authors Andrew Dinn
+#
+# Test for BYTEMAN-325. Check that AS TARGET rules are injected
+# and type checked using the class/interface mentioned in the rule
+# rather than the class the rule is injected into.
+#
+# NOTE: This test expects to see 2 type check errors for the AS TARGET rule on
+# i/face Strings that tries to reference method append. These occur whether
+# the trigger class is StringsLinked or StringsArray. It should expects to see a
+# type check error for the AS TRIGGER rule on i/face Strings when injecting into
+# class StringsArray since it also tries to reference method append.
+
+RULE inject into interface as target
+INTERFACE org.jboss.byteman.tests.auxiliary.Strings
+METHOD add(String)
+AT ENTRY
+AS TARGET
+IF callerEquals("TestAsTarget.test", true)
+DO $this.add("Hello")
+ENDRULE
+
+AS TARGET
+
+RULE inject into interface as trigger fails generic typecheck
+INTERFACE org.jboss.byteman.tests.auxiliary.Strings
+METHOD add(String)
+AT ENTRY
+IF callerEquals("TestAsTarget.test", true)
+DO $this.append("you")
+ENDRULE
+
+RULE inject into interface as trigger fails typecheck only for StringsArray
+INTERFACE org.jboss.byteman.tests.auxiliary.Strings
+METHOD add(String)
+AT ENTRY
+AS TRIGGER
+IF callerEquals("TestAsTarget.test", true)
+DO $this.append("funny")
+ENDRULE
+
+RULE inject into class as trigger
+CLASS org.jboss.byteman.tests.auxiliary.StringsLinked
+METHOD add(String)
+AT ENTRY
+IF callerEquals("TestAsTarget.test", true)
+DO $this.append("old")
+ENDRULE

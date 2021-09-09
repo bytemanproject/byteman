@@ -24,6 +24,7 @@
 package org.jboss.byteman.tests.check;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.byteman.check.RuleCheck;
@@ -43,7 +44,10 @@ public class TestRuleCheck extends Test
         RuleCheck checker = new RuleCheck();
         // don't include access tests as they will fail
         // when we don't have the jigsaw access enabler
-        addBtmScript(checker, new File("src/test/resources/scripts/bugfixes"));
+        List<String> bugfixRejects = new ArrayList<String>();
+        // exclude this bugfix script as it is expected not to type check for some triggers
+        bugfixRejects.add("TestAsTarget.btm");
+        addBtmScript(checker, new File("src/test/resources/scripts/bugfixes"), bugfixRejects);
         addBtmScript(checker, new File("src/test/resources/scripts/helpertests"));
         addBtmScript(checker, new File("src/test/resources/scripts/javaops"));
         addBtmScript(checker, new File("src/test/resources/scripts/location"));
@@ -81,14 +85,33 @@ public class TestRuleCheck extends Test
     }
     
     private void addBtmScript(RuleCheck checker, File dir) {
+        addBtmScript(checker, dir, null);
+    }
+
+    private void addBtmScript(RuleCheck checker, File dir, List<String> rejects) {
         if(dir.isDirectory()) {
             String[] files = dir.list();
             for(String name : files) {
-                File file = new File(dir+"/"+name);
-                if(file.isDirectory()) addBtmScript(checker, file);
-                else checker.addRuleFile(dir+"/"+name);
+                if(!reject(name, rejects)) {
+                    File file = new File(dir + "/" + name);
+                    if (file.isDirectory()) {
+                        addBtmScript(checker, file, rejects);
+                    } else {
+                        checker.addRuleFile(dir + "/" + name);
+                    }
+                }
             }
         }
     }
 
+    private boolean reject(String name, List<String> rejects) {
+        if(rejects != null) {
+            for (String reject : rejects) {
+                if(name.matches(reject)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

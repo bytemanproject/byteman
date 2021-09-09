@@ -115,6 +115,11 @@ public class RuleScript
      */
     private final boolean compileToBytecode;
     /**
+     * true if this rule should be type checked using the target type for this rather
+     * than the trigger type
+     */
+    private final boolean asTarget;
+    /**
      * hash map used to lookup a key used at injection time to identify a
      * rule cloned from this script for injection into a specific trigger
      * method. the map translates a string constructed from the trigger class
@@ -163,8 +168,9 @@ public class RuleScript
      * @param line the line at which the rule starts in it's rule script
      * @param file the path to the file containing the rule
      * @param compileToBytecode true if the rule should be compiled otherwise false
+     * @param asTarget true if the rule should be typed using the target type for this rather than the trigger type
      */
-    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file, boolean compileToBytecode)
+    public RuleScript(String name, String targetClass, boolean isInterface, boolean isOverride, String targetMethod, String targetHelper, String[] imports, Location targetLocation, String ruleText, int line, String file, boolean compileToBytecode, boolean asTarget)
     {
         this.name = name;
         this.targetClass = targetClass;
@@ -178,6 +184,7 @@ public class RuleScript
         this.line = line;
         this.file = file;
         this.compileToBytecode = compileToBytecode;
+        this.asTarget = asTarget;
         this.transformSets = new ArrayList<TransformSet>();
         this.keySet = new HashMap<String, String>();
         this.key_base = name + "_" + nextId();
@@ -230,6 +237,8 @@ public class RuleScript
     }
 
     public boolean isCompileToBytecode() { return compileToBytecode; }
+
+    public boolean isAsTarget() { return asTarget; }
 
     public synchronized String getRuleKey(String triggerClassName, String triggerMethodName, String triggerMethodDescriptor, ClassLoader loader) {
         if (triggerMethodName == null) {

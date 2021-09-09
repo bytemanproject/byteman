@@ -48,7 +48,7 @@ import java.util.LinkedList;
  */
 public class TransformContext
 {
-    public TransformContext(Transformer transformer, RuleScript ruleScript, String triggerClassName, ClassLoader loader, HelperManager helperManager, AccessEnabler accessEnabler)
+    public TransformContext(Transformer transformer, RuleScript ruleScript, String triggerClassName, String targetClassName, ClassLoader loader, HelperManager helperManager, AccessEnabler accessEnabler)
     {
         // the target method spec may just be a bare method name or it may optionally include a
         // parameter type list and a return type. With Java syntax the return type appears before
@@ -60,6 +60,7 @@ public class TransformContext
         this.transformer = transformer;
         this.ruleScript =  ruleScript;
         this.triggerClassName = triggerClassName;
+        this.targetClassName = targetClassName;
         this.targetMethodName = TypeHelper.parseMethodName(mungedMethodSpec);
         this.targetDescriptor = TypeHelper.parseMethodDescriptor(mungedMethodSpec);
         this.loader = loader;
@@ -314,6 +315,11 @@ public class TransformContext
     public String getTriggerClassName()
     {
         return triggerClassName;
+    }
+
+    public String getTargetClassName()
+    {
+        return targetClassName;
     }
 
     /**
@@ -635,6 +641,7 @@ public class TransformContext
     private Transformer transformer;
     private RuleScript ruleScript;
     private String triggerClassName;
+    private String targetClassName;
     private String targetMethodName;
     private String targetDescriptor;
     private ClassLoader loader;

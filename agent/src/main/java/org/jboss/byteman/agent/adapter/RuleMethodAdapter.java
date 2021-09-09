@@ -53,6 +53,11 @@ public class RuleMethodAdapter extends MethodVisitor {
         return transformContext.getTriggerClassName();
     }
 
+    public String getTargetClassName()
+    {
+        return transformContext.getTargetClassName();
+    }
+
     public void visitLocalVariable(
         final String name,
         final String desc,

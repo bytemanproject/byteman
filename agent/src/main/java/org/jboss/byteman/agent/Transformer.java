@@ -261,12 +261,12 @@ public class Transformer implements ClassFileTransformer {
 
             // TODO -- there are almost certainly concurrency issues to deal with here if rules are being loaded/unloaded
 
-            newBuffer = tryTransform(newBuffer, internalName, loader, internalName, false);
+            newBuffer = tryTransform(newBuffer, internalName, loader, internalName, internalName, false, false);
 
             int dotIdx = internalName.lastIndexOf('.');
 
             if (dotIdx > 0) {
-                newBuffer = tryTransform(newBuffer, internalName, loader, internalName.substring(dotIdx + 1), false);
+                newBuffer = tryTransform(newBuffer, internalName, loader, internalName.substring(dotIdx + 1), internalName, false, false);
             }
 
             if (scriptRepository.checkInterfaces()) {
@@ -299,10 +299,10 @@ public class Transformer implements ClassFileTransformer {
                         // avoid visiting  this interface again
                         visited.add(interfaceName);
                         // now see if we have any rules for this interface
-                        newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName, true);
+                        newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName, internalInterfaceName, true, false);
                         dotIdx = internalInterfaceName.lastIndexOf('.');
                         if (dotIdx >= 0) {
-                            newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName.substring(dotIdx + 1), true);
+                            newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName.substring(dotIdx + 1), internalInterfaceName, true, false);
                         }
                         // check the extends list of this interface for new interfaces to consider
                         ClassChecker newChecker = getClassChecker(interfaceName, originalLoader);
@@ -335,10 +335,10 @@ public class Transformer implements ClassFileTransformer {
                         break;
                     }
 
-                    newBuffer = tryTransform(newBuffer, internalName, loader, superName, false, true);
+                    newBuffer = tryTransform(newBuffer, internalName, loader, superName, superName, false, true);
                     dotIdx = superName.lastIndexOf('.');
                     if (dotIdx > 0) {
-                        newBuffer = tryTransform(newBuffer, internalName, loader, superName.substring(dotIdx + 1), false, true);
+                        newBuffer = tryTransform(newBuffer, internalName, loader, superName.substring(dotIdx + 1), superName, false, true);
                     }
 
                     if (scriptRepository.checkInterfaces()) {
@@ -360,10 +360,10 @@ public class Transformer implements ClassFileTransformer {
                                 // avoid visiting  this interface again
                                 visited.add(interfaceName);
                                 // now see if we have any rules for this interface
-                                newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName, true, true);
+                                newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName, internalInterfaceName, true, true);
                                 dotIdx = interfaceName.lastIndexOf('.');
                                 if (dotIdx >= 0) {
-                                    newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName.substring(dotIdx + 1), true, true);
+                                    newBuffer = tryTransform(newBuffer, internalName, loader, internalInterfaceName.substring(dotIdx + 1), internalInterfaceName, true, true);
                                 }
                                 // check the extends list of this interface for new interfaces to consider
                                 ClassChecker newChecker = getClassChecker(interfaceName, originalLoader);
@@ -747,12 +747,13 @@ public class Transformer implements ClassFileTransformer {
      * @param ruleScript the script
      * @param loader the loader of the class being injected into
      * @param className the name of the class being injected into
+     * @param targetClassName the name of the class which matched the rule
      * @param targetClassBytes the current class bytecode
      * @return the transformed bytecode or NULL if no transform was applied
      */
-    public byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, byte[] targetClassBytes)
+    public byte[] transform(RuleScript ruleScript, ClassLoader loader, String className, String targetClassName, byte[] targetClassBytes)
     {
-        TransformContext transformContext = new TransformContext(this, ruleScript, className, loader, helperManager, accessEnabler);
+        TransformContext transformContext = new TransformContext(this, ruleScript, className, targetClassName, loader, helperManager, accessEnabler);
 
         return transformContext.transform(targetClassBytes);
     }
@@ -791,12 +792,7 @@ public class Transformer implements ClassFileTransformer {
         return false;
     }
 
-    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, String key, boolean isInterface)
-    {
-        return tryTransform(buffer, name, loader, key, isInterface, false);
-    }
-
-    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, String key, boolean isInterface, boolean isOverride)
+    private byte[] tryTransform(byte[] buffer, String name, ClassLoader loader, String key, String fullKey, boolean isInterface, boolean isOverride)
     {
         List<RuleScript> ruleScripts;
 
@@ -821,7 +817,7 @@ public class Transformer implements ClassFileTransformer {
                         synchronized (ruleScript) {
                             if (!ruleScript.isDeleted()) {
                                 maybeDumpClassIntermediate(name, newBuffer);
-                                newBuffer = transform(ruleScript, loader, name, newBuffer);
+                                newBuffer = transform(ruleScript, loader, name, fullKey, newBuffer);
                             }
                         }
                     }

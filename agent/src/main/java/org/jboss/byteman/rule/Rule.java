@@ -113,9 +113,16 @@ public class Rule
     /**
      * the fully qualified name of the class to which this rule has been attached by the code
      * transformation package. note that this may not be the same as targetClass since the
-     * latter may not specify a package.
+     * latter may not specify a package and/or may be a super or implemented interface
      */
     private String triggerClass;
+    /**
+     * the fully qualified name of the class that matches the name specified in the CLASS or
+     * INTERFACE clause of the rule. note that this may not be the same as name specified in the
+     * rule as the latter may not specify a package. note also that for overriding or interface
+     * rules the targetClass and triggerClass may be distinct classes.
+     */
+    private String targetClass;
     /**
      * the name of the trigger method in which a trigger call for this rule has been inserted by
      * the code transformation package, not including the descriptor component. note that this
@@ -410,8 +417,9 @@ public class Rule
         }
     }
 
-    public void setTypeInfo(final String className, final int access, final String methodName, final String desc, String[] exceptions)
+    public void setTypeInfo(final String className, final String targetName, final int access, final String methodName, final String desc, String[] exceptions)
     {
+        targetClass = targetName;
         triggerClass = className;
         triggerAccess = access;
         triggerMethod = methodName;
@@ -571,10 +579,13 @@ public class Rule
             typeGroup.addExceptionTypes(triggerExceptions);
         }
 
-        // ensure the trigger class is in the type group
+        boolean asTarget = ruleScript.isAsTarget();
+        String ruleClass = (asTarget ? targetClass : triggerClass);
 
-        if (typeGroup.lookup(triggerClass) == null) {
-            typeGroup.create(triggerClass);
+        // ensure the rule type is include din the type group
+
+        if (typeGroup.lookup(ruleClass) == null) {
+            typeGroup.create(ruleClass);
         }
         // try to resolve all types in the type group to classes
 
@@ -583,7 +594,7 @@ public class Rule
         // use the descriptor to derive the method argument types and type any bindings for them
         // that are located in the bindings list
 
-        installParameters((triggerAccess & Opcodes.ACC_STATIC) != 0, triggerClass);
+        installParameters((triggerAccess & Opcodes.ACC_STATIC) != 0, ruleClass);
 
         event.typeCheck(Type.VOID);
         condition.typeCheck(Type.Z);

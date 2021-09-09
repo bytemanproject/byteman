@@ -70,6 +70,10 @@ public class ScriptRepository
             boolean scriptCompileToBytecode = Transformer.isCompileToBytecode();
             // rule level compilation defaults to script level but may be overridden
             boolean ruleCompileToBytecode = scriptCompileToBytecode;
+            // script level use of target type defaults to false but may be overridden
+            boolean scriptAsTarget = false;
+            // rule level use of target type defaults to false but mnay be overridden
+            boolean ruleAsTarget = scriptAsTarget;
             LocationType locationType = null;
             Location targetLocation = null;
             boolean isInterface = false;
@@ -117,6 +121,20 @@ public class ScriptRepository
                     } else {
                         scriptCompileToBytecode = false;
                         ruleCompileToBytecode = false;
+                    }
+                } else if (line.matches("AS[ \t]+TARGET")) {
+                    if (inRule) {
+                        ruleAsTarget = true;
+                    } else {
+                        scriptAsTarget = true;
+                        ruleAsTarget = true;
+                    }
+                } else if (line.matches("AS[ \t]+TRIGGER")) {
+                    if (inRule) {
+                        ruleAsTarget = false;
+                    } else {
+                        scriptAsTarget = false;
+                        ruleAsTarget = false;
                     }
                 } else if (line.startsWith("IMPORT ") || line.equals("IMPORT")) {
                     String imp = line.substring(6).trim();
@@ -195,7 +213,7 @@ public class ScriptRepository
                         if (targetImports == null) {
                             targetImports = (defaultImports != null) ? defaultImports : new String[0];
                         }
-                        RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetImports, targetLocation, nextRule, startNumber, scriptFile, ruleCompileToBytecode);
+                        RuleScript ruleScript = new RuleScript(name, targetClass, isInterface, isOverride, targetMethod, targetHelper, targetImports, targetLocation, nextRule, startNumber, scriptFile, ruleCompileToBytecode, ruleAsTarget);
                         ruleScripts.add(ruleScript);
                     }
                     name = null;
@@ -206,6 +224,8 @@ public class ScriptRepository
                     targetImports = null;
                     // reset rule level compilation to script level setting
                     ruleCompileToBytecode = scriptCompileToBytecode;
+                    // reset rule level target/trigger to script level setting
+                    ruleAsTarget = scriptAsTarget;
                     nextRule = "";
                     sepr = "";
                     inRule = false;
