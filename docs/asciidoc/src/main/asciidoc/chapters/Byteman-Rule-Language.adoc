@@ -1047,6 +1047,71 @@ non-empty) and called again, this time indirectly from _H.activate_, when _r_ is
 transitions from empty to non-empty). Also, when _r'_ is uninstalled _H'.deactivated_ will be called (as
 _R(H')_ transitions back to empty), deleting the hashmap even though rule _r_ is still depending on it.
 
+=== Target Class vs Trigger Class
+
+The CLASS or INTERFACE clause of a rule specifies the target class or classes into which a rule should be
+injected. Note the use of the plural classes in that last statement. It is possible for the same rule to
+be injected into more than one class. There are essentially only three different ways this can happen.
+
+. A rule specifying `CLASS Foo` might be injected into classes `org.my.Foo` and `org.acme.Foo`
+. A rule specifying `Class ^Foo` might be injected into two different subclasses `org.my.FooBar`
+and `org.my.FooBaz` of class `org.my.Foo`
+
+. A rule specifying `INTERFACE Foo` or `INTERFACE ^Foo` might be injected into different implementation
+classes `org.my.FooBar` and `org.my.FooBaz` of the interface `org.my.Foo`
+
+In the first case it is unambiguous which type should be used when type checking the rule. For example,
+if it is injected into method `myMethod` of class `org.my.Foo` then the identifier `Foo` is resolved
+to class `org.my.Foo` and references to `$0` or `$this` in the rule should clearly be typed using that
+class. However, in the other two cases there is a choice to be made. The rule's target class/interface
+'Foo' will be matched against type `org.my.Foo`. However, the rule code can be injected into a triggering
+method that belongs to one of the subtypes, let's assume it is `org.my.FooBar`. So, should the rule be
+type checked using the *target* type that matched the rule clause or the the *trigger* type that owns
+the triggering method?
+
+The answer is that both options work and both are useful. Type-checking against the target type seems the
+most obvious thing to do as it uses the lexical scope of the rule to define what types are in play. That means
+expressions in the body of the rule can only refer to members of $this declared by the target type and only
+reference types that are defined in the scope of the target type's class loader. So, for example, in the
+following rule defined on interface `List` the will fail to type check when injected into classes
+`LinkedList` and `ArrayList` even though the former does actually define a method call `append`:
+
+    RULE won't inject into List impl even if it defines append
+    INTERFACE java.util.List
+    METHOD add(int, Object)
+    AT ENTRY
+    AS TARGET
+    IF TRUE
+    DO $0.append($2);
+       return;
+    ENDRULE
+
+The `AS TARGET` clause tells the type checker to use the target type named in the `CLASS` or `INTERFACE`
+clause when type checking the expression `$0` or `$this`. It also tells the type checker to resolve class
+names using the class loader of the target type.
+
+By contrast, if the rule uses `AS TRIGGER` semantics then when the rule is matched against class `LinkedList`
+that dynamic type will be used during typecheck to type expression `$0` and type check would succeed. The same
+applies when the rule is matched against any other class that implements a method with signature `append(Object)`.
+The rule will still fail to typecheck when the trigger class is `ArrayList` leading to a type error and
+disabling of injection  for that case.
+
+There are benefits to using the dynamic type scope established at the point of injection as well as
+the potential for errors as seen above. One common case where using `AS TRIGGER` semantics is preferable
+arises when the dynamically determined trigger classes belong to a child classloader of the target class.
+If `AS TRIGGER` semantics are used then the body of the rule can reference other classes defined by the
+child class loader. If `AS TARGET` semantics were used instead then those types would not be in scope.
+In many cases this is simply resolved by injecting direct into each specific subclass but cases do arise
+where it is easier to employ a single rule which relies on injection through an interface and/or down a
+class hierarchy.
+
+For hysterical reasons, Byteman uses `AS TRIGGER` (dynamic) type scoping as the default semantics. However, it
+also supports `AS TARGET` (lexical) type scoping. In fact, you can mix and match the two approaches for individual
+rules or rule groups by inserting an `AS TRIGGER` or `AS TARGET` clause into your scripts. If the clause
+appears in the body of a rule, between the location (`AT`) and condition (`IF`) clauses, then it defines the
+type scope for that specific rule. If it appears at the top level, outside of a rule body then it (re-)defines
+the default type scope to be used for subsequent rules which do not provide their own declaration.
+
 === Rule Compilation
 
 By default rules are executed by Byteman's own interpreter which
