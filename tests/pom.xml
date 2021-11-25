@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-root</artifactId>
-        <version>4.0.17</version>
+        <version>4.0.18</version>
     </parent>
 
     <description>
@@ -1157,7 +1157,7 @@
                       </configuration>
                     </execution>
                     <execution>
-                      <id>javaops.TestInnerClasses</id>
+                      <id>bugfixes.TestBindNull</id>
                       <phase>integration-test</phase>
                       <goals>
                         <goal>integration-test</goal>
@@ -1167,9 +1167,9 @@
                           <forkCount>1</forkCount>
                           <reuseForks>true</reuseForks>
                          <includes>
-                           <include>org/jboss/byteman/tests/bugfixes/TestInnerClasses.class</include>
+                           <include>org/jboss/byteman/tests/bugfixes/TestBindNull.class</include>
                          </includes>
-                         <argLine>-javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/bugfixes/TestInnerClasses.btm</argLine>
+                          <argLine>-javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/bugfixes/TestBindNull.btm</argLine>
                       </configuration>
                     </execution>
                     <execution>
@@ -1186,6 +1186,22 @@
                            <include>org/jboss/byteman/tests/bugfixes/TestTraceOpenAndWrite.class</include>
                          </includes>
                          <argLine>-javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/bugfixes/TestTraceOpenAndWrite.btm</argLine>
+                      </configuration>
+                    </execution>
+                    <execution>
+                      <id>javaops.TestInnerClasses</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                          <forkCount>1</forkCount>
+                          <reuseForks>true</reuseForks>
+                         <includes>
+                           <include>org/jboss/byteman/tests/bugfixes/TestInnerClasses.class</include>
+                         </includes>
+                         <argLine>-javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/bugfixes/TestInnerClasses.btm</argLine>
                       </configuration>
                     </execution>
                     <execution>
@@ -2268,6 +2284,22 @@
                            <include>org/jboss/byteman/tests/bugfixes/TestInnerClasses.class</include>
                          </includes>
                          <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/bugfixes/TestInnerClasses.btm</argLine>
+                      </configuration>
+                    </execution>
+                    <execution>
+                      <id>bugfixes.TestBindNull.compiled</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                          <forkCount>1</forkCount>
+                          <reuseForks>true</reuseForks>
+                         <includes>
+                           <include>org/jboss/byteman/tests/bugfixes/TestBindNull.class</include>
+                         </includes>
+                         <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/../../byteman/target/byteman-${project.version}.jar=script:${project.build.directory}/../../agent/src/test/resources/scripts/bugfixes/TestBindNull.btm</argLine>
                       </configuration>
                     </execution>
                     <execution>
