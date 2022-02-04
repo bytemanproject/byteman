@@ -143,7 +143,7 @@ public class NewExpression extends Expression
             boolean duplicates = false;
 
             for (Constructor constructor : constructors) {
-                if (constructor.getParameterTypes().length == arity) {
+                if (constructor.getParameterCount() == arity) {
                     candidates.add(constructor);
                 }
             }

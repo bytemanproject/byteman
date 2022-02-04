@@ -275,7 +275,7 @@ public class MethodExpression extends Expression
                     // ensure we only look at static or non static methods as appropriate
                     if (Modifier.isStatic(modifiers) == isStatic) {
                         if (method.getName().equals(name) &&
-                                method.getParameterTypes().length == arity) {
+                                method.getParameterCount() == arity) {
                             candidates.add(method);
                         }
                     }
