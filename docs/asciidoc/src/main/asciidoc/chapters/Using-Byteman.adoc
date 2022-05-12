@@ -450,6 +450,41 @@ which allow the client to inject faults into the server code then record and val
 the server. Consult the Javadoc of these two API classes and the contributed package `README` 
 files and source code for full details.
 
+=== The Byteman Agent Load and Unload Lifecycle
+
+Byteman is an implementation of the JVMTI Java agent API. This API allows agent code to be run
+in parallel with normal application code and provides it with privileged  access to JVM functionality
+such as querying the loaded class base, intercepting bytecode load  operations or rewriting class
+bytecode, including JDK runtime class bytecode. When Byteman is installed using the `-javaagent`
+command line argument then the agent code is loaded and starts running during early bootstrap of the
+JVM. If Byteman is installed into a running JVM using `bminstall` then agent code is loaded and
+starts running at the point of install.
+
+When the Byteman agent is installed from the command line *without* specifying the `listener` option
+then the agent code injects any rules specified using the `script` option and performs no further
+actions. The injected rules cannot be unloaded. The Byteman rule engine will execute the installed
+rules every time they are triggered.
+
+When the agent is installed from the command line *with* the `listener` option or, alternatively,
+using `bminstall`, the agent starts a dedicated thread that listens for requests on a socket opened
+for the configured hostname and port number. `bmsubmit` communicates with the agent using this socket.
+The agent thread runs as a daemon and cannot be closed down. It will continue listening for requests
+until the JVM exits. This normally has no noticeable overhead as the thread is only active when
+processing `bmsubmit` requests.
+
+The agent listener thread makes it possible to add and *unload* injected rules. The Byteman rule engine
+continues to execute injected rules when they are triggered. However, unloading a rule means that the
+bytecode for affected methods is reverted to its original definition. Effectively, the method runs
+as it would have done before injection. Removing all rules returns the program to running *as if*
+Byteman were not present. Note, however, that the socket for the configured hostname and port remains
+open and the agent thread is still available to upload, query and unload further rules.
+
+A Byteman agent can only be installed once. An attempt to re-install the agent will fail. Also,
+since Byteman agent classes can only be loaded via either the system loader or the bootstrap loader,
+the agent classes cannot be unloaded. This is generally not a problem because the footprint
+of the loaded class base is quite small and the Byteman implementation does not use libraries that
+will clash with application use.
+
 === Environment Settings
 
 The agent is sensitive to various environment settings which configure its behaviour.
