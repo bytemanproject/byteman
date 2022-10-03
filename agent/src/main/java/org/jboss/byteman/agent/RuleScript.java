@@ -390,7 +390,8 @@ public class RuleScript
         for (Transform transform : transformSet.getTransforms()) {
             // transform may not employ the same rule
             // but it may have the same key.
-            if(transform.getRule().getKey() == rule.getKey()) {
+            Rule transformRule = transform.getRule();
+            if (transformRule != null && transformRule.getKey() == rule.getKey()) {
                 transform.setCompiled(successful, detail);
                 boolean isInstalled = transformSet.isInstalled();
                 // record this as the latest rule to be installed
