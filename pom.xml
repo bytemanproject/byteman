@@ -106,7 +106,7 @@
         <!-- for testing: command line args to enable debugger and verbose trace -->
         <debug.args>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -Dorg.jboss.byteman.verbose</debug.args>
         <!-- asm release version to use -->
-        <asm.version>9.3</asm.version>
+        <asm.version>9.4</asm.version>
         <!-- maven-verification-plugin -->
         <tests.verification.file>access-verification.xml</tests.verification.file>
         <agent.verification.file>verification.xml</agent.verification.file>
