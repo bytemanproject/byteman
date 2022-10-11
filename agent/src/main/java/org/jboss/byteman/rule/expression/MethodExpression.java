@@ -308,8 +308,8 @@ public class MethodExpression extends Expression
 
                 if (method != null) {
                     Type declaringType = getTypeGroup().ensureType(method.getDeclaringClass());
-                    if (rule.requiresAccess(declaringType) || rule.requiresAccess(method)) {
-                        isPublicMethod  = false;
+                    if (requiresAccess(declaringType, method, argumentTypes)) {
+                        isPublicMethod = false;
                         // save the method so we can use it from the compiled code
                         methodIndex = rule.addAccessibleMethodInvoker(method);
                     } else {
@@ -329,6 +329,19 @@ public class MethodExpression extends Expression
 
         // no more possible candidates so throw up here
         throw new TypeException("MethodExpression.typeCheck : invalid method " + name + " for target class " + rootType.getName() + getPos());
+    }
+    private boolean requiresAccess(Type declaringType, Method method, List<Type> argumentTypes) {
+        // 1. check if declaring type or method have restricted access
+        if (rule.requiresAccess(declaringType) || rule.requiresAccess(method)) {
+            return true;
+        }
+        // 2. check if passed arguments have restricted access
+        for (Type argumentType : argumentTypes) {
+            if (rule.requiresAccess(argumentType)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public Object interpret(HelperAdapter helper) throws ExecuteException {

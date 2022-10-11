@@ -1229,7 +1229,7 @@
                       </configuration>
                     </execution>
                     <execution>
-                      <id>javaops.TestInnerClasses</id>
+                      <id>bugfixes.TestInnerClasses</id>
                       <phase>integration-test</phase>
                       <goals>
                         <goal>integration-test</goal>
@@ -1259,6 +1259,25 @@
                          </includes>
                          <argLine>-javaagent:${project.build.directory}/byteman-agent-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/bugfixes/TestAsTarget.btm</argLine>
                       </configuration>
+                    </execution>
+                    <execution>
+                        <!-- n.b. this test only applies for compiled usage
+                        the test specifies COMPILED in the rule so there
+                        is no equivalent compield variant of this test. -->
+                        <id>bugfixes.TestNonPublicArgAccess</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkCount>1</forkCount>
+                            <reuseForks>true</reuseForks>
+                            <includes>
+                                <include>org/jboss/byteman/tests/bugfixes/TestNonPublicArgAccess.class</include>
+                            </includes>
+                            <argLine>-javaagent:${project.build.directory}/byteman-agent-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/bugfixes/TestNonPublicArgAccess.btm</argLine>
+                        </configuration>
                     </execution>
                     <!-- dynamic rule submission
                         n.b. submit test does not use a script on the command line
