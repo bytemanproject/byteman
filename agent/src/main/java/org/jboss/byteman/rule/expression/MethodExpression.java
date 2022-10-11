@@ -307,8 +307,7 @@ public class MethodExpression extends Expression
                 Method method = bestMatchCandidate(candidates, expected);
 
                 if (method != null) {
-                    if (!Modifier.isPublic(method.getModifiers()) ||
-                            !Modifier.isPublic(method.getDeclaringClass().getModifiers())) {
+                    if (requiresAccess(method, argumentTypes)) {
                         // see if we can actually access this method
                         try {
                             method.setAccessible(true);
@@ -337,6 +336,20 @@ public class MethodExpression extends Expression
 
         // no more possible candidates so throw up here
         throw new TypeException("MethodExpression.typeCheck : invalid method " + name + " for target class " + rootType.getName() + getPos());
+    }
+    private boolean requiresAccess(Method method, List<Type> argumentTypes) {
+        // 1. check if declaring type or method have restricted access
+        if (!Modifier.isPublic(method.getModifiers()) ||
+                !Modifier.isPublic(method.getDeclaringClass().getModifiers())) {
+            return true;
+        }
+        // 2. check if passed arguments have restricted access
+        for (Type argumentType : argumentTypes) {
+            if (!Modifier.isPublic(argumentType.getTargetClass().getModifiers())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public Object interpret(HelperAdapter helper) throws ExecuteException {
