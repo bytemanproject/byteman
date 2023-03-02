@@ -710,6 +710,7 @@ public class MethodExpression extends Expression
                 if (charCount > charMax) {
                     break;
                 }
+                dotExtra = 1;
             }
             return idx;
         } else {
