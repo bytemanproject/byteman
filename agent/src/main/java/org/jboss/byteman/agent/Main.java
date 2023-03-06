@@ -67,9 +67,19 @@ public class Main {
             // listener flag which implies use of a retransformer
             for (String arg : argsArray) {
                 if (arg.startsWith(BOOT_PREFIX)) {
-                    bootJarPaths.add(arg.substring(BOOT_PREFIX.length(), arg.length()));
+                    // boot argument can be a single jar or a ':' separated list of jars
+                    String bootArg =  arg.substring(BOOT_PREFIX.length(), arg.length());
+                    String[] jarNames = bootArg.split(":");
+                    for (String jarName : jarNames) {
+                        bootJarPaths.add(jarName);
+                    }
                 } else if (arg.startsWith(SYS_PREFIX)) {
-                    sysJarPaths.add(arg.substring(SYS_PREFIX.length(), arg.length()));
+                    // sys argument can be a single jar or a ':' separated list of jars
+                    String sysArg =  arg.substring(SYS_PREFIX.length(), arg.length());
+                    String[] jarNames = sysArg.split(":");
+                    for (String jarName : jarNames) {
+                        sysJarPaths.add(jarName);
+                    }
                 } else if (arg.startsWith(ADDRESS_PREFIX)) {
                     hostname = arg.substring(ADDRESS_PREFIX.length(), arg.length());
                     if (managerClassName == null) {
