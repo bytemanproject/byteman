@@ -274,7 +274,7 @@ Byteman agent dynamically. It expects to find the JBoss Modules plugin
 jar in directory `$BYTEMAN_HOME/contrib/jboss-modules-system`.
 
 *sys:jarpath* where _jarpath_ is a path to to a jar file to be added to the JVM _system_ class
-path, e.g. `sys:/path/to/my.jar`, or a colon separated list of paths if more than one jar
+path e.g. `sys:/path/to/my.jar`, or a list of paths separated by the system path separator (`:` on Linux and MacOS, `;` on Windows) if more than one jar
 file is to be appended, e.g. `sys:/path/to/my.jar:/path/to/another.jar`.
 This option makes classes contained in the jar file(s) available for use when type checking, 
 compiling and executing rule conditions and actions. It provides a useful way to ensure that 
@@ -284,7 +284,7 @@ to the Helper class should resolve correctly.
 
 
 *boot:jarfile* where _jarfile_ is a path to to a jar file to be added to the JVM _bootstrap_ class 
-path e.g. `sys:/path/to/my.jar`, or a colon separated list of paths if more than one jar
+path e.g. `sys:/path/to/my.jar`, or a list of paths separated by the system path separator (`:` on Linux and MacOS, `;` on Windows) if more than one jar
 file is to be appended, e.g. `sys:/path/to/my.jar:/path/to/another.jar`.
 This option provides a similar facility to the sys option but it ensures that the classes 
 contained in the jar file(s) are loaded by the bootstrap class loader. This is only significant when 
