@@ -262,7 +262,7 @@ jar containing the module plugin manager class is added to the system
 classpath of the JVM into which the agent is being installed (you can
 use the `sys:/path/to/plugin.jar` option for this purpose). It is not
 always possible to add this jar to the bootstrap classpath using the
-`boot:/plugin.jar` option because the module plugin manager needs to
+`boot:/path/to/plugin.jar` option because the module plugin manager needs to
 reference module system-specific code which will not itself be located
 in the bootstrap classpath. As a corollary this means it is not
 normally possible to inject into bootstrap classes when using a
@@ -273,16 +273,21 @@ automatically configure the JBoss Modules plugin when installing the
 Byteman agent dynamically. It expects to find the JBoss Modules plugin
 jar in directory `$BYTEMAN_HOME/contrib/jboss-modules-system`.
 
-*sys:jarfile* where _jarfile_ is a path to to a jar file to be added to the JVM _system_ class path. 
-This option makes classes contained in the jar file available for use when type checking, 
+*sys:jarpath* where _jarpath_ is a path to to a jar file to be added to the JVM _system_ class
+path, e.g. `sys:/path/to/my.jar`, or a colon separated list of paths if more than one jar
+file is to be appended, e.g. `sys:/path/to/my.jar:/path/to/another.jar`.
+This option makes classes contained in the jar file(s) available for use when type checking, 
 compiling and executing rule conditions and actions. It provides a useful way to ensure that 
 Helper classes mentioned in rules are able to be resolved. If a rule's trigger class is loaded by 
 some other class loader this loader will normally have the system loader as a parent so references 
 to the Helper class should resolve correctly.
 
+
 *boot:jarfile* where _jarfile_ is a path to to a jar file to be added to the JVM _bootstrap_ class 
-path. This option provides a similar facility to the sys option but it ensures that the classes 
-contained in the jar file are loaded by the bootstrap class loader. This is only significant when 
+path e.g. `sys:/path/to/my.jar`, or a colon separated list of paths if more than one jar
+file is to be appended, e.g. `sys:/path/to/my.jar:/path/to/another.jar`.
+This option provides a similar facility to the sys option but it ensures that the classes 
+contained in the jar file(s) are loaded by the bootstrap class loader. This is only significant when 
 rules try to inject code into JVM classes which are loaded by the bootstrap class loader (which is 
 a parent of the system loader).
 
@@ -293,7 +298,7 @@ access restrictions (this includes recent versions of JBoss Wildfly/EAP).
 
 *prop:name=value* where _name_ identifies a System property to be set to value or to the empty 
 String if no value is provided. Note that property names must begin with the prefix 
-“`org.jboss.byteman'.”.
+"org.jboss.byteman.".
 
 Note that when injecting into JVM classes it is necessary to install the byteman jar into the boot 
 classpath by passing option `boot:${BYTEMAN_HOME}/lib/byteman.jar`. Without it compilation of the 
