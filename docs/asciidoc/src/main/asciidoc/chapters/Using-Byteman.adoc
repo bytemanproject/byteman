@@ -284,8 +284,8 @@ to the Helper class should resolve correctly.
 
 
 *boot:jarfile* where _jarfile_ is a path to to a jar file to be added to the JVM _bootstrap_ class 
-path e.g. `sys:/path/to/my.jar`, or a list of paths separated by the system path separator (`:` on Linux and MacOS, `;` on Windows) if more than one jar
-file is to be appended, e.g. `sys:/path/to/my.jar:/path/to/another.jar`.
+path e.g. `boot:/path/to/my.jar`, or a list of paths separated by the system path separator (`:` on Linux and MacOS, `;` on Windows) if more than one jar
+file is to be appended, e.g. `boot:/path/to/my.jar:/path/to/another.jar`.
 This option provides a similar facility to the sys option but it ensures that the classes 
 contained in the jar file(s) are loaded by the bootstrap class loader. This is only significant when 
 rules try to inject code into JVM classes which are loaded by the bootstrap class loader (which is 
