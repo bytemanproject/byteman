@@ -67,16 +67,16 @@ public class Main {
             // listener flag which implies use of a retransformer
             for (String arg : argsArray) {
                 if (arg.startsWith(BOOT_PREFIX)) {
-                    // boot argument can be a single jar or a ':' separated list of jars
+                    // boot argument can be a single jar or a ':' or ';' separated list of jars
                     String bootArg =  arg.substring(BOOT_PREFIX.length(), arg.length());
-                    String[] jarNames = bootArg.split(":");
+                    String[] jarNames = bootArg.split(File.pathSeparator);
                     for (String jarName : jarNames) {
                         bootJarPaths.add(jarName);
                     }
                 } else if (arg.startsWith(SYS_PREFIX)) {
-                    // sys argument can be a single jar or a ':' separated list of jars
+                    // sys argument can be a single jar or a ':' or ';' separated list of jars
                     String sysArg =  arg.substring(SYS_PREFIX.length(), arg.length());
-                    String[] jarNames = sysArg.split(":");
+                    String[] jarNames = sysArg.split(File.pathSeparator);
                     for (String jarName : jarNames) {
                         sysJarPaths.add(jarName);
                     }
