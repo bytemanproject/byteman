@@ -69,6 +69,7 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
 Identifier = ([A-Za-z_]) ([A-Za-z0-9$_])*
 
 PosInteger = 0 | [1-9][0-9]*
+DotInteger = [0-9]*
 
 Sign = [+-]
 
@@ -76,7 +77,7 @@ Exp = [Ee]
 
 Dot = "."
 
-DotTrailing = {Dot} {PosInteger}?
+DotTrailing = {Dot} {DotInteger}?
 ExpTrailing = {Exp} {Sign}? {PosInteger}
 FloatTrailing = {ExpTrailing} | {DotTrailing} {ExpTrailing}?
 PosFloat = {PosInteger} {FloatTrailing}
