@@ -178,7 +178,7 @@ METHOD triggerMethod7(int,long,float,double)
 HELPER org.jboss.byteman.tests.helpers.Default
 AFTER CALL log
 BIND test : Test = $0;
-     d_lit : double = 1.23456E-73D;
+     d_lit : double = 1.012345E-73D;
      i : int = $1;
      j : long = $2;
      f : float = $3;

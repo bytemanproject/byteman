@@ -287,7 +287,7 @@ public class TestArithmetic extends Test
                 logExpected("calling TestArithmetic.triggerMethod7");
                 logExpected("inside TestArithmetic.triggerMethod7");
 
-                double d_lit = 1.23456E-73;
+                double d_lit = 1.012345E-73;
                 logExpected("triggerMethod7 : d_lit == " + d_lit);
                 logExpected("triggerMethod7 : i + d_lit == " + ((3 << 8) + d_lit));
                 logExpected("triggerMethod7 : j + d_lit == " + (16L + d_lit));
