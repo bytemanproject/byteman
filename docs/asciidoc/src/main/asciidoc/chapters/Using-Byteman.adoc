@@ -18,15 +18,14 @@ use Byteman, a copy of the programmers guide plus some sample scripts and an ass
 The full release also provides source and javadoc jars.
 
 Details of how to use Byteman from the command line are included in the 
-https://community.jboss.org/wiki/ABytemanTutorial#top[Byteman Command Line Tutorial].
+https://developer.jboss.org/docs/DOC-17213[Byteman Command Line Tutorial].
 
 If you are using Byteman from ant you need to use the BMUnit package which integrates Byteman with 
 JUnit and TestNG. Details of how to configure an ant build script to reference the required jars 
 from your Byteman download are provided in the 
-https://developer.jboss.org/wiki/BMUnitUsingBytemanWithJUnitOrTestNGFromMavenAndAnt#top[Byteman 
+https://developer.jboss.org/docs/DOC-52953[Byteman 
 BMUnit Tutorial]. A more complex example showing the possibilities offered by BMUnit is provided in 
-the https://community.jboss.org/wiki/FaultInjectionTestingWithByteman#top[Byteman Fault Injection 
-Tutorial].
+https://developer.jboss.org/docs/DOC-17315[Byteman Fault Injection Tutorial].
 
 The downloads page also contains a link to downloads for older binary release versions. Note that 
 from Byteman 1.1 onwards the agent can only be run in JDK 6 or 7. Previous releases can also be run 
@@ -40,14 +39,14 @@ the Byteman jars. maven will download these jars automaticaly from the
 http://central.sonatype.org/[Maven Central repository].
 
 Details of how to configure your pom to depend on the required jars are provided in the 
-https://developer.jboss.org/wiki/BMUnitUsingBytemanWithJUnitOrTestNGFromMavenAndAnt#top[Byteman 
+https://developer.jboss.org/docs/DOC-52953[Byteman 
 BMUnit Tutorial]. A more complex example showing the possibilities offered by BMUnit is provided in 
-the https://community.jboss.org/wiki/FaultInjectionTestingWithByteman#top[Byteman Fault Injection 
+https://developer.jboss.org/docs/DOC-17315[Byteman Fault Injection
 Tutorial].
 
 Byteman also provides a maven plugin which can be used to parse and type-check your test rule 
 scripts as part of the maven test cycle. Details of how to configure the maven plugin are provided 
-in the http://community.jboss.org/wiki/CheckingYourBytemanRuleScriptsUnderMaven#top[Byteman Rulecheck 
+in the https://developer.jboss.org/docs/DOC-48911[Byteman Rulecheck 
 Plugin Tutorial].
 
 === Obtaining the source build tree
