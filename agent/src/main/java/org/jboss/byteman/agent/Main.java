@@ -32,7 +32,9 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.net.JarURLConnection;
 import java.net.Socket;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarFile;
@@ -207,19 +209,26 @@ public class Main {
         // look up rules in any script files
 
         for (String scriptPath : scriptPaths) {
-            FileInputStream fis = null;
+            InputStream is = null;
             try {
-                fis = new FileInputStream(scriptPath);
-                byte[] bytes = new byte[fis.available()];
-                fis.read(bytes);
+                if(scriptPath.startsWith("jar:")) {
+                    // A jar:<url>!/{entry}
+                    URL url = new URL(scriptPath);
+                    JarURLConnection jarConnection = (JarURLConnection) url.openConnection();
+                    is = jarConnection.getJarFile().getInputStream(jarConnection.getJarEntry());
+                } else {
+                    is = new FileInputStream(scriptPath);
+                }
+                byte[] bytes = new byte[is.available()];
+                is.read(bytes);
                 String ruleScript = new String(bytes);
                 scripts.add(ruleScript);
             } catch (IOException ioe) {
                 System.err.println("org.jboss.byteman.agent.Main: unable to read rule script file : " + scriptPath);
                 throw ioe;
             } finally {
-                if (fis != null)
-                    fis.close();
+                if (is != null)
+                    is.close();
             }
         }
 
