@@ -63,6 +63,14 @@
                         </manifestEntries>
                     </archive>
                 </configuration>
+                <!-- Create a tests artifact -->
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -2415,6 +2423,25 @@
 							<argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-agent-${project.version}.jar=listener:true</argLine>
                         </configuration>
 					</execution>
+                    <!-- Test accessing the script from a jar url -->
+                    <execution>
+                        <id>jar.TestScriptFromJar</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkCount>1</forkCount>
+                            <reuseForks>true</reuseForks>
+                            <test>TestScriptFromJar</test>
+                            <includes>
+                                <include>org/jboss/byteman/tests/jar/TestScriptFromJar.class</include>
+                            </includes>
+                            <!-- access script from  jar:file://...target/byteman-x.y.z-tests.jar!/scripts/jar/TestScriptFromJar.btm -->
+                            <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-agent-${project.version}.jar=script:jar:file://${project.build.directory}/byteman-agent-${project.version}-tests.jar!/scripts/jar/TestScriptFromJar.btm</argLine>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <!--
