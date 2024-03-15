@@ -836,7 +836,7 @@ public class BMUnitConfigState
     public String getLoadDirectory() {
         // loadDirectory can be overridden so don't look up previous
         // unless it is empty or null
-        if ((loadDirectory != null || loadDirectory.length() == 0) && previous != null) {
+        if ((loadDirectory == null || loadDirectory.length() == 0) && previous != null) {
             return previous.getLoadDirectory();
         }
         return loadDirectory;
@@ -849,7 +849,7 @@ public class BMUnitConfigState
     public String getResourceLoadDirectory() {
         // loadDirectory can be overridden so don't look up previous
         // unless it is empty or null
-        if ((resourceLoadDirectory != null || resourceLoadDirectory.length() == 0) && previous != null) {
+        if ((resourceLoadDirectory == null || resourceLoadDirectory.length() == 0) && previous != null) {
             return previous.getResourceLoadDirectory();
         }
         return resourceLoadDirectory;

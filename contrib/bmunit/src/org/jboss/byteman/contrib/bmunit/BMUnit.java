@@ -335,7 +335,11 @@ public class BMUnit
         } else {
             // n.b. defaults either are "" or end with correct separator
             filename = normalize(getLoadDirectory(), true) + filename;
-            resourceName = normalize(getResourceLoadDirectory(), true) + filename;
+            String resourceDir = getResourceLoadDirectory();
+            if(resourceDir != null && resourceDir.length() > 0) {
+                String separator = resourceDir.endsWith("/") ? "" : "/";
+                resourceName = resourceDir + separator + resourceName;
+            }
         }
 
         final String[] filenames={filename, filename + ".btm", filename + ".txt"};
@@ -347,11 +351,11 @@ public class BMUnit
                 return fname;
         }
 
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader == null) {
+            loader = ClassLoader.getSystemClassLoader();
+        }
         for(String rname: resourceNames) {
-	    ClassLoader loader = Thread.currentThread().getContextClassLoader();
-	    if (loader == null) {
-                loader = ClassLoader.getSystemClassLoader();
-            }
             URL resource=loader.getResource(rname);
             if(resource != null) {
                 File file=new File(resource.getFile());
