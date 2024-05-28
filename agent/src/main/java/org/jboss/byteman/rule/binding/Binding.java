@@ -338,14 +338,23 @@ public class Binding extends RuleElement
             value.compile(mv, compileContext);
             // plant check cast if required
             if (doCheckCast) {
-                // we schedule a direct checkcast here rather than calling
-                // compileTypeConversion(value.type, type). the latter
-                // is fine when we are doing a downcast but does nothing
-                // if this is an 'upcast' i.e.when value.type is a subtype
-                // of type. We may still find doCheckCast set in that case
-                // because value.type requires access i.e. the value has
-                // been handled generically as an Object.
-                compileContext.compileCheckCast(type);
+                Type valueType = value.getType();
+                // as a special case we may be consuming a boxed type
+                // and trying to bind it as a primitive type or consuming
+                // a primitive type and trying to bind it as a boxed type.
+                // if so we need to plant a box or unbox
+                if (type.isPrimitive() != valueType.isPrimitive()) {
+                    compileContext.compileTypeConversion(valueType, type);
+                } else {
+                    // we schedule a direct checkcast here rather than calling
+                    // compileTypeConversion(value.type, type). the latter
+                    // is fine when we are doing a downcast but does nothing
+                    // if this is an 'upcast' i.e.when value.type is a subtype
+                    // of type. We may still find doCheckCast set in that case
+                    // because value.type requires access i.e. the value has
+                    // been handled generically as an Object.
+                    compileContext.compileCheckCast(type);
+                }
             }
             Type type = this.type;
             if (rule.requiresAccess(type)) {
