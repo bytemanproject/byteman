@@ -280,7 +280,14 @@ public class Compiler implements Opcodes
                         // treat inaccessible classes generically
                         type = org.jboss.byteman.rule.type.Type.OBJECT;
                     } else {
-                        cc.compileTypeConversion(org.jboss.byteman.rule.type.Type.OBJECT, type);
+                        if (type.isPrimitive()) {
+                            // convert from object to the relevant primitive type
+                            cc.compileTypeConversion(org.jboss.byteman.rule.type.Type.OBJECT, type);
+                        } else {
+                            // we know the value is of the correct type
+                            // simply plant a checkcast keep the verifier happy
+                            cc.compileCheckCast(type);
+                        }
                     }
                     mv.visitFieldInsn(PUTFIELD, compiledHelperName, name, type.getInternalName(true, true));
                     if (type.getNBytes() > 4) {

@@ -149,7 +149,7 @@ public class CompileContext
                 }
             }
             if (box) {
-                if (toType == Type.NUMBER) {
+                if (toType == Type.NUMBER || toType == Type.OBJECT) {
                     // special case! nothing to do
                 } else {
                     // convert from one numeric object type to another
@@ -164,7 +164,7 @@ public class CompileContext
             if (toType == Type.CHARACTER) {
                 compilePrimitiveConversion(fromType, Type.C);
                 compileBox(toType);
-            } else if (toType == Type.NUMBER) {
+            } else if (toType == Type.NUMBER || toType == Type.OBJECT) {
                 // special case! convert primitive to it's numeric box type
                 toType = Type.boxType(fromType);
                 compileBox(toType);
