@@ -36,7 +36,7 @@
     <parent>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-root</artifactId>
-        <version>4.0.23</version>
+        <version>4.0.24</version>
     </parent>
     <build>
         <plugins>
