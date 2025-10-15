@@ -1,97 +1,94 @@
-<!--
-  ~ JBoss, Home of Professional Open Source
-  ~ Copyright 2011, Red Hat and individual contributors as identified
-  ~ by the @authors tag. See the copyright.txt in the distribution for a
-  ~ full listing of individual contributors.
-  ~
-  ~ This is free software; you can redistribute it and/or modify it
-  ~ under the terms of the GNU Lesser General Public License as
-  ~ published by the Free Software Foundation; either version 2.1 of
-  ~ the License, or (at your option) any later version.
-  ~
-  ~ This software is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-  ~ Lesser General Public License for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public
-  ~ License along with this software; if not, write to the Free
-  ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
-  ~
-  ~ @authors Andrew Dinn
-  -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>org.jboss.byteman</groupId>
-    <artifactId>byteman-root</artifactId>
-    <packaging>pom</packaging>
-    <description>
-        Byteman is a java agent-based bytecode injection tool. It can be used to inject Event Condition Action rules
-        into Java application and JVM runtime methods. Its primary purpose is to support execution tracing and fault
-        injection testing.
-    </description>
-    <version>4.0.26</version>
-    <name>byteman-root</name>
-    <url>http://www.jboss.org/byteman</url>
+  <!--
+    ~ JBoss, Home of Professional Open Source
+    ~ Copyright 2011, 2025 Red Hat and individual contributors as identified
+    ~ by the @authors tag. See the copyright.txt in the distribution for a
+    ~ full listing of individual contributors.
+    ~
+    ~ This is free software; you can redistribute it and/or modify it
+    ~ under the terms of the GNU Lesser General Public License as
+    ~ published by the Free Software Foundation; either version 2.1 of
+    ~ the License, or (at your option) any later version.
+    ~
+    ~ This software is distributed in the hope that it will be useful,
+    ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+    ~ Lesser General Public License for more details.
+    ~
+    ~ You should have received a copy of the GNU Lesser General Public
+    ~ License along with this software; if not, write to the Free
+    ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+    ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+    ~
+    ~ @authors Andrew Dinn
+    -->
+  <project xmlns="http://maven.apache.org/POM/4.0.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+      <modelVersion>4.0.0</modelVersion>
+      <groupId>org.jboss.byteman</groupId>
+      <artifactId>byteman-root</artifactId>
+      <packaging>pom</packaging>
+      <description>
+          Byteman is a java agent-based bytecode injection tool. It can be used to inject Event Condition Action rules
+          into Java application and JVM runtime methods. Its primary purpose is to support execution tracing and fault
+          injection testing.
+      </description>
+      <version>4.0.26</version>
+      <name>byteman-root</name>
+      <url>http://www.jboss.org/byteman</url>
 
-    <issueManagement>
-        <system>JIRA</system>
-        <url>https://jira.jboss.org/jira/browse/BYTEMAN/</url>
-    </issueManagement>
-    <licenses>
-        <license>
-            <name>LGPL 2.1</name>
-            <url>http://www.gnu.org/licenses/lgpl-2.1.html</url>
-        </license>
-    </licenses>
+      <issueManagement>
+          <system>JIRA</system>
+          <url>https://jira.jboss.org/jira/browse/BYTEMAN/</url>
+      </issueManagement>
+      <licenses>
+          <license>
+              <name>LGPL 2.1</name>
+              <url>http://www.gnu.org/licenses/lgpl-2.1.html</url>
+          </license>
+      </licenses>
 
-    <scm>
-        <connection>scm:git:git://github.com/adinn/byteman.git</connection>
-        <developerConnection>scm:git:git://github.com/adinn/byteman.git</developerConnection>
-        <url>http://fisheye.jboss.org/browse/byteman/</url>
-    </scm>
+      <scm>
+          <connection>scm:git:git://github.com/adinn/byteman.git</connection>
+          <developerConnection>scm:git:git://github.com/adinn/byteman.git</developerConnection>
+          <url>http://fisheye.jboss.org/browse/byteman/</url>
+      </scm>
 
-    <developers>
-        <developer>
-            <id>adinn</id>
-            <name>Andrew Dinn</name>
-            <email>adinn@redhat.com</email>
-            <organization>JBoss</organization>
-            <organizationUrl>http://www.jboss.org/</organizationUrl>
-            <roles>
-                <role>project lead</role>
-            </roles>
-            <timezone>0</timezone>
-        </developer>
-        <developer>
-            <id>kabir.khan@jboss.com</id>
-            <name>Kabir Khan</name>
-            <email>kabir.khan@jboss.com</email>
-            <organization>JBoss</organization>
-            <organizationUrl>http://www.jboss.org/</organizationUrl>
-            <roles>
-                <role>contributing developer</role>
-            </roles>
-            <timezone>0</timezone>
-        </developer>
-    </developers>
-    <distributionManagement>
-        <!-- obviously we need to use the Sonatype staging repo for upload -->
-        <snapshotRepository>
-            <id>sonatype-snapshots-repository</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
+      <developers>
+          <developer>
+              <id>adinn</id>
+              <name>Andrew Dinn</name>
+              <email>adinn@redhat.com</email>
+              <organization>JBoss</organization>
+              <organizationUrl>http://www.jboss.org/</organizationUrl>
+              <roles>
+                  <role>project lead</role>
+              </roles>
+              <timezone>0</timezone>
+          </developer>
+          <developer>
+              <id>kabir.khan@jboss.com</id>
+              <name>Kabir Khan</name>
+              <email>kabir.khan@jboss.com</email>
+              <organization>JBoss</organization>
+              <organizationUrl>http://www.jboss.org/</organizationUrl>
+              <roles>
+                  <role>contributing developer</role>
+              </roles>
+              <timezone>0</timezone>
+          </developer>
+      </developers>
+      <!--
+      <distributionManagement>
         <repository>
-            <id>sonatype-releases-repository</id>
-            <name>Sonatype Releases Repository</name>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+          <id>central</id>
+          <name>Central Releases Repository</name>
+          <url>https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2</url>
         </repository>
-    </distributionManagement>
+      </distributionManagement>
+      -->
 
-    <properties>
+      <properties>
         <!-- actual path to tools.jar is defined in the profiles below -->
         <tools.jar>/file-not-found/tools.jar</tools.jar>
 
@@ -99,9 +96,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <!-- maven-release-plugin -->
-        <useReleaseProfile>false</useReleaseProfile>
-        <pushChanges>false</pushChanges>
+         <!-- Maven Central properties -->
+        <repo.sonatype.url>https://central.sonatype.com</repo.sonatype.url>
+        <autoPublish>true</autoPublish>
+
         <autoVersionSubmodules>true</autoVersionSubmodules>
         <!-- for testing: command line args to enable debugger and verbose trace -->
         <debug.args>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -Dorg.jboss.byteman.verbose</debug.args>
@@ -361,14 +359,14 @@
                     <version>1.6</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>2.1</version>
-                </plugin>
-                <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
                     <version>3.0.1</version>
+                </plugin>
+                <plugin>
+                  <groupId>org.sonatype.central</groupId>
+                  <artifactId>central-publishing-maven-plugin</artifactId>
+                  <version>0.9.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -409,6 +407,19 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+              <groupId>org.sonatype.central</groupId>
+              <artifactId>central-publishing-maven-plugin</artifactId>
+              <extensions>true</extensions>
+              <configuration>
+                <publishingServerId>central</publishingServerId>
+                <autoPublish>${autoPublish}</autoPublish>
+                <deploymentName>${project.name} ${project.version}</deploymentName>
+                <waitUntil>published</waitUntil>
+                <centralBaseUrl>https://central.sonatype.com</centralBaseUrl>
+                <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl>
+              </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -431,17 +442,6 @@
 
     <profiles>
       <profile>
-        <id>default-with-docs</id>
-        <activation>
-          <property>
-            <name>!skipDocs</name>
-          </property>
-        </activation>
-        <modules>
-          <module>docs</module>
-        </modules>
-      </profile>
-      <profile>
         <id>skip-integration-test-skips-verification</id>
         <activation>
           <property>
@@ -453,36 +453,10 @@
           <agent.verification.file>noverification.xml</agent.verification.file>
         </properties>
       </profile>
-      <profile>
-        <!-- normally tools jar is in ../lib/tools.jar -->
-        <id>default-toolsjar-profile</id>
-        <activation>
-          <file>
-            <exists>${java.home}/../lib/tools.jar</exists>
-          </file>
-        </activation>
-        <properties>
-          <tools.jar>${java.home}/../lib/tools.jar</tools.jar>
-        </properties>
-      </profile>
-      <!-- We override the tools.jar property on mac osx -->
-      <profile>
-        <!-- on pre-jdk7 mac releases tools jar is in ../Classes/classes.jar -->
-        <id>mac-toolsjar-profile</id>
-        <activation>
-          <file>
-            <exists>${java.home}/../Classes/classes.jar</exists>
-          </file>
-        </activation>
-        <properties>
-          <tools.jar>${java.home}/../Classes/classes.jar</tools.jar>
-        </properties>
-      </profile>
       <!--
-	  new profile for releasing to maven central
-	  to do a release update the version number from a SNAPSHOT
-	  version to a full version and execute
-	  
+	  profile for releasing to maven central. should normally be
+	  enabled by default from settings
+          
 	    mvn -P centralRelease deploy
 
 	  you will need to have permission to upload the jars to
@@ -496,19 +470,13 @@
               </properties>
             </profile>
 
-       you will also need to include a user name and
-       password entry for the nexus server and the nexus
-       snapshot server - note that the ids must match the
-       ones used in the repositories section of this pom
+       you will also need to include a user name and password entry
+       for the central release server - note that the ids must match
+       the ones used in the repositories section of this pom
 
             <servers>
               <server>
-                <id>sonatype-releases-repository</id>
-                <username>NNNNNNNN</username>
-                <password>PPPPPPPP</password>
-              </server>
-              <server>
-                <id>sonatype-snapshots-repository</id>
+                <id>centralrelease</id>
                 <username>NNNNNNNN</username>
                 <password>PPPPPPPP</password>
               </server>
@@ -540,5 +508,27 @@
               </plugins>
           </build>
       </profile>
+      <!--
+          This profile enables consuming snapshot artifacts from the snapshots repository.
+      -->
+      <profile>
+        <id>snapshots</id>
+        <activation>
+          <activeByDefault>false</activeByDefault>
+        </activation>
+        <repositories>
+          <repository>
+            <name>Central Portal Snapshots</name>
+            <id>central-portal-snapshots</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+            <releases>
+              <enabled>false</enabled>
+            </releases>
+                    <snapshots>
+                      <enabled>true</enabled>
+                    </snapshots>
+          </repository>
+        </repositories>
+      </profile>
     </profiles>
-</project>
+  </project>
