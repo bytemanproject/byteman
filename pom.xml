@@ -39,7 +39,7 @@
 
       <issueManagement>
           <system>JIRA</system>
-          <url>https://jira.jboss.org/jira/browse/BYTEMAN/</url>
+          <url>https://issues.redhat.com/projects/BYTEMAN/</url>
       </issueManagement>
       <licenses>
           <license>
@@ -49,9 +49,9 @@
       </licenses>
 
       <scm>
-          <connection>scm:git:git://github.com/adinn/byteman.git</connection>
-          <developerConnection>scm:git:git://github.com/adinn/byteman.git</developerConnection>
-          <url>http://fisheye.jboss.org/browse/byteman/</url>
+          <connection>scm:git:git://github.com/bytemanproject/byteman.git</connection>
+          <developerConnection>scm:git:git://github.com/bytemanproject/byteman.git</developerConnection>
+          <url>github.com:bytemanproject/byteman</url>
       </scm>
 
       <developers>
@@ -78,19 +78,8 @@
               <timezone>0</timezone>
           </developer>
       </developers>
-      <!--
-      <distributionManagement>
-        <repository>
-          <id>central</id>
-          <name>Central Releases Repository</name>
-          <url>https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2</url>
-        </repository>
-      </distributionManagement>
-      -->
 
       <properties>
-        <!-- actual path to tools.jar is defined in the profiles below -->
-        <tools.jar>/file-not-found/tools.jar</tools.jar>
 
         <!-- Decouple file encoding of the platform encoding -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -99,6 +88,7 @@
          <!-- Maven Central properties -->
         <repo.sonatype.url>https://central.sonatype.com</repo.sonatype.url>
         <autoPublish>true</autoPublish>
+        <waitUntil>published</waitUntil>
 
         <autoVersionSubmodules>true</autoVersionSubmodules>
         <!-- for testing: command line args to enable debugger and verbose trace -->
@@ -414,8 +404,8 @@
               <configuration>
                 <publishingServerId>central</publishingServerId>
                 <autoPublish>${autoPublish}</autoPublish>
+                <waitUntil>${waitUntil}</waitUntil>
                 <deploymentName>${project.name} ${project.version}</deploymentName>
-                <waitUntil>published</waitUntil>
                 <centralBaseUrl>https://central.sonatype.com</centralBaseUrl>
                 <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl>
               </configuration>
