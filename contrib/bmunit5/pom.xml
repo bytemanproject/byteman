@@ -67,6 +67,28 @@
                     </environmentVariables>
                 </configuration>
                 <executions>
+                    <!-- the other test classes in this module are named so that the
+                         default includes never match them; the configuration lifecycle
+                         classes are excluded explicitly instead, because running them
+                         one class per fork proves nothing. supplying any exclude
+                         replaces the built in exclude list rather than adding to it, so
+                         the inner class pattern has to be repeated here. with those two
+                         excludes this execution matches no classes at all, which surefire
+                         treats as success unless -Dtest is given -->
+                    <execution>
+                        <id>default-test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/ConfigLifecycle*Test.class</exclude>
+                                <exclude>**/*$*</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+
                     <execution>
                         <id>junit</id>
                         <phase>test</phase>
@@ -89,6 +111,27 @@
                         <configuration>
                             <includes>
                                 <include>**/UnitConfigTest5.class</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+
+                    <!-- the configuration lifecycle classes only mean anything when they
+                         share a JVM, so this execution reuses a single fork rather than
+                         forking per class like the others. the run order is load bearing
+                         for the last link: a leaked configuration trips whichever class
+                         runs next whatever the order, but ConfigLifecycleZTest only
+                         closes the chain if it runs after all of them -->
+                    <execution>
+                        <id>junitlifecycle</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <reuseForks>true</reuseForks>
+                            <runOrder>alphabetical</runOrder>
+                            <includes>
+                                <include>**/ConfigLifecycle*Test.class</include>
                             </includes>
                         </configuration>
                     </execution>
@@ -115,6 +158,14 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>5.4.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- used to run test containers programmatically, so that a container can
+             be started while another container's configuration is installed -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <version>1.4.0</version>
             <scope>test</scope>
         </dependency>
 

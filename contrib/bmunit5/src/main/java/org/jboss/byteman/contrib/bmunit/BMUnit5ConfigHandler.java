@@ -31,6 +31,15 @@ import static org.junit.platform.commons.support.AnnotationSupport.findAnnotatio
 
 public class BMUnit5ConfigHandler extends BMUnit5AbstractHandler<BMUnitConfig> {
 
+    /**
+     * namespace used to remember, per test container, the configuration state
+     * that container installed. the configuration state is global, so teardown
+     * has to be able to tell its own state from one belonging to an enclosing
+     * or preceding container.
+     */
+    private static final ExtensionContext.Namespace NAMESPACE =
+            ExtensionContext.Namespace.create(BMUnit5ConfigHandler.class);
+
     public BMUnit5ConfigHandler() {
         super(BMUnitConfig.class);
     }
@@ -45,11 +54,54 @@ public class BMUnit5ConfigHandler extends BMUnit5AbstractHandler<BMUnitConfig> {
 
         final Optional<BMUnitConfig> optionalAnnotation = findAnnotation(testClass, annotationClass);
         System.out.println(this.getClass().getName() + " installing " + testClass.getCanonicalName());
-        if(!optionalAnnotation.isPresent()) {
-            install(testClass, null, null);
-        } else {
-            install(testClass, null, optionalAnnotation.get());
+        final BMUnitConfigState preexisting = BMUnitConfigState.getCurrentConfigState();
+        try {
+            install(testClass, null, optionalAnnotation.orElse(null));
+        } finally {
+            // a failed install can still have replaced the configuration state, so
+            // record whatever this container installed rather than only recording
+            // it on success. if there already was a configuration then it belongs
+            // to another container and this one must not claim it.
+            final BMUnitConfigState installed = BMUnitConfigState.getCurrentConfigState();
+            if (preexisting == null && installed != null) {
+                context.getStore(NAMESPACE).put(context.getUniqueId(), installed);
+            }
         }
+    }
+
+    /**
+     * removes the configuration installed by this container. the inherited
+     * implementation only uninstalls when the test class carries a
+     * {@link BMUnitConfig} annotation, but beforeAll installs a configuration
+     * either way, which left the state of an unannotated class in place for the
+     * next class to trip over.
+     */
+    @Override
+    public void afterAll(ExtensionContext context) throws Exception {
+        if (isBMUnitVerbose()) {
+            System.out.println(this.getClass().getName() + ".afterAll");
+        }
+
+        final BMUnitConfigState installed =
+                context.getStore(NAMESPACE).remove(context.getUniqueId(), BMUnitConfigState.class);
+        if (installed == null) {
+            // this container installed nothing, so whatever is configured now
+            // belongs to another container and has to be left alone
+            return;
+        }
+
+        final BMUnitConfigState current = BMUnitConfigState.getCurrentConfigState();
+        if (current == null) {
+            // the state installed here has already been removed
+            return;
+        }
+        if (current != installed) {
+            throw new Exception("BMUnit test class configuration for "
+                    + context.getRequiredTestClass().getName()
+                    + " was replaced before it could be popped!");
+        }
+
+        uninstall(context.getRequiredTestClass(), null, null);
     }
 
 
