@@ -955,13 +955,19 @@ public class Helper
     }
 
     /**
-     * meet other threads at a given rendezvous returning either when
-     * the expected number have arrived or if a timeout is exceeded
+     * meet other threads at a given rendezvous returning when the
+     * expected number have arrived or throwing an ExecuteException
+     * if a timeout is exceeded
      * @param identifier the identifier for the rendezvous
-     * @param millis the timeout after which the caller may return
+     * @param millis the timeout after which the call throws an
+     * ExecuteException if the expected threads have not all arrived
      * @return an ordinal which sorts all parties to the rendezvous in
-     * order of arrival from 0 to (expected-1) or -1 if the rendezvous
-     * does not exist or the wait times out
+     * order of arrival from 0 to (expected-1) or -1 if no rendezvous
+     * is registered under identifier, if the rendezvous has already
+     * completed or been deleted so that this call cannot join it, or
+     * if the rendezvous is deleted while the caller is waiting. a
+     * caller whose wait exceeds millis is not returned -1; it is
+     * thrown out of the call with an ExecuteException
      */
     public int rendezvous(Object identifier, long millis)
     {

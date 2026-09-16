@@ -76,11 +76,11 @@ to arrive and that thread can be the one whose action is triggered.
   public boolean createRendezvous(Object identifier,
                                   int expected,
                                   boolean rejoinable)
-  public boolean rendezvous(Object identifier)
-  public boolean rendezvous(Object identifier, long timeout)
+  public int rendezvous(Object identifier)
+  public int rendezvous(Object identifier, long timeout)
   public boolean isRendezvous(Object identifier, int expected)
   public int getRendezvous(Object identifier, int expected)
-  public int deleteRendezvous(Object identifier, int expected)
+  public boolean deleteRendezvous(Object identifier, int expected)
 ----
 
 `createRendezvous` creates a rendezvous identified by `identifier`. `count` identifies the number 

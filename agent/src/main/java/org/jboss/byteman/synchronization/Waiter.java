@@ -119,13 +119,15 @@ public class Waiter
     private Object waiterFor;
 
     /**
-     * true if this waiter has been signalled by a call to signalKill
+     * true if this waiter has been signalled by a call to signalWake
+     * or signalThrow
      */
 
     private boolean signalled;
 
     /**
-     * true if this waiter has been signalled by a call to signal or signalKill
+     * true if this waiter has been signalled by a call to signalThrow,
+     * meaning the thread waiting on it will be thrown out of its wait
      */
 
     private boolean killed;
