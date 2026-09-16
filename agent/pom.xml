@@ -981,6 +981,21 @@
                       </configuration>
                     </execution>
                     <execution>
+                      <id>bugfixes.TestEarlySignalThrowMustMeet</id>
+                      <phase>integration-test</phase>
+                      <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                      </goals>
+                      <configuration>
+                         <forkedProcessTimeoutInSeconds>180</forkedProcessTimeoutInSeconds>
+                         <includes>
+                           <include>org/jboss/byteman/tests/bugfixes/TestEarlySignalThrowMustMeet.class</include>
+                         </includes>
+                         <argLine>-javaagent:${project.build.directory}/byteman-agent-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/bugfixes/TestEarlySignalThrowMustMeet.btm</argLine>
+                      </configuration>
+                    </execution>
+                    <execution>
                       <id>bugfixes.TestThrowRuntimeException</id>
                       <phase>integration-test</phase>
                       <goals>
@@ -2095,6 +2110,21 @@
                                 <include>org/jboss/byteman/tests/bugfixes/TestWaitAfterSignalWakeMustMeet.class</include>
                             </includes>
                             <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-agent-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/bugfixes/TestWaitAfterSignalWakeMustMeet.btm</argLine>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>bugfixes.TestEarlySignalThrowMustMeet.compiled</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <forkedProcessTimeoutInSeconds>180</forkedProcessTimeoutInSeconds>
+                            <includes>
+                                <include>org/jboss/byteman/tests/bugfixes/TestEarlySignalThrowMustMeet.class</include>
+                            </includes>
+                            <argLine>-Dorg.jboss.byteman.compile.to.bytecode -javaagent:${project.build.directory}/byteman-agent-${project.version}.jar=script:${project.build.testOutputDirectory}/scripts/bugfixes/TestEarlySignalThrowMustMeet.btm</argLine>
                         </configuration>
                     </execution>
                     <execution>

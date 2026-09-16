@@ -831,8 +831,10 @@ public class Helper
                 if (waiter != null) {
                     return waiter.signalThrow();
                 } else {
-                    // insert a pre-signalled waiter
-                    waiter = new Waiter(identifier, true, false);
+                    // insert a pre-signalled waiter, marked as killed so that the
+                    // thread which meets it is thrown out of its wait just as it
+                    // would have been had it got here first
+                    waiter = new Waiter(identifier, true, true);
                     waitMap.put(identifier, waiter);
                 }
             }

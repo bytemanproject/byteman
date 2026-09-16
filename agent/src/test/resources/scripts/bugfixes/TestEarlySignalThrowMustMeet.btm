@@ -1,0 +1,81 @@
+##############################################################################
+# JBoss, Home of Professional Open Source
+# Copyright 2009, Red Hat and individual contributors
+# by the @authors tag. See the copyright.txt in the distribution for a
+# full listing of individual contributors.
+#
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of
+# the License, or (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this software; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+#
+# Test that a mustMeet signal delivered before anybody is waiting keeps the
+# semantics of the signal it was sent with.
+
+##############################################################################
+# when ensureWaiterRegistered is called we need to wait until some thread has
+# registered a waiter for the identifier. our helper adds that check, which is
+# what orders the two threads in each case. the RETURN skips the body of the
+# trigger method, which throws if it is ever reached, so that a rule which
+# fails to fire is reported instead of silently dropping the ordering
+
+RULE ensureWaiterRegistered
+CLASS TestEarlySignalThrowMustMeet
+METHOD ensureWaiterRegistered
+HELPER org.jboss.byteman.tests.helpers.EarlySignalThrowMustMeetHelper
+IF TRUE
+DO ensureWaiter($1);
+   RETURN
+ENDRULE
+
+##############################################################################
+# when triggerWaitFor is called we need to do a waitFor
+
+RULE triggerWaitFor
+CLASS TestEarlySignalThrowMustMeet
+METHOD triggerWaitFor
+IF TRUE
+DO waitFor($1)
+ENDRULE
+
+##############################################################################
+# when triggerSignalThrow is called we need to do a mustMeet signalThrow
+
+RULE triggerSignalThrow
+CLASS TestEarlySignalThrowMustMeet
+METHOD triggerSignalThrow
+IF TRUE
+DO signalThrow($1, true)
+ENDRULE
+
+##############################################################################
+# when triggerSignalKill is called we need to do a mustMeet signalKill, which
+# is the alias for signalThrow and so has to behave the same way
+
+RULE triggerSignalKill
+CLASS TestEarlySignalThrowMustMeet
+METHOD triggerSignalKill
+IF TRUE
+DO signalKill($1, true)
+ENDRULE
+
+##############################################################################
+# when triggerSignalWake is called we need to do a mustMeet signalWake, which
+# is the non throwing signal and so must leave the waiting thread running
+
+RULE triggerSignalWake
+CLASS TestEarlySignalThrowMustMeet
+METHOD triggerSignalWake
+IF TRUE
+DO signalWake($1, true)
+ENDRULE
