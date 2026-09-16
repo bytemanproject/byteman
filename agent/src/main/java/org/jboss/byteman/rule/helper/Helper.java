@@ -960,7 +960,10 @@ public class Helper
      * if a timeout is exceeded
      * @param identifier the identifier for the rendezvous
      * @param millis the timeout after which the call throws an
-     * ExecuteException if the expected threads have not all arrived
+     * ExecuteException if the expected threads have not all arrived.
+     * zero or a negative value means there is no timeout and the call
+     * waits for as long as it takes; {@link #rendezvous(Object)} passes
+     * zero
      * @return an ordinal which sorts all parties to the rendezvous in
      * order of arrival from 0 to (expected-1) or -1 if no rendezvous
      * is registered under identifier, if the rendezvous has already
