@@ -260,22 +260,24 @@ public class ConfigLifecycleOwnershipTest
     }
 
     @Test
-    public void nestedContainerLeavesTheEnclosingConfigurationInstalled()
+    public void nestedContainerLeavesTheEnclosingConfigurationInstalled() throws Exception
     {
-        observedBeforeEnclosingTeardown = null;
+        try (ConfigurationCleanup cleanup = new ConfigurationCleanup()) {
+            observedBeforeEnclosingTeardown = null;
 
-        final TestExecutionSummary summary = run(NestingScenario.class);
+            final TestExecutionSummary summary = run(NestingScenario.class);
 
-        // a nested container cannot install a configuration of its own while the
-        // enclosing one is in force, so it is expected to fail. this pins current
-        // behaviour rather than stating a requirement: making nested containers
-        // work is a separate change, and it should have to update these lines
-        assertEquals(ALREADY_PUSHED, soleFailureMessage(summary),
-                "the nested container failed for an unexpected reason");
-        assertNotNull(observedBeforeEnclosingTeardown,
-                "the nested container removed the enclosing class configuration");
-        assertNull(BMUnitConfigState.getCurrentConfigState(),
-                "the enclosing class did not remove its own configuration");
+            // a nested container cannot install a configuration of its own while the
+            // enclosing one is in force, so it is expected to fail. this pins current
+            // behaviour rather than stating a requirement: making nested containers
+            // work is a separate change, and it should have to update these lines
+            assertEquals(ALREADY_PUSHED, soleFailureMessage(summary),
+                    "the nested container failed for an unexpected reason");
+            assertNotNull(observedBeforeEnclosingTeardown,
+                    "the nested container removed the enclosing class configuration");
+            assertNull(BMUnitConfigState.getCurrentConfigState(),
+                    "the enclosing class did not remove its own configuration");
+        }
     }
 
     @Test
@@ -385,34 +387,48 @@ public class ConfigLifecycleOwnershipTest
      * defect.
      */
     @Test
-    public void anAlreadyRemovedConfigurationIsNotReportedAsAnError()
+    public void anAlreadyRemovedConfigurationIsNotReportedAsAnError() throws Exception
     {
-        assertPassed(run(ClearedScenario.class), 1,
-                "removing the configuration early was treated as a failure");
-        assertNull(BMUnitConfigState.getCurrentConfigState(),
-                "a configuration was reinstated by teardown");
+        try (ConfigurationCleanup cleanup = new ConfigurationCleanup()) {
+            assertPassed(run(ClearedScenario.class), 1,
+                    "removing the configuration early was treated as a failure");
+            assertNull(BMUnitConfigState.getCurrentConfigState(),
+                    "a configuration was reinstated by teardown");
+        }
     }
 
     @Test
-    public void rejectedConfigurationLeavesNothingInstalled()
+    public void rejectedConfigurationLeavesNothingInstalled() throws Exception
     {
-        // the enforcing configuration is only rejected once a default configuration
-        // exists to conflict with, and the first class to install one in this JVM
-        // defines it, so establish it from a scenario with default settings
-        assertPassed(run(PlainScenario.class), 1,
-                "the seeding scenario could not install a default configuration");
+        try (ConfigurationCleanup cleanup = new ConfigurationCleanup()) {
+            // the enforcing configuration is only rejected once a default configuration
+            // exists to conflict with, and the first class to install one in this JVM
+            // defines it, so establish it from a scenario with default settings
+            assertPassed(run(PlainScenario.class), 1,
+                    "the seeding scenario could not install a default configuration");
 
-        final TestExecutionSummary summary = run(RejectedConfigScenario.class);
-        assertEquals(REJECTED, soleFailureMessage(summary),
-                "the enforcing configuration was rejected for an unexpected reason");
-        assertNull(BMUnitConfigState.getCurrentConfigState(),
-                "a rejected configuration left state installed");
+            final TestExecutionSummary summary = run(RejectedConfigScenario.class);
+            assertEquals(REJECTED, soleFailureMessage(summary),
+                    "the enforcing configuration was rejected for an unexpected reason");
+            assertNull(BMUnitConfigState.getCurrentConfigState(),
+                    "a rejected configuration left state installed");
 
-        // a later class must still be able to install and remove its own configuration
-        assertPassed(run(PlainScenario.class), 1,
-                "the following class could not install its own configuration");
-        assertNull(BMUnitConfigState.getCurrentConfigState(),
-                "the following class did not remove its own configuration");
+            // a later class must still be able to install and remove its own configuration
+            assertPassed(run(PlainScenario.class), 1,
+                    "the following class could not install its own configuration");
+            assertNull(BMUnitConfigState.getCurrentConfigState(),
+                    "the following class did not remove its own configuration");
+        }
+    }
+
+    // try-with-resources preserves an assertion failure if cleanup also throws.
+    private static final class ConfigurationCleanup implements AutoCloseable
+    {
+        @Override
+        public void close() throws Exception
+        {
+            BMUnitConfigState.resetConfigurationState(ConfigLifecycleOwnershipTest.class);
+        }
     }
 
     /**
