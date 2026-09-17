@@ -106,7 +106,7 @@ zero or negative timeout value means do not time out.
 
 `isRendezvous` will return true if a rendezvous identified by identifier with the expected count 
 is currently active. If there is no active rendezvous identified by identifier or it exists but 
-has a different expected count then `getRendezvous` will return false.
+has a different expected count then `isRendezvous` will return false.
 
 `getRendezvous` will return the number of threads waiting at the rendezvous identified by 
 `identifier` or 0 if no threads are currently waiting. If there is no rendezvous identified by 
