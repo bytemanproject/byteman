@@ -47,9 +47,10 @@ public class Rendezvous
     /**
      * enter this rendezvous. n.b. this must be called synchronized on the rendezvous object
      * in question
-     * @param millis how long to wait (wait forever if 0)
+     * @param millis how long to wait in milliseconds; zero or a negative value means no timeout
      * @return the index in arrival order from 0 to expected of the calling thread or -1 if
      * either the rendezvous has completed and is not restartable or the rendezvous has been deleted
+     * @throws ExecuteException if a positive timeout expires before all expected threads arrive
      */
     public int rendezvous(long millis)
     {

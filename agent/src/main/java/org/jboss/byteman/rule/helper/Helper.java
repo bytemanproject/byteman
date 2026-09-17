@@ -648,7 +648,9 @@ public class Helper
      * cannot safely release and reobtain locks on application
      * data. this argument is used as a key to identify a
      * synchronization object private to the rule system.
-     * @param millisecs hwo long to wait
+     * @param millisecs how long to wait in milliseconds; zero means no timeout.
+     * a negative value skips the wait, but a previously received signalThrow
+     * can still cause an ExecuteException
      */
     public void waitFor(Object identifier, long millisecs)
     {
