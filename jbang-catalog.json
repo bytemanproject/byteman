@@ -1,0 +1,9 @@
+{
+  "catalogs": {},
+  "aliases": {
+    "byteman": {
+      "script-ref": "org.jboss.byteman:byteman:RELEASE"
+    }
+  },
+  "templates": {}
+}
