@@ -77,13 +77,6 @@ public class Retransformer extends Transformer {
 
         for (RuleScript ruleScript : toBeAdded) {
             String name = ruleScript.getName();
-            String className = ruleScript.getTargetClass();
-            String baseName = null;
-            int lastDotIdx = className.lastIndexOf('.');
-            if (lastDotIdx >= 0) {
-                baseName = className.substring(lastDotIdx + 1);
-            }
-
             RuleScript previous;
 
             previous = scriptRepository.addScript(ruleScript);
