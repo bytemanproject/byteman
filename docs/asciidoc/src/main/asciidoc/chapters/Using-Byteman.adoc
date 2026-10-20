@@ -300,9 +300,21 @@ String if no value is provided. Note that property names must begin with the pre
 "org.jboss.byteman.".
 
 Note that when injecting into JVM classes it is necessary to install the byteman jar into the boot 
-classpath by passing option `boot:${BYTEMAN_HOME}/lib/byteman.jar`. Without it compilation of the 
+classpath by passing java command line option `-Xbootclasspath/p:${BYTEMAN_HOME}/lib/byteman.jar` or by use
+of the Byteman agent option `boot:${BYTEMAN_HOME}/lib/byteman.jar`. Without it compilation of the
 transformed class will fail because it cannot locate classes `Rule`, `ExecuteException`, 
 `ThrowException` and `ReturnException.` Script `bmjava` automatically takes care of this requirement.
+
+Note that use of the `boot:` agent option is deprecated for JDK 25+
+releases when installing the agent on the command line (there is no
+other option when loading it into an already running JVM). This is
+because adding a jar via the agent is incompatible with use of an AOT
+cache. When the agent installs jars into the bootstrap classpath it
+invalidates all AOT cache assets that do not belong to bootstrap
+classes. For command line use it is recommended always to add jars to
+the bootstrap classpath using java command line option
+`-Xbootclasspath/p`. This option is compatible with all supported
+releases from JDK 8 onwards.
 
 === Running Byteman Using Script bmjava
 
