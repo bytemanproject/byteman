@@ -123,6 +123,7 @@ else
 fi
 AGENT_PREFIX="-javaagent:${BYTEMAN_JAR}"
 AGENT_OPTS=""
+BOOTAPPEND_OPTS=""
 
 # default is to use listener and add byteman jar to bootstrap classpath
 LISTENER=1
@@ -147,7 +148,9 @@ do
 	fi
     elif [ "$1" == "-b" -a $# -ge 2 ]; then
 	if [ -r "$2" ]; then
-	    AGENT_OPTS="${AGENT_OPTS},boot:$2"
+            # add jars to bootstrap path in order provided
+            BOOTAPPEND_OPTS="$BOOTAPPEND:$2"
+	    # AGENT_OPTS="${AGENT_OPTS},boot:$2"
 	    shift;
 	    shift;
 	else
@@ -190,7 +193,9 @@ do
 done
 
 if [ $BYTEMAN_BOOT_JAR -eq 1 ]; then
-    AGENT_OPTS="${AGENT_OPTS},boot:${BYTEMAN_JAR}"
+    # add byteman jar first at start of bootstrap path
+    BOOTAPPEND_OPTS=":${BYTEMAN_JAR}$BOOTAPPEND_OPTS"
+    # AGENT_OPTS="${AGENT_OPTS},boot:${BYTEMAN_JAR}"
 fi
 
 if [ $LISTENER -eq 1 ]; then
@@ -221,6 +226,10 @@ else
 fi
 
 AGENT_ARGUMENT=${AGENT_PREFIX}=${AGENT_OPTS}
+
+if [ "$BOOTAPPEND_OPTS" != "" ]; then
+    BOOTAPPEND_OPTS="-Xbootclasspath/p$BOOTAPPEND_OPTS"
+fi
 
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 
