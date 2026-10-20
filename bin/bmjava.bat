@@ -53,7 +53,7 @@
 @rem   javaargs trailing arguments to be supplied to the java command
 @rem
 @rem The script employs the java command found in the current execution
-@rem PATH. If BYTEMAN_JAVA_ARGS is set then this is inserted to the
+@rem PATH. If BYTEMAN_JAVA_OPTS is set then this is inserted to the
 @rem java command line before the -javaagent argument and before any
 @rem arguments in javaargs.
 @rem
@@ -280,7 +280,7 @@ echo.
 echo   javaargs  trailing arguments to be supplied to the java command
 echo.
 echo The script constructs a -javaagent argument to pass to the java
-echo command found in the current execution PATH. If BYTEMAN_JAVA_ARGS
+echo command found in the current execution PATH. If BYTEMAN_JAVA_OPTS
 echo is set then this is inserted to the java command line before
 echo the -javaagent argument and before any arguments in javaargs.
 goto exitBatch

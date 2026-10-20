@@ -52,7 +52,7 @@
 #   javaargs trailing arguments to be supplied to the java command
 #
 # The script employs the java command found in the current execution
-# PATH. If BYTEMAN_JAVA_ARGS is set then this is inserted to the
+# PATH. If BYTEMAN_JAVA_OPTS is set then this is inserted to the
 # java command line before the -javaagent argument and before any
 # arguments in javaargs.
 #
@@ -93,7 +93,7 @@ a * means zero or more occurences
   javaargs  trailing arguments to be supplied to the java command
 
 The script constructs a -javaagent argument to pass to the java
-command found in the current execution PATH. If BYTEMAN_JAVA_ARGS
+command found in the current execution PATH. If BYTEMAN_JAVA_OPTS
 is set then this is inserted to the java command line before
 the -javaagent argument and before any arguments in javaargs.
 EOF
