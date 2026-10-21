@@ -228,10 +228,10 @@ fi
 AGENT_ARGUMENT=${AGENT_PREFIX}=${AGENT_OPTS}
 
 if [ "$BOOTAPPEND_OPTS" != "" ]; then
-    BOOTAPPEND_OPTS="-Xbootclasspath/p$BOOTAPPEND_OPTS"
+    BOOTAPPEND_OPTS="-Xbootclasspath/a$BOOTAPPEND_OPTS"
 fi
 
 # allow for extra java opts via setting BYTEMAN_JAVA_OPTS
 
-exec java ${BYTEMAN_JAVA_OPTS} "${AGENT_ARGUMENT}" ${INJECT_JAVA_LANG_OPTS} $*
+exec java ${BOOTAPPEND_OPTS} ${BYTEMAN_JAVA_OPTS} "${AGENT_ARGUMENT}" ${INJECT_JAVA_LANG_OPTS} $*
 
